@@ -1,12 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
 
-dotenv.config();
-
 const prisma = new PrismaClient();
-const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -22,7 +18,36 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/auth', authRoutes);
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    res.json({ message: 'Login successful', user });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    const newUser = await prisma.user.create({
+      data: { name, email, password }
+    });
+    res.json({ message: 'User registered successfully', user: newUser });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
 
 app.use((err, req, res, next) => {
   const status = err.status || 500;
