@@ -1,0 +1,23 @@
+// Datasource
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  password          String
+  isProfileComplete Boolean   @default(false)
+  bio               String?
+  profileImage      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
