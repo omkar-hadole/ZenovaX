@@ -32,7 +32,7 @@ export default function LoginForm({ onToggle, showToast }) {
       const data = await login(formData.email, formData.password);
       localStorage.setItem('user', JSON.stringify(data.user));
       showToast({ message: 'Login successful!', type: 'success' });
-      
+
       setTimeout(() => {
         navigate('/dashboard');
       }, 600);
