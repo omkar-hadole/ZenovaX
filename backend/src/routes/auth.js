@@ -1,4 +1,6 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const {
   isValidEmail,
   isValidPassword,
@@ -29,11 +31,13 @@ router.post("/register", async (req, res) => {
     if (existingUser)
       return res.status(409).json({ error: "Email already registered" });
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = await prisma.user.create({
       data: {
         name: name.trim(),
         email: email.trim(),
-        password: password.trim(),
+        password: hashedPassword,
       },
       select: {
         id: true,
@@ -44,7 +48,11 @@ router.post("/register", async (req, res) => {
       },
     });
 
-    return res.status(201).json({ user: newUser });
+    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    return res.status(201).json({ token, user: newUser });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Server error" });
@@ -62,12 +70,20 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
 
     const userRecord = await prisma.user.findUnique({ where: { email } });
-    if (!userRecord || userRecord.password !== password) {
+    if (!userRecord)
       return res.status(401).json({ error: "Invalid credentials" });
-    }
+
+    const isValid = await bcrypt.compare(password, userRecord.password);
+    if (!isValid)
+      return res.status(401).json({ error: "Invalid credentials" });
 
     const { password: _, ...user } = userRecord;
-    return res.status(200).json({ user });
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    return res.status(200).json({ token, user });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Server error" });
