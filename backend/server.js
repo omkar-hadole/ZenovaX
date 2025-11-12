@@ -34,11 +34,11 @@ app.use((err, req, res, next) => {
   const message = err.message || "Internal Server Error";
   res.status(status).json({ error: message });
 });
+export default app;
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-process.on("SIGINT", async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
+// process.on("SIGINT", async () => {
+//   await prisma.$disconnect();
+//   process.exit(0);
+// });
