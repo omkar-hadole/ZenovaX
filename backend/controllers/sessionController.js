@@ -1,0 +1,454 @@
+const { sanitizeString, isValidArray } = require("../utils/validation");
+
+exports.createSessionRequest = async (req, res, next) => {
+    try {
+        const {
+            title,
+            description,
+            subject,
+            department,
+            topics,
+            mode,
+            priceType,
+            price,
+            maxSeats,
+            venue,
+            meetingLink,
+            proposedDate,
+            duration
+        } = req.body;
+
+        // Basic validation
+        if (!title || !description || !subject || !department || !mode || !proposedDate || !duration) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        if (mode === "OFFLINE" && !venue) {
+            return res.status(400).json({ error: "Venue is required for offline sessions" });
+        }
+
+        if (mode === "ONLINE" && !meetingLink) {
+            return res.status(400).json({ error: "Meeting link is required for online sessions" });
+        }
+
+        const sessionRequest = await req.prisma.sessionRequest.create({
+            data: {
+                mentorId: req.user.id,
+                title: sanitizeString(title),
+                description: sanitizeString(description),
+                subject: sanitizeString(subject),
+                department: sanitizeString(department),
+                topics: JSON.stringify(isValidArray(topics) ? topics : []),
+                mode,
+                priceType: priceType || "FREE",
+                price: parseFloat(price) || 0,
+                maxSeats: parseInt(maxSeats) || 0,
+                venue: venue ? sanitizeString(venue) : null,
+                meetingLink,
+                proposedDate: new Date(proposedDate),
+                duration: parseInt(duration),
+                status: "PENDING"
+            }
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Session request submitted successfully",
+            request: sessionRequest
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getMyRequests = async (req, res, next) => {
+    try {
+        const requests = await req.prisma.sessionRequest.findMany({
+            where: { mentorId: req.user.id },
+            orderBy: { requestedAt: 'desc' }
+        });
+        return res.json({ requests });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getMySessions = async (req, res, next) => {
+    try {
+        // Fetch active sessions
+        const sessions = await req.prisma.session.findMany({
+            where: { mentorId: req.user.id },
+            orderBy: { scheduledAt: 'asc' },
+            include: {
+                _count: {
+                    select: { bookings: true }
+                }
+            }
+        });
+
+        // Fetch approved requests that haven't been converted to sessions yet
+        const approvedRequests = await req.prisma.sessionRequest.findMany({
+            where: {
+                mentorId: req.user.id,
+                status: 'APPROVED'
+            },
+            include: { session: true }, // Include session to check if it exists
+            orderBy: { proposedDate: 'asc' }
+        });
+
+        // Map requests to session-like structure
+        const mappedRequests = approvedRequests
+            .filter(req => !req.session) // Filter out requests that are already sessions
+            .map(req => ({
+                id: `req-${req.id}`, // distinct ID
+                title: req.title,
+                scheduledAt: req.proposedDate,
+                duration: req.duration,
+                mode: req.mode,
+                maxSeats: req.maxSeats,
+                _count: { bookings: 0 },
+                isRequest: true
+            }));
+
+        // Combine and sort
+        const allSessions = [...sessions, ...mappedRequests].sort((a, b) =>
+            new Date(a.scheduledAt) - new Date(b.scheduledAt)
+        );
+
+        return res.json({ sessions: allSessions });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.bookSession = async (req, res, next) => {
+    try {
+        let sessionId = req.params.id;
+        let session;
+
+        // Handle booking of a request (convert to session if needed)
+        if (sessionId.startsWith('req-')) {
+            const requestId = sessionId.replace('req-', '');
+
+            // Check if session already exists for this request
+            session = await req.prisma.session.findUnique({
+                where: { requestId }
+            });
+
+            if (!session) {
+                // Create new session from request
+                const request = await req.prisma.sessionRequest.findUnique({
+                    where: { id: requestId }
+                });
+
+                if (!request) {
+                    return res.status(404).json({ error: "Session request not found" });
+                }
+
+                session = await req.prisma.session.create({
+                    data: {
+                        title: request.title,
+                        description: request.description,
+                        subject: request.subject,
+                        department: request.department,
+                        topics: request.topics,
+                        mentorId: request.mentorId,
+                        mode: request.mode,
+                        priceType: request.priceType,
+                        price: request.price,
+                        maxSeats: request.maxSeats,
+                        availableSeats: request.maxSeats,
+                        venue: request.venue,
+                        meetingLink: request.meetingLink,
+                        scheduledAt: request.proposedDate,
+                        duration: request.duration,
+                        requestId: request.id,
+                        status: 'UPCOMING'
+                    }
+                });
+            }
+            sessionId = session.id;
+        } else {
+            session = await req.prisma.session.findUnique({
+                where: { id: sessionId }
+            });
+        }
+
+        if (!session) {
+            return res.status(404).json({ error: "Session not found" });
+        }
+
+        // Check if already booked
+        const existingBooking = await req.prisma.booking.findUnique({
+            where: {
+                userId_sessionId: {
+                    userId: req.user.id,
+                    sessionId: sessionId
+                }
+            }
+        });
+
+        if (existingBooking) {
+            return res.status(400).json({ error: "You have already booked this session" });
+        }
+
+        // Check availability
+        if (session.availableSeats <= 0) {
+            return res.status(400).json({ error: "Session is full" });
+        }
+
+        // Create booking
+        const booking = await req.prisma.booking.create({
+            data: {
+                userId: req.user.id,
+                sessionId: sessionId,
+                status: 'CONFIRMED', // Auto-confirm for now
+                amountPaid: 0 // Assuming free or handled elsewhere for now
+            }
+        });
+
+        // Update available seats
+        await req.prisma.session.update({
+            where: { id: sessionId },
+            data: { availableSeats: { decrement: 1 } }
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Booking confirmed",
+            booking,
+            sessionId // Return actual session ID in case it changed
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getMyBookings = async (req, res, next) => {
+    try {
+        const bookings = await req.prisma.booking.findMany({
+            where: { userId: req.user.id },
+            include: {
+                session: {
+                    include: {
+                        mentor: {
+                            select: {
+                                id: true,
+                                name: true,
+                                profilePicture: true,
+                                department: true,
+                                averageRating: true
+                            }
+                        },
+                        resources: true,
+                        quizzes: true
+                    }
+                }
+            },
+            orderBy: { session: { scheduledAt: 'asc' } }
+        });
+
+        const sessions = bookings.map(b => ({
+            ...b.session,
+            bookingId: b.id,
+            isBooked: true,
+            bookingStatus: b.status,
+            sessionStatus: b.session.status,
+            hasReviewed: b.hasReviewed
+        }));
+
+        return res.json({ sessions });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getAllSessions = async (req, res, next) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const cacheKey = `all_sessions_${page}_${limit}`;
+
+        // Check cache
+        if (req.cache && req.cache.has(cacheKey)) {
+            return res.json(req.cache.get(cacheKey));
+        }
+
+        // Fetch sessions that are upcoming OR currently live
+        const [sessions, total] = await Promise.all([
+            req.prisma.session.findMany({
+                where: {
+                    OR: [
+                        { status: 'UPCOMING' },
+                        { status: 'LIVE' }
+                    ]
+                },
+                skip,
+                take: limit,
+                include: {
+                    mentor: {
+                        select: {
+                            id: true,
+                            name: true,
+                            profilePicture: true,
+                            department: true,
+                            year: true,
+                            averageRating: true
+                        }
+                    },
+                    bookings: {
+                        where: { userId: req.user.id },
+                        select: { id: true }
+                    },
+                    resources: {
+                        select: { id: true, title: true, fileType: true, fileUrl: true }
+                    },
+                    quizzes: {
+                        select: { id: true, title: true, status: true }
+                    },
+                    reviews: {
+                        take: 3,
+                        orderBy: { createdAt: 'desc' },
+                        include: {
+                            author: { select: { name: true, profilePicture: true } }
+                        }
+                    }
+                },
+                orderBy: { scheduledAt: 'asc' }
+            }),
+            req.prisma.session.count({
+                where: {
+                    OR: [
+                        { status: 'UPCOMING' },
+                        { status: 'LIVE' }
+                    ]
+                }
+            })
+        ]);
+
+        const mappedSessions = sessions.map(s => ({
+            ...s,
+            isBooked: s.bookings.length > 0
+        }));
+
+        const response = {
+            sessions: mappedSessions,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+
+        // Set cache
+        if (req.cache) {
+            req.cache.set(cacheKey, response);
+        }
+
+        return res.json(response);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getSessionById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const session = await req.prisma.session.findUnique({
+            where: { id },
+            include: {
+                mentor: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePicture: true,
+                        department: true,
+                        averageRating: true
+                    }
+                },
+                bookings: {
+                    where: { userId: req.user.id },
+                    select: { id: true }
+                },
+                resources: true,
+                quizzes: true,
+                reviews: {
+                    take: 3,
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        author: { select: { name: true, profilePicture: true } }
+                    }
+                }
+            }
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: "Session not found" });
+        }
+
+        const mappedSession = {
+            ...session,
+            isBooked: session.bookings.length > 0,
+            hasReviewed: false // Logic to check if user reviewed can be added if needed
+        };
+
+        // Check if user has reviewed
+        const userReview = await req.prisma.review.findFirst({
+            where: {
+                sessionId: id,
+                authorId: req.user.id
+            }
+        });
+
+        mappedSession.hasReviewed = !!userReview;
+
+        return res.json({ session: mappedSession });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getMentorStats = async (req, res, next) => {
+    try {
+        const mentorId = req.user.id;
+        const cacheKey = `mentor_stats_${mentorId}`;
+
+        if (req.cache && req.cache.has(cacheKey)) {
+            return res.json(req.cache.get(cacheKey));
+        }
+
+        const [totalSessions, totalLearners, sessionStats, mentor] = await Promise.all([
+            req.prisma.session.count({ where: { mentorId } }),
+            req.prisma.booking.count({ where: { session: { mentorId } } }),
+            req.prisma.session.aggregate({
+                where: { mentorId },
+                _sum: { duration: true }
+            }),
+            req.prisma.user.findUnique({
+                where: { id: mentorId },
+                select: { averageRating: true }
+            })
+        ]);
+
+        const totalHours = Math.round((sessionStats._sum.duration || 0) / 60);
+
+        const stats = {
+            totalSessions,
+            totalLearners,
+            totalHours,
+            averageRating: mentor?.averageRating || 0
+        };
+
+        if (req.cache) {
+            req.cache.set(cacheKey, { stats });
+        }
+
+        return res.json({ stats });
+    } catch (error) {
+        return next(error);
+    }
+};

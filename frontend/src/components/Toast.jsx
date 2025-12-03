@@ -15,8 +15,7 @@ export default function Toast({ message, type, onClose }) {
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-fade-in">
-      <div className={`${bgColor} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-2`}
-           style={{ backdropFilter: 'blur(10px)' }}>
+      <div className={`${bgColor} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-2 backdrop-blur-md`}>
         <Icon className="w-5 h-5" />
         <span className="font-light">{message}</span>
       </div>

@@ -49,14 +49,38 @@ export const register = async (name, email, password) => {
   return data;
 };
 
-export const apiCall = async (endpoint, options = {}) => {
+export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) => {
+  let options = {};
+
+  if (typeof methodOrOptions === 'string') {
+    options = { method: methodOrOptions };
+    if (bodyData) {
+      options.body = bodyData;
+    }
+  } else {
+    options = methodOrOptions || {};
+  }
+
+  const isFormData = options.body instanceof FormData;
+
+  const headers = {
+    ...getAuthHeader(),
+    ...options.headers,
+  };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  let body = options.body;
+  if (body && !isFormData && typeof body !== 'string') {
+    body = JSON.stringify(body);
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-      ...options.headers,
-    },
+    headers,
+    body,
   });
 
   const data = await response.json();
