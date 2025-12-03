@@ -1,0 +1,76 @@
+import React from 'react';
+import { Sparkles, CheckCircle, PlayCircle } from 'lucide-react';
+import dashboard from '../../assets/dashboard-mockup.png';
+import bg from '../../assets/bg.png';
+
+export default function HeroSection({ handlePrimaryCTA }) {
+    return (
+        <section
+            className="relative px-4 pt-40 border-b border-[#e2e0ff] animate-in fade-in duration-700"
+            style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "top center",
+                backgroundRepeat: "no-repeat",
+
+            }}
+        >
+            <div className="absolute inset-0 pointer-events-none opacity-50"></div>
+            <div className="max-w-6xl mx-auto">
+
+                {/* Text Center Block */}
+                <div className="text-center space-y-10 mb-20">
+
+                    {/* Feature Badge */}
+                    <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-[#e2e0ff] text-xs text-slate-700 font-semibold shadow-sm">
+                        <Sparkles className="w-3 h-6" /> Announcing our feature
+                    </span>
+
+                    {/* Heading */}
+                    <h1 className="text-4xl lg:text-7xl font-semibold leading-tight text-slate-900">
+                        <span className="text-[#7a79e6]">ZenovaX</span> Your Personalized <br className="hidden md:block" /> Learning Dashboard
+                    </h1>
+
+                    {/* Three small features */}
+                    <div className="flex flex-wrap justify-center gap-6 text-lg text-slate-500 font-normal">
+                        {[
+                            "Track your courses",
+                            "Monitor progress",
+                            "Schedule classes"
+                        ].map((item) => (
+                            <div key={item} className="flex items-center gap-2">
+                                <CheckCircle className="w-4 h-4 text-[#6967e6]" />
+                                <span>{item}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex flex-wrap justify-center gap-6">
+                        <button
+                            onClick={handlePrimaryCTA}
+                            className="px-8 py-3 rounded-4xl bg-[#9190F8] text-white font-medium hover:bg-[#5957e6] transition"
+                        >
+                            Get Started For Free
+                        </button>
+
+                        <button className="px-8 py-3 rounded-4xl border border-[#d4d6ff] text-[#7a79e6] font-medium flex items-center gap-2 bg-white hover:bg-[#fafaff] transition">
+                            <PlayCircle className="w-5 h-5" /> View Demo
+                        </button>
+                    </div>
+                </div>
+
+                {/* Dashboard Image */}
+                <div className="flex justify-center mt-16">
+                    <div className="w-full max-w-8xl">
+                        <img
+                            src={dashboard}
+                            alt="Skillify Dashboard Preview"
+                            className="w-full rounded-[32px] shadow-2xl border border-[#eceafd] rounded-b-[0px]"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}

@@ -61,9 +61,9 @@ export default function SignupForm({ onToggle, showToast }) {
       const data = await register(name, formData.email, formData.password);
       localStorage.setItem('user', JSON.stringify(data.user));
       showToast({ message: 'Account created successfully!', type: 'success' });
-      
+
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/complete-profile');
       }, 600);
     } catch (err) {
       showToast({ message: err.message || 'Network error', type: 'error' });

@@ -1,0 +1,46 @@
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Navbar from '../components/home/Navbar';
+import HeroSection from '../components/home/HeroSection';
+import FeaturesSection from '../components/home/FeaturesSection';
+import TrackingSection from '../components/home/TrackingSection';
+import TestimonialsSection from '../components/home/TestimonialsSection';
+import FAQSection from '../components/home/FAQSection';
+import CTASection from '../components/home/CTASection';
+import Footer from '../components/home/Footer';
+
+export default function Home() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    setIsLoggedIn(!!user);
+
+    const handleScroll = () => setScrolled(window.scrollY > 30);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handlePrimaryCTA = () => {
+    navigate(isLoggedIn ? '/dashboard' : '/auth');
+  };
+
+  return (
+    <div className="min-h-screen text-slate-900 bg-transparent">
+      <Navbar scrolled={scrolled} isLoggedIn={isLoggedIn} handlePrimaryCTA={handlePrimaryCTA} />
+
+      <main className="">
+        <HeroSection handlePrimaryCTA={handlePrimaryCTA} />
+        <FeaturesSection />
+        <TrackingSection />
+        <TestimonialsSection />
+        <FAQSection />
+        <CTASection handlePrimaryCTA={handlePrimaryCTA} />
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

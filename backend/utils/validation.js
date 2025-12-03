@@ -27,10 +27,21 @@ function isValidUrl(url) {
   }
 }
 
+function sanitizeString(str) {
+  if (typeof str !== 'string') return '';
+  return str.trim().replace(/[<>]/g, ''); // Basic XSS prevention
+}
+
+function isValidArray(arr) {
+  return Array.isArray(arr);
+}
+
 module.exports = {
   isValidEmail,
   isValidPassword,
   isValidName,
   isValidBio,
   isValidUrl,
+  sanitizeString,
+  isValidArray,
 };

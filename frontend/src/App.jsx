@@ -1,24 +1,129 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home';
 import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
+
+import LearnerLayout from './layouts/LearnerLayout';
+import DashboardPage from './pages/learner/DashboardPage';
+import SessionsPage from './pages/learner/SessionsPage';
+import SessionDetailsPage from './pages/learner/SessionDetailsPage';
+import BookingsPage from './pages/learner/BookingsPage';
+import ComingSoonPage from './pages/learner/ComingSoonPage';
+
+import MentorDashboard from './pages/MentorDashboard';
+import CompleteProfile from './pages/CompleteProfile';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import MentorsList from './pages/MentorsList';
+
+import CreateSession from './pages/CreateSession';
+import LaunchQuiz from './pages/LaunchQuiz';
+import QuizAttempt from './pages/QuizAttempt';
+import LiveSession from './pages/LiveSession';
+import UploadResource from './pages/UploadResource';
+
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import PendingSessions from './pages/admin/PendingSessions';
+import AllSessions from './pages/admin/AllSessions';
+import UsersList from './pages/admin/UsersList';
+import Reports from './pages/admin/Reports';
+
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Auth />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-  );
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/auth" element={<Auth />} />
+
+                <Route
+                    path="/complete-profile"
+                    element={
+                        <ProtectedRoute>
+                            <CompleteProfile />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Learner Routes */}
+                <Route
+                    path="/"
+                    element={
+                        <ProtectedRoute>
+                            <LearnerLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="sessions" element={<SessionsPage />} />
+                    <Route path="sessions/:id" element={<SessionDetailsPage />} />
+                    <Route path="bookings" element={<BookingsPage />} />
+                    <Route path="mentors" element={<MentorsList />} />
+                    <Route path="help" element={<ComingSoonPage />} />
+                    <Route path="settings" element={<ComingSoonPage />} />
+                </Route>
+
+                <Route
+                    path="/mentor-dashboard"
+                    element={
+                        <ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}>
+                            <MentorDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <Profile />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/profile/:id"
+                    element={
+                        <ProtectedRoute>
+                            <Profile />
+                        </ProtectedRoute>
+                    }
+                />
+
+
+                <Route path="/mentor/create-session" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><CreateSession /></ProtectedRoute>} />
+                <Route path="/mentor/upload-resource" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><UploadResource /></ProtectedRoute>} />
+                <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><LaunchQuiz /></ProtectedRoute>} />
+                <Route path="/quiz/:id/attempt" element={<ProtectedRoute><QuizAttempt /></ProtectedRoute>} />
+                <Route
+                    path="/session/:id/live"
+                    element={
+                        <ProtectedRoute>
+                            <LiveSession />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Admin Routes */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute allowedRoles={['ADMIN']}>
+                            <AdminLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="pending-sessions" element={<PendingSessions />} />
+                    <Route path="all-sessions" element={<AllSessions />} />
+                    <Route path="users" element={<UsersList />} />
+                    <Route path="reports" element={<Reports />} />
+                    <Route path="settings" element={<ComingSoonPage />} />
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;

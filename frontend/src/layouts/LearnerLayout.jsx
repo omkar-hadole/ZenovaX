@@ -1,0 +1,63 @@
+import React, { useState } from 'react';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import {
+    LayoutDashboard,
+    BookOpen,
+    Calendar,
+    FileText,
+    HelpCircle,
+    Settings,
+    Users,
+} from 'lucide-react';
+import Sidebar from '../components/dashboard/Sidebar';
+import Header from '../components/dashboard/Header';
+
+export default function LearnerLayout() {
+    const navigate = useNavigate();
+    const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+    const [activeTab, setActiveTab] = useState('Dashboard'); // Keep for now if Sidebar needs it, but we'll switch to NavLink
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/');
+    };
+
+    const sidebarItems = [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+        { icon: BookOpen, label: 'Browse Sessions', path: '/sessions' },
+        { icon: Calendar, label: 'My Bookings', path: '/bookings' },
+        { icon: Users, label: 'Mentors', path: '/mentors' },
+        { icon: HelpCircle, label: 'Help Center', path: '/help' },
+        { icon: Settings, label: 'Settings', path: '/settings' },
+    ];
+
+    return (
+        <div className="flex h-screen bg-[#F5F6FA] font-outfit">
+            <Sidebar
+                title="ZenovaX"
+                items={sidebarItems}
+                activeTab={activeTab} // We might need to remove this prop if we fully switch to NavLink in Sidebar
+                setActiveTab={setActiveTab} // Same here
+                onLogout={handleLogout}
+            >
+                <div className="bg-[#1C1C1E] rounded-[2rem] p-6 text-white relative overflow-hidden text-center mx-2 mb-4">
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mx-auto mb-3 text-black shadow-lg transform -rotate-12">
+                        <HelpCircle className="w-5 h-5" strokeWidth={2} />
+                    </div>
+                    <h3 className="text-lg font-bold mb-1">Help Center</h3>
+                    <p className="text-gray-400 text-xs mb-4 leading-relaxed">Having trouble in Learning? Please contact us.</p>
+                    <button className="bg-[#F6D483] text-black px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#FFE5A5] transition-all w-full shadow-lg shadow-orange-900/20">
+                        Go to Help Center
+                    </button>
+                </div>
+            </Sidebar>
+
+            <main className="flex-1 overflow-y-auto">
+                <Header user={user} title={`Welcome back ${user.name || 'Learner'}`} searchPlaceholder="Search courses" />
+                <Outlet />
+            </main>
+        </div>
+    );
+}

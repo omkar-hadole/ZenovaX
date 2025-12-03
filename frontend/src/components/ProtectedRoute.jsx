@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom';
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, allowedRoles }) {
   const userStr = localStorage.getItem('user');
-  
+
   if (!userStr) {
     return <Navigate to="/" replace />;
   }
@@ -13,6 +13,11 @@ export default function ProtectedRoute({ children }) {
       localStorage.removeItem('user');
       return <Navigate to="/" replace />;
     }
+
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
+      return <Navigate to="/" replace />;
+    }
+
   } catch (e) {
     localStorage.removeItem('user');
     return <Navigate to="/" replace />;
