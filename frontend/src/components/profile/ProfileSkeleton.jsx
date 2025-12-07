@@ -7,7 +7,6 @@ const SkeletonBase = ({ className }) => (
 export default function ProfileSkeleton() {
     return (
         <div className="min-h-screen bg-[#F8F9FC]">
-            {/* Header Skeleton */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between">
                     <SkeletonBase className="w-20 h-8 rounded-full" />
@@ -20,9 +19,7 @@ export default function ProfileSkeleton() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* LEFT COLUMN */}
                     <div className="lg:col-span-8 space-y-8">
-                        {/* Header Card Skeleton */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 h-64 relative overflow-hidden">
                             <div className="space-y-6 relative z-10">
                                 <SkeletonBase className="w-24 h-6 rounded-full" />
@@ -38,7 +35,6 @@ export default function ProfileSkeleton() {
                             </div>
                         </div>
 
-                        {/* About Section Skeleton */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-4">
                             <SkeletonBase className="w-24 h-6" />
                             <div className="space-y-2">
@@ -48,7 +44,6 @@ export default function ProfileSkeleton() {
                             </div>
                         </div>
 
-                        {/* Skills Section Skeleton */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-6">
                             <SkeletonBase className="w-32 h-6" />
                             <div className="flex flex-wrap gap-3">
@@ -59,7 +54,6 @@ export default function ProfileSkeleton() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN - SIDEBAR */}
                     <div className="lg:col-span-4 space-y-6">
                         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
                             <SkeletonBase className="w-32 h-32 rounded-full mb-6" />

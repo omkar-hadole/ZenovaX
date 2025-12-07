@@ -14,7 +14,6 @@ export default function DashboardView({
 }) {
     return (
         <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Left Column - 2/3 width */}
             <div className="lg:col-span-2 space-y-6">
                 <SessionList
                     title="Your Course"
@@ -42,15 +41,13 @@ export default function DashboardView({
                 />
             </div>
 
-            {/* Right Column - 1/3 width */}
             <div className="space-y-6">
-                {/* Current/Next Session Card */}
                 {(() => {
                     const now = new Date();
                     const currentOrNextSession = sessions.find(s => {
                         const start = new Date(s.scheduledAt);
                         const end = new Date(start.getTime() + s.duration * 60000);
-                        return end > now; // Find first session that hasn't ended
+                        return end > now;
                     });
 
                     if (!currentOrNextSession) return (
@@ -67,7 +64,6 @@ export default function DashboardView({
 
                     return (
                         <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300">
-                            {/* Background decorations */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl" />
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/20 rounded-full -ml-10 -mb-10 blur-xl" />
 
@@ -120,7 +116,6 @@ export default function DashboardView({
                                 <button
                                     onClick={() => {
                                         if (isRegistered) {
-                                            // Logic to join or view details
                                             setSelectedSession(currentOrNextSession);
                                         } else {
                                             setSelectedSession(currentOrNextSession);

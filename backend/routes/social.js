@@ -3,7 +3,6 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-// Follow a user
 router.post("/follow/:id", auth, async (req, res, next) => {
     try {
         const { id: followingId } = req.params;
@@ -29,7 +28,6 @@ router.post("/follow/:id", auth, async (req, res, next) => {
     }
 });
 
-// Unfollow a user
 router.delete("/follow/:id", auth, async (req, res, next) => {
     try {
         const { id: followingId } = req.params;
@@ -53,7 +51,6 @@ router.delete("/follow/:id", auth, async (req, res, next) => {
     }
 });
 
-// Like a mentor
 router.post("/like/:id", auth, async (req, res, next) => {
     try {
         const { id: mentorId } = req.params;
@@ -79,7 +76,6 @@ router.post("/like/:id", auth, async (req, res, next) => {
     }
 });
 
-// Unlike a mentor
 router.delete("/like/:id", auth, async (req, res, next) => {
     try {
         const { id: mentorId } = req.params;

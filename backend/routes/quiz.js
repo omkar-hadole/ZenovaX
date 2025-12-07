@@ -2,12 +2,10 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
-// Create a new quiz (Draft)
 router.post("/create", auth, async (req, res, next) => {
     try {
         const { sessionId, title, description, duration, totalMarks, passingMarks, questions } = req.body;
 
-        // Verify session belongs to mentor
         const session = await req.prisma.session.findUnique({
             where: { id: sessionId }
         });
@@ -20,7 +18,6 @@ router.post("/create", auth, async (req, res, next) => {
             return res.status(403).json({ error: "Not authorized to create quiz for this session" });
         }
 
-        // Create Quiz and Questions in transaction
         const quiz = await req.prisma.quiz.create({
             data: {
                 title,
@@ -34,7 +31,7 @@ router.post("/create", auth, async (req, res, next) => {
                 questions: {
                     create: questions.map((q, index) => ({
                         questionText: q.questionText,
-                        options: JSON.stringify(q.options), // Store as JSON string
+                        options: JSON.stringify(q.options),
                         correctAnswer: q.correctAnswer,
                         marks: parseInt(q.marks) || 1,
                         order: index + 1
@@ -52,7 +49,6 @@ router.post("/create", auth, async (req, res, next) => {
     }
 });
 
-// Launch a quiz (Set status to LIVE)
 router.post("/:id/launch", auth, async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -80,7 +76,6 @@ router.post("/:id/launch", auth, async (req, res, next) => {
             }
         });
 
-        // Notify session attendees (Optional - can be added later)
 
         res.json({ success: true, quiz: updatedQuiz });
     } catch (error) {
@@ -88,7 +83,6 @@ router.post("/:id/launch", auth, async (req, res, next) => {
     }
 });
 
-// Get quizzes for a session (for Mentor to view their quizzes)
 router.get("/session/:sessionId", auth, async (req, res, next) => {
     try {
         const { sessionId } = req.params;
@@ -110,7 +104,6 @@ router.get("/session/:sessionId", auth, async (req, res, next) => {
     }
 });
 
-// Get quiz for attempt (Learner view - No correct answers)
 router.get("/:id/attempt", auth, async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -125,7 +118,6 @@ router.get("/:id/attempt", auth, async (req, res, next) => {
                         options: true,
                         marks: true,
                         order: true
-                        // Exclude correctAnswer
                     },
                     orderBy: { order: 'asc' }
                 },
@@ -149,7 +141,6 @@ router.get("/:id/attempt", auth, async (req, res, next) => {
             return res.status(400).json({ error: "Quiz is not live" });
         }
 
-        // Check if user has booked the session
         const booking = await req.prisma.booking.findUnique({
             where: {
                 userId_sessionId: {
@@ -163,7 +154,6 @@ router.get("/:id/attempt", auth, async (req, res, next) => {
             return res.status(403).json({ error: "You must be registered for the session to take this quiz" });
         }
 
-        // Check if already attempted
         const existingAttempt = await req.prisma.quizAttempt.findFirst({
             where: {
                 quizId: id,
@@ -181,11 +171,10 @@ router.get("/:id/attempt", auth, async (req, res, next) => {
     }
 });
 
-// Submit quiz attempt
 router.post("/:id/submit", auth, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { answers } = req.body; // { questionId: selectedOption }
+        const { answers } = req.body; 
 
         const quiz = await req.prisma.quiz.findUnique({
             where: { id },
@@ -196,7 +185,6 @@ router.post("/:id/submit", auth, async (req, res, next) => {
             return res.status(404).json({ error: "Quiz not found" });
         }
 
-        // Calculate score
         let score = 0;
         const totalMarks = quiz.totalMarks;
         const attemptAnswers = [];
@@ -219,7 +207,6 @@ router.post("/:id/submit", auth, async (req, res, next) => {
 
         const isPassed = score >= quiz.passingMarks;
 
-        // Create attempt record
         const attempt = await req.prisma.quizAttempt.create({
             data: {
                 userId: req.user.id,
@@ -234,6 +221,15 @@ router.post("/:id/submit", auth, async (req, res, next) => {
             }
         });
 
+
+
+        const stats = await req.prisma.quizAttempt.aggregate({
+            where: { quizId: id },
+            _avg: { score: true }
+        });
+
+        const averageScore = stats._avg.score ? parseFloat(stats._avg.score.toFixed(1)) : score;
+
         res.json({
             success: true,
             result: {
@@ -241,6 +237,7 @@ router.post("/:id/submit", auth, async (req, res, next) => {
                 totalMarks,
                 isPassed,
                 passingMarks: quiz.passingMarks,
+                averageScore,
                 answers: attemptAnswers.map(a => ({
                     questionId: a.questionId,
                     selectedAnswer: a.selectedAnswer,

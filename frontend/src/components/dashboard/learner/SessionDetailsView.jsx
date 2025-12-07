@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { apiCall } from '../../../utils/api';
 
-// Write Review Component
 const WriteReview = ({ sessionId, onReviewSubmit }) => {
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
@@ -105,7 +104,6 @@ const WriteReview = ({ sessionId, onReviewSubmit }) => {
     );
 };
 
-// Reviews Component with fetching and dynamic display
 const ReviewsSection = ({ session, onReviewSubmit }) => {
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, distribution: [] });
@@ -132,11 +130,6 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
             setHasMore(data.pagination?.page < data.pagination?.totalPages);
             setPage(pageNum);
 
-            // Calculate stats (ideally should be from backend, but keeping frontend logic for now or fetching separate stats)
-            // Note: Stats calculation here is only based on fetched reviews if pagination is used, which is wrong.
-            // We should fetch stats separately or use the total from pagination.
-            // For now, let's assume stats endpoint exists or we rely on what we have.
-            // Actually, let's fetch stats separately to be accurate.
             fetchStats();
 
         } catch (error) {
@@ -148,15 +141,6 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
     };
 
     const fetchStats = async () => {
-        // Assuming we have a stats endpoint or we can use the one from mentor stats but specific to session?
-        // The backend doesn't have a specific session stats endpoint yet.
-        // For now, we'll skip accurate stats update on pagination or implement it if needed.
-        // Let's use the initial fetch logic but we need ALL reviews for stats.
-        // Or we can add a stats endpoint.
-        // Given the constraints, I'll leave stats as is (might be inaccurate if not all loaded) or better,
-        // I'll add a quick stats calculation in the backend response or separate call.
-        // The backend route I just modified returns `total`.
-        // I'll stick to basic stats for now.
     };
 
     useEffect(() => {
@@ -165,7 +149,7 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
 
     const handleReviewSubmitSuccess = () => {
         onReviewSubmit();
-        fetchReviews(1, true); // Re-fetch reviews to update list
+        fetchReviews(1, true); 
     };
 
     const loadMoreReviews = () => {
@@ -185,9 +169,7 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
             )}
 
             <div className="flex flex-col md:flex-row gap-8">
-                {/* Stats Column - Placeholder or simplified since we paginate */}
                 <div className="w-full md:w-1/3 bg-gray-50 p-6 rounded-2xl h-fit">
-                    {/* Stats display logic here - might need adjustment if we don't have all reviews */}
                     <div className="flex flex-col items-center justify-center mb-6">
                         <span className="text-5xl font-bold text-gray-900">{session.mentor?.averageRating?.toFixed(1) || "0.0"}</span>
                         <div className="flex gap-1 my-2">
@@ -199,7 +181,6 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
                     </div>
                 </div>
 
-                {/* Reviews List Column */}
                 <div className="w-full md:w-2/3 space-y-6">
                     {isLoading ? (
                         <p className="text-gray-500">Loading reviews...</p>
@@ -259,12 +240,10 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
 export default function SessionDetailsView({ session, onBack, onRegister, isRegistering }) {
     const [showResources, setShowResources] = useState(true);
     const [showQuizzes, setShowQuizzes] = useState(false);
-    // Local state to force re-render when review is submitted (simple way)
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
-    // Mock data (keep your real data)
     const mockSession = {
-        id: "session123", // Added for review system
+        id: "session123",
         title: "Advanced React Patterns & Performance Optimization",
         description:
             "Master the art of building scalable React applications. In this comprehensive session, we'll dive deep into custom hooks, context optimization, suspense, error boundaries, and advanced performance tuning techniques used by top tech companies.",
@@ -276,8 +255,8 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
         maxSeats: 40,
         availableSeats: 8,
         isBooked: false,
-        hasReviewed: false, // Added for review system
-        status: "UPCOMING", // Added for action card logic
+        hasReviewed: false,
+        status: "UPCOMING",
         topics: ["Custom Hooks & Composition", "Context API Performance", "Server Components", "Code Splitting & Suspense"],
         mentor: {
             name: "Sarah Johnson",
@@ -300,17 +279,14 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
     const S = session || mockSession;
 
-    // Handle review submit success
     const handleReviewSubmit = () => {
         setReviewSubmitted(true);
-        // Ideally fetch updated session data here
-        S.hasReviewed = true; // Optimistic update
+        S.hasReviewed = true;
         alert("Review submitted successfully!");
     };
 
     return (
         <div className="min-h-screen bg-[#F8F9FC]">
-            {/* HERO SECTION */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-4 flex items-center justify-between">
@@ -339,10 +315,8 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-                    {/* LEFT COLUMN - MAIN CONTENT */}
                     <div className="lg:col-span-8 space-y-8">
 
-                        {/* HEADER CARD */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
 
@@ -376,7 +350,6 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                             </div>
                         </div>
 
-                        {/* ABOUT SECTION */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <FileText className="w-5 h-5 text-gray-400" />
@@ -387,7 +360,6 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                             </p>
                         </div>
 
-                        {/* TOPICS SECTION */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5 text-gray-400" />
@@ -413,7 +385,6 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                             </div>
                         </div>
 
-                        {/* MATERIALS SECTION - Only for registered users */}
                         {S.isBooked && (
                             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                                 <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -493,18 +464,15 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                             </div>
                         )}
 
-                        {/* REVIEWS SECTION */}
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                             <ReviewsSection session={S} onReviewSubmit={handleReviewSubmit} />
                         </div>
 
                     </div>
 
-                    {/* RIGHT COLUMN - SIDEBAR */}
                     <div className="lg:col-span-4 space-y-6">
                         <div className="sticky top-24 space-y-6">
 
-                            {/* INSTRUCTOR CARD */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
                                 <div className="flex items-start justify-between mb-6">
                                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Instructor</h3>
@@ -530,7 +498,6 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                 </button>
                             </div>
 
-                            {/* ACTION CARD */}
                             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-white/50">
                                 <div className="mb-8">
                                     <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-3">Registration Fee</p>

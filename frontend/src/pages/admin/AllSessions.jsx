@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Trash2, ExternalLink } from 'lucide-react';
+import Pagination from '../../components/common/Pagination';
 
 export default function AllSessions() {
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const fetchSessions = async () => {
         try {
@@ -33,6 +36,11 @@ export default function AllSessions() {
         }
     };
 
+    // Pagination Logic
+    const totalPages = Math.ceil(sessions.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentSessions = sessions.slice(startIndex, startIndex + itemsPerPage);
+
     if (loading) return <div className="p-8">Loading sessions...</div>;
 
     return (
@@ -53,7 +61,7 @@ export default function AllSessions() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {sessions.map((session) => (
+                            {currentSessions.map((session) => (
                                 <tr key={session.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="text-sm font-medium text-gray-900">{session.title}</div>
@@ -67,9 +75,9 @@ export default function AllSessions() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-bold ${session.status === 'UPCOMING' ? 'bg-blue-100 text-blue-700' :
-                                                session.status === 'LIVE' ? 'bg-red-100 text-red-700' :
-                                                    session.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                                        'bg-gray-100 text-gray-700'
+                                            session.status === 'LIVE' ? 'bg-red-100 text-red-700' :
+                                                session.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                    'bg-gray-100 text-gray-700'
                                             }`}>
                                             {session.status}
                                         </span>
@@ -99,6 +107,12 @@ export default function AllSessions() {
                     </table>
                 </div>
             </div>
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
         </div>
     );
 }

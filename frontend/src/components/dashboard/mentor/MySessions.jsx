@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlayCircle, Calendar, Clock, Users, Filter, MoreVertical } from 'lucide-react';
+import { PlayCircle, Calendar, Clock, Users, Filter, MoreVertical, Edit } from 'lucide-react';
 
 export default function MySessions({ sessions }) {
     const navigate = useNavigate();
@@ -15,7 +15,6 @@ export default function MySessions({ sessions }) {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">My Sessions</h2>
@@ -97,16 +96,34 @@ export default function MySessions({ sessions }) {
                             </div>
 
                             <div className="flex gap-3 mt-auto">
-                                <button className="flex-1 bg-[#C9C7F5]/20 text-[#5a59b5] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#C9C7F5]/40 transition-colors flex items-center justify-center gap-2">
-                                    <PlayCircle size={18} />
-                                    Start
-                                </button>
-                                <button
-                                    onClick={() => navigate(`/sessions/${session.id}`)}
-                                    className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                                >
-                                    Details
-                                </button>
+                                {session.isRequest ? (
+                                    <>
+                                        <button
+                                            onClick={() => navigate(`/mentor/edit-session/${session.id.replace('req-', '')}`)}
+                                            className="flex-1 bg-yellow-50 text-yellow-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-yellow-100 transition-colors flex items-center justify-center gap-2 border border-yellow-200"
+                                        >
+                                            <Edit size={18} />
+                                            Edit Request
+                                        </button>
+                                        <div className="px-4 py-2.5 rounded-xl text-sm font-bold text-gray-400 bg-gray-50 border border-gray-100 flex items-center gap-2 cursor-help" title="Waiting for admin approval">
+                                            <Clock size={16} />
+                                            Pending
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button className="flex-1 bg-[#C9C7F5]/20 text-[#5a59b5] px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#C9C7F5]/40 transition-colors flex items-center justify-center gap-2">
+                                            <PlayCircle size={18} />
+                                            Start
+                                        </button>
+                                        <button
+                                            onClick={() => navigate(`/sessions/${session.id}`)}
+                                            className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                                        >
+                                            Details
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))

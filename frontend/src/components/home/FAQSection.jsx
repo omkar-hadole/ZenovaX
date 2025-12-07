@@ -3,24 +3,29 @@ import { ChevronDown } from 'lucide-react';
 
 const faqItems = [
     {
-        question: 'What key features should a Learning Management SaaS landing page include?',
+        question: 'Are peer sessions free or paid?',
         answer:
-            'Highlight core product benefits, student success metrics, testimonials, pricing clarity, and compelling CTAs that nudge visitors to try the product.',
+            'Both. Mentors can offer free or paid sessions depending on their expertise and availability. You choose based on ratings, topic, and price.',
     },
     {
-        question: 'How can I make my LMS landing page visually appealing?',
+        question: 'Who teaches in these sessions?',
         answer:
-            'Blend a soft color palette with generous white space, large hero imagery, and consistent icons to keep the experience premium.',
+            'Sessions are led by verified student mentors who recently mastered the same topic. You learn directly from active learners, not random tutors.',
     },
     {
-        question: 'How do I optimize my LMS landing page for conversions?',
+        question: 'What happens after a session?',
         answer:
-            'Focus on social proof, frictionless signup flows, and direct language that states exactly how Skillify helps.',
+            'You receive topic notes, practice questions, and quizzes (if offered by the mentor). You can also rate and review the mentor to improve quality.',
     },
     {
-        question: 'What should I include in the pricing section of my LMS page?',
+        question: 'How does rating and review help me?',
         answer:
-            'Provide tier comparisons, highlight most popular plans, and surface guarantees or trials right beside the pricing table.',
+            'Ratings help you choose better mentors. Reviews improve the teaching quality on the platform and reward mentors who deliver genuine value.',
+    },
+    {
+        question: 'Is ZenovaX only for one subject?',
+        answer:
+            'No. You can learn multiple topics from different mentors. Subjects will expand over time based on student demand and mentor expertise.',
     },
 ];
 
@@ -46,11 +51,12 @@ export default function FAQSection() {
     return (
         <section id="faq" className="mt-24 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
             <div className="max-w-4xl mx-auto text-center">
-                <h2 className="text-3xl lg:text-4xl font-bold">Frequently asked Questions</h2>
+                <h2 className="text-3xl lg:text-4xl font-bold">Got Questions? We’ve Got Answers.</h2>
             </div>
             <div className="mt-10 max-w-4xl mx-auto space-y-4">
                 {faqItems.map((item, idx) => (
                     <FAQItem key={item.question} question={item.question} answer={item.answer} defaultOpen={idx === 0} />
+                    
                 ))}
             </div>
         </section>

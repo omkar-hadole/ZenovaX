@@ -211,7 +211,6 @@ export default function CompleteProfile() {
 
     return (
         <div className="min-h-screen bg-[#F4F4F9] relative overflow-hidden flex items-center justify-center py-6">
-            {/* Background Blobs */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
@@ -224,7 +223,6 @@ export default function CompleteProfile() {
                 </button>
 
                 <div className="rounded-[2rem] bg-white shadow-xl shadow-purple-100/50 border border-[#C9C7F5]/30 p-6 md:p-10 space-y-6 relative overflow-hidden">
-                    {/* Decorative Corner */}
                     <div className="absolute top-0 right-0 w-40 h-40 bg-[#C9C7F5]/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
 
                     <div className="space-y-2 relative z-10">

@@ -7,7 +7,6 @@ const SkeletonBase = ({ className }) => (
 export default function DashboardSkeleton() {
     return (
         <div className="animate-in fade-in duration-500 space-y-8 p-6">
-            {/* Stats Cards Skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
@@ -21,9 +20,7 @@ export default function DashboardSkeleton() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column Skeleton */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Featured/Upcoming Session Skeleton */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-64 relative overflow-hidden">
                         <div className="flex justify-between items-start mb-6">
                             <div className="space-y-3">
@@ -38,7 +35,6 @@ export default function DashboardSkeleton() {
                         </div>
                     </div>
 
-                    {/* List Items Skeleton */}
                     <div className="space-y-4">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
@@ -58,9 +54,7 @@ export default function DashboardSkeleton() {
                     </div>
                 </div>
 
-                {/* Right Column Skeleton */}
                 <div className="space-y-6">
-                    {/* Quick Actions / Calendar Skeleton */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
                         <SkeletonBase className="w-32 h-6 mb-4" />
                         <div className="grid grid-cols-2 gap-3">
@@ -70,7 +64,6 @@ export default function DashboardSkeleton() {
                         </div>
                     </div>
 
-                    {/* Recent Activity Skeleton */}
                     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
                         <SkeletonBase className="w-40 h-6 mb-2" />
                         {[1, 2, 3].map((i) => (

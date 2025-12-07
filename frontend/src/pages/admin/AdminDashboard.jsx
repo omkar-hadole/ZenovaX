@@ -42,7 +42,6 @@ export default function AdminDashboard() {
 
     return (
         <div className="p-8 space-y-8">
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Total Sessions"
@@ -70,7 +69,6 @@ export default function AdminDashboard() {
                 />
             </div>
 
-            {/* Recent Sessions */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">Recently Added Sessions</h2>
                 <div className="overflow-x-auto">

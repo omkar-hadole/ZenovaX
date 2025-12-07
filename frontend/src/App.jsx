@@ -13,6 +13,7 @@ import MentorDashboard from './pages/MentorDashboard';
 import CompleteProfile from './pages/CompleteProfile';
 import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
+import DesktopOnlyGuard from './components/DesktopOnlyGuard';
 
 import MentorsList from './pages/MentorsList';
 
@@ -40,17 +41,20 @@ function App() {
                     path="/complete-profile"
                     element={
                         <ProtectedRoute>
-                            <CompleteProfile />
+                            <DesktopOnlyGuard>
+                                <CompleteProfile />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 />
 
-                {/* Learner Routes */}
                 <Route
                     path="/"
                     element={
                         <ProtectedRoute>
-                            <LearnerLayout />
+                            <DesktopOnlyGuard>
+                                <LearnerLayout />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 >
@@ -67,7 +71,9 @@ function App() {
                     path="/mentor-dashboard"
                     element={
                         <ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}>
-                            <MentorDashboard />
+                            <DesktopOnlyGuard>
+                                <MentorDashboard />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 />
@@ -76,7 +82,9 @@ function App() {
                     path="/profile"
                     element={
                         <ProtectedRoute>
-                            <Profile />
+                            <DesktopOnlyGuard>
+                                <Profile />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 />
@@ -85,31 +93,37 @@ function App() {
                     path="/profile/:id"
                     element={
                         <ProtectedRoute>
-                            <Profile />
+                            <DesktopOnlyGuard>
+                                <Profile />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 />
 
 
-                <Route path="/mentor/create-session" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><CreateSession /></ProtectedRoute>} />
-                <Route path="/mentor/upload-resource" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><UploadResource /></ProtectedRoute>} />
-                <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><LaunchQuiz /></ProtectedRoute>} />
-                <Route path="/quiz/:id/attempt" element={<ProtectedRoute><QuizAttempt /></ProtectedRoute>} />
+                <Route path="/mentor/create-session" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><CreateSession /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/mentor/edit-session/:id" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><CreateSession /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/mentor/upload-resource" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><UploadResource /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><LaunchQuiz /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/quiz/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><QuizAttempt /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route
                     path="/session/:id/live"
                     element={
                         <ProtectedRoute>
-                            <LiveSession />
+                            <DesktopOnlyGuard>
+                                <LiveSession />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 />
 
-                {/* Admin Routes */}
                 <Route
                     path="/admin"
                     element={
                         <ProtectedRoute allowedRoles={['ADMIN']}>
-                            <AdminLayout />
+                            <DesktopOnlyGuard>
+                                <AdminLayout />
+                            </DesktopOnlyGuard>
                         </ProtectedRoute>
                     }
                 >

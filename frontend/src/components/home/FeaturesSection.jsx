@@ -3,22 +3,22 @@ import { BookOpen, Calendar, Globe } from 'lucide-react';
 
 const featureCards = [
     {
-        title: 'Track your Progress',
-        description: 'Monitor weekly activity and stay ahead of your goals.',
-        accent: 'from-[#e9ecff] to-white',
+        title: 'Book Peer Sessions (Free or Paid)',
+        description: 'Choose mentors based on ratings and topic expertise. Learn through focused topic-based sessions.',
+        accent: 'from-[#fff3e6] to-white',
         icon: BookOpen,
     },
     {
-        title: 'Organize Daily Schedule',
-        description: 'Plan your classes, tasks, and meetings in one view.',
-        accent: 'from-[#f4e9ff] to-white',
-        icon: Calendar,
+        title: 'Access Resources & Quizzes',
+        description: 'Get curated notes, assignments, and quizzes after sessions to strengthen your understanding.',
+        accent: 'from-[#e8ffef] to-white',
+        icon: Globe,
     },
     {
-        title: 'Enroll in New Courses',
-        description: 'Browse curated courses aligned to your career path.',
-        accent: 'from-[#e9fff7] to-white',
-        icon: Globe,
+        title: 'Rate & Review Your Mentor',
+        description: 'Help improve the platform by rating the mentor’s teaching, clarity, and usefulness of the session.',
+        accent: 'from-[#f3e8ff] to-white',
+        icon: Calendar,
     },
 ];
 
@@ -27,9 +27,11 @@ export default function FeaturesSection() {
         <section id="features" className="mt-24 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
             <div className="max-w-6xl mx-auto text-center">
                 <div className='max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center'>
-                    <h2 className="text-3xl lg:text-4xl font-bold mt-4 text-left">Smart Learning Tools to Track & Organize Your Progress</h2>
+                    <h2 className="text-3xl lg:text-4xl font-bold mt-4 text-left">
+                        Learn Faster With Real Peer Collaboration
+                    </h2>
                     <p className="mt-3 text-slate-500 max-w-3xl mx-auto text-left">
-                        Monitor study habits, schedule lessons, and enroll in fresh courses with the exact look & feel you designed.
+                        Choose a topic, solve problems live with peers, and get actionable feedback and assignments tailored to your mistakes.
                     </p>
                 </div>
                 <div className="mt-12 grid md:grid-cols-3 gap-6">

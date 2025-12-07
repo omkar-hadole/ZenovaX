@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
 const authenticateToken = require('../middleware/auth');
 
-// Create a new resource
-router.post('/create', authenticateToken, async (req, res) => {
+router.post('/create', authenticateToken, async (req, res, next) => {
     try {
         const { title, description, fileUrl, fileType, sessionId } = req.body;
         const uploaderId = req.user.id;
@@ -14,7 +11,6 @@ router.post('/create', authenticateToken, async (req, res) => {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
-        // Verify session ownership
         const session = await req.prisma.session.findUnique({
             where: { id: sessionId },
         });

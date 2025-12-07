@@ -13,7 +13,6 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
 
   return (
     <nav className="fixed top-4 left-0 right-0 z-50 flex justify-center transition-all duration-300">
-      {/* Floating white navbar box */}
       <div
         className={`
           w-[94%] md:w-[90%] lg:w-[85%]
@@ -22,13 +21,11 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
           ${scrolled ? "bg-white/80 backdrop-blur-2xl shadow-xl" : "bg-white/80 backdrop-blur-xl shadow"}
         `}
       >
-        {/* Logo */}
         <div className="flex items-center gap-3">
 
             <img src={logo} alt="ZenovaX Logo" className="h-6 object-contain drop-shadow-sm" />
         </div>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <a
@@ -41,7 +38,6 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
           ))}
         </div>
 
-        {/* Desktop Buttons */}
         <div className="hidden md:flex items-center gap-4">
           {!isLoggedIn ? (
             <>

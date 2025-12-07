@@ -29,7 +29,7 @@ function isValidUrl(url) {
 
 function sanitizeString(str) {
   if (typeof str !== 'string') return '';
-  return str.trim().replace(/[<>]/g, ''); // Basic XSS prevention
+  return str.trim().replace(/[<>]/g, ''); 
 }
 
 function isValidArray(arr) {

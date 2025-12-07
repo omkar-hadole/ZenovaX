@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
     const fetchSessions = async () => {
         try {
-            const data = await apiCall('/sessions/all?limit=10'); // Fetch more to ensure we have enough after filtering
+            const data = await apiCall('/sessions/all?limit=10');
             setSessions(data.sessions || []);
         } catch (error) {
             console.error(error);

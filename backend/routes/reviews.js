@@ -3,7 +3,6 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 
-// Create a review
 router.post('/create', auth, async (req, res) => {
     const { sessionId, rating, comment, isAnonymous } = req.body;
     const userId = req.user.id;
@@ -13,7 +12,6 @@ router.post('/create', auth, async (req, res) => {
     }
 
     try {
-        // Check if session exists
         const session = await req.prisma.session.findUnique({
             where: { id: sessionId },
             include: { mentor: true }
@@ -23,7 +21,6 @@ router.post('/create', auth, async (req, res) => {
             return res.status(404).json({ error: 'Session not found' });
         }
 
-        // Check if user has a booking
         const booking = await req.prisma.booking.findUnique({
             where: {
                 userId_sessionId: {
@@ -41,9 +38,7 @@ router.post('/create', auth, async (req, res) => {
             return res.status(400).json({ error: 'You have already reviewed this session' });
         }
 
-        // Create review and update booking/mentor stats in a transaction
         await req.prisma.$transaction(async (prisma) => {
-            // 1. Create Review
             await prisma.review.create({
                 data: {
                     authorId: userId,
@@ -55,20 +50,17 @@ router.post('/create', auth, async (req, res) => {
                 }
             });
 
-            // 2. Update Booking
             await prisma.booking.update({
                 where: { id: booking.id },
                 data: { hasReviewed: true }
             });
 
-            // 3. Recalculate Mentor Stats
             const stats = await prisma.review.aggregate({
                 where: { mentorId: session.mentorId },
                 _avg: { rating: true },
                 _count: true
             });
 
-            // 4. Update Mentor
             await prisma.user.update({
                 where: { id: session.mentorId },
                 data: {
@@ -77,7 +69,7 @@ router.post('/create', auth, async (req, res) => {
                 }
             });
         }, {
-            timeout: 20000 // Increase timeout to 20s
+            timeout: 20000 
         });
 
         res.status(201).json({ message: 'Review submitted successfully' });
@@ -86,7 +78,6 @@ router.post('/create', auth, async (req, res) => {
     }
 });
 
-// Get reviews for a session
 router.get('/session/:sessionId', async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -113,7 +104,6 @@ router.get('/session/:sessionId', async (req, res, next) => {
             })
         ]);
 
-        // Process anonymous reviews
         const processedReviews = reviews.map(review => {
             if (review.isAnonymous) {
                 return {
@@ -141,12 +131,11 @@ router.get('/session/:sessionId', async (req, res, next) => {
     }
 });
 
-// Get reviews for a mentor (Profile)
 router.get('/mentor/:mentorId', async (req, res) => {
     try {
         const reviews = await req.prisma.review.findMany({
             where: { mentorId: req.params.mentorId },
-            take: 5, // Limit to latest 5
+            take: 5,
             include: {
                 author: {
                     select: {
@@ -163,7 +152,6 @@ router.get('/mentor/:mentorId', async (req, res) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // Process anonymous reviews
         const processedReviews = reviews.map(review => {
             if (review.isAnonymous) {
                 return {
@@ -183,7 +171,6 @@ router.get('/mentor/:mentorId', async (req, res) => {
     }
 });
 
-// Get authenticated mentor's reviews
 router.get('/my-reviews', auth, async (req, res, next) => {
     try {
         const reviews = await req.prisma.review.findMany({
@@ -204,7 +191,6 @@ router.get('/my-reviews', auth, async (req, res, next) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // Process anonymous reviews
         const processedReviews = reviews.map(review => {
             if (review.isAnonymous) {
                 return {
@@ -224,12 +210,10 @@ router.get('/my-reviews', auth, async (req, res, next) => {
     }
 });
 
-// Get review stats for authenticated mentor
 router.get('/stats', auth, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Get all reviews for this mentor
         const reviews = await req.prisma.review.findMany({
             where: { mentorId: userId },
             select: { rating: true }
@@ -240,7 +224,6 @@ router.get('/stats', auth, async (req, res) => {
             ? reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews
             : 0;
 
-        // Calculate distribution
         const distribution = [5, 4, 3, 2, 1].map(star => {
             const count = reviews.filter(r => r.rating === star).length;
             const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
@@ -258,12 +241,10 @@ router.get('/stats', auth, async (req, res) => {
     }
 });
 
-// Get review stats for a specific mentor (Public)
 router.get('/stats/:mentorId', async (req, res) => {
     try {
         const userId = req.params.mentorId;
 
-        // Get all reviews for this mentor
         const reviews = await req.prisma.review.findMany({
             where: { mentorId: userId },
             select: { rating: true }
@@ -274,7 +255,6 @@ router.get('/stats/:mentorId', async (req, res) => {
             ? reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews
             : 0;
 
-        // Calculate distribution
         const distribution = [5, 4, 3, 2, 1].map(star => {
             const count = reviews.filter(r => r.rating === star).length;
             const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
