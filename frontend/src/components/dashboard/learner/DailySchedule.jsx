@@ -20,7 +20,6 @@ export default function DailySchedule({ bookings = [] }) {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [hoveredDate, setHoveredDate] = useState(null);
 
-    // Update time every minute
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
@@ -41,7 +40,6 @@ export default function DailySchedule({ bookings = [] }) {
         end: endDate
     });
 
-    // Get bookings for a specific date
     const getBookingsForDate = (date) => {
         return bookings.filter(booking =>
             isSameDay(parseISO(booking.scheduledAt), date)
@@ -50,7 +48,6 @@ export default function DailySchedule({ bookings = [] }) {
 
     return (
         <section className="bg-white rounded-[2rem] shadow-sm border border-black/5 overflow-visible relative z-10 hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
-            {/* Compact Header */}
             <div className="px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <h3 className="text-base font-light text-gray-800 tracking-tight">
@@ -73,7 +70,6 @@ export default function DailySchedule({ bookings = [] }) {
             </div>
 
             <div className="px-5 pb-4">
-                {/* Calendar Grid */}
                 <div className="grid grid-cols-7 gap-1 text-center mb-2">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                         <div key={index} className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{day}</div>
@@ -107,7 +103,6 @@ export default function DailySchedule({ bookings = [] }) {
                                     )}
                                 </button>
 
-                                {/* Hover Tooltip */}
                                 {hasEvent && (
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-white rounded-xl shadow-xl border border-black/5 p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 pointer-events-none transform translate-y-2 group-hover:translate-y-0">
                                         <div className="text-[10px] font-bold text-gray-900 mb-2 pb-2 border-b border-gray-100 flex items-center justify-between">
@@ -136,7 +131,6 @@ export default function DailySchedule({ bookings = [] }) {
                                                 </div>
                                             ))}
                                         </div>
-                                        {/* Arrow */}
                                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-white drop-shadow-sm" />
                                     </div>
                                 )}

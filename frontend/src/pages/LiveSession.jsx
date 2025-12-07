@@ -10,12 +10,8 @@ export default function LiveSession() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, we'd fetch session details and connect to video service
-    // For now, we'll just simulate fetching
     const fetchSession = async () => {
       try {
-        // We can reuse the booking endpoint or a specific session details endpoint
-        // For now, let's just mock it or fetch from /all if needed, but let's assume we have data
         setLoading(false);
       } catch (error) {
         console.error(error);
@@ -27,7 +23,6 @@ export default function LiveSession() {
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col">
-      {/* Header */}
       <div className="h-16 border-b border-gray-800 flex items-center justify-between px-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -46,9 +41,7 @@ export default function LiveSession() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex">
-        {/* Video Area */}
         <div className="flex-1 p-6 flex items-center justify-center bg-gray-950 relative">
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -58,7 +51,6 @@ export default function LiveSession() {
             <p className="text-gray-500">The session will begin shortly.</p>
           </div>
           
-          {/* Controls */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-gray-900/90 p-4 rounded-2xl border border-gray-800 backdrop-blur-sm">
             <button className="p-4 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors">
               <MicOff className="w-6 h-6" />
@@ -78,7 +70,6 @@ export default function LiveSession() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="w-80 border-l border-gray-800 bg-gray-900 flex flex-col">
           <div className="p-4 border-b border-gray-800">
             <h3 className="font-bold">Live Chat</h3>

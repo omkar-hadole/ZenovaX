@@ -75,15 +75,12 @@ exports.approveSession = async (req, res) => {
             return res.status(400).json({ error: "Request is not pending" });
         }
 
-        // Transaction to approve request and create session
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Update request status
             await tx.sessionRequest.update({
                 where: { id: requestId },
                 data: { status: 'APPROVED', reviewedAt: new Date() }
             });
 
-            // 2. Create Session
             const session = await tx.session.create({
                 data: {
                     title: sessionRequest.title,
@@ -105,7 +102,6 @@ exports.approveSession = async (req, res) => {
                 }
             });
 
-            // 3. Create Notification for Mentor
             await tx.notification.create({
                 data: {
                     userId: sessionRequest.mentorId,
@@ -117,12 +113,14 @@ exports.approveSession = async (req, res) => {
             });
 
             return session;
+        }, {
+            timeout: 10000
         });
 
         res.json({ message: "Session approved successfully", session: result });
     } catch (error) {
         console.error("Approve Session Error:", error);
-        res.status(500).json({ error: "Failed to approve session" });
+        res.status(500).json({ error: "Failed to approve session", details: error.message });
     }
 };
 
@@ -140,8 +138,6 @@ exports.rejectSession = async (req, res) => {
             data: { status: 'REJECTED', reviewedAt: new Date() }
         });
 
-        // Notify Mentor (Optional, but good practice)
-        // Fetch mentorId first if needed, but update returns the object
         const request = await prisma.sessionRequest.findUnique({ where: { id: requestId } });
         if (request) {
             await prisma.notification.create({
@@ -256,7 +252,7 @@ exports.getReports = async (req, res) => {
 exports.handleReportAction = async (req, res) => {
     try {
         const prisma = req.prisma;
-        const { reportId, action } = req.body; // action: 'DELETE_SESSION' or 'IGNORE'
+        const { reportId, action } = req.body; 
 
         if (!reportId || !action) {
             return res.status(400).json({ error: "Report ID and action are required" });

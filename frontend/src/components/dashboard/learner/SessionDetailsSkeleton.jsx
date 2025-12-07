@@ -7,7 +7,6 @@ const SkeletonBase = ({ className }) => (
 export default function SessionDetailsSkeleton() {
     return (
         <div className="min-h-screen bg-[#F8F9FC] pb-12">
-            {/* Hero Section Skeleton */}
             <div className="bg-white border-b border-gray-200 pb-8 pt-6">
                 <div className="max-w-7xl mx-auto px-6">
                     <SkeletonBase className="w-24 h-8 mb-6 rounded-full" />
@@ -23,9 +22,7 @@ export default function SessionDetailsSkeleton() {
             </div>
 
             <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* About Card */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-4">
                         <SkeletonBase className="w-32 h-8" />
                         <div className="space-y-2">
@@ -35,7 +32,6 @@ export default function SessionDetailsSkeleton() {
                         </div>
                     </div>
 
-                    {/* Instructor Card */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                         <SkeletonBase className="w-40 h-8 mb-6" />
                         <div className="flex items-center gap-4">
@@ -48,7 +44,6 @@ export default function SessionDetailsSkeleton() {
                     </div>
                 </div>
 
-                {/* Right Column (Sidebar) */}
                 <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-6">
                         <SkeletonBase className="w-full h-64 rounded-2xl" />

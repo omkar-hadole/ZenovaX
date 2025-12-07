@@ -12,7 +12,6 @@ export default function MentorDashboardView({ stats, mySessions, sessionRequests
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {[
                     { icon: Calendar, label: 'Total Sessions', value: stats.totalSessions, bg: 'bg-[#C9C7F5]', text: 'text-[#5a59b5]', border: 'border-[#b8b6e5]' },
@@ -33,9 +32,7 @@ export default function MentorDashboardView({ stats, mySessions, sessionRequests
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - 2/3 width */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Upcoming Sessions (Top 3) */}
                     <section>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-800">Upcoming Sessions</h3>
@@ -50,7 +47,6 @@ export default function MentorDashboardView({ stats, mySessions, sessionRequests
                         <div className="space-y-4">
                             {mySessions.filter(s => new Date(s.scheduledAt) > new Date()).length > 0 ? (
                                 <>
-                                    {/* Next Session - Featured Card */}
                                     {mySessions.filter(s => new Date(s.scheduledAt) > new Date()).slice(0, 1).map(session => (
                                         <div key={session.id} className="bg-gradient-to-br from-[#7A79E6] to-[#5a59b5] rounded-2xl p-6 text-white relative overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl" />
@@ -84,7 +80,6 @@ export default function MentorDashboardView({ stats, mySessions, sessionRequests
                                         </div>
                                     ))}
 
-                                    {/* Other Upcoming Sessions */}
                                     {mySessions.filter(s => new Date(s.scheduledAt) > new Date()).slice(1, 3).map((session) => (
                                         <div key={session.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all duration-300">
                                             <div className="flex items-center gap-4">
@@ -125,7 +120,6 @@ export default function MentorDashboardView({ stats, mySessions, sessionRequests
                     <SessionRequests requests={sessionRequests} />
                 </div>
 
-                {/* Right Column - 1/3 width */}
                 <div className="space-y-6">
                     <QuickActions />
                     <RatingSummary stats={reviewStats} />

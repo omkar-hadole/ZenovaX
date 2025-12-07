@@ -149,7 +149,6 @@ exports.getMe = async (req, res, next) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // Parse mentorSkills if it exists
         if (user.mentorSkills) {
             try {
                 user.mentorSkills = JSON.parse(user.mentorSkills);
@@ -158,7 +157,6 @@ exports.getMe = async (req, res, next) => {
             }
         }
 
-        // Add counts
         const responseUser = {
             ...user,
             followersCount: user._count.followers,
@@ -186,17 +184,14 @@ exports.updateProfile = async (req, res, next) => {
 
         const updateData = {};
 
-        // Update name if provided
         if (name && name.trim()) {
             updateData.name = sanitizeString(name.trim());
         }
 
-        // Update department if provided
         if (department && department.trim()) {
             updateData.department = sanitizeString(department.trim());
         }
 
-        // Update year if provided
         if (yearOfStudy) {
             const parsedYear = parseInt(yearOfStudy, 10);
             if (!Number.isNaN(parsedYear) && parsedYear >= 1) {
@@ -204,22 +199,18 @@ exports.updateProfile = async (req, res, next) => {
             }
         }
 
-        // Update bio if provided
         if (bio !== undefined) {
             updateData.bio = bio ? sanitizeString(bio.trim()) : null;
         }
 
-        // Update phone if provided
         if (phone !== undefined) {
             updateData.phoneNumber = phone ? phone.trim() : null;
         }
 
-        // Update LinkedIn if provided
         if (linkedin !== undefined) {
             updateData.linkedinUrl = linkedin ? linkedin.trim() : null;
         }
 
-        // Update skills if provided (for mentors)
         if (skills !== undefined) {
             try {
                 const parsedSkills = Array.isArray(skills)
@@ -231,7 +222,6 @@ exports.updateProfile = async (req, res, next) => {
             }
         }
 
-        // Handle profile image upload
         if (req.file) {
             if (!req.file.mimetype.startsWith("image/")) {
                 return res.status(400).json({ error: "Only image files are allowed" });
@@ -251,7 +241,6 @@ exports.updateProfile = async (req, res, next) => {
             }
         }
 
-        // Update user in database
         const updatedUser = await req.prisma.user.update({
             where: { id: req.user.id },
             data: updateData,
@@ -272,7 +261,6 @@ exports.updateProfile = async (req, res, next) => {
             },
         });
 
-        // Parse mentorSkills for response
         if (updatedUser.mentorSkills) {
             try {
                 updatedUser.mentorSkills = JSON.parse(updatedUser.mentorSkills);
@@ -321,9 +309,7 @@ exports.getMentors = async (req, res, next) => {
                         select: {
                             followers: true,
                             likesReceived: true,
-                            mentorSessions: {
-                                where: { status: 'COMPLETED' }
-                            }
+                            mentorSessions: true
                         }
                     },
                     followers: {
@@ -344,7 +330,6 @@ exports.getMentors = async (req, res, next) => {
             })
         ]);
 
-        // Parse skills and add isFollowing/isLiked
         const parsedMentors = mentors.map(mentor => ({
             ...mentor,
             mentorSkills: mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [],
@@ -353,7 +338,7 @@ exports.getMentors = async (req, res, next) => {
             totalSessions: mentor._count.mentorSessions,
             isFollowing: mentor.followers.length > 0,
             isLiked: mentor.likesReceived.length > 0,
-            followers: undefined, // Remove raw relation data
+            followers: undefined,
             likesReceived: undefined,
             _count: undefined
         }));
@@ -421,7 +406,6 @@ exports.getProfileById = async (req, res, next) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // Parse mentorSkills if it exists
         if (user.mentorSkills) {
             try {
                 user.mentorSkills = JSON.parse(user.mentorSkills);
@@ -430,7 +414,6 @@ exports.getProfileById = async (req, res, next) => {
             }
         }
 
-        // Add counts and status
         const responseUser = {
             ...user,
             followersCount: user._count.followers,

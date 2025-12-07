@@ -18,7 +18,6 @@ exports.createSessionRequest = async (req, res, next) => {
             duration
         } = req.body;
 
-        // Basic validation
         if (!title || !description || !subject || !department || !mode || !proposedDate || !duration) {
             return res.status(400).json({ error: "Missing required fields" });
         }
@@ -62,6 +61,91 @@ exports.createSessionRequest = async (req, res, next) => {
     }
 };
 
+exports.getSessionRequestById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const request = await req.prisma.sessionRequest.findUnique({
+            where: { id }
+        });
+
+        if (!request) {
+            return res.status(404).json({ error: "Session request not found" });
+        }
+
+        if (request.mentorId !== req.user.id) {
+            return res.status(403).json({ error: "Unauthorized to view this request" });
+        }
+
+        return res.json({ request });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.updateSessionRequest = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const {
+            title,
+            description,
+            subject,
+            department,
+            topics,
+            mode,
+            priceType,
+            price,
+            maxSeats,
+            venue,
+            meetingLink,
+            proposedDate,
+            duration
+        } = req.body;
+
+        const request = await req.prisma.sessionRequest.findUnique({
+            where: { id }
+        });
+
+        if (!request) {
+            return res.status(404).json({ error: "Session request not found" });
+        }
+
+        if (request.mentorId !== req.user.id) {
+            return res.status(403).json({ error: "Unauthorized to update this request" });
+        }
+
+        if (request.status !== 'PENDING') {
+            return res.status(400).json({ error: "Only pending requests can be updated" });
+        }
+
+        const updatedRequest = await req.prisma.sessionRequest.update({
+            where: { id },
+            data: {
+                title: title ? sanitizeString(title) : undefined,
+                description: description ? sanitizeString(description) : undefined,
+                subject: subject ? sanitizeString(subject) : undefined,
+                department: department ? sanitizeString(department) : undefined,
+                topics: topics ? JSON.stringify(isValidArray(topics) ? topics : []) : undefined,
+                mode,
+                priceType,
+                price: price !== undefined ? parseFloat(price) : undefined,
+                maxSeats: maxSeats !== undefined ? parseInt(maxSeats) : undefined,
+                venue: venue ? sanitizeString(venue) : undefined,
+                meetingLink,
+                proposedDate: proposedDate ? new Date(proposedDate) : undefined,
+                duration: duration !== undefined ? parseInt(duration) : undefined,
+            }
+        });
+
+        return res.json({
+            success: true,
+            message: "Session request updated successfully",
+            request: updatedRequest
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
 exports.getMyRequests = async (req, res, next) => {
     try {
         const requests = await req.prisma.sessionRequest.findMany({
@@ -76,7 +160,6 @@ exports.getMyRequests = async (req, res, next) => {
 
 exports.getMySessions = async (req, res, next) => {
     try {
-        // Fetch active sessions
         const sessions = await req.prisma.session.findMany({
             where: { mentorId: req.user.id },
             orderBy: { scheduledAt: 'asc' },
@@ -87,21 +170,19 @@ exports.getMySessions = async (req, res, next) => {
             }
         });
 
-        // Fetch approved requests that haven't been converted to sessions yet
         const approvedRequests = await req.prisma.sessionRequest.findMany({
             where: {
                 mentorId: req.user.id,
                 status: 'APPROVED'
             },
-            include: { session: true }, // Include session to check if it exists
+            include: { session: true },
             orderBy: { proposedDate: 'asc' }
         });
 
-        // Map requests to session-like structure
         const mappedRequests = approvedRequests
-            .filter(req => !req.session) // Filter out requests that are already sessions
+            .filter(req => !req.session)
             .map(req => ({
-                id: `req-${req.id}`, // distinct ID
+                id: `req-${req.id}`,
                 title: req.title,
                 scheduledAt: req.proposedDate,
                 duration: req.duration,
@@ -111,7 +192,6 @@ exports.getMySessions = async (req, res, next) => {
                 isRequest: true
             }));
 
-        // Combine and sort
         const allSessions = [...sessions, ...mappedRequests].sort((a, b) =>
             new Date(a.scheduledAt) - new Date(b.scheduledAt)
         );
@@ -127,17 +207,14 @@ exports.bookSession = async (req, res, next) => {
         let sessionId = req.params.id;
         let session;
 
-        // Handle booking of a request (convert to session if needed)
         if (sessionId.startsWith('req-')) {
             const requestId = sessionId.replace('req-', '');
 
-            // Check if session already exists for this request
             session = await req.prisma.session.findUnique({
                 where: { requestId }
             });
 
             if (!session) {
-                // Create new session from request
                 const request = await req.prisma.sessionRequest.findUnique({
                     where: { id: requestId }
                 });
@@ -179,7 +256,6 @@ exports.bookSession = async (req, res, next) => {
             return res.status(404).json({ error: "Session not found" });
         }
 
-        // Check if already booked
         const existingBooking = await req.prisma.booking.findUnique({
             where: {
                 userId_sessionId: {
@@ -193,22 +269,19 @@ exports.bookSession = async (req, res, next) => {
             return res.status(400).json({ error: "You have already booked this session" });
         }
 
-        // Check availability
         if (session.availableSeats <= 0) {
             return res.status(400).json({ error: "Session is full" });
         }
 
-        // Create booking
         const booking = await req.prisma.booking.create({
             data: {
                 userId: req.user.id,
                 sessionId: sessionId,
-                status: 'CONFIRMED', // Auto-confirm for now
-                amountPaid: 0 // Assuming free or handled elsewhere for now
+                status: 'CONFIRMED',
+                amountPaid: 0
             }
         });
 
-        // Update available seats
         await req.prisma.session.update({
             where: { id: sessionId },
             data: { availableSeats: { decrement: 1 } }
@@ -218,7 +291,7 @@ exports.bookSession = async (req, res, next) => {
             success: true,
             message: "Booking confirmed",
             booking,
-            sessionId // Return actual session ID in case it changed
+            sessionId
         });
 
     } catch (error) {
@@ -270,14 +343,12 @@ exports.getAllSessions = async (req, res, next) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const cacheKey = `all_sessions_${page}_${limit}`;
+        const cacheKey = `all_sessions_${req.user.id}_${page}_${limit}`;
 
-        // Check cache
         if (req.cache && req.cache.has(cacheKey)) {
             return res.json(req.cache.get(cacheKey));
         }
 
-        // Fetch sessions that are upcoming OR currently live
         const [sessions, total] = await Promise.all([
             req.prisma.session.findMany({
                 where: {
@@ -344,7 +415,6 @@ exports.getAllSessions = async (req, res, next) => {
             }
         };
 
-        // Set cache
         if (req.cache) {
             req.cache.set(cacheKey, response);
         }
@@ -393,10 +463,9 @@ exports.getSessionById = async (req, res, next) => {
         const mappedSession = {
             ...session,
             isBooked: session.bookings.length > 0,
-            hasReviewed: false // Logic to check if user reviewed can be added if needed
+            hasReviewed: false
         };
 
-        // Check if user has reviewed
         const userReview = await req.prisma.review.findFirst({
             where: {
                 sessionId: id,

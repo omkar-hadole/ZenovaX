@@ -10,11 +10,11 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
+import logo from '../assets/adminlogo.svg';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
     const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
-    // activeTab is not strictly needed if we use paths, but Sidebar might use it for some logic or we can pass dummy
     const [activeTab, setActiveTab] = useState('Dashboard');
 
     const handleLogout = () => {
@@ -35,8 +35,8 @@ export default function AdminLayout() {
     return (
         <div className="flex h-screen bg-[#F5F6FA] font-outfit">
             <Sidebar
-                title="ZenovaX Admin"
-                subtitle="Administrator Panel"
+                logo={logo}
+                logoClassName="w-56 h-auto"
                 items={sidebarItems}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}

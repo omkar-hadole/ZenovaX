@@ -2,12 +2,10 @@ const adminAuth = async (req, res, next) => {
     try {
         const prisma = req.prisma;
 
-        // Ensure user is authenticated (req.user should be set by auth middleware)
         if (!req.user || !req.user.id) {
             return res.status(401).json({ error: "Unauthorized: No user found" });
         }
 
-        // Fetch user to check role
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
             select: { role: true }

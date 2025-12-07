@@ -29,11 +29,10 @@ export default function LaunchQuiz() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Quiz Form State
   const [quizData, setQuizData] = useState({
     title: '',
     description: '',
-    duration: 15, // minutes
+    duration: 15,
     totalMarks: 0,
     passingMarks: 0,
     questions: [
@@ -116,7 +115,7 @@ export default function LaunchQuiz() {
         sessionId: selectedSessionId,
         ...quizData,
         totalMarks,
-        passingMarks: Math.ceil(totalMarks * 0.4) // Default 40% passing
+        passingMarks: Math.ceil(totalMarks * 0.4)
       };
 
       const response = await apiCall('/quiz/create', {
@@ -186,7 +185,6 @@ export default function LaunchQuiz() {
           <Header user={user} title="Launch Quiz" />
 
           <div className="p-8 max-w-6xl mx-auto space-y-8">
-            {/* Header Actions */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button onClick={() => navigate('/mentor-dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
@@ -218,9 +216,7 @@ export default function LaunchQuiz() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Quiz Details */}
               <div className="lg:col-span-1 space-y-6">
-                {/* Session & Basics Card */}
                 <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-6 -mt-6" />
                   <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -269,7 +265,6 @@ export default function LaunchQuiz() {
                   </div>
                 </div>
 
-                {/* Configuration Card */}
                 <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#A9C1F7]/10 rounded-bl-full -mr-6 -mt-6" />
                   <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -308,7 +303,6 @@ export default function LaunchQuiz() {
                 </div>
               </div>
 
-              {/* Right Column - Questions */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">

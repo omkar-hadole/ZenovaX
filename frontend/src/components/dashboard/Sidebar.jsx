@@ -2,14 +2,18 @@ import React from 'react';
 import { LogOut } from 'lucide-react';
 import { useNavigate, NavLink } from 'react-router-dom';
 
-export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children }) {
+export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain" }) {
     const navigate = useNavigate();
 
     return (
         <aside className="w-64 bg-white/70 backdrop-blur-md border-r border-black/5 flex flex-col h-full shadow-sm transition-all duration-300">
             <div className="p-8">
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white text-lg">Z</span>
+                    {logo ? (
+                        <img src={logo} alt="Logo" className={logoClassName} />
+                    ) : (
+                        <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white text-lg">Z</span>
+                    )}
                     {title}
                 </h1>
                 {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}

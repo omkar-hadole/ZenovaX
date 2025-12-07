@@ -60,13 +60,11 @@ export default function ReviewsReceived() {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header Section */}
             <div>
                 <h2 className="text-2xl font-bold text-gray-800">Reviews & Feedback</h2>
                 <p className="text-gray-500 text-sm mt-1">See what your learners are saying about your sessions</p>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
@@ -104,7 +102,6 @@ export default function ReviewsReceived() {
                 </div>
             </div>
 
-            {/* Reviews List */}
             <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h3 className="font-bold text-gray-800 text-lg">Recent Reviews</h3>

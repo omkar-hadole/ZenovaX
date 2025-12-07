@@ -16,6 +16,7 @@ import MentorDashboardView from '../components/dashboard/mentor/MentorDashboardV
 import ReviewsReceived from '../components/dashboard/mentor/ReviewsReceived';
 import MentorSessionsSkeleton from '../components/dashboard/mentor/MentorSessionsSkeleton';
 import ReviewsSkeleton from '../components/dashboard/mentor/ReviewsSkeleton';
+import logo from '../assets/mentorlogo.svg';
 
 export default function MentorDashboard() {
   const navigate = useNavigate();
@@ -96,7 +97,6 @@ export default function MentorDashboard() {
 
   return (
     <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
-      {/* Background Blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
@@ -104,8 +104,8 @@ export default function MentorDashboard() {
 
       <div className="relative z-10 flex h-full w-full">
         <Sidebar
-          title="ZenovaX Mentor"
-          subtitle="Mentor Dashboard"
+          logo={logo}
+          logoClassName="w-56 h-auto"
           items={sidebarItems}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -135,7 +135,19 @@ export default function MentorDashboard() {
                 loading={loading}
               />
             ) : activeTab === 'My Sessions' ? (
-              loading ? <MentorSessionsSkeleton /> : <MySessions sessions={mySessions} />
+              loading ? <MentorSessionsSkeleton /> : <MySessions sessions={[
+                ...mySessions,
+                ...sessionRequests.filter(req => req.status === 'PENDING').map(req => ({
+                  id: `req-${req.id}`,
+                  title: req.title,
+                  scheduledAt: req.proposedDate,
+                  duration: req.duration,
+                  mode: req.mode,
+                  isRequest: true,
+                  status: req.status,
+                  _count: { bookings: 0 }
+                }))
+              ].sort((a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt))} />
             ) : activeTab === 'Reviews Received' ? (
               loading ? <ReviewsSkeleton /> : <ReviewsReceived />
             ) : (

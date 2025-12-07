@@ -11,11 +11,12 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
+import logo from '../assets/logo.svg';
 
 export default function LearnerLayout() {
     const navigate = useNavigate();
     const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
-    const [activeTab, setActiveTab] = useState('Dashboard'); // Keep for now if Sidebar needs it, but we'll switch to NavLink
+    const [activeTab, setActiveTab] = useState('Dashboard');
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -35,10 +36,10 @@ export default function LearnerLayout() {
     return (
         <div className="flex h-screen bg-[#F5F6FA] font-outfit">
             <Sidebar
-                title="ZenovaX"
+                logo={logo}
                 items={sidebarItems}
-                activeTab={activeTab} // We might need to remove this prop if we fully switch to NavLink in Sidebar
-                setActiveTab={setActiveTab} // Same here
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
                 onLogout={handleLogout}
             >
                 <div className="bg-[#1C1C1E] rounded-[2rem] p-6 text-white relative overflow-hidden text-center mx-2 mb-4">

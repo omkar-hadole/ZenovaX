@@ -30,7 +30,6 @@ import {
 import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 
-// Reusing ReviewsSection logic from SessionDetailsView but adapted for Profile
 const ReviewsSection = ({ userId }) => {
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, distribution: [] });
@@ -38,13 +37,10 @@ const ReviewsSection = ({ userId }) => {
 
   const fetchReviews = async () => {
     try {
-      // Fetch reviews for the mentor
       const data = await apiCall(`/reviews/mentor/${userId}`);
       const fetchedReviews = data.reviews || [];
       setReviews(fetchedReviews);
 
-      // Fetch stats separately or calculate (using calculation here for consistency with SessionDetails)
-      // Ideally backend provides stats endpoint: /reviews/stats/:mentorId
       const statsData = await apiCall(`/reviews/stats/${userId}`);
       setStats(statsData);
 
@@ -66,7 +62,6 @@ const ReviewsSection = ({ userId }) => {
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
-        {/* Stats Column */}
         <div className="w-full md:w-1/3 bg-gray-50 p-6 rounded-2xl h-fit">
           <div className="flex flex-col items-center justify-center mb-6">
             <span className="text-5xl font-bold text-gray-900">{stats.averageRating ? stats.averageRating.toFixed(1) : '0.0'}</span>
@@ -94,7 +89,6 @@ const ReviewsSection = ({ userId }) => {
           </div>
         </div>
 
-        {/* Reviews List Column */}
         <div className="w-full md:w-2/3 space-y-6">
           {isLoading ? (
             <p className="text-gray-500">Loading reviews...</p>
@@ -151,7 +145,6 @@ export default function Profile() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
 
-  // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -213,7 +206,6 @@ export default function Profile() {
 
   const handleEditToggle = () => {
     if (!isEditing) {
-      // Enter edit mode: populate form
       setEditForm({
         name: profile.name || '',
         department: profile.department || '',
@@ -257,7 +249,6 @@ export default function Profile() {
       formData.append('phone', editForm.phoneNumber);
       formData.append('linkedin', editForm.linkedinUrl);
 
-      // Handle skills - split by comma and trim
       if (profile.role === 'MENTOR' && editForm.mentorSkills) {
         const skillsArray = editForm.mentorSkills.split(',').map(s => s.trim()).filter(s => s);
         formData.append('skills', JSON.stringify(skillsArray));
@@ -285,11 +276,10 @@ export default function Profile() {
   if (loading) return <ProfileSkeleton />;
   if (!profile) return <div className="p-8 text-center text-red-500">Profile not found</div>;
 
-  const isOwnProfile = !id || id === 'me'; // Simplified check, real app should compare with auth user id
+  const isOwnProfile = !id || id === 'me';
 
   return (
     <div className="min-h-screen bg-[#F8F9FC]">
-      {/* HERO SECTION (Sticky Header) */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4 flex items-center justify-between">
@@ -344,10 +334,8 @@ export default function Profile() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* LEFT COLUMN - MAIN CONTENT */}
           <div className="lg:col-span-8 space-y-8">
 
-            {/* HEADER CARD */}
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
 
@@ -456,7 +444,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* ABOUT SECTION */}
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-gray-400" />
@@ -478,7 +465,6 @@ export default function Profile() {
               )}
             </div>
 
-            {/* SKILLS SECTION */}
             {(profile.role === 'MENTOR' || isEditing) && (
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -512,7 +498,6 @@ export default function Profile() {
               </div>
             )}
 
-            {/* REVIEWS SECTION (Only for Mentors) */}
             {profile.role === 'MENTOR' && (
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                 <ReviewsSection userId={profile.id} />
@@ -521,11 +506,9 @@ export default function Profile() {
 
           </div>
 
-          {/* RIGHT COLUMN - SIDEBAR */}
           <div className="lg:col-span-4 space-y-6">
             <div className="sticky top-24 space-y-6">
 
-              {/* PROFILE IMAGE CARD */}
               <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
                 <div className="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 shadow-lg ring-4 ring-gray-50 relative group">
                   {isEditing ? (
@@ -566,7 +549,6 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* ACTIONS (Inside Profile Card) */}
                 {!isOwnProfile && (
                   <div className="space-y-3">
                     <button
@@ -592,7 +574,6 @@ export default function Profile() {
                 )}
               </div>
 
-              {/* EDUCATOR BADGE CARD (New) */}
               {profile.role === 'MENTOR' && (
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-white/50 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500" />

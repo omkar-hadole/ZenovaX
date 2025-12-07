@@ -3,31 +3,32 @@ import { CheckCircle, LineChart } from 'lucide-react';
 
 const efficiencyCards = [
     {
-        title: 'Boost Productivity',
-        description: 'Stay on top of the day with smart reminders and nudges.',
+        title: 'Clear Your Doubts Faster',
+        description: 'Learn directly from peers who mastered the same topic recently.',
     },
     {
-        title: 'Stay Motivated',
-        description: 'Visualize milestones with delightful progress cards.',
+        title: 'Learn by Solving Together',
+        description: 'Collaborative practice builds deeper understanding and speed.',
     },
     {
-        title: 'Stay Organized & in Control',
-        description: 'Juggling multiple classes feels effortless and calm.',
+        title: 'Get Notes & Quizzes After Sessions',
+        description: 'Continue learning with resources tailored to your topic.',
     },
     {
-        title: 'Learn Anywhere',
-        description: 'Switch from laptop to phone without missing a beat.',
+        title: 'Rate Mentors & Improve Learning Quality',
+        description: 'Your feedback shapes better sessions for everyone.',
     },
 ];
-
 export default function TrackingSection() {
     return (
         <section id="tracking" className="mt-24 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
             <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6">
-                    <h2 className="text-3xl lg:text-4xl font-bold">Enhance Learning Efficiency with Smart Tracking & Flexibility</h2>
+                    <h2 className="text-3xl lg:text-4xl font-bold">
+                        Learn Faster With Real Peer Support
+                    </h2>
                     <p className="text-slate-500">
-                        Optimize your learning experience with stacked analytics cards, flexible scheduling, and instant progress snapshots.
+                        Book topic-based sessions, solve doubts live, access resources, and improve together with honest mentor ratings.
                     </p>
                     <div className="grid grid-cols-1 gap-5">
                         {efficiencyCards.map((card) => (
@@ -44,35 +45,30 @@ export default function TrackingSection() {
                     </div>
                 </div>
                 <div className="bg-white rounded-[32px] border border-[#eceafd] p-8 space-y-6">
+
                     <div className="bg-[#f7f6ff] rounded-3xl p-6 border border-[#eceafd]">
-                        <div className="flex items-center justify-between text-sm text-slate-500">
-                            <span>Hours Activity</span>
-                            <span className="text-[#9190F8] font-semibold flex items-center gap-1">
-                                <LineChart className="w-4 h-4" />
-                                Weekly
-                            </span>
-                        </div>
-                        <div className="mt-6 grid grid-cols-5 gap-3">
-                            {[54, 72, 60, 86, 70].map((value, idx) => (
-                                <div key={idx} className="bg-white rounded-2xl p-4 border border-[#eceafd] shadow-sm">
-                                    <p className="text-xs text-slate-500">Day {idx + 1}</p>
-                                    <p className="text-2xl font-semibold text-slate-900 mt-2">{value}%</p>
-                                </div>
-                            ))}
-                        </div>
+                        <p className="text-sm text-slate-500">Upcoming Session</p>
+                        <h3 className="mt-2 font-semibold text-slate-900">Math — Trigonometric Identities</h3>
+                        <p className="mt-1 text-xs text-slate-500">Mentor: Aditi Sharma • Free Session</p>
+
+                        <button className="mt-4 px-4 py-2 rounded-lg bg-[#9190F8] text-white text-sm font-semibold">
+                            Join Session
+                        </button>
                     </div>
+
                     <div className="grid md:grid-cols-2 gap-4">
                         <div className="rounded-2xl border border-[#eceafd] p-4">
-                            <p className="text-xs text-slate-500">Achievements</p>
-                            <h3 className="text-3xl font-bold text-slate-900 mt-2">24</h3>
-                            <p className="text-xs text-slate-500">Badges earned</p>
+                            <p className="text-xs text-slate-500">Resources</p>
+                            <h3 className="text-lg font-semibold text-slate-900 mt-1">Notes + 5 Quizzes</h3>
+                            <p className="text-xs text-slate-500">For your last session</p>
                         </div>
                         <div className="rounded-2xl border border-[#eceafd] p-4">
-                            <p className="text-xs text-slate-500">Study Time</p>
-                            <h3 className="text-3xl font-bold text-slate-900 mt-2">156h</h3>
-                            <p className="text-xs text-slate-500">This quarter</p>
+                            <p className="text-xs text-slate-500">Your Ratings</p>
+                            <h3 className="text-lg font-semibold text-slate-900 mt-1">4.5⭐ Mentor Avg</h3>
+                            <p className="text-xs text-slate-500">Based on 3 sessions</p>
                         </div>
                     </div>
+
                 </div>
             </div>
         </section>

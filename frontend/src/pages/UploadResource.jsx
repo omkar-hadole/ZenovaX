@@ -70,7 +70,6 @@ export default function UploadResource() {
 
     return (
         <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
-            {/* Background Blobs */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
@@ -110,7 +109,6 @@ export default function UploadResource() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            {/* Left Column - Resource Details */}
                             <div className="lg:col-span-2 space-y-6">
                                 <div className="bg-white rounded-[1.5rem] p-8 shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9C7F5]/10 rounded-bl-full -mr-8 -mt-8" />
@@ -164,7 +162,6 @@ export default function UploadResource() {
                                 </div>
                             </div>
 
-                            {/* Right Column - Settings & Action */}
                             <div className="space-y-6">
                                 <div className="bg-white rounded-[1.5rem] p-8 shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#A9C1F7]/10 rounded-bl-full -mr-8 -mt-8" />

@@ -26,10 +26,11 @@ export default function PendingSessions() {
         if (!window.confirm("Are you sure you want to approve this session?")) return;
         try {
             await apiCall('/admin/approve-session', 'POST', { requestId });
-            fetchRequests(); // Refresh list
+            fetchRequests();
         } catch (error) {
             console.error("Failed to approve session", error);
-            alert("Failed to approve session");
+            const errorMsg = error.message || error.error || JSON.stringify(error);
+            alert(`Failed to approve session: ${errorMsg}`);
         }
     };
 
@@ -37,60 +38,92 @@ export default function PendingSessions() {
         if (!window.confirm("Are you sure you want to reject this session?")) return;
         try {
             await apiCall('/admin/reject-session', 'POST', { requestId });
-            fetchRequests(); // Refresh list
+            fetchRequests();
         } catch (error) {
             console.error("Failed to reject session", error);
-            alert("Failed to reject session");
+            const errorMsg = error.message || error.error || JSON.stringify(error);
+            alert(`Failed to reject session: ${errorMsg}`);
         }
     };
 
-    if (loading) return <div className="p-8">Loading requests...</div>;
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-full p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Pending Session Approvals</h1>
+            <header className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Pending Approvals</h1>
+                <p className="text-gray-500 mt-1">Review and manage session requests from mentors</p>
+            </header>
 
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                 {requests.map((request) => (
-                    <div key={request.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                    <Clock className="w-3 h-3" /> Pending
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    Requested on {new Date(request.requestedAt).toLocaleDateString()}
-                                </span>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{request.title}</h3>
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{request.description}</p>
+                    <div key={request.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full group">
 
-                            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                <div className="flex items-center gap-1">
-                                    <span className="font-medium text-gray-900">Mentor:</span> {request.mentor?.name}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span className="font-medium text-gray-900">Date:</span> {new Date(request.proposedDate).toLocaleString()}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span className="font-medium text-gray-900">Seats:</span> {request.maxSeats}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span className="font-medium text-gray-900">Price:</span> {request.price > 0 ? `₹${request.price}` : 'Free'}
-                                </div>
+                        <div className="flex items-start justify-between mb-4">
+                            <span className="bg-orange-50 text-orange-600 text-xs font-bold px-3 py-1 rounded-full border border-orange-100 uppercase tracking-wide flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" /> Pending
+                            </span>
+                            <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
+                                {new Date(request.requestedAt).toLocaleDateString()}
+                            </span>
+                        </div>
+
+                        <div className="mb-6 flex-1">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-indigo-600 transition-colors">
+                                {request.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                                {request.description}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg">
+                                {request.mentor?.name?.[0] || 'M'}
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">{request.mentor?.name}</p>
+                                <p className="text-xs text-gray-500 font-medium">{request.mentor?.email}</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 md:border-l md:pl-6 border-gray-100">
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Date</p>
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                    {new Date(request.proposedDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Duration</p>
+                                <p className="text-sm font-semibold text-gray-900">{request.duration} min</p>
+                            </div>
+                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Seats</p>
+                                <p className="text-sm font-semibold text-gray-900">{request.maxSeats}</p>
+                            </div>
+                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Price</p>
+                                <p className="text-sm font-semibold text-gray-900">{request.price > 0 ? `₹${request.price}` : 'Free'}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                             <button
                                 onClick={() => handleApprove(request.id)}
-                                className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-600 transition-colors"
+                                className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-200"
                             >
                                 <Check className="w-4 h-4" /> Approve
                             </button>
                             <button
                                 onClick={() => handleReject(request.id)}
-                                className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors"
+                                className="flex-1 bg-white text-red-500 border border-red-100 py-3 rounded-xl text-sm font-bold hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:border-red-200"
                             >
                                 <X className="w-4 h-4" /> Reject
                             </button>
@@ -99,8 +132,12 @@ export default function PendingSessions() {
                 ))}
 
                 {requests.length === 0 && (
-                    <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
-                        <p className="text-gray-500">No pending session requests.</p>
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-dashed border-gray-200 text-center">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <Check className="w-8 h-8 text-gray-300" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">All Caught Up!</h3>
+                        <p className="text-gray-500">No pending session requests at the moment.</p>
                     </div>
                 )}
             </div>

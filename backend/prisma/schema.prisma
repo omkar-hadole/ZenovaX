@@ -113,9 +113,7 @@ model Like {
   @@map("likes")
 }
 
-// ============================================
 // SESSION REQUESTS (Mentor → Admin Approval)
-// ============================================
 
 enum RequestStatus {
   PENDING
@@ -168,9 +166,7 @@ model SessionRequest {
   @@map("session_requests")
 }
 
-// ============================================
 // SESSIONS
-// ============================================
 
 enum SessionMode {
   ONLINE
@@ -251,9 +247,7 @@ model Session {
   @@map("sessions")
 }
 
-// ============================================
 // BOOKINGS
-// ============================================
 
 enum BookingStatus {
   PENDING
@@ -305,9 +299,7 @@ model Booking {
   @@map("bookings")
 }
 
-// ============================================
 // REVIEWS & RATINGS
-// ============================================
 
 model Review {
   id              String    @id @default(uuid())
@@ -340,9 +332,7 @@ model Review {
   @@map("reviews")
 }
 
-// ============================================
 // RESOURCES & MATERIALS
-// ============================================
 
 enum ResourceType {
   PDF
@@ -389,9 +379,7 @@ model Resource {
   @@map("resources")
 }
 
-// ============================================
 // QUIZ SYSTEM
-// ============================================
 
 enum QuizStatus {
   DRAFT
@@ -520,9 +508,7 @@ model Answer {
   @@map("answers")
 }
 
-// ============================================
 // GAMIFICATION & ACHIEVEMENTS
-// ============================================
 
 enum AchievementType {
   SESSIONS_COMPLETED
@@ -573,9 +559,7 @@ model UserAchievement {
   @@map("user_achievements")
 }
 
-// ============================================
 // PAYMENTS & TRANSACTIONS
-// ============================================
 
 enum TransactionStatus {
   PENDING
@@ -624,9 +608,7 @@ model Transaction {
   @@map("transactions")
 }
 
-// ============================================
 // NOTIFICATIONS
-// ============================================
 
 enum NotificationType {
   BOOKING_CONFIRMED
@@ -671,9 +653,7 @@ model Notification {
   @@map("notifications")
 }
 
-// ============================================
 // REPORTS & FLAGGED CONTENT
-// ============================================
 
 enum ReportStatus {
   PENDING

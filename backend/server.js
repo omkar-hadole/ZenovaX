@@ -15,23 +15,20 @@ const { PrismaClient } = require('@prisma/client');
 
 const app = express();
 const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
+  log: ['warn', 'error'],
 });
-const cache = new NodeCache({ stdTTL: 600 }); // Cache for 10 minutes by default
+const cache = new NodeCache({ stdTTL: 600 });
 
-// Middleware
-app.use(compression()); // Enable gzip compression
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
-// Attach Prisma and Cache to request
 app.use((req, res, next) => {
   req.prisma = prisma;
   req.cache = cache;
   next();
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/social", socialRoutes);
@@ -43,7 +40,6 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 
 const PORT = config.port;
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
