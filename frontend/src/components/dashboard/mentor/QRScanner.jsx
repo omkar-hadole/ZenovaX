@@ -1,35 +1,50 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
-import { X, CheckCircle, AlertCircle, Camera } from 'lucide-react';
+import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
+import { X, CheckCircle, AlertCircle, Camera, RefreshCw } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
 
 export default function QRScanner({ onClose }) {
     const [scanResult, setScanResult] = useState(null);
     const [error, setError] = useState(null);
+    const [permissionError, setPermissionError] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
     const scannerRef = useRef(null);
 
     useEffect(() => {
-        // Initialize scanner
-        const scanner = new Html5QrcodeScanner(
-            "reader",
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            },
-            false
-        );
+        let scanner;
 
-        scanner.render(onScanSuccess, onScanFailure);
-        scannerRef.current = scanner;
+        const startScanner = async () => {
+            try {
+                // Check for camera support
+                const devices = await Html5Qrcode.getCameras();
+                if (!devices || devices.length === 0) {
+                    throw new Error("No camera found");
+                }
 
-        // Cleanup
+                scanner = new Html5QrcodeScanner(
+                    "reader",
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0,
+                        showTorchButtonIfSupported: true
+                    },
+                    false
+                );
+
+                scanner.render(onScanSuccess, onScanFailure);
+                scannerRef.current = scanner;
+            } catch (err) {
+                console.error("Camera access failed", err);
+                setPermissionError(true);
+            }
+        };
+
+        startScanner();
+
         return () => {
-            if (scannerRef.current) {
-                scannerRef.current.clear().catch(error => {
-                    console.error("Failed to clear html5-qrcode scanner", error);
-                });
+            if (scanner) {
+                scanner.clear().catch(console.error);
             }
         };
     }, []);
@@ -38,7 +53,6 @@ export default function QRScanner({ onClose }) {
         if (isVerifying) return;
 
         try {
-            // Pause scanning
             if (scannerRef.current) {
                 scannerRef.current.pause();
             }
@@ -46,7 +60,6 @@ export default function QRScanner({ onClose }) {
             setIsVerifying(true);
             setError(null);
 
-            // Parse QR Data
             let data;
             try {
                 data = JSON.parse(decodedText);
@@ -58,7 +71,6 @@ export default function QRScanner({ onClose }) {
                 throw new Error("Not a ZenovaX Ticket");
             }
 
-            // Verify with Backend
             const response = await apiCall('/sessions/verify-attendance', 'POST', {
                 bookingId: data.bookingId,
                 sessionId: data.sessionId
@@ -94,6 +106,15 @@ export default function QRScanner({ onClose }) {
         }
     };
 
+    const handleRetry = () => {
+        setPermissionError(false);
+        onClose(); // Close and let user reopen to try triggering permission prompt again
+        setTimeout(() => {
+            // Optional: could trigger reopen logic if passed from parent, but closing is simplest reset
+            alert("Please ensure you allow camera permissions when prompted.");
+        }, 500);
+    };
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative">
@@ -114,50 +135,71 @@ export default function QRScanner({ onClose }) {
                     </p>
                 </div>
 
-                <div className="p-4 bg-gray-50 min-h-[300px] flex flex-col items-center justify-center">
-                    {/* Scanner Container */}
-                    {!scanResult && (
-                        <div id="reader" className="w-full rounded-xl overflow-hidden shadow-inner"></div>
-                    )}
-
-                    {/* Verification Result */}
-                    {scanResult && (
-                        <div className={`text-center p-6 rounded-2xl w-full ${scanResult.success ? 'bg-green-50' : 'bg-red-50'}`}>
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${scanResult.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                {scanResult.success ? <CheckCircle size={32} /> : <AlertCircle size={32} />}
+                <div className="p-4 bg-gray-50 min-h-[350px] flex flex-col items-center justify-center">
+                    {permissionError ? (
+                        <div className="text-center p-6">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                                <AlertCircle size={32} />
                             </div>
+                            <h4 className="text-lg font-bold text-gray-900 mb-2">Camera Access Denied</h4>
+                            <p className="text-sm text-gray-600 mb-6">
+                                We couldn't access your camera. Please ensure you have granted permission in your browser settings.
+                            </p>
+                            <button
+                                onClick={handleRetry}
+                                className="flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-bold w-full hover:bg-gray-800 transition-colors"
+                            >
+                                <RefreshCw size={18} />
+                                Retry / Check Settings
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Scanner Container */}
+                            {!scanResult && (
+                                <div id="reader" className="w-full rounded-xl overflow-hidden shadow-inner border border-gray-200 bg-black"></div>
+                            )}
 
-                            <h4 className={`text-lg font-bold mb-1 ${scanResult.success ? 'text-green-800' : 'text-red-800'}`}>
-                                {scanResult.success ? 'Access Granted' : 'Access Denied'}
-                            </h4>
+                            {/* Verification Result */}
+                            {scanResult && (
+                                <div className={`text-center p-6 rounded-2xl w-full ${scanResult.success ? 'bg-green-50' : 'bg-red-50'}`}>
+                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${scanResult.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                        {scanResult.success ? <CheckCircle size={32} /> : <AlertCircle size={32} />}
+                                    </div>
 
-                            {scanResult.success && (
-                                <div className="mt-2 text-green-700 bg-green-100/50 py-2 px-4 rounded-lg inline-block">
-                                    <p className="font-semibold">{scanResult.user?.name}</p>
-                                    <p className="text-xs opacity-75">{scanResult.user?.email}</p>
+                                    <h4 className={`text-lg font-bold mb-1 ${scanResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                                        {scanResult.success ? 'Access Granted' : 'Access Denied'}
+                                    </h4>
+
+                                    {scanResult.success && (
+                                        <div className="mt-2 text-green-700 bg-green-100/50 py-2 px-4 rounded-lg inline-block">
+                                            <p className="font-semibold">{scanResult.user?.name}</p>
+                                            <p className="text-xs opacity-75">{scanResult.user?.email}</p>
+                                        </div>
+                                    )}
+
+                                    {error && (
+                                        <p className="text-red-600 font-medium mt-2">{error}</p>
+                                    )}
+
+                                    <button
+                                        onClick={resetScanner}
+                                        className={`mt-6 w-full py-3 rounded-xl font-semibold text-white shadow-lg transition-transform active:scale-95
+                            ${scanResult.success ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-red-600 hover:bg-red-700 shadow-red-200'}
+                        `}
+                                    >
+                                        Scan Next
+                                    </button>
                                 </div>
                             )}
 
-                            {error && (
-                                <p className="text-red-600 font-medium mt-2">{error}</p>
+                            {isVerifying && (
+                                <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center text-indigo-600 z-50">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
+                                    <span className="font-bold">Verifying Ticket...</span>
+                                </div>
                             )}
-
-                            <button
-                                onClick={resetScanner}
-                                className={`mt-6 w-full py-3 rounded-xl font-semibold text-white shadow-lg transition-transform active:scale-95
-                            ${scanResult.success ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-red-600 hover:bg-red-700 shadow-red-200'}
-                        `}
-                            >
-                                Scan Next
-                            </button>
-                        </div>
-                    )}
-
-                    {isVerifying && (
-                        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center text-indigo-600">
-                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
-                            <span className="font-bold">Verifying Ticket...</span>
-                        </div>
+                        </>
                     )}
                 </div>
             </div>
