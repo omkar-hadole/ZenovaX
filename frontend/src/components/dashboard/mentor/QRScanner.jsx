@@ -12,6 +12,7 @@ export default function QRScanner({ onClose }) {
     // We use a ref to hold the instance so we can properly cleanup
     const html5QrCodeRef = useRef(null);
     const isScanningRef = useRef(false);
+    const lastScannedCodeRef = useRef(null);
 
     useEffect(() => {
         const startScanner = async () => {
@@ -65,6 +66,11 @@ export default function QRScanner({ onClose }) {
     const onScanSuccess = async (decodedText, decodedResult) => {
         if (isVerifying) return;
 
+        // Prevent immediate re-scan of the same code
+        if (decodedText === lastScannedCodeRef.current) {
+            return;
+        }
+
         try {
             // Pause the scanner logic without stopping the camera stream if possible, 
             // or just ignore subsequent reads using state.
@@ -95,6 +101,11 @@ export default function QRScanner({ onClose }) {
                 sessionId: data.sessionId
             });
 
+            // Only update lastScannedCode on success to prevent locking out retries on errors
+            if (response && response.success) {
+                lastScannedCodeRef.current = decodedText;
+            }
+
             setScanResult({
                 success: true,
                 user: response.user,
@@ -107,6 +118,8 @@ export default function QRScanner({ onClose }) {
             setScanResult({
                 success: false
             });
+            // Allow rescanning the same code if it failed (e.g. network error)
+            // But if it was "Already Scanned", we also want to allow scanning a NEW code, so we don't set lastScannedCodeRef
         } finally {
             setIsVerifying(false);
         }
