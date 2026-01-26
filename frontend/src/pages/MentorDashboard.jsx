@@ -185,6 +185,14 @@ export default function MentorDashboard() {
 
       {/* QR Scanner Modal */}
       {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
+
+      {/* Mobile Scan FAB */}
+      <button
+        onClick={() => setShowScanner(true)}
+        className="md:hidden fixed bottom-6 right-6 z-50 bg-black text-white p-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform border border-white/20"
+      >
+        <QrCode className="w-6 h-6" />
+      </button>
     </div>
   );
 }
