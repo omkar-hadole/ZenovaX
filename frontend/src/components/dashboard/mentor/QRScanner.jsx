@@ -96,15 +96,13 @@ export default function QRScanner({ onClose }) {
                 throw new Error("Not a ZenovaX Ticket");
             }
 
+            // Cache the code immediately to prevent loop if API fails (e.g. Already Scanned)
+            lastScannedCodeRef.current = decodedText;
+
             const response = await apiCall('/sessions/verify-attendance', 'POST', {
                 bookingId: data.bookingId,
                 sessionId: data.sessionId
             });
-
-            // Only update lastScannedCode on success to prevent locking out retries on errors
-            if (response && response.success) {
-                lastScannedCodeRef.current = decodedText;
-            }
 
             setScanResult({
                 success: true,
