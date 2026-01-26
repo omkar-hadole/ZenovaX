@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { X, CheckCircle, AlertCircle, Camera, RefreshCw } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
 
@@ -8,43 +8,56 @@ export default function QRScanner({ onClose }) {
     const [error, setError] = useState(null);
     const [permissionError, setPermissionError] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
-    const scannerRef = useRef(null);
+
+    // We use a ref to hold the instance so we can properly cleanup
+    const html5QrCodeRef = useRef(null);
+    const isScanningRef = useRef(false);
 
     useEffect(() => {
-        let scanner;
-
         const startScanner = async () => {
             try {
-                // Check for camera support
+                // 1. Check cameras
                 const devices = await Html5Qrcode.getCameras();
                 if (!devices || devices.length === 0) {
                     throw new Error("No camera found");
                 }
 
-                scanner = new Html5QrcodeScanner(
-                    "reader",
+                // 2. Create instance
+                const html5QrCode = new Html5Qrcode("reader");
+                html5QrCodeRef.current = html5QrCode;
+
+                // 3. Start scanning
+                // Prefer the back camera
+                const cameraId = devices.length > 1 ? { facingMode: "environment" } : devices[0].id;
+
+                await html5QrCode.start(
+                    cameraId,
                     {
                         fps: 10,
                         qrbox: { width: 250, height: 250 },
                         aspectRatio: 1.0,
-                        showTorchButtonIfSupported: true
                     },
-                    false
+                    onScanSuccess,
+                    onScanFailure
                 );
+                isScanningRef.current = true;
 
-                scanner.render(onScanSuccess, onScanFailure);
-                scannerRef.current = scanner;
             } catch (err) {
-                console.error("Camera access failed", err);
+                console.error("Camera start failed", err);
                 setPermissionError(true);
             }
         };
 
-        startScanner();
+        // Small delay to ensure DOM is ready
+        setTimeout(startScanner, 100);
 
         return () => {
-            if (scanner) {
-                scanner.clear().catch(console.error);
+            // Cleanup function
+            if (html5QrCodeRef.current && isScanningRef.current) {
+                html5QrCodeRef.current.stop().then(() => {
+                    html5QrCodeRef.current.clear();
+                    isScanningRef.current = false;
+                }).catch(err => console.error("Failed to stop scanner", err));
             }
         };
     }, []);
@@ -53,8 +66,14 @@ export default function QRScanner({ onClose }) {
         if (isVerifying) return;
 
         try {
-            if (scannerRef.current) {
-                scannerRef.current.pause();
+            // Pause the scanner logic without stopping the camera stream if possible, 
+            // or just ignore subsequent reads using state.
+            // For now, we'll keep the camera running but show the overlay.
+
+            // If you want to freeze the video, you'd call pause, but that sometimes causes black screen issues on some devices.
+            // Better to just set verifying state and ignore new inputs.
+            if (html5QrCodeRef.current) {
+                html5QrCodeRef.current.pause(true); // Pauses scanning
             }
 
             setIsVerifying(true);
@@ -64,7 +83,7 @@ export default function QRScanner({ onClose }) {
             try {
                 data = JSON.parse(decodedText);
             } catch (e) {
-                throw new Error("Invalid QR Code format");
+                throw new Error("Invalid QR Code");
             }
 
             if (data.type !== 'ZENOVAX_TICKET' || !data.bookingId || !data.sessionId) {
@@ -101,18 +120,15 @@ export default function QRScanner({ onClose }) {
         setScanResult(null);
         setError(null);
         setIsVerifying(false);
-        if (scannerRef.current) {
-            scannerRef.current.resume();
+        if (html5QrCodeRef.current) {
+            html5QrCodeRef.current.resume();
         }
     };
 
     const handleRetry = () => {
         setPermissionError(false);
-        onClose(); // Close and let user reopen to try triggering permission prompt again
-        setTimeout(() => {
-            // Optional: could trigger reopen logic if passed from parent, but closing is simplest reset
-            alert("Please ensure you allow camera permissions when prompted.");
-        }, 500);
+        onClose();
+        setTimeout(() => alert("Please ensure you allow camera permissions."), 500);
     };
 
     return (
@@ -155,9 +171,11 @@ export default function QRScanner({ onClose }) {
                         </div>
                     ) : (
                         <>
-                            {/* Scanner Container */}
+                            {/* Scanner Container - IMPORTANT: Fixed height for video */}
                             {!scanResult && (
-                                <div id="reader" className="w-full rounded-xl overflow-hidden shadow-inner border border-gray-200 bg-black"></div>
+                                <div className="w-full relative rounded-xl overflow-hidden bg-black shadow-inner">
+                                    <div id="reader" className="w-full h-full"></div>
+                                </div>
                             )}
 
                             {/* Verification Result */}
