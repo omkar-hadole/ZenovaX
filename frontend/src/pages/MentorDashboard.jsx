@@ -6,6 +6,7 @@ import {
   Star,
   HelpCircle,
   Settings,
+  QrCode
 } from 'lucide-react';
 
 import { apiCall } from '../utils/api';
@@ -16,6 +17,7 @@ import MentorDashboardView from '../components/dashboard/mentor/MentorDashboardV
 import ReviewsReceived from '../components/dashboard/mentor/ReviewsReceived';
 import MentorSessionsSkeleton from '../components/dashboard/mentor/MentorSessionsSkeleton';
 import ReviewsSkeleton from '../components/dashboard/mentor/ReviewsSkeleton';
+import QRScanner from '../components/dashboard/mentor/QRScanner';
 import logo from '../assets/mentorlogo.svg';
 
 export default function MentorDashboard() {
@@ -33,6 +35,7 @@ export default function MentorDashboard() {
   const [reviewStats, setReviewStats] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -90,6 +93,7 @@ export default function MentorDashboard() {
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', active: activeTab === 'Dashboard', onClick: () => setActiveTab('Dashboard') },
     { icon: Calendar, label: 'My Sessions', active: activeTab === 'My Sessions', onClick: () => setActiveTab('My Sessions') },
+    { icon: QrCode, label: 'Scan Attendance', active: activeTab === 'Scan Attendance', onClick: () => setActiveTab('Scan Attendance') },
     { icon: Star, label: 'Reviews Received', active: activeTab === 'Reviews Received', onClick: () => setActiveTab('Reviews Received') },
     { icon: HelpCircle, label: 'Help Center' },
     { icon: Settings, label: 'Settings' },
@@ -150,6 +154,22 @@ export default function MentorDashboard() {
               ].sort((a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt))} />
             ) : activeTab === 'Reviews Received' ? (
               loading ? <ReviewsSkeleton /> : <ReviewsReceived />
+            ) : activeTab === 'Scan Attendance' ? (
+              <div className="flex flex-col items-center justify-center p-12 bg-white rounded-[2rem] shadow-sm border border-gray-100 h-[600px] animate-in fade-in zoom-in-95 duration-300">
+                <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                  <QrCode className="w-12 h-12 text-indigo-600" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Ticket Scanner</h2>
+                <p className="text-gray-500 mb-8 max-w-sm text-center text-lg">
+                  Use your camera to scan student QR codes for instant attendance verification.
+                </p>
+                <button
+                  onClick={() => setShowScanner(true)}
+                  className="bg-black text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all hover:shadow-xl hover:-translate-y-1"
+                >
+                  Open Scanner
+                </button>
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -162,6 +182,9 @@ export default function MentorDashboard() {
           </div>
         </main>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
     </div>
   );
 }

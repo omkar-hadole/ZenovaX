@@ -521,3 +521,62 @@ exports.getMentorStats = async (req, res, next) => {
         return next(error);
     }
 };
+
+exports.verifyAttendance = async (req, res, next) => {
+    try {
+        const { bookingId, sessionId } = req.body;
+
+        if (!bookingId || !sessionId) {
+            return res.status(400).json({ error: "Booking ID and Session ID are required" });
+        }
+
+        const session = await req.prisma.session.findUnique({
+            where: { id: sessionId }
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: "Session not found" });
+        }
+
+        // Verify Mentor owns the session
+        if (session.mentorId !== req.user.id) {
+            return res.status(403).json({ error: "Unauthorized: You are not the mentor for this session" });
+        }
+
+        const booking = await req.prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: { user: { select: { name: true, email: true } } }
+        });
+
+        if (!booking) {
+            return res.status(404).json({ error: "Booking not found" });
+        }
+
+        if (booking.sessionId !== sessionId) {
+            return res.status(400).json({ error: "Invalid Ticket: This booking belongs to a different session" });
+        }
+
+        if (booking.status !== 'CONFIRMED') {
+            return res.status(400).json({ error: "Payment Pending: This ticket is not paid/confirmed" });
+        }
+
+        if (booking.attended) {
+            return res.status(409).json({ error: "Already Scanned: This ticket has already been used" });
+        }
+
+        // Mark as attended
+        await req.prisma.booking.update({
+            where: { id: bookingId },
+            data: { attended: true, joinedAt: new Date() }
+        });
+
+        return res.json({
+            success: true,
+            message: "Attendance Verified",
+            user: booking.user
+        });
+
+    } catch (error) {
+        return next(error);
+    }
+};

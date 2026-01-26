@@ -22,6 +22,8 @@ router.get("/my-bookings", auth, sessionController.getMyBookings);
 
 router.get("/all", auth, sessionController.getAllSessions);
 
+router.post("/verify-attendance", auth, sessionController.verifyAttendance);
+
 router.get("/:id", auth, sessionController.getSessionById);
 
 module.exports = router;
