@@ -107,6 +107,7 @@ export default function QRScanner({ onClose }) {
             setScanResult({
                 success: true,
                 user: response.user,
+                session: response.session,
                 message: response.message
             });
 
@@ -201,9 +202,20 @@ export default function QRScanner({ onClose }) {
                                     </h4>
 
                                     {scanResult.success && (
-                                        <div className="mt-2 text-green-700 bg-green-100/50 py-2 px-4 rounded-lg inline-block">
-                                            <p className="font-semibold">{scanResult.user?.name}</p>
-                                            <p className="text-xs opacity-75">{scanResult.user?.email}</p>
+                                        <div className="mt-2 text-green-700 bg-green-100/50 py-3 px-4 rounded-lg inline-block w-full">
+                                            <p className="font-bold text-lg text-green-800">{scanResult.user?.name}</p>
+                                            <p className="text-xs opacity-75 mb-2">{scanResult.user?.email}</p>
+
+                                            {scanResult.session && (
+                                                <div className="border-t border-green-200/50 pt-2 mt-2">
+                                                    <p className="text-sm font-semibold text-indigo-700 bg-indigo-50 inline-block px-2 py-0.5 rounded text-xs mb-1">
+                                                        {scanResult.session.mode} EVENT
+                                                    </p>
+                                                    <p className="text-sm font-medium text-gray-700">
+                                                        {scanResult.session.title}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 

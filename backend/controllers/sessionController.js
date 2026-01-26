@@ -573,7 +573,11 @@ exports.verifyAttendance = async (req, res, next) => {
         return res.json({
             success: true,
             message: "Attendance Verified",
-            user: booking.user
+            user: booking.user,
+            session: {
+                title: session.title,
+                mode: session.mode
+            }
         });
 
     } catch (error) {
