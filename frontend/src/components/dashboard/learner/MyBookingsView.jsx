@@ -1,6 +1,7 @@
-import React from 'react';
-import { Calendar, Clock, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Clock, Settings, QrCode, X } from 'lucide-react';
 import SessionSkeleton from '../SessionSkeleton';
+import QRCodeGenerator from '../../common/QRCodeGenerator';
 
 export default function MyBookingsView({
     myBookings,
@@ -8,8 +9,10 @@ export default function MyBookingsView({
     setSelectedSession,
     setActiveTab
 }) {
+    const [showTicket, setShowTicket] = useState(null);
+
     return (
-        <div className="h-full overflow-y-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="h-full overflow-y-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
             <div className="mx-auto">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">My Bookings</h2>
                 {isLoading ? (
@@ -33,6 +36,10 @@ export default function MyBookingsView({
                                 status = 'LIVE NOW';
                                 statusColor = 'text-red-600 animate-pulse';
                             }
+
+                            const showTicketButton = session.mode === 'OFFLINE' &&
+                                session.bookingStatus === 'CONFIRMED' &&
+                                status !== 'COMPLETED';
 
                             return (
                                 <div key={session.id} className="bg-white rounded-[2rem] p-6 border border-black/5 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group">
@@ -79,17 +86,28 @@ export default function MyBookingsView({
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                        <div className="text-sm">
-                                            <span className={`font-bold px-3 py-1 rounded-full text-xs ${status === 'COMPLETED' ? 'bg-gray-100 text-gray-500' : status === 'LIVE NOW' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                                {status}
-                                            </span>
-                                        </div>
+                                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-2">
+                                        {showTicketButton ? (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setShowTicket(session); }}
+                                                className="flex-1 bg-black text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <QrCode size={16} />
+                                                View Ticket
+                                            </button>
+                                        ) : (
+                                            <div className="text-sm">
+                                                <span className={`font-bold px-3 py-1 rounded-full text-xs ${status === 'COMPLETED' ? 'bg-gray-100 text-gray-500' : status === 'LIVE NOW' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                    {status}
+                                                </span>
+                                            </div>
+                                        )}
+
                                         <button
                                             onClick={() => setSelectedSession(session)}
-                                            className="bg-black text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                                            className={`${showTicketButton ? 'bg-gray-100 text-gray-900' : 'bg-black text-white'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
                                         >
-                                            View Details
+                                            Details
                                         </button>
                                     </div>
                                 </div>
@@ -112,6 +130,38 @@ export default function MyBookingsView({
                     </div>
                 )}
             </div>
+
+            {/* Ticket Modal */}
+            {showTicket && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setShowTicket(null)}
+                            className="absolute top-4 right-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="p-8 text-center bg-gradient-to-b from-indigo-50 to-white">
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">{showTicket.title}</h3>
+                            <p className="text-sm text-gray-500 mb-6">{new Date(showTicket.scheduledAt).toLocaleString()}</p>
+
+                            <div className="bg-white p-2 rounded-2xl shadow-sm inline-block">
+                                <QRCodeGenerator
+                                    bookingId={showTicket.bookingId}
+                                    sessionId={showTicket.id}
+                                />
+                            </div>
+                        </div>
+                        <div className="bg-gray-50 p-6 text-center border-t border-gray-100">
+                            <p className="text-xs text-gray-400">
+                                This is your entry ticket. Please present this QR code at the venue.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
