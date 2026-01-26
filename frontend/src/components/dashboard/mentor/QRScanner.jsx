@@ -182,12 +182,12 @@ export default function QRScanner({ onClose }) {
                         </div>
                     ) : (
                         <>
-                            {/* Scanner Container - IMPORTANT: Fixed height for video */}
-                            {!scanResult && (
-                                <div className="w-full relative rounded-xl overflow-hidden bg-black shadow-inner">
-                                    <div id="reader" className="w-full h-full"></div>
-                                </div>
-                            )}
+                            {/* Scanner Container - Always keep in DOM for resume to work */}
+                            <div
+                                className={`w-full relative rounded-xl overflow-hidden bg-black shadow-inner ${scanResult ? 'hidden' : 'block'}`}
+                            >
+                                <div id="reader" className="w-full h-full"></div>
+                            </div>
 
                             {/* Verification Result */}
                             {scanResult && (
