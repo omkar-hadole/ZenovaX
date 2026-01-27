@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, Settings, QrCode, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Calendar, Clock, Settings, QrCode, X, Download } from 'lucide-react';
 import SessionSkeleton from '../SessionSkeleton';
 import QRCodeGenerator from '../../common/QRCodeGenerator';
+import domtoimage from 'dom-to-image-more';
 
 export default function MyBookingsView({
     myBookings,
@@ -10,6 +11,42 @@ export default function MyBookingsView({
     setActiveTab
 }) {
     const [showTicket, setShowTicket] = useState(null);
+    const ticketRef = useRef(null);
+
+    const handleDownloadTicket = async () => {
+        if (!ticketRef.current) return;
+
+        try {
+            const dataUrl = await domtoimage.toPng(ticketRef.current, {
+                quality: 1,
+                style: {
+                    transform: 'scale(2)',
+                    transformOrigin: 'top left',
+                    width: ticketRef.current.offsetWidth + 'px',
+                    height: ticketRef.current.offsetHeight + 'px',
+                    'border-style': 'none' // Force remove border at root
+                },
+                filter: (node) => {
+                    // Ensure no borders on any element
+                    if (node.style) {
+                        node.style.border = 'none';
+                        node.style.boxShadow = 'none';
+                    }
+                    return true;
+                },
+                width: ticketRef.current.offsetWidth * 2,
+                height: ticketRef.current.offsetHeight * 2
+            });
+
+            const link = document.createElement('a');
+            link.download = `ZenovaX-Ticket-${showTicket.title.replace(/\s+/g, '-')}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error("Failed to download ticket", error);
+            alert("Could not download ticket. Please try again.");
+        }
+    };
 
     return (
         <div className="h-full overflow-y-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
@@ -134,30 +171,47 @@ export default function MyBookingsView({
             {/* Ticket Modal */}
             {showTicket && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
-                        {/* Close Button */}
+                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+
+                        {/* Download Button (Top Left) */}
+                        <button
+                            onClick={handleDownloadTicket}
+                            className="absolute top-4 left-4 z-20 p-2 bg-black/10 hover:bg-black/20 text-gray-800 rounded-full transition-colors backdrop-blur-md"
+                            title="Download Ticket"
+                        >
+                            <Download size={20} />
+                        </button>
+
+                        {/* Close Button (Top Right) */}
                         <button
                             onClick={() => setShowTicket(null)}
-                            className="absolute top-4 right-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors"
+                            className="absolute top-4 right-4 z-20 p-2 bg-black/10 hover:bg-black/20 text-gray-800 rounded-full transition-colors backdrop-blur-md"
                         >
                             <X size={20} />
                         </button>
 
-                        <div className="p-8 text-center bg-gradient-to-b from-indigo-50 to-white">
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">{showTicket.title}</h3>
-                            <p className="text-sm text-gray-500 mb-6">{new Date(showTicket.scheduledAt).toLocaleString()}</p>
+                        {/* Capture Area */}
+                        <div ref={ticketRef} className="bg-white">
+                            {/* Explicit inline style for gradient to avoid html2canvas oklch error */}
+                            <div
+                                className="p-8 text-center pt-16"
+                                style={{ background: 'linear-gradient(to bottom, #eef2ff, #ffffff)' }}
+                            >
+                                <h3 className="text-xl font-bold text-gray-900 mb-1">{showTicket.title}</h3>
+                                <p className="text-sm text-gray-500 mb-6">{new Date(showTicket.scheduledAt).toLocaleString()}</p>
 
-                            <div className="bg-white p-2 rounded-2xl shadow-sm inline-block">
-                                <QRCodeGenerator
-                                    bookingId={showTicket.bookingId}
-                                    sessionId={showTicket.id}
-                                />
+                                <div className="bg-white p-2 rounded-2xl shadow-sm inline-block border border-gray-100">
+                                    <QRCodeGenerator
+                                        bookingId={showTicket.bookingId}
+                                        sessionId={showTicket.id}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <div className="bg-gray-50 p-6 text-center border-t border-gray-100">
-                            <p className="text-xs text-gray-400">
-                                This is your entry ticket. Please present this QR code at the venue.
-                            </p>
+                            <div className="bg-gray-50 p-6 text-center border-t border-gray-100">
+                                <p className="text-xs text-gray-400">
+                                    This is your entry ticket. Please present this QR code at the venue.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

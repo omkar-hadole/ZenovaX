@@ -28,6 +28,7 @@ export default function LaunchQuiz() {
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [quizData, setQuizData] = useState({
     title: '',
@@ -98,16 +99,50 @@ export default function LaunchQuiz() {
     return quizData.questions.reduce((acc, q) => acc + (parseInt(q.marks) || 0), 0);
   };
 
-  const handleSubmit = async (launch = false) => {
-    if (!selectedSessionId) {
-      alert('Please select a session');
-      return;
-    }
-    if (!quizData.title) {
-      alert('Please enter a quiz title');
-      return;
-    }
+  const validateQuiz = () => {
+    if (!selectedSessionId) return 'Please select a session';
+    if (!quizData.title) return 'Please enter a quiz title';
 
+    for (let i = 0; i < quizData.questions.length; i++) {
+      const q = quizData.questions[i];
+      if (!q.questionText.trim()) {
+        return `Question ${i + 1}: Question text is required`;
+      }
+      const validOptions = q.options.filter(o => o.trim() !== '');
+      if (validOptions.length < 2) {
+        return `Question ${i + 1}: At least 2 options are required`;
+      }
+      if (!q.correctAnswer) {
+        // Optional: warn if no correct answer is set logic could go here if needed
+      }
+    }
+    return null;
+  };
+
+  const handleSaveDraft = () => {
+    const error = validateQuiz();
+    if (error) {
+      alert(error);
+      return;
+    }
+    submitQuiz(false);
+  };
+
+  const handleLaunchClick = () => {
+    const error = validateQuiz();
+    if (error) {
+      alert(error);
+      return;
+    }
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmLaunch = () => {
+    setShowConfirmModal(false);
+    submitQuiz(true);
+  };
+
+  const submitQuiz = async (launch = false) => {
     setSubmitting(true);
     try {
       const totalMarks = calculateTotalMarks();
@@ -181,7 +216,7 @@ export default function LaunchQuiz() {
           </div>
         </Sidebar>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative">
           <Header user={user} title="Launch Quiz" />
 
           <div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -197,7 +232,7 @@ export default function LaunchQuiz() {
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => handleSubmit(false)}
+                  onClick={handleSaveDraft}
                   disabled={submitting}
                   className="px-6 py-3 text-gray-700 font-bold hover:bg-white rounded-[1rem] transition-all flex items-center gap-2 border border-transparent hover:border-gray-200 hover:shadow-sm"
                 >
@@ -205,7 +240,7 @@ export default function LaunchQuiz() {
                   Save Draft
                 </button>
                 <button
-                  onClick={() => handleSubmit(true)}
+                  onClick={handleLaunchClick}
                   disabled={submitting}
                   className="px-6 py-3 bg-[#C9C7F5] text-[#5a59b5] font-bold rounded-[1rem] hover:bg-[#b8b6e5] transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-1"
                 >
@@ -341,8 +376,9 @@ export default function LaunchQuiz() {
                               value={question.questionText}
                               onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
                               placeholder="Enter your question here..."
-                              className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#F7D483] font-medium text-lg placeholder:text-gray-400 transition-all"
+                              className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#F7D483] font-medium text-lg placeholder:text-gray-400 transition-all required"
                             />
+                            {!question.questionText && <p className="text-red-400 text-xs mt-1 ml-1 hidden group-focus-within/q:block">* Question text required</p>}
                           </div>
                         </div>
 
@@ -370,6 +406,7 @@ export default function LaunchQuiz() {
                               />
                             </div>
                           ))}
+                          <p className="text-xs text-gray-400 italic">Enter at least 2 options</p>
                         </div>
 
                         <div className="pl-12 pt-2 flex items-center gap-4 border-t border-gray-50 mt-4">
@@ -390,6 +427,35 @@ export default function LaunchQuiz() {
               </div>
             </div>
           </div>
+
+          {/* Confirmation Modal */}
+          {showConfirmModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95">
+                <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full mx-auto mb-4">
+                  <Rocket size={24} />
+                </div>
+                <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Launch Quiz?</h3>
+                <p className="text-gray-500 text-center mb-6">
+                  Are you sure you want to launch this quiz? It will maintain draft status but be available for managing by you.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowConfirmModal(false)}
+                    className="flex-1 py-3 text-gray-700 font-bold hover:bg-gray-50 rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmLaunch}
+                    className="flex-1 py-3 bg-[#C9C7F5] text-[#5a59b5] font-bold rounded-xl hover:bg-[#b8b6e5] transition-colors"
+                  >
+                    Confirm Launch
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

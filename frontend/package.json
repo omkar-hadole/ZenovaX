@@ -12,8 +12,10 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
     "date-fns": "^4.1.0",
+    "dom-to-image-more": "^3.7.2",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.552.0",
+    "qrcode": "^1.5.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-qr-code": "^2.0.18",
