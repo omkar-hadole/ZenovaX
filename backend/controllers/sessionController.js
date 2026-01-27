@@ -446,6 +446,15 @@ exports.getSessionById = async (req, res, next) => {
                 },
                 resources: true,
                 quizzes: true,
+                codingQuestions: {
+                    where: { status: 'LIVE' },
+                    include: {
+                        submissions: {
+                            where: { userId: req.user.id, status: 'PASSED' },
+                            select: { id: true }
+                        }
+                    }
+                },
                 reviews: {
                     take: 3,
                     orderBy: { createdAt: 'desc' },
@@ -460,8 +469,14 @@ exports.getSessionById = async (req, res, next) => {
             return res.status(404).json({ error: "Session not found" });
         }
 
+        const codingQuestionsWithStatus = session.codingQuestions.map(q => ({
+            ...q,
+            isSolved: q.submissions.length > 0
+        }));
+
         const mappedSession = {
             ...session,
+            codingQuestions: codingQuestionsWithStatus,
             isBooked: session.bookings.length > 0,
             hasReviewed: false
         };

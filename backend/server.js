@@ -10,6 +10,7 @@ const sessionRoutes = require("./routes/session");
 const quizRoutes = require('./routes/quiz');
 const resourceRoutes = require('./routes/resource');
 const reviewRoutes = require('./routes/reviews');
+const codingChallengeRoutes = require('./routes/codingChallengeRoutes');
 
 const { PrismaClient } = require('@prisma/client');
 
@@ -63,6 +64,7 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/coding-questions", codingChallengeRoutes);
 app.use("/api/admin", require("./routes/adminRoutes"));
 
 const PORT = config.port;

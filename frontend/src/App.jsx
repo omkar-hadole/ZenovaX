@@ -22,6 +22,7 @@ import LaunchQuiz from './pages/LaunchQuiz';
 import QuizAttempt from './pages/QuizAttempt';
 import LiveSession from './pages/LiveSession';
 import UploadResource from './pages/UploadResource';
+import AttemptCodingQuestion from './pages/learner/AttemptCodingQuestion';
 
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -106,6 +107,7 @@ function App() {
                 <Route path="/mentor/upload-resource" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><UploadResource /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><LaunchQuiz /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route path="/quiz/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><QuizAttempt /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/coding/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><AttemptCodingQuestion /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route
                     path="/session/:id/live"
                     element={

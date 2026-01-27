@@ -6,7 +6,8 @@ import {
   Star,
   HelpCircle,
   Settings,
-  QrCode
+  QrCode,
+  Code
 } from 'lucide-react';
 
 import { apiCall } from '../utils/api';
@@ -18,6 +19,7 @@ import ReviewsReceived from '../components/dashboard/mentor/ReviewsReceived';
 import MentorSessionsSkeleton from '../components/dashboard/mentor/MentorSessionsSkeleton';
 import ReviewsSkeleton from '../components/dashboard/mentor/ReviewsSkeleton';
 import QRScanner from '../components/dashboard/mentor/QRScanner';
+import LaunchCodingQuestion from './LaunchCodingQuestion';
 import logo from '../assets/mentorlogo.svg';
 
 export default function MentorDashboard() {
@@ -94,6 +96,7 @@ export default function MentorDashboard() {
     { icon: LayoutDashboard, label: 'Dashboard', active: activeTab === 'Dashboard', onClick: () => setActiveTab('Dashboard') },
     { icon: Calendar, label: 'My Sessions', active: activeTab === 'My Sessions', onClick: () => setActiveTab('My Sessions') },
     { icon: QrCode, label: 'Scan Attendance', active: activeTab === 'Scan Attendance', onClick: () => setActiveTab('Scan Attendance') },
+    { icon: Code, label: 'Launch Code', active: activeTab === 'Launch Code', onClick: () => setActiveTab('Launch Code') },
     { icon: Star, label: 'Reviews Received', active: activeTab === 'Reviews Received', onClick: () => setActiveTab('Reviews Received') },
     { icon: HelpCircle, label: 'Help Center' },
     { icon: Settings, label: 'Settings' },
@@ -138,6 +141,8 @@ export default function MentorDashboard() {
                 setActiveTab={setActiveTab}
                 loading={loading}
               />
+            ) : activeTab === 'Launch Code' ? (
+              <LaunchCodingQuestion setActiveTab={setActiveTab} mySessions={mySessions} />
             ) : activeTab === 'My Sessions' ? (
               loading ? <MentorSessionsSkeleton /> : <MySessions sessions={[
                 ...mySessions,

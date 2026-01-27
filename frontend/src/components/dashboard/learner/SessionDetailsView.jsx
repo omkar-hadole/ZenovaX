@@ -15,7 +15,8 @@ import {
     Share2,
     Heart,
     MoreHorizontal,
-    PlayCircle
+    PlayCircle,
+    Code
 } from "lucide-react";
 import { apiCall } from '../../../utils/api';
 
@@ -149,7 +150,7 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
 
     const handleReviewSubmitSuccess = () => {
         onReviewSubmit();
-        fetchReviews(1, true); 
+        fetchReviews(1, true);
     };
 
     const loadMoreReviews = () => {
@@ -240,6 +241,7 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
 export default function SessionDetailsView({ session, onBack, onRegister, isRegistering }) {
     const [showResources, setShowResources] = useState(true);
     const [showQuizzes, setShowQuizzes] = useState(false);
+    const [showCoding, setShowCoding] = useState(false);
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
     const mockSession = {
@@ -394,21 +396,32 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
                                 <div className="flex gap-4 mb-6 p-1 bg-gray-100 rounded-xl w-fit">
                                     <button
-                                        onClick={() => { setShowResources(true); setShowQuizzes(false); }}
+                                        onClick={() => { setShowResources(true); setShowQuizzes(false); setShowCoding(false); }}
                                         className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${showResources ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                     >
                                         Resources
                                     </button>
                                     <button
-                                        onClick={() => { setShowResources(false); setShowQuizzes(true); }}
-                                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${!showResources ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                        onClick={() => { setShowResources(false); setShowQuizzes(true); setShowCoding(false); }}
+                                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${showQuizzes ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                     >
                                         Quizzes
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowResources(false); setShowQuizzes(false); setShowCoding(true); }}
+                                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${showCoding ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        Coding
+                                        {S.codingQuestions && S.codingQuestions.length > 0 && (
+                                            <span className="ml-2 text-xs opacity-70">
+                                                ({S.codingQuestions.filter(q => q.isSolved).length}/{S.codingQuestions.length})
+                                            </span>
+                                        )}
                                     </button>
                                 </div>
 
                                 <div className="space-y-3">
-                                    {showResources ? (
+                                    {showResources && (
                                         S.resources && S.resources.length > 0 ? S.resources.map((file) => (
                                             <a
                                                 key={file.id}
@@ -431,7 +444,9 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                 </div>
                                             </a>
                                         )) : <p className="text-gray-500 text-center py-8">No resources available.</p>
-                                    ) : (
+                                    )}
+
+                                    {showQuizzes && (
                                         S.quizzes && S.quizzes.length > 0 ? S.quizzes.map((q) => (
                                             <div key={q.id} className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/5 transition-all group bg-white"
                                             >
@@ -459,6 +474,44 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                 )}
                                             </div>
                                         )) : <p className="text-gray-500 text-center py-8">No quizzes available.</p>
+                                    )}
+
+                                    {showCoding && (
+                                        S.codingQuestions && S.codingQuestions.length > 0 ? S.codingQuestions.map((q) => (
+                                            <div key={q.id} className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5 transition-all group bg-white">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                                                        <Code size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{q.title}</h4>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${q.difficulty === 'HARD' ? 'bg-red-100 text-red-700' :
+                                                                q.difficulty === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                                                                    'bg-green-100 text-green-700'
+                                                                }`}>
+                                                                {q.difficulty}
+                                                            </span>
+                                                            {q.isSolved && (
+                                                                <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-green-100 text-green-700">
+                                                                    <CheckCircle size={10} /> Completed
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => window.open(`/coding/${q.id}/attempt`, '_blank')}
+                                                    className={`px-5 py-2.5 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2 ${q.isSolved
+                                                        ? 'bg-green-600 hover:bg-green-700 shadow-green-200'
+                                                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                                                        }`}
+                                                >
+                                                    {q.isSolved ? <CheckCircle size={16} /> : <PlayCircle size={16} />}
+                                                    {q.isSolved ? 'Solved' : 'Solve'}
+                                                </button>
+                                            </div>
+                                        )) : <p className="text-gray-500 text-center py-8">No coding challenges available.</p>
                                     )}
                                 </div>
                             </div>
@@ -577,6 +630,6 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

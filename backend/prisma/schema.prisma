@@ -64,10 +64,12 @@ model User {
   receivedReviews   Review[]  @relation("ReviewRecipient")
   resources         Resource[]
   quizzes           Quiz[]
+  codingQuestions   CodingQuestion[]
   quizAttempts      QuizAttempt[]
   achievements      UserAchievement[]
   transactions      Transaction[]
   notifications     Notification[]
+  codingSubmissions CodingSubmission[]
   
   @@index([email])
   @@index([phoneNumber])
@@ -233,6 +235,7 @@ model Session {
   reviews         Review[]
   resources       Resource[]
   quizzes         Quiz[]
+  codingQuestions CodingQuestion[]
   reports         Report[]
   
   @@index([mentorId])
@@ -683,4 +686,55 @@ model Report {
   @@index([sessionId])
   @@index([status])
   @@map("reports")
+}
+
+model CodingQuestion {
+  id              String        @id @default(uuid())
+  
+  // References
+  creatorId       String
+  creator         User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  sessionId       String
+  session         Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Details
+  title           String
+  description     String        @db.Text
+  testCases       String        @db.Text // JSON strings like [{input: "1", output: "2"}]
+  difficulty      String        @default("MEDIUM")
+  
+  // Status
+  status          QuizStatus    @default(DRAFT)
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([creatorId])
+  @@index([sessionId])
+  @@map("coding_questions")
+  
+  submissions     CodingSubmission[]
+}
+
+model CodingSubmission {
+  id               String         @id @default(uuid())
+  
+  // References
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codingQuestionId String
+  codingQuestion   CodingQuestion @relation(fields: [codingQuestionId], references: [id], onDelete: Cascade)
+  
+  // Submission details
+  code             String         @db.Text
+  language         String
+  status           String         // PASSED, FAILED
+  
+  // Timestamps
+  createdAt        DateTime       @default(now())
+  
+  @@index([userId])
+  @@index([codingQuestionId])
+  @@map("coding_submissions")
 }
