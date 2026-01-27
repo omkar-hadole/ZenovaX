@@ -20,6 +20,74 @@ export default function AttemptCodingQuestion() {
     const [results, setResults] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [indentError, setIndentError] = useState(null);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+    // Language Change Modal State
+    const [showLanguagePopup, setShowLanguagePopup] = useState(false);
+    const [pendingLanguage, setPendingLanguage] = useState(null);
+
+    // --- Resizable Layout Logic ---
+    const [leftWidth, setLeftWidth] = useState(30); // Percentage
+    const [topHeight, setTopHeight] = useState(60); // Percentage
+    const containerRef = useRef(null);
+    const rightPanelRef = useRef(null);
+    const isDraggingLeft = useRef(false);
+    const isDraggingTop = useRef(false);
+
+    // Initialize layout from localStorage
+    useEffect(() => {
+        const savedLayout = localStorage.getItem('compiler-layout');
+        if (savedLayout) {
+            try {
+                const { left, top } = JSON.parse(savedLayout);
+                if (left) setLeftWidth(Math.max(20, Math.min(80, left)));
+                if (top) setTopHeight(Math.max(20, Math.min(80, top)));
+            } catch (e) { console.error("Layout parse error", e); }
+        }
+    }, []);
+
+    // Save layout on change
+    useEffect(() => {
+        localStorage.setItem('compiler-layout', JSON.stringify({ left: leftWidth, top: topHeight }));
+    }, [leftWidth, topHeight]);
+
+    const startDragLeft = () => {
+        isDraggingLeft.current = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none'; // Prevent selection
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', stopDrag);
+    };
+
+    const startDragTop = () => {
+        isDraggingTop.current = true;
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', stopDrag);
+    };
+
+    const handleDragMove = (e) => {
+        if (isDraggingLeft.current && containerRef.current) {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            setLeftWidth(Math.max(20, Math.min(80, newLeftWidth)));
+        }
+        if (isDraggingTop.current && rightPanelRef.current) {
+            const panelRect = rightPanelRef.current.getBoundingClientRect();
+            const newTopHeight = ((e.clientY - panelRect.top) / panelRect.height) * 100;
+            setTopHeight(Math.max(20, Math.min(80, newTopHeight)));
+        }
+    };
+
+    const stopDrag = () => {
+        isDraggingLeft.current = false;
+        isDraggingTop.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', handleDragMove);
+        window.removeEventListener('mouseup', stopDrag);
+    };
 
     const BOILERPLATES = {
         javascript: `// Write your solution here
@@ -49,11 +117,22 @@ class Solution {
 
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
-        const confirmChange = window.confirm("Changing language will reset your code. Continue?");
-        if (confirmChange) {
-            setLanguage(newLang);
-            setCode(BOILERPLATES[newLang]);
+        setPendingLanguage(newLang);
+        setShowLanguagePopup(true);
+    };
+
+    const confirmLanguageChange = () => {
+        if (pendingLanguage) {
+            setLanguage(pendingLanguage);
+            setCode(BOILERPLATES[pendingLanguage]);
         }
+        setShowLanguagePopup(false);
+        setPendingLanguage(null);
+    };
+
+    const cancelLanguageChange = () => {
+        setShowLanguagePopup(false);
+        setPendingLanguage(null);
     };
 
     useEffect(() => {
@@ -187,7 +266,7 @@ class Solution {
                         body: JSON.stringify({ code, language, status: 'PASSED' })
                     });
                     setQuestion(prev => ({ ...prev, isSolved: true }));
-                    alert("Congratulations! Solution Submitted Successfully.");
+                    setShowSuccessPopup(true);
                 } catch (submitErr) {
                     console.error("Submission failed", submitErr);
                     alert("All tests passed, but failed to save submission.");
@@ -304,7 +383,7 @@ class Solution {
                     <div className="h-6 w-px bg-white/5 mx-1"></div>
 
                     <select
-                        value={language}
+                        value={showLanguagePopup ? pendingLanguage : language}
                         onChange={handleLanguageChange}
                         className="bg-white/5 text-gray-400 text-xs font-medium px-3 py-2 rounded-lg border border-white/5 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer hover:bg-white/10"
                     >
@@ -332,10 +411,11 @@ class Solution {
                 </div>
             </header>
 
-            {/* Main Content */}
-            <div className="flex-1 flex overflow-hidden">
+            {/* Main Content Resizable Container */}
+            <div ref={containerRef} className="flex-1 flex overflow-hidden relative">
+
                 {/* Left Panel: Problem Description */}
-                <div className="w-[35%] border-r border-white/5 flex flex-col bg-[#111111]">
+                <div style={{ width: `${leftWidth}%` }} className="border-r border-white/5 flex flex-col bg-[#111111] min-w-[250px]">
                     <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                         <div className="prose prose-invert prose-p:text-gray-400 prose-headings:text-gray-200 max-w-none">
                             <h3 className="text-xl font-semibold mb-6 text-gray-100">Problem Description</h3>
@@ -367,72 +447,87 @@ class Solution {
                     </div>
                 </div>
 
+                {/* Vertical Drag Handle */}
+                <div
+                    onMouseDown={startDragLeft}
+                    className="w-1 bg-[#2a2a2a] hover:bg-indigo-500 cursor-col-resize flex items-center justify-center transition-colors z-20"
+                />
+
                 {/* Right Panel: Editor & Output */}
-                <div className="w-[65%] flex flex-col bg-[#1e1e1e]">
+                <div ref={rightPanelRef} style={{ width: `${100 - leftWidth}%` }} className="flex flex-col bg-[#1e1e1e]">
 
-                    {/* Indentation Error Alert */}
-                    {indentError && (
-                        <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
-                                <AlertTriangle className="w-4 h-4" />
-                                {indentError}
+                    {/* Editor Area (Top) */}
+                    <div style={{ height: `${topHeight}%` }} className="flex flex-col relative min-h-[150px]">
+
+                        {/* Indentation Error Alert (Absolute to not break flex flow if possible, or just stack) */}
+                        {indentError && (
+                            <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {indentError}
+                                </div>
+                                <button
+                                    onClick={handleFormatCode}
+                                    className="text-xs font-bold bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1 rounded transition-colors"
+                                >
+                                    Auto-Fix
+                                </button>
                             </div>
-                            <button
-                                onClick={handleFormatCode}
-                                className="text-xs font-bold bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1 rounded transition-colors"
-                            >
-                                Auto-Fix
-                            </button>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Editor Area */}
-                    <div className="flex-1 relative overflow-hidden flex flex-col">
-                        <Editor
-                            height="100%"
-                            language={language}
-                            value={code}
-                            theme="vs-dark"
-                            onMount={(editor) => { editorRef.current = editor; }}
-                            onChange={(value) => setCode(value)}
-                            options={{
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                fontSize: 16,
-                                fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-                                fontLigatures: true,
-                                automaticLayout: true,
-                                tabSize: 4,
-                                insertSpaces: true,
-                                detectIndentation: false,
-                                renderWhitespace: 'selection',
-                                renderIndentGuides: true,
-                                rulers: [],
-                                bracketPairColorization: { enabled: true },
-                                padding: { top: 24, bottom: 24 },
-                                smoothScrolling: true,
-                                cursorBlinking: "smooth",
-                                cursorSmoothCaretAnimation: "on",
-                                lineNumbersMinChars: 3,
-                                glyphMargin: false,
-                                folding: true,
-                                scrollBeyondLastColumn: 0,
-                                overviewRulerLanes: 0,
-                                hideCursorInOverviewRuler: true,
-                                overviewRulerBorder: false,
-                                scrollbar: {
-                                    vertical: 'visible',
-                                    horizontal: 'visible',
-                                    useShadows: false,
-                                    verticalScrollbarSize: 10,
-                                    horizontalScrollbarSize: 10
-                                }
-                            }}
-                        />
+                        <div className="flex-1 relative overflow-hidden flex flex-col">
+                            <Editor
+                                height="100%"
+                                language={language}
+                                value={code}
+                                theme="vs-dark"
+                                onMount={(editor) => { editorRef.current = editor; }}
+                                onChange={(value) => setCode(value)}
+                                options={{
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    fontSize: 16,
+                                    fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+                                    fontLigatures: true,
+                                    automaticLayout: true,
+                                    tabSize: 4,
+                                    insertSpaces: true,
+                                    detectIndentation: false,
+                                    renderWhitespace: 'selection',
+                                    renderIndentGuides: true,
+                                    rulers: [],
+                                    bracketPairColorization: { enabled: true },
+                                    padding: { top: 24, bottom: 24 },
+                                    smoothScrolling: true,
+                                    cursorBlinking: "smooth",
+                                    cursorSmoothCaretAnimation: "on",
+                                    lineNumbersMinChars: 3,
+                                    glyphMargin: false,
+                                    folding: true,
+                                    scrollBeyondLastColumn: 0,
+                                    overviewRulerLanes: 0,
+                                    hideCursorInOverviewRuler: true,
+                                    overviewRulerBorder: false,
+                                    scrollbar: {
+                                        vertical: 'visible',
+                                        horizontal: 'visible',
+                                        useShadows: false,
+                                        verticalScrollbarSize: 10,
+                                        horizontalScrollbarSize: 10
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
 
-                    {/* Output Panel */}
-                    <div className="h-[40%] border-t border-white/10 bg-[#1e1e1e] flex flex-col">
+                    {/* Horizontal Drag Handle */}
+                    <div
+                        onMouseDown={startDragTop}
+                        className="h-1 bg-[#2a2a2a] hover:bg-indigo-500 cursor-row-resize flex items-center justify-center transition-colors z-20"
+                    />
+
+                    {/* Output Panel (Bottom) */}
+                    <div style={{ height: `${100 - topHeight}%` }} className="border-t border-white/10 bg-[#1e1e1e] flex flex-col min-h-[100px]">
                         <div className="flex items-center border-b border-white/10 bg-[#1e1e1e]">
                             <button
                                 onClick={() => setActiveTab('tests')}
@@ -532,6 +627,62 @@ class Solution {
                     </div>
                 </div>
             </div>
+            {/* Success Popup Modal */}
+            {showSuccessPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-[#18181b] border border-white/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl transform scale-100 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+                        <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6">
+                            <CheckCircle className="w-8 h-8 text-emerald-400" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Success!</h3>
+                        <p className="text-gray-400 mb-8">
+                            Your solution passed all test cases and has been submitted successfully.
+                        </p>
+                        <div className="flex gap-3 w-full">
+                            <button
+                                onClick={() => setShowSuccessPopup(false)}
+                                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
+                            >
+                                Keep Coding
+                            </button>
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="flex-1 px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/20 rounded-xl font-medium transition-colors"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Language Change Modal */}
+            {showLanguagePopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-[#18181b] border border-white/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl transform scale-100 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center">
+                        <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mb-6">
+                            <AlertTriangle className="w-8 h-8 text-yellow-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Change Language?</h3>
+                        <p className="text-gray-400 mb-8 text-sm">
+                            Switching to <span className="font-bold text-white">{pendingLanguage}</span> will <span className="text-red-400">reset your current code</span>. This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3 w-full">
+                            <button
+                                onClick={cancelLanguageChange}
+                                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmLanguageChange}
+                                className="flex-1 px-4 py-3 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/20 rounded-xl font-medium transition-colors"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
