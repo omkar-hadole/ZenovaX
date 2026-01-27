@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Calendar, Clock, Settings, QrCode, X, Download } from 'lucide-react';
 import SessionSkeleton from '../SessionSkeleton';
+import SessionCard from './SessionCard';
 import QRCodeGenerator from '../../common/QRCodeGenerator';
 import domtoimage from 'dom-to-image-more';
 
@@ -79,75 +80,43 @@ export default function MyBookingsView({
                                 status !== 'COMPLETED';
 
                             return (
-                                <div key={session.id} className="bg-white rounded-[2rem] p-6 border border-black/5 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 shadow-inner">
-                                                {session.mentor?.profilePicture ? (
-                                                    <img src={session.mentor.profilePicture} alt={session.mentor.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-[#A9C1F7]/20 text-[#5B8DEF] font-bold text-lg">
-                                                        {session.mentor?.name?.[0]}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-gray-900 text-lg">{session.mentor?.name}</h4>
-                                                <p className="text-xs text-gray-500 font-medium">{session.mentor?.department || 'Mentor'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <span className="bg-[#F5F6FA] text-gray-600 text-xs font-bold px-3 py-1 rounded-full border border-black/5">
-                                                {session.mode}
+                                <SessionCard
+                                    key={session.id}
+                                    session={session}
+                                    extraBadges={
+                                        status === 'COMPLETED' && !session.hasReviewed && (
+                                            <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">
+                                                Review Pending
                                             </span>
-                                            {status === 'COMPLETED' && !session.hasReviewed && (
-                                                <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">
-                                                    Review Pending
-                                                </span>
+                                        )
+                                    }
+                                    footer={
+                                        <>
+                                            {showTicketButton ? (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setShowTicket(session); }}
+                                                    className="flex-1 bg-black text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <QrCode size={16} />
+                                                    View Ticket
+                                                </button>
+                                            ) : (
+                                                <div className="text-sm">
+                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs ${status === 'COMPLETED' ? 'bg-gray-100 text-gray-500' : status === 'LIVE NOW' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                        {status}
+                                                    </span>
+                                                </div>
                                             )}
-                                        </div>
-                                    </div>
 
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">{session.title}</h3>
-                                    <p className="text-sm text-gray-500 mb-6 line-clamp-2 leading-relaxed">{session.description || 'Join this session to learn more.'}</p>
-
-                                    <div className="flex items-center gap-6 text-sm text-gray-500 mb-6 bg-[#F5F6FA] p-3 rounded-xl">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-gray-400" />
-                                            <span className="font-medium">{new Date(session.scheduledAt).toLocaleDateString()}</span>
-                                        </div>
-                                        <div className="w-px h-4 bg-gray-300" />
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-gray-400" />
-                                            <span className="font-medium">{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-2">
-                                        {showTicketButton ? (
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); setShowTicket(session); }}
-                                                className="flex-1 bg-black text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                                onClick={() => setSelectedSession(session)}
+                                                className={`${showTicketButton ? 'bg-gray-100 text-gray-900' : 'bg-black text-white'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
                                             >
-                                                <QrCode size={16} />
-                                                View Ticket
+                                                Details
                                             </button>
-                                        ) : (
-                                            <div className="text-sm">
-                                                <span className={`font-bold px-3 py-1 rounded-full text-xs ${status === 'COMPLETED' ? 'bg-gray-100 text-gray-500' : status === 'LIVE NOW' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                                    {status}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        <button
-                                            onClick={() => setSelectedSession(session)}
-                                            className={`${showTicketButton ? 'bg-gray-100 text-gray-900' : 'bg-black text-white'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
-                                        >
-                                            Details
-                                        </button>
-                                    </div>
-                                </div>
+                                        </>
+                                    }
+                                />
                             );
                         })}
                     </div>
