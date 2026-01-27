@@ -1,31 +1,77 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
+
 import SessionSkeleton from '../SessionSkeleton';
 
 export default function BrowseSessionsView({
     sessions,
     isLoading,
     setSelectedSession,
-    onLoadMore,
-    hasMore,
-    isMoreLoading
+    currentPage,
+    totalPages,
+    onPageChange,
+    filterType,
+    setFilterType,
+    filters,
+    setFilters
 }) {
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
     return (
         <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-800">Browse Sessions</h2>
-                <div className="flex gap-2">
-                    <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>All Categories</option>
-                        <option>Design</option>
-                        <option>Development</option>
-                    </select>
-                    <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option>All Levels</option>
-                        <option>Beginner</option>
-                        <option>Intermediate</option>
-                        <option>Advanced</option>
-                    </select>
+            <div className="flex items-center justify-between gap-6">
+                <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">Browse Sessions</h2>
+
+                <div className="flex items-center gap-4">
+                    <div className="bg-gray-100 p-1 rounded-xl flex items-center">
+                        <button
+                            onClick={() => setFilterType('upcoming')}
+                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'upcoming'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            Upcoming
+                        </button>
+                        <button
+                            onClick={() => setFilterType('past')}
+                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'past'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            Past
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={filters?.mode || ''}
+                            onChange={(e) => handleFilterChange('mode', e.target.value)}
+                            className="bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 transition-colors text-center min-w-[100px]"
+                            style={{ backgroundImage: 'none' }}
+                        >
+                            <option value="">All Modes</option>
+                            <option value="ONLINE">Online</option>
+                            <option value="OFFLINE">Offline</option>
+                        </select>
+
+                        <select
+                            value={filters?.priceType || ''}
+                            onChange={(e) => handleFilterChange('priceType', e.target.value)}
+                            className="bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 transition-colors text-center min-w-[100px]"
+                            style={{ backgroundImage: 'none' }}
+                        >
+                            <option value="">All Prices</option>
+                            <option value="FREE">Free</option>
+                            <option value="PAID">Paid</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -101,21 +147,35 @@ export default function BrowseSessionsView({
                         ))}
                     </div>
 
-                    {hasMore && (
-                        <div className="flex justify-center pt-4">
+                    {totalPages > 1 && (
+                        <div className="flex justify-center pt-8 gap-2">
                             <button
-                                onClick={onLoadMore}
-                                disabled={isMoreLoading}
-                                className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                onClick={() => onPageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
-                                {isMoreLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                                        Loading...
-                                    </>
-                                ) : (
-                                    'Load More Sessions'
-                                )}
+                                Previous
+                            </button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => onPageChange(pageNum)}
+                                    className={`w-10 h-10 rounded-xl text-sm font-bold flex items-center justify-center transition-all ${currentPage === pageNum
+                                        ? 'bg-black text-white shadow-lg scale-110'
+                                        : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-600'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => onPageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                Next
                             </button>
                         </div>
                     )}

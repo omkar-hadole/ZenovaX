@@ -8,39 +8,39 @@ export default function SessionsPage() {
     const [sessions, setSessions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [isMoreLoading, setIsMoreLoading] = useState(false);
+    const [totalPages, setTotalPages] = useState(1);
+    const [filterType, setFilterType] = useState('upcoming');
+    const [filters, setFilters] = useState({ mode: '', priceType: '' });
 
-    const fetchSessions = async (pageNum = 1, reset = false) => {
+    const fetchSessions = async (pageNum = 1, type = filterType, currentFilters = filters) => {
         try {
-            if (pageNum > 1) setIsMoreLoading(true);
-            else setIsLoading(true);
+            setIsLoading(true);
 
-            const data = await apiCall(`/sessions/all?page=${pageNum}&limit=9`);
+            let query = `/sessions/all?page=${pageNum}&limit=9&type=${type}`;
+            if (currentFilters.mode) query += `&mode=${currentFilters.mode}`;
+            if (currentFilters.priceType) query += `&priceType=${currentFilters.priceType}`;
 
-            if (reset) {
-                setSessions(data.sessions || []);
-            } else {
-                setSessions(prev => [...prev, ...(data.sessions || [])]);
-            }
+            const data = await apiCall(query);
 
-            setHasMore(data.pagination?.page < data.pagination?.totalPages);
+            setSessions(data.sessions || []);
+            setTotalPages(data.pagination?.totalPages || 1);
             setPage(pageNum);
         } catch (error) {
             console.error(error);
         } finally {
             setIsLoading(false);
-            setIsMoreLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchSessions(1, true);
-    }, []);
+        // Reset to page 1 when filter changes
+        fetchSessions(1, filterType, filters);
+    }, [filterType, filters]);
 
-    const loadMoreSessions = () => {
-        if (!isMoreLoading && hasMore) {
-            fetchSessions(page + 1);
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            fetchSessions(newPage, filterType, filters);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -55,9 +55,13 @@ export default function SessionsPage() {
             sessions={sessions}
             isLoading={isLoading}
             setSelectedSession={setSelectedSession}
-            onLoadMore={loadMoreSessions}
-            hasMore={hasMore}
-            isMoreLoading={isMoreLoading}
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            filters={filters}
+            setFilters={setFilters}
         />
     );
 }

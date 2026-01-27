@@ -343,20 +343,57 @@ exports.getAllSessions = async (req, res, next) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const cacheKey = `all_sessions_${req.user.id}_${page}_${limit}`;
+        const type = req.query.type || 'upcoming';
+        const mode = req.query.mode;
+        const priceType = req.query.priceType;
+        const now = new Date();
+        const cacheKey = `all_sessions_${req.user.id}_${page}_${limit}_${type}_${mode || 'all'}_${priceType || 'all'}`;
 
         if (req.cache && req.cache.has(cacheKey)) {
             return res.json(req.cache.get(cacheKey));
         }
 
+        let whereClause = {};
+
+        if (type === 'past') {
+            whereClause = {
+                OR: [
+                    { status: 'COMPLETED' },
+                    { status: 'CANCELLED' },
+                    {
+                        AND: [
+                            { status: 'UPCOMING' },
+                            { scheduledAt: { lt: now } }
+                        ]
+                    }
+                ]
+            };
+        } else {
+            // Default: UPCOMING (and LIVE)
+            whereClause = {
+                OR: [
+                    { status: 'LIVE' },
+                    {
+                        AND: [
+                            { status: 'UPCOMING' },
+                            { scheduledAt: { gt: now } }
+                        ]
+                    }
+                ]
+            };
+        }
+
+        if (mode) {
+            whereClause.mode = mode;
+        }
+
+        if (priceType) {
+            whereClause.priceType = priceType;
+        }
+
         const [sessions, total] = await Promise.all([
             req.prisma.session.findMany({
-                where: {
-                    OR: [
-                        { status: 'UPCOMING' },
-                        { status: 'LIVE' }
-                    ]
-                },
+                where: whereClause,
                 skip,
                 take: limit,
                 include: {
@@ -388,15 +425,10 @@ exports.getAllSessions = async (req, res, next) => {
                         }
                     }
                 },
-                orderBy: { scheduledAt: 'asc' }
+                orderBy: { scheduledAt: type === 'past' ? 'desc' : 'asc' }
             }),
             req.prisma.session.count({
-                where: {
-                    OR: [
-                        { status: 'UPCOMING' },
-                        { status: 'LIVE' }
-                    ]
-                }
+                where: whereClause
             })
         ]);
 
