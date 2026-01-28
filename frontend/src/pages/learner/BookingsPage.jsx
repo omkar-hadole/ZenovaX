@@ -13,7 +13,10 @@ export default function BookingsPage() {
             setIsLoading(true);
             try {
                 const data = await apiCall('/sessions/my-bookings');
-                setMyBookings(data.sessions || []);
+                const sortedSessions = (data.sessions || []).sort((a, b) =>
+                    new Date(b.scheduledAt) - new Date(a.scheduledAt)
+                );
+                setMyBookings(sortedSessions);
             } catch (error) {
                 console.error(error);
             } finally {
