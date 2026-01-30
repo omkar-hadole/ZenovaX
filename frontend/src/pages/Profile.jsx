@@ -20,21 +20,21 @@ import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 
 // Import Badge Images
-import FirstStepBadge from '../assets/badges/Fisrt_Step.webp';
-import SessionProBadge from '../assets/badges/Session_Pro.webp';
-import VeteranBadge from '../assets/badges/Veteran.webp';
-import EliteMentorBadge from '../assets/badges/Elite_Mentor.webp';
-import MasterMentorBadge from '../assets/badges/Master_Mentor.webp';
-import GuideBadge from '../assets/badges/Guide.webp';
-import PathfinderBadge from '../assets/badges/Path_Finder.webp';
-import GameChangerBadge from '../assets/badges/Game_Changer.webp';
-import ImpactMakerBadge from '../assets/badges/Impact_Maker.webp';
-import WellRatedBadge from '../assets/badges/Well_Rated.webp';
-import TopRatedBadge from '../assets/badges/Top_Rated.webp';
-import ExceptionalBadge from '../assets/badges/Exceptional.webp';
-import LovedBadge from '../assets/badges/Loved.webp';
-import PopularBadge from '../assets/badges/Popular.webp';
-import FavoriteBadge from '../assets/badges/Favorite.webp';
+import FirstStepBadge from "../assets/Badges/Fisrt_Step.webp";
+import SessionProBadge from "../assets/Badges/Session_Pro.webp";
+import VeteranBadge from "../assets/Badges/Veteran.webp";
+import EliteMentorBadge from "../assets/Badges/Elite_Mentor.webp";
+import MasterMentorBadge from "../assets/Badges/Master_Mentor.webp";
+import GuideBadge from "../assets/Badges/Guide.webp";
+import PathfinderBadge from "../assets/Badges/Path_Finder.webp";
+import GameChangerBadge from "../assets/Badges/Game_Changer.webp";
+import ImpactMakerBadge from "../assets/Badges/Impact_Maker.webp";
+import WellRatedBadge from "../assets/Badges/Well_Rated.webp";
+import TopRatedBadge from "../assets/Badges/Top_Rated.webp";
+import ExceptionalBadge from "../assets/Badges/Exceptional.webp";
+import LovedBadge from "../assets/Badges/Loved.webp";
+import PopularBadge from "../assets/Badges/Popular.webp";
+import FavoriteBadge from "../assets/Badges/Favorite.webp";
 
 const BADGE_INFO = {
   "First Step": { image: FirstStepBadge, description: "Completed their first mentoring session" },
