@@ -5,22 +5,11 @@ import {
   Share2,
   Heart,
   CheckCircle,
-  Calendar,
-  Clock,
   FileText,
-  Download,
-  HelpCircle,
-  PlayCircle,
   Star,
-  ExternalLink,
-  Users,
-  AlertTriangle,
-  MapPin,
   Briefcase,
-  GraduationCap,
   Linkedin,
   Phone,
-  Mail,
   Edit2,
   Award,
   Camera,
@@ -378,7 +367,6 @@ export default function Profile() {
                 )}
 
                 <div className="flex items-center gap-2 text-gray-500 mb-6">
-                  <GraduationCap size={18} />
                   {isEditing ? (
                     <div className="flex items-center gap-2">
                       <span>Year</span>
