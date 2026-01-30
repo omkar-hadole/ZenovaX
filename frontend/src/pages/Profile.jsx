@@ -20,17 +20,17 @@ import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 
 // Import Badge Images
-import FirstStepBadge from '../assets/badges/Fisrt Step.webp';
-import SessionProBadge from '../assets/badges/Session Pro.webp';
+import FirstStepBadge from '../assets/badges/Fisrt_Step.webp';
+import SessionProBadge from '../assets/badges/Session_Pro.webp';
 import VeteranBadge from '../assets/badges/Veteran.webp';
-import EliteMentorBadge from '../assets/badges/Elite Mentor.webp';
-import MasterMentorBadge from '../assets/badges/Master Mentor.webp';
+import EliteMentorBadge from '../assets/badges/Elite_Mentor.webp';
+import MasterMentorBadge from '../assets/badges/Master_Mentor.webp';
 import GuideBadge from '../assets/badges/Guide.webp';
-import PathfinderBadge from '../assets/badges/Path Finder.webp';
-import GameChangerBadge from '../assets/badges/Game Changer.webp';
-import ImpactMakerBadge from '../assets/badges/Impact Maker.webp';
-import WellRatedBadge from '../assets/badges/Well Rated.webp';
-import TopRatedBadge from '../assets/badges/Top Rated.webp';
+import PathfinderBadge from '../assets/badges/Path_Finder.webp';
+import GameChangerBadge from '../assets/badges/Game_Changer.webp';
+import ImpactMakerBadge from '../assets/badges/Impact_Maker.webp';
+import WellRatedBadge from '../assets/badges/Well_Rated.webp';
+import TopRatedBadge from '../assets/badges/Top_Rated.webp';
 import ExceptionalBadge from '../assets/badges/Exceptional.webp';
 import LovedBadge from '../assets/badges/Loved.webp';
 import PopularBadge from '../assets/badges/Popular.webp';
