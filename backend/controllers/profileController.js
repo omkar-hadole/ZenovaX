@@ -121,7 +121,7 @@ exports.completeProfile = async (req, res, next) => {
 const calculateBadges = (user, uniqueLearners) => {
     const badges = [];
 
-    const sessions = user.totalSessions || 0; 
+    const sessions = user.totalSessions || 0;
 
     if (sessions >= 1) badges.push("First Step");
     if (sessions >= 5) badges.push("Session Pro");
@@ -180,7 +180,7 @@ exports.getMe = async (req, res, next) => {
                         likesReceived: true,
                         receivedReviews: true,
                         mentorSessions: {
-                            where: { status: 'COMPLETED' } 
+                            where: { status: 'COMPLETED' }
                         }
                     }
                 }
@@ -355,59 +355,90 @@ exports.getMentors = async (req, res, next) => {
         const userId = req.user.id;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-        const cacheKey = `mentors_${page}_${limit}_${userId}`;
-
-        if (req.cache && req.cache.has(cacheKey)) {
-            return res.json(req.cache.get(cacheKey));
-        }
-
-        const [mentors, total] = await Promise.all([
-            req.prisma.user.findMany({
-                where: {
-                    role: "MENTOR",
-                    isProfileComplete: true
-                },
-                skip,
-                take: limit,
-                select: {
-                    id: true,
-                    name: true,
-                    department: true,
-                    profilePicture: true,
-                    mentorSkills: true,
-                    averageRating: true,
-                    totalSessions: true, // Need this
-                    totalReviews: true, // Need this
-                    _count: {
-                        select: {
-                            followers: true,
-                            likesReceived: true,
-                            receivedReviews: true, // Fetch received reviews count
-                            mentorSessions: { where: { status: 'COMPLETED' } }
+        const cacheKey = `mentors_sorted_${userId}`; 
+        const allMentors = await req.prisma.user.findMany({
+            where: {
+                role: "MENTOR",
+                isProfileComplete: true
+            },
+            select: {
+                id: true,
+                name: true,
+                department: true,
+                profilePicture: true,
+                mentorSkills: true,
+                averageRating: true,
+                totalSessions: true, 
+                totalReviews: true,
+                _count: {
+                    select: {
+                        followers: true,
+                        likesReceived: true,
+                        receivedReviews: true,
+                        mentorSessions: {
+                            where: {
+                                status: { in: ['COMPLETED', 'LIVE', 'UPCOMING'] },
+                                bookings: {
+                                    some: {
+                                        status: { in: ['CONFIRMED', 'COMPLETED'] }
+                                    }
+                                }
+                            }
                         }
-                    },
-                    followers: {
-                        where: { followerId: userId },
-                        select: { id: true }
-                    },
-                    likesReceived: {
-                        where: { userId: userId },
-                        select: { id: true }
                     }
                 },
-            }),
-            req.prisma.user.count({
-                where: {
-                    role: "MENTOR",
-                    isProfileComplete: true
+                followers: {
+                    where: { followerId: userId },
+                    select: { id: true }
+                },
+                likesReceived: {
+                    where: { userId: userId },
+                    select: { id: true }
                 }
-            })
-        ]);
+            }
+        });
 
-        const mentorsWithBadges = await Promise.all(mentors.map(async (mentor) => {
-            let uniqueLearners = 0;
-            uniqueLearners = await req.prisma.booking.findMany({
+
+
+        const processedMentors = await Promise.all(allMentors.map(async (mentor) => {
+
+
+            const effectiveSessions = mentor._count.mentorSessions; 
+            let skills = [];
+            try {
+                skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
+            } catch (e) { }
+
+            return {
+                ...mentor,
+                mentorSkills: skills,
+                followersCount: mentor._count.followers,
+                likesCount: mentor._count.likesReceived,
+                totalSessions: effectiveSessions, 
+                isFollowing: mentor.followers.length > 0,
+                isLiked: mentor.likesReceived.length > 0,
+                badges: [],
+                uniqueLearners: 0
+            };
+        }));
+
+        processedMentors.sort((a, b) => {
+            const ratingDiff = (b.averageRating || 0) - (a.averageRating || 0);
+            if (Math.abs(ratingDiff) > 0.01) return ratingDiff;
+
+            const sessionsDiff = (b.totalSessions || 0) - (a.totalSessions || 0);
+            if (sessionsDiff !== 0) return sessionsDiff;
+
+            return 0;
+        });
+
+        const total = processedMentors.length;
+        const totalPages = Math.ceil(total / limit);
+        const startIndex = (page - 1) * limit;
+        const paginatedMentors = processedMentors.slice(startIndex, startIndex + limit);
+
+        const fullyHydratedMentors = await Promise.all(paginatedMentors.map(async (mentor) => {
+            const uniqueLearners = await req.prisma.booking.findMany({
                 where: {
                     session: { mentorId: mentor.id },
                     status: { in: ['CONFIRMED', 'COMPLETED'] }
@@ -416,22 +447,15 @@ exports.getMentors = async (req, res, next) => {
                 select: { userId: true }
             }).then(b => b.length);
 
-            const completedSessionsCount = mentor._count.mentorSessions;
-            const effectiveSessions = Math.max(mentor.totalSessions, completedSessionsCount);
+            const badges = calculateBadges({
+                ...mentor,
+                totalSessions: mentor.totalSessions 
+            }, uniqueLearners);
 
             return {
                 ...mentor,
-                mentorSkills: mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [],
-                followersCount: mentor._count.followers,
-                likesCount: mentor._count.likesReceived,
-                totalSessions: effectiveSessions,
                 uniqueLearners,
-                badges: calculateBadges({
-                    ...mentor,
-                    totalSessions: effectiveSessions
-                }, uniqueLearners),
-                isFollowing: mentor.followers.length > 0,
-                isLiked: mentor.likesReceived.length > 0,
+                badges,
                 followers: undefined,
                 likesReceived: undefined,
                 _count: undefined
@@ -439,20 +463,17 @@ exports.getMentors = async (req, res, next) => {
         }));
 
         const response = {
-            mentors: mentorsWithBadges,
+            mentors: fullyHydratedMentors,
             pagination: {
                 page,
                 limit,
                 total,
-                totalPages: Math.ceil(total / limit)
+                totalPages
             }
         };
 
-        if (req.cache) {
-            req.cache.set(cacheKey, response);
-        }
-
         return res.json(response);
+
     } catch (error) {
         return next(error);
     }
@@ -488,7 +509,7 @@ exports.getProfileById = async (req, res, next) => {
                     select: {
                         followers: true,
                         likesReceived: true,
-                        receivedReviews: true, // Fetch received reviews count
+                        receivedReviews: true,
                         mentorSessions: { where: { status: 'COMPLETED' } }
                     }
                 },
