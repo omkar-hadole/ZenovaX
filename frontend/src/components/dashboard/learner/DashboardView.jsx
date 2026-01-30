@@ -17,14 +17,17 @@ export default function DashboardView({
             <div className="lg:col-span-2 space-y-6">
                 <SessionList
                     title="Your Course"
-                    sessions={myBookings.slice(0, 3).map(booking => ({
-                        id: booking.id,
-                        title: booking.title,
-                        mentor: booking.mentor?.name,
-                        date: `${booking.duration} min`,
-                        mode: booking.mode,
-                        color: 'bg-blue-100 text-blue-600'
-                    }))}
+                    sessions={[...myBookings]
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .slice(0, 3)
+                        .map(booking => ({
+                            id: booking.id,
+                            title: booking.title,
+                            mentor: booking.mentor?.name,
+                            date: `${booking.duration} min`,
+                            mode: booking.mode,
+                            color: 'bg-blue-100 text-blue-600'
+                        }))}
                     type="course"
                     onViewAll={() => setActiveTab('My Bookings')}
                     onSessionClick={(sessionId) => {
@@ -156,6 +159,7 @@ export default function DashboardView({
                         }))}
                     type="class"
                     onViewAll={() => setActiveTab('Browse Sessions')}
+                    onSessionClick={(sessionId) => setSelectedSession({ id: sessionId })}
                 />
             </div>
         </div>

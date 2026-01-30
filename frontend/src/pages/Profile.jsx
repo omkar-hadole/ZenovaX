@@ -19,6 +19,41 @@ import {
 import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 
+// Import Badge Images
+import FirstStepBadge from '../assets/badges/Fisrt Step.webp';
+import SessionProBadge from '../assets/badges/Session Pro.webp';
+import VeteranBadge from '../assets/badges/Veteran.webp';
+import EliteMentorBadge from '../assets/badges/Elite Mentor.webp';
+import MasterMentorBadge from '../assets/badges/Master Mentor.webp';
+import GuideBadge from '../assets/badges/Guide.webp';
+import PathfinderBadge from '../assets/badges/Path Finder.webp';
+import GameChangerBadge from '../assets/badges/Game Changer.webp';
+import ImpactMakerBadge from '../assets/badges/Impact Maker.webp';
+import WellRatedBadge from '../assets/badges/Well Rated.webp';
+import TopRatedBadge from '../assets/badges/Top Rated.webp';
+import ExceptionalBadge from '../assets/badges/Exceptional.webp';
+import LovedBadge from '../assets/badges/Loved.webp';
+import PopularBadge from '../assets/badges/Popular.webp';
+import FavoriteBadge from '../assets/badges/Favorite.webp';
+
+const BADGE_INFO = {
+  "First Step": { image: FirstStepBadge, description: "Completed their first mentoring session" },
+  "Session Pro": { image: SessionProBadge, description: "Completed 5+ mentoring sessions" },
+  "Veteran": { image: VeteranBadge, description: "Completed 10+ mentoring sessions" },
+  "Elite Mentor": { image: EliteMentorBadge, description: "Completed 25+ mentoring sessions" },
+  "Master Mentor": { image: MasterMentorBadge, description: "Completed 50+ mentoring sessions" },
+  "Guide": { image: GuideBadge, description: "Helped 10+ unique learners" },
+  "Pathfinder": { image: PathfinderBadge, description: "Helped 50+ unique learners" },
+  "Game Changer": { image: GameChangerBadge, description: "Helped 100+ unique learners" },
+  "Impact Maker": { image: ImpactMakerBadge, description: "Helped 250+ unique learners" },
+  "Well Rated": { image: WellRatedBadge, description: "Maintained a 4.0+ average rating" },
+  "Top Rated": { image: TopRatedBadge, description: "Maintained a 4.5+ average rating" },
+  "Exceptional": { image: ExceptionalBadge, description: "Maintained a 4.8+ rating with 20+ reviews" },
+  "Loved": { image: LovedBadge, description: "Received 50+ likes" },
+  "Popular": { image: PopularBadge, description: "Accumulated 50+ followers" },
+  "Favorite": { image: FavoriteBadge, description: "Reached 25+ followers and 50+ likes" }
+};
+
 const ReviewsSection = ({ userId }) => {
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, distribution: [] });
@@ -541,7 +576,7 @@ export default function Profile() {
                   <div className="space-y-3">
                     <button
                       onClick={handleFollow}
-                      className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2
+                      className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all transform hover:-translate-y-1
                                             ${isFollowing
                           ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                           : 'bg-black text-white hover:bg-gray-800 shadow-gray-400/20'}`}
@@ -563,32 +598,43 @@ export default function Profile() {
               </div>
 
               {profile.role === 'MENTOR' && (
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-white/50 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500" />
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <Award className="w-5 h-5 text-gray-400" />
+                    Achievements
+                  </h3>
 
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-orange-50 rounded-2xl text-orange-600">
-                      <Award size={24} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900">Educator Tiers</h3>
-                      <p className="text-xs text-gray-500 font-medium">Unlock badges as you grow</p>
-                    </div>
-                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    {profile.badges && profile.badges.length > 0 ? (
+                      profile.badges.map((badgeName, i) => (
+                        <div key={i} className="group relative">
+                          {/* Badge Image */}
+                          <div className="w-22 h-22 transition-transform hover:scale-110 cursor-pointer">
+                            <img
+                              src={BADGE_INFO[badgeName]?.image || BADGE_INFO[badgeName]}
+                              alt={badgeName}
+                              className="w-full h-full object-contain drop-shadow-sm"
+                            />
+                          </div>
 
-                  <div className="space-y-4">
-                    {[
-                      { name: "BRONZE EDUCATOR", count: "50+", color: "text-amber-700 bg-amber-50 border-amber-100" },
-                      { name: "SILVER EDUCATOR", count: "150+", color: "text-gray-500 bg-gray-50 border-gray-200" },
-                      { name: "GOLD EDUCATOR", count: "300+", color: "text-yellow-600 bg-yellow-50 border-yellow-100" },
-                      { name: "PLATINUM EDUCATOR", count: "500+", color: "text-cyan-600 bg-cyan-50 border-cyan-100" },
-                      { name: "LEGEND EDUCATOR", count: "1000+", color: "text-purple-600 bg-purple-50 border-purple-100" },
-                    ].map((tier, i) => (
-                      <div key={i} className={`flex items-center justify-between p-3 rounded-xl border ${tier.color}`}>
-                        <span className="text-xs font-bold tracking-wider">{tier.name}</span>
-                        <span className="text-xs font-bold bg-white px-2 py-1 rounded-md shadow-sm">{tier.count} students</span>
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                            <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl relative text-center">
+                              <div className="font-bold mb-1 border-b border-gray-700 pb-1">{badgeName}</div>
+                              <div className="text-gray-300 leading-snug">
+                                {BADGE_INFO[badgeName]?.description || "Achievement unlocked!"}
+                              </div>
+                              {/* Tooltip Arrow */}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-400 text-sm">
+                        No badges unlocked yet.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}

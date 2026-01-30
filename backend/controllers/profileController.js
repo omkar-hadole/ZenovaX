@@ -117,6 +117,41 @@ exports.completeProfile = async (req, res, next) => {
     }
 };
 
+
+const calculateBadges = (user, uniqueLearners) => {
+    const badges = [];
+
+    const sessions = user.totalSessions || 0; 
+
+    if (sessions >= 1) badges.push("First Step");
+    if (sessions >= 5) badges.push("Session Pro");
+    if (sessions >= 10) badges.push("Veteran");
+    if (sessions >= 25) badges.push("Elite Mentor");
+    if (sessions >= 50) badges.push("Master Mentor");
+
+    const learners = uniqueLearners || 0;
+    if (learners >= 10) badges.push("Guide");
+    if (learners >= 50) badges.push("Pathfinder");
+    if (learners >= 100) badges.push("Game Changer");
+    if (learners >= 250) badges.push("Impact Maker");
+
+    const rating = user.averageRating || 0;
+    const reviews = user._count?.receivedReviews || user.totalReviews || 0;
+
+    if (rating >= 4.0) badges.push("Well Rated");
+    if (rating >= 4.5) badges.push("Top Rated");
+    if (rating >= 4.8 && reviews >= 20) badges.push("Exceptional");
+
+    const likes = user._count?.likesReceived || 0;
+    const followers = user._count?.followers || 0;
+
+    if (likes >= 50) badges.push("Loved");
+    if (followers >= 50) badges.push("Popular");
+    if (followers >= 25 && likes >= 50) badges.push("Favorite");
+
+    return badges;
+};
+
 exports.getMe = async (req, res, next) => {
     try {
         const user = await req.prisma.user.findUnique({
@@ -136,10 +171,17 @@ exports.getMe = async (req, res, next) => {
                 isProfileComplete: true,
                 createdAt: true,
                 updatedAt: true,
+                totalSessions: true,
+                averageRating: true,
+                totalReviews: true,
                 _count: {
                     select: {
                         followers: true,
-                        likesReceived: true
+                        likesReceived: true,
+                        receivedReviews: true,
+                        mentorSessions: {
+                            where: { status: 'COMPLETED' } 
+                        }
                     }
                 }
             },
@@ -157,10 +199,40 @@ exports.getMe = async (req, res, next) => {
             }
         }
 
+        // Calculate unique learners helped
+        let uniqueLearners = 0;
+        if (user.role === 'MENTOR') {
+            uniqueLearners = await req.prisma.booking.findMany({
+                where: {
+                    session: {
+                        mentorId: user.id
+                    },
+                    status: { in: ['CONFIRMED', 'COMPLETED'] }
+                },
+                distinct: ['userId'],
+                select: {
+                    userId: true
+                }
+            }).then(bookings => bookings.length);
+        }
+
+        const completedSessionsCount = user._count.mentorSessions;
+        const effectiveSessions = Math.max(user.totalSessions, completedSessionsCount);
+
+        const badges = user.role === 'MENTOR'
+            ? calculateBadges({
+                ...user,
+                totalSessions: effectiveSessions
+            }, uniqueLearners)
+            : [];
+
         const responseUser = {
             ...user,
             followersCount: user._count.followers,
             likesCount: user._count.likesReceived,
+            badges,
+            uniqueLearners,
+            totalSessions: effectiveSessions,
             _count: undefined
         };
 
@@ -305,11 +377,14 @@ exports.getMentors = async (req, res, next) => {
                     profilePicture: true,
                     mentorSkills: true,
                     averageRating: true,
+                    totalSessions: true, // Need this
+                    totalReviews: true, // Need this
                     _count: {
                         select: {
                             followers: true,
                             likesReceived: true,
-                            mentorSessions: true
+                            receivedReviews: true, // Fetch received reviews count
+                            mentorSessions: { where: { status: 'COMPLETED' } }
                         }
                     },
                     followers: {
@@ -330,21 +405,41 @@ exports.getMentors = async (req, res, next) => {
             })
         ]);
 
-        const parsedMentors = mentors.map(mentor => ({
-            ...mentor,
-            mentorSkills: mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [],
-            followersCount: mentor._count.followers,
-            likesCount: mentor._count.likesReceived,
-            totalSessions: mentor._count.mentorSessions,
-            isFollowing: mentor.followers.length > 0,
-            isLiked: mentor.likesReceived.length > 0,
-            followers: undefined,
-            likesReceived: undefined,
-            _count: undefined
+        const mentorsWithBadges = await Promise.all(mentors.map(async (mentor) => {
+            let uniqueLearners = 0;
+            uniqueLearners = await req.prisma.booking.findMany({
+                where: {
+                    session: { mentorId: mentor.id },
+                    status: { in: ['CONFIRMED', 'COMPLETED'] }
+                },
+                distinct: ['userId'],
+                select: { userId: true }
+            }).then(b => b.length);
+
+            const completedSessionsCount = mentor._count.mentorSessions;
+            const effectiveSessions = Math.max(mentor.totalSessions, completedSessionsCount);
+
+            return {
+                ...mentor,
+                mentorSkills: mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [],
+                followersCount: mentor._count.followers,
+                likesCount: mentor._count.likesReceived,
+                totalSessions: effectiveSessions,
+                uniqueLearners,
+                badges: calculateBadges({
+                    ...mentor,
+                    totalSessions: effectiveSessions
+                }, uniqueLearners),
+                isFollowing: mentor.followers.length > 0,
+                isLiked: mentor.likesReceived.length > 0,
+                followers: undefined,
+                likesReceived: undefined,
+                _count: undefined
+            };
         }));
 
         const response = {
-            mentors: parsedMentors,
+            mentors: mentorsWithBadges,
             pagination: {
                 page,
                 limit,
@@ -385,10 +480,16 @@ exports.getProfileById = async (req, res, next) => {
                 isProfileComplete: true,
                 createdAt: true,
                 updatedAt: true,
+                // Stats
+                totalSessions: true,
+                averageRating: true,
+                totalReviews: true,
                 _count: {
                     select: {
                         followers: true,
-                        likesReceived: true
+                        likesReceived: true,
+                        receivedReviews: true, // Fetch received reviews count
+                        mentorSessions: { where: { status: 'COMPLETED' } }
                     }
                 },
                 followers: {
@@ -414,10 +515,35 @@ exports.getProfileById = async (req, res, next) => {
             }
         }
 
+        let uniqueLearners = 0;
+        if (user.role === 'MENTOR') {
+            uniqueLearners = await req.prisma.booking.findMany({
+                where: {
+                    session: { mentorId: user.id },
+                    status: { in: ['CONFIRMED', 'COMPLETED'] }
+                },
+                distinct: ['userId'],
+                select: { userId: true }
+            }).then(b => b.length);
+        }
+
+        const completedSessionsCount = user._count.mentorSessions;
+        const effectiveSessions = Math.max(user.totalSessions, completedSessionsCount);
+
+        const badges = user.role === 'MENTOR'
+            ? calculateBadges({
+                ...user,
+                totalSessions: effectiveSessions
+            }, uniqueLearners)
+            : [];
+
         const responseUser = {
             ...user,
             followersCount: user._count.followers,
             likesCount: user._count.likesReceived,
+            badges,
+            uniqueLearners,
+            totalSessions: effectiveSessions,
             isFollowing: user.followers.length > 0,
             isLiked: user.likesReceived.length > 0,
             followers: undefined,
