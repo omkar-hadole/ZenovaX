@@ -112,6 +112,13 @@ export default function CreateSession() {
 
     try {
       const dateTime = new Date(`${formData.proposedDate}T${formData.time}`);
+
+      if (dateTime < new Date()) {
+        setError("You cannot schedule a session in the past. Please check the date and time.");
+        setLoading(false);
+        return;
+      }
+
       const topicsArray = formData.topics.split(',').map(t => t.trim()).filter(Boolean);
 
       const payload = {
@@ -190,6 +197,13 @@ export default function CreateSession() {
                 <p className="text-gray-500">{isEditing ? "Update details before approval" : "Craft a unique learning experience for your students"}</p>
               </div>
             </div>
+
+            {error && (
+              <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <p className="font-medium">{error}</p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
@@ -299,6 +313,7 @@ export default function CreateSession() {
                         type="date"
                         name="proposedDate"
                         required
+                        min={new Date().toISOString().split('T')[0]}
                         value={formData.proposedDate}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#A9C1F7]"

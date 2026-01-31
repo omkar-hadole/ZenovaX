@@ -14,6 +14,8 @@ router.get("/my-requests", protect, sessionController.getMyRequests);
 
 router.get("/stats", protect, sessionController.getMentorStats);
 
+router.get("/activity", protect, sessionController.getRecentActivity);
+
 router.get("/my-sessions", protect, sessionController.getMySessions);
 
 router.post("/book/:id", protect, sessionController.bookSession);

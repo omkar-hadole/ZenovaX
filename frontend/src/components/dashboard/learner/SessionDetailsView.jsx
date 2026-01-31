@@ -311,6 +311,8 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
         alert("Review submitted successfully!");
     };
 
+    const isSessionTimeOver = new Date(new Date(S.scheduledAt).getTime() + S.duration * 60000) < new Date();
+
     return (
         <div className="min-h-screen bg-[#F8F9FC]">
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
@@ -636,6 +638,13 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                         className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
                                     >
                                         Register Now (Disabled for Mentors)
+                                    </button>
+                                ) : isSessionTimeOver ? (
+                                    <button
+                                        disabled
+                                        className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                                    >
+                                        Registration Closed
                                     </button>
                                 ) : (
                                     <button

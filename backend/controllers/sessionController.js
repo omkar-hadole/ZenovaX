@@ -30,6 +30,11 @@ exports.createSessionRequest = async (req, res, next) => {
             return res.status(400).json({ error: "Meeting link is required for online sessions" });
         }
 
+        const sessionDate = new Date(proposedDate);
+        if (sessionDate < new Date()) {
+            return res.status(400).json({ error: "Cannot create a session in the past. Please choose a future date and time." });
+        }
+
         const sessionRequest = await req.prisma.sessionRequest.create({
             data: {
                 mentorId: req.user.id,
@@ -324,6 +329,12 @@ exports.bookSession = async (req, res, next) => {
 
         if (session.availableSeats <= 0) {
             return res.status(400).json({ error: "Session is full" });
+        }
+
+        // Check if session has ended
+        const sessionEndTime = new Date(session.scheduledAt).getTime() + (session.duration * 60 * 1000);
+        if (Date.now() > sessionEndTime) {
+            return res.status(400).json({ error: "Registration closed: Session has ended" });
         }
 
         const booking = await req.prisma.booking.create({
@@ -670,6 +681,7 @@ exports.verifyAttendance = async (req, res, next) => {
             data: { attended: true, joinedAt: new Date() }
         });
 
+
         return res.json({
             success: true,
             message: "Attendance Verified",
@@ -680,6 +692,160 @@ exports.verifyAttendance = async (req, res, next) => {
             }
         });
 
+    } catch (error) {
+        return next(error);
+    }
+};
+
+const { calculateBadges } = require("../utils/badges");
+
+exports.getRecentActivity = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await req.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                totalSessions: true,
+                averageRating: true,
+                totalReviews: true,
+                _count: {
+                    select: {
+                        followers: true,
+                        likesReceived: true,
+                        receivedReviews: true
+                    }
+                }
+            }
+        });
+
+        if (user) {
+            const now = new Date();
+            const finishedSessionsCount = await req.prisma.session.count({
+                where: {
+                    mentorId: userId,
+                    OR: [
+                        { status: 'COMPLETED' },
+                        {
+                            AND: [
+                                { status: { in: ['UPCOMING', 'LIVE'] } },
+                                { scheduledAt: { lt: now } }
+                            ]
+                        }
+                    ]
+                }
+            });
+
+
+            const uniqueLearners = await req.prisma.booking.findMany({
+                where: {
+                    session: { mentorId: userId },
+                    status: { in: ['CONFIRMED', 'COMPLETED'] }
+                },
+                distinct: ['userId'],
+                select: { userId: true }
+            }).then(b => b.length);
+
+            const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
+            const earnedBadges = calculateBadges({
+                ...user,
+                totalSessions: effectiveSessions
+            }, uniqueLearners);
+
+            for (const badge of earnedBadges) {
+                const existingNotif = await req.prisma.notification.findFirst({
+                    where: {
+                        userId: userId,
+                        type: 'ACHIEVEMENT_UNLOCKED',
+                        title: badge
+                    }
+                });
+
+                if (!existingNotif) {
+                    await req.prisma.notification.create({
+                        data: {
+                            userId: userId,
+                            type: 'ACHIEVEMENT_UNLOCKED',
+                            title: badge,
+                            message: `Congratulations! You have unlocked the "${badge}" badge.`
+                        }
+                    });
+                }
+            }
+        }
+
+        const notifications = await req.prisma.notification.findMany({
+            where: { userId: userId },
+            orderBy: { createdAt: 'desc' },
+            take: 4
+        });
+
+        const sessions = await req.prisma.session.findMany({
+            where: { mentorId: userId },
+            select: { id: true }
+        });
+        const sessionIds = sessions.map(s => s.id);
+
+        let reports = [];
+        if (sessionIds.length > 0) {
+            reports = await req.prisma.report.findMany({
+                where: { sessionId: { in: sessionIds } },
+                orderBy: { createdAt: 'desc' },
+                take: 4,
+                include: { session: { select: { title: true } } }
+            });
+        }
+
+        // 3. Normalize and Merge
+        const normalizedNotifications = notifications.map(n => ({
+            type: 'NOTIFICATION',
+            data: n,
+            createdAt: n.createdAt
+        }));
+
+        const normalizedReports = reports.map(r => ({
+            type: 'REPORT',
+            data: r,
+            createdAt: r.createdAt
+        }));
+
+        const combined = [...normalizedNotifications, ...normalizedReports]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 4);
+
+        // 4. Map to Activity Format
+        const activities = combined.map(item => {
+            if (item.type === 'REPORT') {
+                return {
+                    id: item.data.id,
+                    action: "Report Received",
+                    detail: `${item.data.reason} (Session: ${item.data.session.title})`,
+                    createdAt: item.data.createdAt,
+                    isNegative: true
+                };
+            } else {
+                // Notification
+                const n = item.data;
+                let action = "Notification";
+                switch (n.type) {
+                    case 'BOOKING_CONFIRMED': action = "New booking"; break;
+                    case 'NEW_REVIEW': action = "Review received"; break;
+                    case 'SESSION_REQUEST_APPROVED': action = "Session Approved"; break;
+                    case 'SESSION_REQUEST_REJECTED': action = "Session Rejected"; break;
+                    case 'ACHIEVEMENT_UNLOCKED': action = "Achievement Unlocked"; break;
+                    default: action = n.title;
+                }
+                return {
+                    id: n.id,
+                    action: action,
+                    detail: n.message,
+                    createdAt: n.createdAt
+                };
+            }
+        });
+
+        return res.json({ activities });
     } catch (error) {
         return next(error);
     }

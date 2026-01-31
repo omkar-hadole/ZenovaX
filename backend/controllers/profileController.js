@@ -118,39 +118,7 @@ exports.completeProfile = async (req, res, next) => {
 };
 
 
-const calculateBadges = (user, uniqueLearners) => {
-    const badges = [];
-
-    const sessions = user.totalSessions || 0;
-
-    if (sessions >= 1) badges.push("First Step");
-    if (sessions >= 5) badges.push("Session Pro");
-    if (sessions >= 10) badges.push("Veteran");
-    if (sessions >= 25) badges.push("Elite Mentor");
-    if (sessions >= 50) badges.push("Master Mentor");
-
-    const learners = uniqueLearners || 0;
-    if (learners >= 10) badges.push("Guide");
-    if (learners >= 50) badges.push("Pathfinder");
-    if (learners >= 100) badges.push("Game Changer");
-    if (learners >= 250) badges.push("Impact Maker");
-
-    const rating = user.averageRating || 0;
-    const reviews = user._count?.receivedReviews || user.totalReviews || 0;
-
-    if (rating >= 4.0) badges.push("Well Rated");
-    if (rating >= 4.5) badges.push("Top Rated");
-    if (rating >= 4.8 && reviews >= 20) badges.push("Exceptional");
-
-    const likes = user._count?.likesReceived || 0;
-    const followers = user._count?.followers || 0;
-
-    if (likes >= 50) badges.push("Loved");
-    if (followers >= 50) badges.push("Popular");
-    if (followers >= 25 && likes >= 50) badges.push("Favorite");
-
-    return badges;
-};
+const { calculateBadges } = require("../utils/badges");
 
 exports.getMe = async (req, res, next) => {
     try {
@@ -216,8 +184,33 @@ exports.getMe = async (req, res, next) => {
             }).then(bookings => bookings.length);
         }
 
-        const completedSessionsCount = user._count.mentorSessions;
-        const effectiveSessions = Math.max(user.totalSessions, completedSessionsCount);
+        // CORRECTED: Count sessions that are actually finished (COMPLETED or Past UPCOMING/LIVE)
+        // Using current time for comparison
+        const now = new Date();
+        const finishedSessionsCount = await req.prisma.session.count({
+            where: {
+                mentorId: req.user.id,
+                OR: [
+                    { status: 'COMPLETED' },
+                    {
+                        AND: [
+                            { status: { in: ['UPCOMING', 'LIVE'] } },
+                            { scheduledAt: { lt: now } }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
+        console.log("DEBUG BADGES:", {
+            userId: user.id,
+            dbTotalSessions: user.totalSessions,
+            finishedSessionsCount,
+            effectiveSessions,
+            uniqueLearners
+        });
 
         const badges = user.role === 'MENTOR'
             ? calculateBadges({
@@ -225,6 +218,8 @@ exports.getMe = async (req, res, next) => {
                 totalSessions: effectiveSessions
             }, uniqueLearners)
             : [];
+
+        console.log("Calculated Badges:", badges);
 
         const responseUser = {
             ...user,
@@ -355,7 +350,7 @@ exports.getMentors = async (req, res, next) => {
         const userId = req.user.id;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const cacheKey = `mentors_sorted_${userId}`; 
+        const cacheKey = `mentors_sorted_${userId}`;
         const allMentors = await req.prisma.user.findMany({
             where: {
                 role: "MENTOR",
@@ -368,7 +363,7 @@ exports.getMentors = async (req, res, next) => {
                 profilePicture: true,
                 mentorSkills: true,
                 averageRating: true,
-                totalSessions: true, 
+                totalSessions: true,
                 totalReviews: true,
                 _count: {
                     select: {
@@ -403,7 +398,7 @@ exports.getMentors = async (req, res, next) => {
         const processedMentors = await Promise.all(allMentors.map(async (mentor) => {
 
 
-            const effectiveSessions = mentor._count.mentorSessions; 
+            const effectiveSessions = mentor._count.mentorSessions;
             let skills = [];
             try {
                 skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
@@ -414,7 +409,7 @@ exports.getMentors = async (req, res, next) => {
                 mentorSkills: skills,
                 followersCount: mentor._count.followers,
                 likesCount: mentor._count.likesReceived,
-                totalSessions: effectiveSessions, 
+                totalSessions: effectiveSessions,
                 isFollowing: mentor.followers.length > 0,
                 isLiked: mentor.likesReceived.length > 0,
                 badges: [],
@@ -449,7 +444,7 @@ exports.getMentors = async (req, res, next) => {
 
             const badges = calculateBadges({
                 ...mentor,
-                totalSessions: mentor.totalSessions 
+                totalSessions: mentor.totalSessions
             }, uniqueLearners);
 
             return {
@@ -548,8 +543,32 @@ exports.getProfileById = async (req, res, next) => {
             }).then(b => b.length);
         }
 
-        const completedSessionsCount = user._count.mentorSessions;
-        const effectiveSessions = Math.max(user.totalSessions, completedSessionsCount);
+        // CORRECTED: Count sessions that are actually finished
+        const now = new Date();
+        const finishedSessionsCount = await req.prisma.session.count({
+            where: {
+                mentorId: user.id,
+                OR: [
+                    { status: 'COMPLETED' },
+                    {
+                        AND: [
+                            { status: { in: ['UPCOMING', 'LIVE'] } },
+                            { scheduledAt: { lt: now } }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
+        console.log("DEBUG BADGES (ById):", {
+            userId: user.id,
+            dbTotalSessions: user.totalSessions,
+            finishedSessionsCount,
+            effectiveSessions,
+            uniqueLearners
+        });
 
         const badges = user.role === 'MENTOR'
             ? calculateBadges({
