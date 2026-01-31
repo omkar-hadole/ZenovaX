@@ -77,7 +77,7 @@ export default function CompleteProfile() {
         () => ({
             1: !!role,
             2:
-                !!basicInfo.profilePicture?.file &&
+                (role === 'learner' || !!basicInfo.profilePicture?.file) &&
                 basicInfo.department.length > 0 &&
                 basicInfo.year.length > 0 &&
                 basicInfo.bio.length <= 150,
@@ -259,13 +259,7 @@ export default function CompleteProfile() {
                         </button>
 
                         <div className="flex items-center gap-3">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 transition-all"
-                            >
-                                Skip for now
-                            </button>
+
                             <button
                                 type="button"
                                 onClick={primaryAction}

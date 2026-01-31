@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { login } from '../utils/api';
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { login, apiCall } from '../utils/api';
 
 export default function LoginForm({ onToggle, showToast }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const validateEmail = (email) => {
     return email.endsWith('@nst.rishihood.edu.in') && email.includes('@');
@@ -27,6 +28,7 @@ export default function LoginForm({ onToggle, showToast }) {
     }
 
     setLoading(true);
+    setNeedsVerification(false);
 
     try {
       const data = await login(formData.email, formData.password);
@@ -45,11 +47,56 @@ export default function LoginForm({ onToggle, showToast }) {
         }
       }, 600);
     } catch (err) {
-      showToast({ message: err.message || 'Network error', type: 'error' });
+      if (err.needsVerification) {
+        setNeedsVerification(true);
+        showToast({ message: 'Please verify your email first.', type: 'error' });
+      } else {
+        showToast({ message: err.message || 'Network error', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const handleResend = async () => {
+    try {
+      setLoading(true);
+      await apiCall('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email: formData.email })
+      });
+      showToast({ message: 'Verification email resent!', type: 'success' });
+      setNeedsVerification(false); // Reset state
+    } catch (err) {
+      showToast({ message: err.message || 'Failed to resend email.', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (needsVerification) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Email not verified</h2>
+        <p className="text-gray-600 mb-6">
+          Your account is not verified yet. Please check your inbox for the verification link.
+        </p>
+        <button
+          onClick={handleResend}
+          disabled={loading}
+          className="w-full bg-[#7A79E6] text-white py-3 rounded-xl font-medium hover:bg-[#6c6bd6] transition-colors mb-3"
+        >
+          {loading ? 'Sending...' : 'Resend Verification Email'}
+        </button>
+        <button
+          onClick={() => setNeedsVerification(false)}
+          className="text-gray-500 hover:text-gray-700 text-sm"
+        >
+          Back to Login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

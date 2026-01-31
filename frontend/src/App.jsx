@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
+import VerifyEmail from './pages/VerifyEmail';
 
 import LearnerLayout from './layouts/LearnerLayout';
 import DashboardPage from './pages/learner/DashboardPage';
@@ -38,6 +39,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
 
                 <Route
                     path="/complete-profile"

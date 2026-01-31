@@ -16,6 +16,7 @@ export default function SignupForm({ onToggle, showToast }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const validateEmail = (email) => {
     return email.endsWith('@nst.rishihood.edu.in') && email.includes('@');
@@ -58,19 +59,37 @@ export default function SignupForm({ onToggle, showToast }) {
 
     try {
       const name = `${formData.firstname} ${formData.lastname}`;
-      const data = await register(name, formData.email, formData.password);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      showToast({ message: 'Account created successfully!', type: 'success' });
-
-      setTimeout(() => {
-        navigate('/complete-profile');
-      }, 600);
+      await register(name, formData.email, formData.password);
+      setSuccess(true);
+      showToast({ message: 'Registration successful! Check your email.', type: 'success' });
     } catch (err) {
       showToast({ message: err.message || 'Network error', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="text-center py-10">
+        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h2>
+        <p className="text-gray-600 mb-8 max-w-sm mx-auto">
+          We've sent a verification link to <strong>{formData.email}</strong>. Please check your inbox and click the link to activate your account.
+        </p>
+        <button
+          onClick={onToggle}
+          className="btn-primary px-8 py-3 rounded-xl text-white font-medium hover:opacity-90 transition-all"
+        >
+          Back to Login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

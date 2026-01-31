@@ -42,6 +42,7 @@ model User {
   // Email verification
   isEmailVerified   Boolean   @default(false)
   verificationToken String?   @unique
+  verificationTokenExpires DateTime?
   verifiedAt        DateTime?
   
   // Gamification (for mentors)

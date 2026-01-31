@@ -17,7 +17,9 @@ export const login = async (email, password) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Login failed');
+    const error = new Error(data.error || 'Login failed');
+    Object.assign(error, data);
+    throw error;
   }
 
   if (data.token) {
@@ -38,13 +40,10 @@ export const register = async (name, email, password) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Registration failed');
+    const error = new Error(data.error || 'Registration failed');
+    Object.assign(error, data);
+    throw error;
   }
-
-  if (data.token) {
-    localStorage.setItem('token', data.token);
-  }
-  localStorage.setItem('user', JSON.stringify(data.user));
 
   return data;
 };
