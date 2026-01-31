@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import LoginForm from '../components/LoginForm';
 import SignupForm from '../components/SignupForm';
@@ -7,7 +7,8 @@ import Toast from '../components/Toast';
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'signup');
   const [toast, setToast] = useState(null);
   const [currentImage, setCurrentImage] = useState(0);
 

@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import logo from "../../assets/logo.svg";
 
 export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -23,7 +25,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
       >
         <div className="flex items-center gap-3">
 
-            <img src={logo} alt="ZenovaX Logo" className="h-6 object-contain drop-shadow-sm" />
+          <img src={logo} alt="ZenovaX Logo" className="h-6 object-contain drop-shadow-sm" />
         </div>
 
         <div className="hidden md:flex items-center gap-8">
@@ -42,13 +44,13 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
           {!isLoggedIn ? (
             <>
               <button
-                onClick={handlePrimaryCTA}
+                onClick={() => navigate('/auth?mode=login')}
                 className="px-6 py-2 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-gray-200 transition"
               >
                 Login
               </button>
               <button
-                onClick={handlePrimaryCTA}
+                onClick={() => navigate('/auth?mode=signup')}
                 className="px-6 py-2 rounded-full bg-[#7A79E6] text-white font-semibold shadow-md hover:bg-[#6b6ad6] hover:shadow-xl transition"
               >
                 Sign Up
@@ -96,7 +98,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
               <>
                 <button
                   onClick={() => {
-                    handlePrimaryCTA();
+                    navigate('/auth?mode=login');
                     setMobileMenuOpen(false);
                   }}
                   className="w-full px-6 py-3 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-[#6c6bd6] transition"
@@ -106,7 +108,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
 
                 <button
                   onClick={() => {
-                    handlePrimaryCTA();
+                    navigate('/auth?mode=signup');
                     setMobileMenuOpen(false);
                   }}
                   className="w-full px-6 py-3 rounded-full bg-[#7A79E6] text-white font-semibold shadow-md hover:shadow-lg hover:bg-[#6c6bd6] transition"
