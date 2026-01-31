@@ -117,7 +117,7 @@ export default function MySessions({ sessions }) {
                                             Start
                                         </button>
                                         <button
-                                            onClick={() => navigate(`/sessions/${session.id}`)}
+                                            onClick={() => navigate(`/mentor/session/${session.id}`)}
                                             className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                                         >
                                             Details

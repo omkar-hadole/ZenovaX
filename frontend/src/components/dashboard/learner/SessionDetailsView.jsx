@@ -238,11 +238,35 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
     );
 };
 
-export default function SessionDetailsView({ session, onBack, onRegister, isRegistering }) {
+export default function SessionDetailsView({ session, onBack, onRegister, isRegistering, user }) {
     const [showResources, setShowResources] = useState(true);
     const [showQuizzes, setShowQuizzes] = useState(false);
     const [showCoding, setShowCoding] = useState(false);
     const [reviewSubmitted, setReviewSubmitted] = useState(false);
+    const [showReviews, setShowReviews] = useState(false);
+
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [reportReason, setReportReason] = useState('');
+
+    const handleReportSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await apiCall('/reports/create', {
+                method: 'POST',
+                body: JSON.stringify({
+                    sessionId: session.id,
+                    reason: reportReason
+                })
+            });
+            alert('Report submitted successfully.');
+            setIsReportModalOpen(false);
+            setReportReason('');
+        } catch (error) {
+            alert(error.message || 'Failed to submit report');
+        }
+    };
+
+    if (!session) return null;
 
     const mockSession = {
         id: "session123",
@@ -606,6 +630,13 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                             </button>
                                         )}
                                     </div>
+                                ) : user?.role === 'MENTOR' ? (
+                                    <button
+                                        disabled
+                                        className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                                    >
+                                        Register Now (Disabled for Mentors)
+                                    </button>
                                 ) : (
                                     <button
                                         onClick={onRegister}
@@ -620,7 +651,10 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                 )}
 
                                 <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                                    <button className="text-gray-400 text-xs font-bold hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto uppercase tracking-wider group">
+                                    <button
+                                        onClick={() => setIsReportModalOpen(true)}
+                                        className="text-gray-400 text-xs font-bold hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto uppercase tracking-wider group"
+                                    >
                                         <AlertTriangle className="w-3.5 h-3.5 group-hover:animate-bounce" />
                                         Report an issue
                                     </button>
@@ -630,6 +664,46 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     </div>
                 </div>
             </div>
+
+            {/* Report Modal */}
+            {isReportModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95">
+                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <AlertTriangle className="text-red-500 w-6 h-6" />
+                            Report Session
+                        </h3>
+                        <p className="text-gray-500 text-sm mb-6">
+                            Please describe the issue with this session. Our team will review your report.
+                        </p>
+                        <form onSubmit={handleReportSubmit}>
+                            <textarea
+                                value={reportReason}
+                                onChange={(e) => setReportReason(e.target.value)}
+                                placeholder="Describe the issue..."
+                                required
+                                rows={4}
+                                className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-red-500 mb-6 resize-none"
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsReportModalOpen(false)}
+                                    className="flex-1 py-3 text-gray-700 font-bold hover:bg-gray-50 rounded-xl transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                                >
+                                    Submit Report
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

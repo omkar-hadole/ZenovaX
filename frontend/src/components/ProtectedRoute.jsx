@@ -15,13 +15,20 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     }
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-      return <Navigate to="/" replace />;
+      // Redirect to correct dashboard based on actual role
+      if (user.role === 'ADMIN') {
+        return <Navigate to="/admin/dashboard" replace />;
+      } else if (user.role === 'MENTOR' || user.role === 'BOTH') {
+        return <Navigate to="/mentor-dashboard" replace />;
+      } else {
+        return <Navigate to="/dashboard" replace />;
+      }
     }
+
+    return children;
 
   } catch (e) {
     localStorage.removeItem('user');
     return <Navigate to="/" replace />;
   }
-
-  return children;
 }

@@ -72,7 +72,20 @@ exports.getSessionRequestById = async (req, res, next) => {
             return res.status(404).json({ error: "Session request not found" });
         }
 
-        if (request.mentorId !== req.user.id) {
+        const user = await req.prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+
+        if (!user) {
+            return res.status(401).json({ error: "User not found" });
+        }
+
+        console.log("getSessionRequestById Debug:");
+        console.log("User:", user.id, "Role:", user.role);
+        console.log("Request Mentor:", request.mentorId);
+
+        if (request.mentorId !== user.id && user.role !== 'ADMIN') {
+            console.log("Access Denied: User is not mentor and not ADMIN");
             return res.status(403).json({ error: "Unauthorized to view this request" });
         }
 
@@ -109,32 +122,72 @@ exports.updateSessionRequest = async (req, res, next) => {
             return res.status(404).json({ error: "Session request not found" });
         }
 
-        if (request.mentorId !== req.user.id) {
+        const user = await req.prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+
+        if (!user) {
+            return res.status(401).json({ error: "User not found" });
+        }
+
+        if (request.mentorId !== user.id && user.role !== 'ADMIN') {
             return res.status(403).json({ error: "Unauthorized to update this request" });
         }
 
-        if (request.status !== 'PENDING') {
+        if (request.status !== 'PENDING' && user.role !== 'ADMIN') {
             return res.status(400).json({ error: "Only pending requests can be updated" });
         }
 
+        const requestUpdateData = {
+            title: title ? sanitizeString(title) : undefined,
+            description: description ? sanitizeString(description) : undefined,
+            subject: subject ? sanitizeString(subject) : undefined,
+            department: department ? sanitizeString(department) : undefined,
+            topics: topics ? JSON.stringify(isValidArray(topics) ? topics : []) : undefined,
+            mode,
+            priceType,
+            price: (price !== undefined && !isNaN(parseFloat(price))) ? parseFloat(price) : undefined,
+            maxSeats: (maxSeats !== undefined && !isNaN(parseInt(maxSeats))) ? parseInt(maxSeats) : undefined,
+            venue: venue ? sanitizeString(venue) : undefined,
+            meetingLink,
+            proposedDate: proposedDate ? new Date(proposedDate) : undefined,
+            duration: (duration !== undefined && !isNaN(parseInt(duration))) ? parseInt(duration) : undefined,
+        };
+
         const updatedRequest = await req.prisma.sessionRequest.update({
             where: { id },
-            data: {
-                title: title ? sanitizeString(title) : undefined,
-                description: description ? sanitizeString(description) : undefined,
-                subject: subject ? sanitizeString(subject) : undefined,
-                department: department ? sanitizeString(department) : undefined,
-                topics: topics ? JSON.stringify(isValidArray(topics) ? topics : []) : undefined,
-                mode,
-                priceType,
-                price: price !== undefined ? parseFloat(price) : undefined,
-                maxSeats: maxSeats !== undefined ? parseInt(maxSeats) : undefined,
-                venue: venue ? sanitizeString(venue) : undefined,
-                meetingLink,
-                proposedDate: proposedDate ? new Date(proposedDate) : undefined,
-                duration: duration !== undefined ? parseInt(duration) : undefined,
-            }
+            data: requestUpdateData
         });
+
+        // If Admin is updating an APPROVED request, also update the linked Session
+        if (user.role === 'ADMIN' && request.status === 'APPROVED') {
+            try {
+                console.log("Attempting to update linked session for Request ID:", id);
+                await req.prisma.session.update({
+                    where: { requestId: id },
+                    data: {
+                        title: requestUpdateData.title,
+                        description: requestUpdateData.description,
+                        subject: requestUpdateData.subject,
+                        department: requestUpdateData.department,
+                        topics: requestUpdateData.topics,
+                        mode: requestUpdateData.mode,
+                        priceType: requestUpdateData.priceType,
+                        price: requestUpdateData.price,
+                        maxSeats: requestUpdateData.maxSeats,
+                        venue: requestUpdateData.venue,
+                        meetingLink: requestUpdateData.meetingLink,
+                        scheduledAt: requestUpdateData.proposedDate,
+                        duration: requestUpdateData.duration,
+                    }
+                });
+                console.log("Linked session updated successfully");
+            } catch (sessionError) {
+                console.error("Failed to update linked session:", sessionError);
+                if (sessionError.code !== 'P2025') {
+                }
+            }
+        }
 
         return res.json({
             success: true,

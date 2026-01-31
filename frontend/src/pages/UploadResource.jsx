@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Link, FileText, Video, Image, ArrowLeft, LayoutDashboard, Calendar, Star, HelpCircle, Settings, BookOpen, Layers } from 'lucide-react';
+import { Upload, Link, FileText, Video, Image, ArrowLeft, LayoutDashboard, Calendar, Star, HelpCircle, Settings, BookOpen, Layers, QrCode, Code } from 'lucide-react';
 import { apiCall } from '../utils/api';
-import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
+import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 
 export default function UploadResource() {
     const navigate = useNavigate();
@@ -60,14 +60,6 @@ export default function UploadResource() {
         { value: 'OTHER', icon: FileText, label: 'Other' }
     ];
 
-    const sidebarItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', onClick: () => navigate('/mentor-dashboard') },
-        { icon: Calendar, label: 'My Sessions', onClick: () => navigate('/mentor-dashboard') },
-        { icon: Star, label: 'Reviews Received', onClick: () => navigate('/mentor-dashboard') },
-        { icon: HelpCircle, label: 'Help Center' },
-        { icon: Settings, label: 'Settings' },
-    ];
-
     return (
         <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
@@ -76,23 +68,7 @@ export default function UploadResource() {
             </div>
 
             <div className="relative z-10 flex h-full w-full">
-                <Sidebar
-                    title="ZenovaX Mentor"
-                    subtitle="Resource Manager"
-                    items={sidebarItems}
-                    activeTab=""
-                    setActiveTab={() => { }}
-                    onLogout={() => { }}
-                >
-                    <div className="bg-gradient-to-br from-[#C9C7F5] to-[#A9C1F7] rounded-2xl p-6 text-white relative overflow-hidden shadow-sm">
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-bl-full" />
-                        <h3 className="font-bold text-lg mb-2 text-gray-800">Upgrade to Gold</h3>
-                        <p className="text-sm text-gray-700 mb-4">Get access to premium features and analytics.</p>
-                        <button className="bg-white text-[#5a59b5] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors w-full shadow-sm">
-                            Upgrade Now
-                        </button>
-                    </div>
-                </Sidebar>
+                <MentorSidebar activeTab="Dashboard" />
 
                 <main className="flex-1 overflow-y-auto">
                     <Header user={user} title="Upload Resource" />

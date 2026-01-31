@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, Video, MapPin,
-  DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit
+  DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/mentorlogo.svg'
+import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 
 export default function CreateSession() {
   const navigate = useNavigate();
@@ -39,34 +40,62 @@ export default function CreateSession() {
     if (isEditing) {
       const fetchRequest = async () => {
         try {
+          console.log("Fetching session request for ID:", id);
           const data = await apiCall(`/sessions/request/${id}`);
+          console.log("Fetched data:", data);
+
+          if (!data || !data.request) {
+            throw new Error("No request data found");
+          }
+
           const req = data.request;
           const date = new Date(req.proposedDate);
 
+          let parsedTopics = "";
+          try {
+            // Handle case where topics might be already parsed or invalid
+            const rawTopics = req.topics;
+            if (Array.isArray(rawTopics)) {
+              parsedTopics = rawTopics.join(', ');
+            } else if (typeof rawTopics === 'string') {
+              // Try parsing if it looks like JSON array
+              if (rawTopics.trim().startsWith('[')) {
+                parsedTopics = JSON.parse(rawTopics).join(', ');
+              } else {
+                parsedTopics = rawTopics;
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to parse topics:", e);
+            parsedTopics = req.topics || "";
+          }
+
           setFormData({
-            title: req.title,
-            description: req.description,
-            subject: req.subject,
-            department: req.department,
-            topics: JSON.parse(req.topics).join(', '),
-            mode: req.mode,
+            title: req.title || '',
+            description: req.description || '',
+            subject: req.subject || '',
+            department: req.department || '',
+            topics: parsedTopics,
+            mode: req.mode || 'ONLINE',
             venue: req.venue || '',
             meetingLink: req.meetingLink || '',
-            proposedDate: date.toISOString().split('T')[0],
-            time: date.toTimeString().slice(0, 5),
-            duration: req.duration,
-            priceType: req.priceType,
-            price: req.price,
-            maxSeats: req.maxSeats
+            proposedDate: !isNaN(date) ? date.toISOString().split('T')[0] : '',
+            time: !isNaN(date) ? date.toTimeString().slice(0, 5) : '',
+            duration: req.duration || '',
+            priceType: req.priceType || 'FREE',
+            price: req.price || '',
+            maxSeats: req.maxSeats || ''
           });
         } catch (err) {
-          setError("Failed to load session details");
-          console.error(err);
+          setError("Failed to load session details: " + err.message);
+          console.error("Fetch request error:", err);
         }
       };
       fetchRequest();
     }
   }, [id, isEditing]);
+
+  const isAdmin = user?.role === 'ADMIN';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,9 +118,9 @@ export default function CreateSession() {
         ...formData,
         proposedDate: dateTime.toISOString(),
         topics: topicsArray,
-        price: parseFloat(formData.price),
-        maxSeats: parseInt(formData.maxSeats),
-        duration: parseInt(formData.duration)
+        price: formData.price ? parseFloat(formData.price) : 0,
+        maxSeats: formData.maxSeats ? parseInt(formData.maxSeats) : 0,
+        duration: formData.duration ? parseInt(formData.duration) : 0
       };
 
       if (isEditing) {
@@ -106,21 +135,17 @@ export default function CreateSession() {
         });
       }
 
-      navigate('/mentor-dashboard');
+      if (isAdmin) {
+        navigate('/admin/reports');
+      } else {
+        navigate('/mentor-dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Failed to save session');
     } finally {
       setLoading(false);
     }
   };
-
-  const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', onClick: () => navigate('/mentor-dashboard') },
-    { icon: Calendar, label: 'My Sessions', onClick: () => navigate('/mentor-dashboard') },
-    { icon: Star, label: 'Reviews Received', onClick: () => navigate('/mentor-dashboard') },
-    { icon: HelpCircle, label: 'Help Center' },
-    { icon: Settings, label: 'Settings' },
-  ];
 
   return (
     <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
@@ -130,22 +155,27 @@ export default function CreateSession() {
       </div>
 
       <div className="relative z-10 flex h-full w-full">
-        <Sidebar
-          title="ZenovaX"
-          items={sidebarItems}
-          activeTab=""
-          setActiveTab={() => { }}
-          onLogout={() => { }}
-        >
-          <div className="bg-gradient-to-br from-[#C9C7F5] to-[#A9C1F7] rounded-2xl p-6 text-white relative overflow-hidden shadow-sm">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-bl-full" />
-            <h3 className="font-bold text-lg mb-2 text-gray-800">Upgrade to Gold</h3>
-            <p className="text-sm text-gray-700 mb-4">Get access to premium features and analytics.</p>
-            <button className="bg-white text-[#5a59b5] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors w-full shadow-sm">
-              Upgrade Now
-            </button>
-          </div>
-        </Sidebar>
+        {isAdmin ? (
+          <Sidebar
+            logo={logo}
+            logoClassName="w-56 h-auto"
+            items={[
+              { icon: LayoutDashboard, label: 'Dashboard', onClick: () => navigate('/admin/dashboard') },
+              { icon: Tag, label: 'Reports', onClick: () => navigate('/admin/reports') },
+            ]}
+            activeTab="Reports"
+            setActiveTab={() => { }}
+            onLogout={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              navigate('/');
+            }}
+          >
+            {/* Admin specific sidebar children if any */}
+          </Sidebar>
+        ) : (
+          <MentorSidebar />
+        )}
 
         <main className="flex-1 overflow-y-auto">
           <Header user={user} title={isEditing ? "Edit Session Request" : "Create New Session"} />
@@ -390,6 +420,6 @@ export default function CreateSession() {
           </div>
         </main>
       </div>
-    </div>
+    </div >
   );
 }

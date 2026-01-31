@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Upload, BookOpen } from 'lucide-react';
+import { PlusCircle, Upload, BookOpen, Code } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function QuickActions() {
@@ -32,6 +32,14 @@ export default function QuickActions() {
                 >
                     <span>Launch Quiz</span>
                     <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-[#b59a5a] transition-colors" />
+                </button>
+
+                <button
+                    onClick={() => navigate('/mentor-dashboard?tab=Launch Code')}
+                    className="w-full bg-white border border-gray-200 text-gray-700 p-4 rounded-2xl font-semibold hover:bg-[#A9C1F7]/10 hover:border-[#A9C1F7] hover:text-[#4a7ac7] transition-all group flex items-center justify-between"
+                >
+                    <span>Launch Code</span>
+                    <Code className="w-5 h-5 text-gray-400 group-hover:text-[#4a7ac7] transition-colors" />
                 </button>
             </div>
         </section>

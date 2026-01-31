@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 
-router.post('/create', auth, async (req, res) => {
+router.post('/create', protect, async (req, res) => {
     const { sessionId, rating, comment, isAnonymous } = req.body;
     const userId = req.user.id;
 
@@ -69,7 +69,7 @@ router.post('/create', auth, async (req, res) => {
                 }
             });
         }, {
-            timeout: 20000 
+            timeout: 20000
         });
 
         res.status(201).json({ message: 'Review submitted successfully' });
@@ -171,7 +171,7 @@ router.get('/mentor/:mentorId', async (req, res) => {
     }
 });
 
-router.get('/my-reviews', auth, async (req, res, next) => {
+router.get('/my-reviews', protect, async (req, res, next) => {
     try {
         const reviews = await req.prisma.review.findMany({
             where: { mentorId: req.user.id },
@@ -210,7 +210,7 @@ router.get('/my-reviews', auth, async (req, res, next) => {
     }
 });
 
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', protect, async (req, res) => {
     try {
         const userId = req.user.id;
 

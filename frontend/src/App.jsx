@@ -30,6 +30,7 @@ import PendingSessions from './pages/admin/PendingSessions';
 import AllSessions from './pages/admin/AllSessions';
 import UsersList from './pages/admin/UsersList';
 import Reports from './pages/admin/Reports';
+import MentorSessionDetailsPage from './pages/mentor/MentorSessionDetailsPage';
 
 function App() {
     return (
@@ -52,7 +53,7 @@ function App() {
                 <Route
                     path="/"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute allowedRoles={['LEARNER']}>
                             <DesktopOnlyGuard>
                                 <LearnerLayout />
                             </DesktopOnlyGuard>
@@ -103,7 +104,8 @@ function App() {
 
 
                 <Route path="/mentor/create-session" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><CreateSession /></DesktopOnlyGuard></ProtectedRoute>} />
-                <Route path="/mentor/edit-session/:id" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><CreateSession /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/mentor/session/:id" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><MentorSessionDetailsPage /></DesktopOnlyGuard></ProtectedRoute>} />
+                <Route path="/mentor/edit-session/:id" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH', 'ADMIN']}><DesktopOnlyGuard><CreateSession /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route path="/mentor/upload-resource" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><UploadResource /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><LaunchQuiz /></DesktopOnlyGuard></ProtectedRoute>} />
                 <Route path="/quiz/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><QuizAttempt /></DesktopOnlyGuard></ProtectedRoute>} />

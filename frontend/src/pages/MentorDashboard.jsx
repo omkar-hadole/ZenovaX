@@ -1,17 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  Calendar,
-  Star,
-  HelpCircle,
-  Settings,
-  QrCode,
-  Code
-} from 'lucide-react';
-
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiCall } from '../utils/api';
-import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import MySessions from '../components/dashboard/mentor/MySessions';
 import MentorDashboardView from '../components/dashboard/mentor/MentorDashboardView';
@@ -20,12 +9,29 @@ import MentorSessionsSkeleton from '../components/dashboard/mentor/MentorSession
 import ReviewsSkeleton from '../components/dashboard/mentor/ReviewsSkeleton';
 import QRScanner from '../components/dashboard/mentor/QRScanner';
 import LaunchCodingQuestion from './LaunchCodingQuestion';
-import logo from '../assets/mentorlogo.svg';
+import ReportsView from '../components/dashboard/mentor/ReportsView';
+import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
+import {
+  Settings,
+  QrCode
+} from 'lucide-react';
 
 export default function MentorDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
-  const [activeTab, setActiveTab] = useState('Dashboard');
+
+  // Initialize tab from query param or default to 'Dashboard'
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Dashboard');
+
+  // Update active tab when URL query param changes (e.g. back button)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
   const [mySessions, setMySessions] = useState([]);
   const [sessionRequests, setSessionRequests] = useState([]);
   const [stats, setStats] = useState({
@@ -86,22 +92,6 @@ export default function MentorDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/');
-  };
-
-  const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: activeTab === 'Dashboard', onClick: () => setActiveTab('Dashboard') },
-    { icon: Calendar, label: 'My Sessions', active: activeTab === 'My Sessions', onClick: () => setActiveTab('My Sessions') },
-    { icon: QrCode, label: 'Scan Attendance', active: activeTab === 'Scan Attendance', onClick: () => setActiveTab('Scan Attendance') },
-    { icon: Code, label: 'Launch Code', active: activeTab === 'Launch Code', onClick: () => setActiveTab('Launch Code') },
-    { icon: Star, label: 'Reviews Received', active: activeTab === 'Reviews Received', onClick: () => setActiveTab('Reviews Received') },
-    { icon: HelpCircle, label: 'Help Center' },
-    { icon: Settings, label: 'Settings' },
-  ];
-
   return (
     <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
@@ -110,23 +100,14 @@ export default function MentorDashboard() {
       </div>
 
       <div className="relative z-10 flex h-full w-full">
-        <Sidebar
-          logo={logo}
-          logoClassName="w-56 h-auto"
-          items={sidebarItems}
+        <MentorSidebar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onLogout={handleLogout}
-        >
-          <div className="bg-gradient-to-br from-[#C9C7F5] to-[#A9C1F7] rounded-2xl p-6 text-white relative overflow-hidden shadow-sm">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-bl-full" />
-            <h3 className="font-bold text-lg mb-2 text-gray-800">Upgrade to Gold</h3>
-            <p className="text-sm text-gray-700 mb-4">Get access to premium features and analytics.</p>
-            <button className="bg-white text-[#5a59b5] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors w-full shadow-sm">
-              Upgrade Now
-            </button>
-          </div>
-        </Sidebar>
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            // Optionally update URL without reload for deep linking
+            // navigate(`?tab=${tab}`, { replace: true }); 
+          }}
+        />
 
         <main className="flex-1 overflow-y-auto">
           <Header user={user} title={`Hello, ${user.name || 'Mentor'}!`} searchPlaceholder="Search sessions, learners..." />
@@ -159,6 +140,8 @@ export default function MentorDashboard() {
               ].sort((a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt))} />
             ) : activeTab === 'Reviews Received' ? (
               loading ? <ReviewsSkeleton /> : <ReviewsReceived />
+            ) : activeTab === 'Reports' ? (
+              loading ? <div className="p-12 text-center">Loading...</div> : <ReportsView />
             ) : activeTab === 'Scan Attendance' ? (
               <div className="flex flex-col items-center justify-center p-12 bg-white rounded-[2rem] shadow-sm border border-gray-100 h-[600px] animate-in fade-in zoom-in-95 duration-300">
                 <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 shadow-inner">

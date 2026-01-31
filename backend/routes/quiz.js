@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/auth");
+const { protect } = require("../middleware/auth");
 
-router.post("/create", auth, async (req, res, next) => {
+router.post("/create", protect, async (req, res, next) => {
     try {
         const { sessionId, title, description, duration, totalMarks, passingMarks, questions } = req.body;
 
@@ -49,7 +49,7 @@ router.post("/create", auth, async (req, res, next) => {
     }
 });
 
-router.post("/:id/launch", auth, async (req, res, next) => {
+router.post("/:id/launch", protect, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -83,7 +83,7 @@ router.post("/:id/launch", auth, async (req, res, next) => {
     }
 });
 
-router.get("/session/:sessionId", auth, async (req, res, next) => {
+router.get("/session/:sessionId", protect, async (req, res, next) => {
     try {
         const { sessionId } = req.params;
 
@@ -104,7 +104,7 @@ router.get("/session/:sessionId", auth, async (req, res, next) => {
     }
 });
 
-router.get("/:id/attempt", auth, async (req, res, next) => {
+router.get("/:id/attempt", protect, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -171,10 +171,10 @@ router.get("/:id/attempt", auth, async (req, res, next) => {
     }
 });
 
-router.post("/:id/submit", auth, async (req, res, next) => {
+router.post("/:id/submit", protect, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { answers } = req.body; 
+        const { answers } = req.body;
 
         const quiz = await req.prisma.quiz.findUnique({
             where: { id },

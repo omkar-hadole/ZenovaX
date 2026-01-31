@@ -65,6 +65,7 @@ app.use("/api/quiz", quizRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/coding-questions", codingChallengeRoutes);
+app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 
 const PORT = config.port;

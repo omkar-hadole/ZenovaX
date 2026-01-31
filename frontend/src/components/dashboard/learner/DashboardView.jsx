@@ -98,22 +98,43 @@ export default function DashboardView({
                                     by {currentOrNextSession.mentor?.name}
                                 </p>
 
-                                <div className="flex items-center gap-4 text-sm text-blue-100 mb-6 bg-white/5 p-3 rounded-xl backdrop-blur-sm border border-white/10">
+                                <div className="flex items-center justify-between text-sm text-blue-100 mb-6 bg-white/5 p-3 rounded-xl backdrop-blur-sm border border-white/10">
+
+                                    {/* Date */}
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-4 h-4 text-blue-300" />
                                         <div className="flex flex-col leading-none">
                                             <span className="text-[10px] text-blue-300 uppercase font-bold">Date</span>
-                                            <span className="font-medium">{start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                            <span className="font-medium">
+                                                {start.toLocaleDateString(undefined, {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                })}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="w-px h-8 bg-white/10" />
+
+                                    {/* Divider */}
+                                    <div className="w-px h-6 bg-white/20" />
+
+                                    {/* Time */}
                                     <div className="flex items-center gap-2">
                                         <Clock className="w-4 h-4 text-blue-300" />
                                         <div className="flex flex-col leading-none">
                                             <span className="text-[10px] text-blue-300 uppercase font-bold">Time</span>
-                                            <span className="font-medium">{start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span className="font-medium">
+                                                {start
+                                                    .toLocaleTimeString([], {
+                                                        hour: 'numeric',
+                                                        minute: '2-digit',
+                                                        hour12: true,
+                                                    })
+                                                    .toLowerCase()}
+                                            </span>
                                         </div>
                                     </div>
+
                                 </div>
 
                                 <button

@@ -1,9 +1,9 @@
 const express = require("express");
-const auth = require("../middleware/auth");
+const { protect } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/follow/:id", auth, async (req, res, next) => {
+router.post("/follow/:id", protect, async (req, res, next) => {
     try {
         const { id: followingId } = req.params;
         const followerId = req.user.id;
@@ -28,7 +28,7 @@ router.post("/follow/:id", auth, async (req, res, next) => {
     }
 });
 
-router.delete("/follow/:id", auth, async (req, res, next) => {
+router.delete("/follow/:id", protect, async (req, res, next) => {
     try {
         const { id: followingId } = req.params;
         const followerId = req.user.id;
@@ -51,7 +51,7 @@ router.delete("/follow/:id", auth, async (req, res, next) => {
     }
 });
 
-router.post("/like/:id", auth, async (req, res, next) => {
+router.post("/like/:id", protect, async (req, res, next) => {
     try {
         const { id: mentorId } = req.params;
         const userId = req.user.id;
@@ -76,7 +76,7 @@ router.post("/like/:id", auth, async (req, res, next) => {
     }
 });
 
-router.delete("/like/:id", auth, async (req, res, next) => {
+router.delete("/like/:id", protect, async (req, res, next) => {
     try {
         const { id: mentorId } = req.params;
         const userId = req.user.id;

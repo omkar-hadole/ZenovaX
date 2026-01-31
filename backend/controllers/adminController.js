@@ -234,10 +234,10 @@ exports.getReports = async (req, res) => {
         const reports = await prisma.report.findMany({
             include: {
                 reporter: {
-                    select: { name: true }
+                    select: { name: true, email: true }
                 },
                 session: {
-                    select: { title: true }
+                    select: { title: true, requestId: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -252,7 +252,7 @@ exports.getReports = async (req, res) => {
 exports.handleReportAction = async (req, res) => {
     try {
         const prisma = req.prisma;
-        const { reportId, action } = req.body; 
+        const { reportId, action } = req.body;
 
         if (!reportId || !action) {
             return res.status(400).json({ error: "Report ID and action are required" });
@@ -270,18 +270,27 @@ exports.handleReportAction = async (req, res) => {
         if (action === 'DELETE_SESSION') {
             if (report.sessionId) {
                 await prisma.session.delete({ where: { id: report.sessionId } });
+                // Report is deleted via cascade, so we cannot update it.
+                res.json({ message: "Session deleted and report removed" });
+            } else {
+                await prisma.report.update({
+                    where: { id: reportId },
+                    data: { status: 'RESOLVED', resolvedAt: new Date() }
+                });
+                res.json({ message: "Session already deleted, report marked as resolved" });
             }
-            await prisma.report.update({
-                where: { id: reportId },
-                data: { status: 'RESOLVED', resolvedAt: new Date() }
-            });
-            res.json({ message: "Session deleted and report resolved" });
         } else if (action === 'IGNORE') {
             await prisma.report.update({
                 where: { id: reportId },
                 data: { status: 'IGNORED', resolvedAt: new Date() }
             });
             res.json({ message: "Report ignored" });
+        } else if (action === 'RESOLVE') {
+            await prisma.report.update({
+                where: { id: reportId },
+                data: { status: 'RESOLVED', resolvedAt: new Date() }
+            });
+            res.json({ message: "Report resolved" });
         } else {
             res.status(400).json({ error: "Invalid action" });
         }
