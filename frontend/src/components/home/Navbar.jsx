@@ -14,7 +14,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
   ];
 
   return (
-    <nav className="fixed top-4 left-0 right-0 z-50 flex justify-center transition-all duration-300">
+    <nav className="fixed top-4 left-0 right-0 z-50 flex flex-col items-center justify-center transition-all duration-300">
       <div
         className={`
           w-[94%] md:w-[90%] lg:w-[85%]
@@ -81,19 +81,19 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
 
       {/* Mobile dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden w-[94%] mx-auto mt-3 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-100 py-6 px-6 space-y-6">
+        <div className="md:hidden w-[94%] mx-auto mt-3 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-100 py-6 px-6 space-y-6 flex flex-col items-center text-center">
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block text-gray-700 font-medium text-lg hover:text-[#7A79E6] transition"
+              className="block w-full text-gray-700 font-medium text-lg hover:text-[#7A79E6] transition"
             >
               {link.name}
             </a>
           ))}
 
-          <div className="pt-4 border-t border-gray-200 space-y-3">
+          <div className="w-full pt-4 border-t border-gray-200 space-y-3">
             {!isLoggedIn ? (
               <>
                 <button
@@ -101,7 +101,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
                     navigate('/auth?mode=login');
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full px-6 py-3 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-[#6c6bd6] transition"
+                  className="w-full px-6 py-3 rounded-full border border-gray-300 text-gray-700 font-medium transition"
                 >
                   Login
                 </button>
@@ -111,7 +111,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
                     navigate('/auth?mode=signup');
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full px-6 py-3 rounded-full bg-[#7A79E6] text-white font-semibold shadow-md hover:shadow-lg hover:bg-[#6c6bd6] transition"
+                  className="w-full px-6 py-3 rounded-full bg-[#7A79E6] text-white font-semibold shadow-md transition"
                 >
                   Sign Up
                 </button>

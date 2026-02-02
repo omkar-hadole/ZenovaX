@@ -5,10 +5,10 @@ import { FieldGroup } from './FormComponents';
 const departmentOptions = ['CSE', 'AI/ML', 'IT', 'BBA', 'ECON', 'DESIGN', 'PSY', 'MEDIA'];
 const yearOptions = ['1', '2', '3', '4'];
 
-export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUpload }) {
+export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUpload, role }) {
     return (
         <div className="space-y-8">
-            <FieldGroup label="Profile picture" required description="Square images (1:1) work best. Max 3MB.">
+            <FieldGroup label="Profile picture" required={role !== 'learner'} description="Square images (1:1) work best. Max 3MB.">
                 <div className="flex flex-col md:flex-row gap-4 items-start">
                     <div className="w-28 h-28 rounded-[1.5rem] border-2 border-dashed border-[#C9C7F5] bg-white flex items-center justify-center overflow-hidden">
                         {basicInfo.profilePicture?.preview ? (

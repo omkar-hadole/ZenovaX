@@ -194,6 +194,7 @@ export default function CompleteProfile() {
                     basicInfo={basicInfo}
                     setBasicInfo={setBasicInfo}
                     handleImageUpload={handleImageUpload}
+                    role={role}
                 />
             );
         }
