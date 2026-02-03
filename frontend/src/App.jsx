@@ -9,6 +9,7 @@ import SessionsPage from './pages/learner/SessionsPage';
 import SessionDetailsPage from './pages/learner/SessionDetailsPage';
 import BookingsPage from './pages/learner/BookingsPage';
 import ComingSoonPage from './pages/learner/ComingSoonPage';
+import HelpCenter from './pages/learner/HelpCenter';
 
 import MentorDashboard from './pages/MentorDashboard';
 import CompleteProfile from './pages/CompleteProfile';
@@ -67,7 +68,7 @@ function App() {
                     <Route path="sessions/:id" element={<SessionDetailsPage />} />
                     <Route path="bookings" element={<BookingsPage />} />
                     <Route path="mentors" element={<MentorsList />} />
-                    <Route path="help" element={<ComingSoonPage />} />
+                    <Route path="help" element={<HelpCenter />} />
                     <Route path="settings" element={<ComingSoonPage />} />
                 </Route>
 

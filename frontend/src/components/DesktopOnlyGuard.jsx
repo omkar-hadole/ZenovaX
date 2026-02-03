@@ -74,7 +74,16 @@ export default function DesktopOnlyGuard({ children }) {
                                 Please switch to a larger device
                             </p>
 
-                            <div className="pt-4 border-t border-gray-100">
+                            <div className="pt-4 border-t border-gray-100 space-y-3">
+                                <a
+                                    href="https://wa.me/919876543210" // Replace with actual number
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 text-green-600 font-semibold hover:text-green-700 transition"
+                                >
+                                    <span>Need help? Chat on WhatsApp</span>
+                                </a>
+
                                 {(() => {
                                     const userStr = localStorage.getItem('user');
                                     const user = userStr ? JSON.parse(userStr) : null;
