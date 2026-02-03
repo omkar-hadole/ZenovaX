@@ -12,6 +12,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/vite": "^4.1.16",
+    "axios": "^1.13.4",
     "date-fns": "^4.1.0",
     "dom-to-image-more": "^3.7.2",
     "html5-qrcode": "^2.3.8",
