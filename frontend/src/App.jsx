@@ -10,6 +10,7 @@ import SessionDetailsPage from './pages/learner/SessionDetailsPage';
 import BookingsPage from './pages/learner/BookingsPage';
 import ComingSoonPage from './pages/learner/ComingSoonPage';
 import HelpCenter from './pages/learner/HelpCenter';
+import Zen from './pages/learner/Zen';
 
 import MentorDashboard from './pages/MentorDashboard';
 import CompleteProfile from './pages/CompleteProfile';
@@ -69,6 +70,7 @@ function App() {
                     <Route path="bookings" element={<BookingsPage />} />
                     <Route path="mentors" element={<MentorsList />} />
                     <Route path="help" element={<HelpCenter />} />
+                    <Route path="zen" element={<Zen />} />
                     <Route path="settings" element={<ComingSoonPage />} />
                 </Route>
 

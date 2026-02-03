@@ -47,10 +47,13 @@ export default function LearnerLayout() {
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center mx-auto mb-3 text-black shadow-lg transform -rotate-12">
                         <HelpCircle className="w-5 h-5" strokeWidth={2} />
                     </div>
-                    <h3 className="text-lg font-bold mb-1">Help Center</h3>
-                    <p className="text-gray-400 text-xs mb-4 leading-relaxed">Having trouble in Learning? Please contact us.</p>
-                    <button className="bg-[#F6D483] text-black px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#FFE5A5] transition-all w-full shadow-lg shadow-orange-900/20">
-                        Go to Help Center
+                    <h3 className="text-lg font-bold mb-1">Zen</h3>
+                    <p className="text-gray-400 text-xs mb-4 leading-relaxed">Your AI learning assistant. Ask me anything!</p>
+                    <button
+                        onClick={() => navigate('/zen')}
+                        className="bg-[#F6D483] text-black px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#FFE5A5] transition-all w-full shadow-lg shadow-orange-900/20"
+                    >
+                        Chat with Zen
                     </button>
                 </div>
             </Sidebar>
