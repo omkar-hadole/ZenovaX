@@ -22,7 +22,7 @@ const cache = new NodeCache({ stdTTL: 600 });
 
 app.use(compression());
 
-// app.use(cors());
+app.use(cors());
 
 // app.use(cors({
 //   origin: 'http://localhost:5173',
@@ -31,11 +31,11 @@ app.use(compression());
 //   allowedHeaders: ['Content-Type', 'Authorization']
 // }));
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://zenova-x.vercel.app',
-  'https://zenova-x-server.vercel.app'
-];
+// const allowedOrigins = [
+//   'http://localhost:5173',
+//   'https://zenova-x.vercel.app',
+//   'https://zenova-x-server.vercel.app'
+// ];
 
 app.use(cors({
   origin: function (origin, callback) {
