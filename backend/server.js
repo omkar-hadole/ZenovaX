@@ -29,16 +29,24 @@ const allowedOrigins = [
 ];
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin starts with any of the allowed origins (to handle trailing slashes)
+    const isAllowed = allowedOrigins.some(allowedOrigin => origin.startsWith(allowedOrigin));
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
 }));
+
+// Enable pre-flight for all routes
+app.options('*', cors());
+
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -70,5 +78,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-
+  console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app;
