@@ -2,8 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 if (!process.env.JWT_SECRET) {
-    console.error("FATAL ERROR: JWT_SECRET is not defined.");
-    process.exit(1);
+    console.error("FATAL ERROR: JWT_SECRET is not defined. Please set it in Vercel environment variables.");
 }
 
 module.exports = {
