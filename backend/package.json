@@ -2,11 +2,12 @@
   "name": "zenovax-backend",
   "version": "1.0.0",
   "description": "Authentication backend with Express, Prisma, MySQL",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate"
   },
   "keywords": [],
   "author": "",
