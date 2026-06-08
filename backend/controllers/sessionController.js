@@ -262,103 +262,130 @@ exports.getMySessions = async (req, res, next) => {
 
 exports.bookSession = async (req, res, next) => {
     try {
-        let sessionId = req.params.id;
-        let session;
+        const sessionId = req.params.id;
 
-        if (sessionId.startsWith('req-')) {
-            const requestId = sessionId.replace('req-', '');
+        const result = await req.prisma.$transaction(async (tx) => {
+            let currentSessionId = sessionId;
+            let currentSession;
 
-            session = await req.prisma.session.findUnique({
-                where: { requestId }
-            });
+            if (currentSessionId.startsWith('req-')) {
+                const requestId = currentSessionId.replace('req-', '');
 
-            if (!session) {
-                const request = await req.prisma.sessionRequest.findUnique({
-                    where: { id: requestId }
+                currentSession = await tx.session.findUnique({
+                    where: { requestId }
                 });
 
-                if (!request) {
-                    return res.status(404).json({ error: "Session request not found" });
-                }
+                if (!currentSession) {
+                    const request = await tx.sessionRequest.findUnique({
+                        where: { id: requestId }
+                    });
 
-                session = await req.prisma.session.create({
+                    if (!request) {
+                        throw new Error("SESSION_REQUEST_NOT_FOUND");
+                    }
+
+                    currentSession = await tx.session.create({
+                        data: {
+                            title: request.title,
+                            description: request.description,
+                            subject: request.subject,
+                            department: request.department,
+                            topics: request.topics,
+                            mentorId: request.mentorId,
+                            mode: request.mode,
+                            priceType: request.priceType,
+                            price: request.price,
+                            maxSeats: request.maxSeats,
+                            availableSeats: request.maxSeats,
+                            venue: request.venue,
+                            meetingLink: request.meetingLink,
+                            scheduledAt: request.proposedDate,
+                            duration: request.duration,
+                            requestId: request.id,
+                            status: 'UPCOMING'
+                        }
+                    });
+                }
+                currentSessionId = currentSession.id;
+            } else {
+                currentSession = await tx.session.findUnique({
+                    where: { id: currentSessionId }
+                });
+            }
+
+            if (!currentSession) {
+                throw new Error("SESSION_NOT_FOUND");
+            }
+
+            // Check if session has ended
+            const sessionEndTime = new Date(currentSession.scheduledAt).getTime() + (currentSession.duration * 60 * 1000);
+            if (Date.now() > sessionEndTime) {
+                throw new Error("SESSION_ENDED");
+            }
+
+            const existingBooking = await tx.booking.findUnique({
+                where: {
+                    userId_sessionId: {
+                        userId: req.user.id,
+                        sessionId: currentSessionId
+                    }
+                }
+            });
+
+            if (existingBooking) {
+                throw new Error("ALREADY_BOOKED");
+            }
+
+            // Atomically decrement seats if > 0
+            try {
+                await tx.session.update({
+                    where: {
+                        id: currentSessionId,
+                        availableSeats: { gt: 0 }
+                    },
                     data: {
-                        title: request.title,
-                        description: request.description,
-                        subject: request.subject,
-                        department: request.department,
-                        topics: request.topics,
-                        mentorId: request.mentorId,
-                        mode: request.mode,
-                        priceType: request.priceType,
-                        price: request.price,
-                        maxSeats: request.maxSeats,
-                        availableSeats: request.maxSeats,
-                        venue: request.venue,
-                        meetingLink: request.meetingLink,
-                        scheduledAt: request.proposedDate,
-                        duration: request.duration,
-                        requestId: request.id,
-                        status: 'UPCOMING'
+                        availableSeats: { decrement: 1 }
                     }
                 });
-            }
-            sessionId = session.id;
-        } else {
-            session = await req.prisma.session.findUnique({
-                where: { id: sessionId }
-            });
-        }
-
-        if (!session) {
-            return res.status(404).json({ error: "Session not found" });
-        }
-
-        const existingBooking = await req.prisma.booking.findUnique({
-            where: {
-                userId_sessionId: {
-                    userId: req.user.id,
-                    sessionId: sessionId
+            } catch (err) {
+                if (err.code === 'P2025') {
+                    throw new Error("SESSION_FULL");
                 }
+                throw err;
             }
-        });
 
-        if (existingBooking) {
-            return res.status(400).json({ error: "You have already booked this session" });
-        }
+            const booking = await tx.booking.create({
+                data: {
+                    userId: req.user.id,
+                    sessionId: currentSessionId,
+                    status: 'CONFIRMED',
+                    amountPaid: 0
+                }
+            });
 
-        if (session.availableSeats <= 0) {
-            return res.status(400).json({ error: "Session is full" });
-        }
-
-        // Check if session has ended
-        const sessionEndTime = new Date(session.scheduledAt).getTime() + (session.duration * 60 * 1000);
-        if (Date.now() > sessionEndTime) {
-            return res.status(400).json({ error: "Registration closed: Session has ended" });
-        }
-
-        const booking = await req.prisma.booking.create({
-            data: {
-                userId: req.user.id,
-                sessionId: sessionId,
-                status: 'CONFIRMED',
-                amountPaid: 0
-            }
-        });
-
-        await req.prisma.session.update({
-            where: { id: sessionId },
-            data: { availableSeats: { decrement: 1 } }
+            return { booking, sessionId: currentSessionId };
         });
 
         return res.status(201).json({
             success: true,
             message: "Booking confirmed",
-            booking,
-            sessionId
+            booking: result.booking,
+            sessionId: result.sessionId
         });
 
     } catch (error) {
+        if (error.message === "SESSION_REQUEST_NOT_FOUND" || error.message === "SESSION_NOT_FOUND") {
+            return res.status(404).json({ error: "Session not found" });
+        }
+        if (error.message === "ALREADY_BOOKED") {
+            return res.status(400).json({ error: "You have already booked this session" });
+        }
+        if (error.message === "SESSION_FULL") {
+            return res.status(400).json({ error: "Session is full" });
+        }
+        if (error.message === "SESSION_ENDED") {
+            return res.status(400).json({ error: "Registration closed: Session has ended" });
+        }
         return next(error);
     }
 };
