@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require("helmet");
 const cors = require("cors");
 const compression = require("compression");
 const NodeCache = require("node-cache");
@@ -75,6 +76,19 @@ const prisma = basePrisma.$extends({
 });
 const cache = new NodeCache({ stdTTL: 600 });
 
+app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      connectSrc: ["'self'", "https://api.piston.dev"]
+    }
+  })
+);
 app.use(compression());
 
 const allowedOrigins = [
