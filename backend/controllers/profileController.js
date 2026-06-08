@@ -348,115 +348,132 @@ exports.updateProfile = async (req, res, next) => {
 exports.getMentors = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const cacheKey = `mentors_sorted_${userId}`;
-        const allMentors = await req.prisma.user.findMany({
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const skip = (page - 1) * limit;
+
+        // 1. Group bookings by sessionId and userId to get all unique learner-session pairs
+        const bookings = await req.prisma.booking.groupBy({
+            by: ['sessionId', 'userId'],
             where: {
-                role: "MENTOR",
-                isProfileComplete: true
-            },
-            select: {
-                id: true,
-                name: true,
-                department: true,
-                profilePicture: true,
-                mentorSkills: true,
-                averageRating: true,
-                totalSessions: true,
-                totalReviews: true,
-                _count: {
-                    select: {
-                        followers: true,
-                        likesReceived: true,
-                        receivedReviews: true,
-                        mentorSessions: {
-                            where: {
-                                status: { in: ['COMPLETED', 'LIVE', 'UPCOMING'] },
-                                bookings: {
-                                    some: {
-                                        status: { in: ['CONFIRMED', 'COMPLETED'] }
+                status: { in: ['CONFIRMED', 'COMPLETED'] }
+            }
+        });
+
+        // 2. Fetch all session mappings to mentorIds to resolve the unique learners per mentor
+        const sessions = await req.prisma.session.findMany({
+            select: { id: true, mentorId: true }
+        });
+        const sessionToMentorMap = new Map(sessions.map(s => [s.id, s.mentorId]));
+
+        // 3. Build a set of unique learner userIds per mentorId
+        const mentorLearnersSetMap = new Map();
+        for (const booking of bookings) {
+            const mentorId = sessionToMentorMap.get(booking.sessionId);
+            if (mentorId) {
+                if (!mentorLearnersSetMap.has(mentorId)) {
+                    mentorLearnersSetMap.set(mentorId, new Set());
+                }
+                mentorLearnersSetMap.get(mentorId).add(booking.userId);
+            }
+        }
+
+        // 4. Create unique learners count map keyed by mentorId
+        const uniqueLearnersMap = new Map();
+        for (const [mentorId, learnersSet] of mentorLearnersSetMap.entries()) {
+            uniqueLearnersMap.set(mentorId, learnersSet.size);
+        }
+
+        // 5. Query total count and paginate + sort the mentors at database level
+        const [mentors, total] = await Promise.all([
+            req.prisma.user.findMany({
+                where: {
+                    role: "MENTOR",
+                    isProfileComplete: true
+                },
+                orderBy: [
+                    { averageRating: 'desc' },
+                    { totalSessions: 'desc' }
+                ],
+                skip,
+                take: limit,
+                select: {
+                    id: true,
+                    name: true,
+                    department: true,
+                    profilePicture: true,
+                    mentorSkills: true,
+                    averageRating: true,
+                    totalSessions: true,
+                    totalReviews: true,
+                    _count: {
+                        select: {
+                            followers: true,
+                            likesReceived: true,
+                            receivedReviews: true,
+                            mentorSessions: {
+                                where: {
+                                    status: { in: ['COMPLETED', 'LIVE', 'UPCOMING'] },
+                                    bookings: {
+                                        some: {
+                                            status: { in: ['CONFIRMED', 'COMPLETED'] }
+                                        }
                                     }
                                 }
                             }
                         }
+                    },
+                    followers: {
+                        where: { followerId: userId },
+                        select: { id: true }
+                    },
+                    likesReceived: {
+                        where: { userId: userId },
+                        select: { id: true }
                     }
-                },
-                followers: {
-                    where: { followerId: userId },
-                    select: { id: true }
-                },
-                likesReceived: {
-                    where: { userId: userId },
-                    select: { id: true }
                 }
-            }
-        });
+            }),
+            req.prisma.user.count({
+                where: {
+                    role: "MENTOR",
+                    isProfileComplete: true
+                }
+            })
+        ]);
 
-
-
-        const processedMentors = await Promise.all(allMentors.map(async (mentor) => {
-
-
+        // 6. Map and hydrate the paginated results
+        const fullyHydratedMentors = mentors.map((mentor) => {
             const effectiveSessions = mentor._count.mentorSessions;
             let skills = [];
             try {
                 skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
             } catch (e) { }
 
-            return {
-                ...mentor,
-                mentorSkills: skills,
-                followersCount: mentor._count.followers,
-                likesCount: mentor._count.likesReceived,
-                totalSessions: effectiveSessions,
-                isFollowing: mentor.followers.length > 0,
-                isLiked: mentor.likesReceived.length > 0,
-                badges: [],
-                uniqueLearners: 0
-            };
-        }));
-
-        processedMentors.sort((a, b) => {
-            const ratingDiff = (b.averageRating || 0) - (a.averageRating || 0);
-            if (Math.abs(ratingDiff) > 0.01) return ratingDiff;
-
-            const sessionsDiff = (b.totalSessions || 0) - (a.totalSessions || 0);
-            if (sessionsDiff !== 0) return sessionsDiff;
-
-            return 0;
-        });
-
-        const total = processedMentors.length;
-        const totalPages = Math.ceil(total / limit);
-        const startIndex = (page - 1) * limit;
-        const paginatedMentors = processedMentors.slice(startIndex, startIndex + limit);
-
-        const fullyHydratedMentors = await Promise.all(paginatedMentors.map(async (mentor) => {
-            const uniqueLearners = await req.prisma.booking.findMany({
-                where: {
-                    session: { mentorId: mentor.id },
-                    status: { in: ['CONFIRMED', 'COMPLETED'] }
-                },
-                distinct: ['userId'],
-                select: { userId: true }
-            }).then(b => b.length);
-
+            const uniqueLearners = uniqueLearnersMap.get(mentor.id) || 0;
             const badges = calculateBadges({
                 ...mentor,
-                totalSessions: mentor.totalSessions
+                totalSessions: effectiveSessions
             }, uniqueLearners);
 
             return {
-                ...mentor,
+                id: mentor.id,
+                name: mentor.name,
+                department: mentor.department,
+                profilePicture: mentor.profilePicture,
+                mentorSkills: skills,
+                averageRating: mentor.averageRating,
+                totalSessions: effectiveSessions,
+                totalReviews: mentor.totalReviews,
+                followersCount: mentor._count.followers,
+                likesCount: mentor._count.likesReceived,
+                isFollowing: mentor.followers.length > 0,
+                isLiked: mentor.likesReceived.length > 0,
                 uniqueLearners,
-                badges,
-                followers: undefined,
-                likesReceived: undefined,
-                _count: undefined
+                badges
             };
-        }));
+        });
 
+        const totalPages = Math.ceil(total / limit);
         const response = {
             mentors: fullyHydratedMentors,
             pagination: {
