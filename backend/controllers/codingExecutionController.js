@@ -71,6 +71,21 @@ exports.executeCode = async (req, res) => {
     try {
         const { language, code, testCases } = req.body;
 
+        if (!code || typeof code !== 'string' || code.length > 10000) {
+            return res.status(400).json({ error: "Code must be a string and under 10,000 characters" });
+        }
+
+        if (!Array.isArray(testCases) || testCases.length === 0 || testCases.length > 10) {
+            return res.status(400).json({ error: "Test cases must be an array with a maximum of 10 items" });
+        }
+
+        for (let i = 0; i < testCases.length; i++) {
+            const tc = testCases[i];
+            if (!tc || typeof tc.input !== 'string' || tc.input.length > 500) {
+                return res.status(400).json({ error: `Test case ${i + 1} input must be a string under 500 characters` });
+            }
+        }
+
         if (language === 'javascript') {
             // JS processed on frontend for now, but if sent here, valid too.
             // Piston supports node.
@@ -93,7 +108,15 @@ exports.executeCode = async (req, res) => {
             ]
         };
 
-        const response = await axios.post(PISTON_API, payload);
+        let response;
+        try {
+            response = await axios.post(PISTON_API, payload, { timeout: 10000 });
+        } catch (error) {
+            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+                return res.status(504).json({ error: "Code execution timed out. The execution engine took too long to respond." });
+            }
+            throw error;
+        }
         const { run } = response.data;
 
         if (run.stderr) {
