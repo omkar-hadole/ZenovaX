@@ -1,3 +1,5 @@
+const xss = require('xss');
+
 function isValidEmail(email) {
   if (typeof email !== 'string') return false;
   const trimmed = email.trim();
@@ -29,7 +31,7 @@ function isValidUrl(url) {
 
 function sanitizeString(str) {
   if (typeof str !== 'string') return '';
-  return str.trim().replace(/[<>]/g, ''); 
+  return xss(str.trim()); 
 }
 
 function isValidArray(arr) {
