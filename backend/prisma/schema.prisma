@@ -57,6 +57,8 @@ model User {
   // Timestamps
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  isDeleted         Boolean   @default(false)
+  deletedAt         DateTime?
   
   // Relations
   mentorSessions    Session[] @relation("MentorSessions")
@@ -229,6 +231,8 @@ model Session {
   // Timestamps
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  isDeleted       Boolean       @default(false)
+  deletedAt       DateTime?
   
   // Relations
   sessionRequest  SessionRequest? @relation("ApprovedSession", fields: [requestId], references: [id], onDelete: SetNull)

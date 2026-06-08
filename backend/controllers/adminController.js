@@ -180,8 +180,9 @@ exports.deleteSession = async (req, res) => {
         const prisma = req.prisma;
         const { id } = req.params;
 
-        await prisma.session.delete({
-            where: { id }
+        await prisma.session.update({
+            where: { id },
+            data: { isDeleted: true, deletedAt: new Date() }
         });
 
         res.json({ message: "Session deleted successfully" });
@@ -217,8 +218,9 @@ exports.deleteUser = async (req, res) => {
         const prisma = req.prisma;
         const { id } = req.params;
 
-        await prisma.user.delete({
-            where: { id }
+        await prisma.user.update({
+            where: { id },
+            data: { isDeleted: true, deletedAt: new Date() }
         });
 
         res.json({ message: "User deleted successfully" });
@@ -269,9 +271,15 @@ exports.handleReportAction = async (req, res) => {
 
         if (action === 'DELETE_SESSION') {
             if (report.sessionId) {
-                await prisma.session.delete({ where: { id: report.sessionId } });
-                // Report is deleted via cascade, so we cannot update it.
-                res.json({ message: "Session deleted and report removed" });
+                await prisma.session.update({
+                    where: { id: report.sessionId },
+                    data: { isDeleted: true, deletedAt: new Date() }
+                });
+                await prisma.report.update({
+                    where: { id: reportId },
+                    data: { status: 'RESOLVED', resolvedAt: new Date() }
+                });
+                res.json({ message: "Session deleted and report marked as resolved" });
             } else {
                 await prisma.report.update({
                     where: { id: reportId },

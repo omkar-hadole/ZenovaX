@@ -16,8 +16,62 @@ const { generalLimiter } = require("./middleware/rateLimiter");
 const { PrismaClient } = require('@prisma/client');
 
 const app = express();
-const prisma = new PrismaClient({
+const basePrisma = new PrismaClient({
   log: ['warn', 'error'],
+});
+
+const prisma = basePrisma.$extends({
+  query: {
+    user: {
+      async findUnique({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return basePrisma.user.findFirst(args);
+      },
+      async findFirst({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+      async findMany({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+      async count({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+    },
+    session: {
+      async findUnique({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return basePrisma.session.findFirst(args);
+      },
+      async findFirst({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+      async findMany({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+      async count({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+      async aggregate({ model, operation, args, query }) {
+        args.where = args.where || {};
+        args.where.isDeleted = false;
+        return query(args);
+      },
+    },
+  },
 });
 const cache = new NodeCache({ stdTTL: 600 });
 
