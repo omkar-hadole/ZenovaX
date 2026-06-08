@@ -19,39 +19,40 @@ import {
 import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 
-// Import Badge Images
-import FirstStepBadge from "../assets/Badges/Fisrt_Step.webp";
-import SessionProBadge from "../assets/Badges/Session_Pro.webp";
-import VeteranBadge from "../assets/Badges/Veteran.webp";
-import EliteMentorBadge from "../assets/Badges/Elite_Mentor.webp";
-import MasterMentorBadge from "../assets/Badges/Master_Mentor.webp";
-import GuideBadge from "../assets/Badges/Guide.webp";
-import PathfinderBadge from "../assets/Badges/Path_Finder.webp";
-import GameChangerBadge from "../assets/Badges/Game_Changer.webp";
-import ImpactMakerBadge from "../assets/Badges/Impact_Maker.webp";
-import WellRatedBadge from "../assets/Badges/Well_Rated.webp";
-import TopRatedBadge from "../assets/Badges/Top_Rated.webp";
-import ExceptionalBadge from "../assets/Badges/Exceptional.webp";
-import LovedBadge from "../assets/Badges/Loved.webp";
-import PopularBadge from "../assets/Badges/Popular.webp";
-import FavoriteBadge from "../assets/Badges/Favorite.webp";
+const BADGE_FILE_NAMES = {
+  "First Step": "Fisrt_Step",
+  "Session Pro": "Session_Pro",
+  "Veteran": "Veteran",
+  "Elite Mentor": "Elite_Mentor",
+  "Master Mentor": "Master_Mentor",
+  "Guide": "Guide",
+  "Pathfinder": "Path_Finder",
+  "Game Changer": "Game_Changer",
+  "Impact Maker": "Impact_Maker",
+  "Well Rated": "Well_Rated",
+  "Top Rated": "Top_Rated",
+  "Exceptional": "Exceptional",
+  "Loved": "Loved",
+  "Popular": "Popular",
+  "Favorite": "Favorite"
+};
 
 const BADGE_INFO = {
-  "First Step": { image: FirstStepBadge, description: "Completed their first mentoring session" },
-  "Session Pro": { image: SessionProBadge, description: "Completed 5+ mentoring sessions" },
-  "Veteran": { image: VeteranBadge, description: "Completed 10+ mentoring sessions" },
-  "Elite Mentor": { image: EliteMentorBadge, description: "Completed 25+ mentoring sessions" },
-  "Master Mentor": { image: MasterMentorBadge, description: "Completed 50+ mentoring sessions" },
-  "Guide": { image: GuideBadge, description: "Helped 10+ unique learners" },
-  "Pathfinder": { image: PathfinderBadge, description: "Helped 50+ unique learners" },
-  "Game Changer": { image: GameChangerBadge, description: "Helped 100+ unique learners" },
-  "Impact Maker": { image: ImpactMakerBadge, description: "Helped 250+ unique learners" },
-  "Well Rated": { image: WellRatedBadge, description: "Maintained a 4.0+ average rating" },
-  "Top Rated": { image: TopRatedBadge, description: "Maintained a 4.5+ average rating" },
-  "Exceptional": { image: ExceptionalBadge, description: "Maintained a 4.8+ rating with 20+ reviews" },
-  "Loved": { image: LovedBadge, description: "Received 50+ likes" },
-  "Popular": { image: PopularBadge, description: "Accumulated 50+ followers" },
-  "Favorite": { image: FavoriteBadge, description: "Reached 25+ followers and 50+ likes" }
+  "First Step": { description: "Completed their first mentoring session" },
+  "Session Pro": { description: "Completed 5+ mentoring sessions" },
+  "Veteran": { description: "Completed 10+ mentoring sessions" },
+  "Elite Mentor": { description: "Completed 25+ mentoring sessions" },
+  "Master Mentor": { description: "Completed 50+ mentoring sessions" },
+  "Guide": { description: "Helped 10+ unique learners" },
+  "Pathfinder": { description: "Helped 50+ unique learners" },
+  "Game Changer": { description: "Helped 100+ unique learners" },
+  "Impact Maker": { description: "Helped 250+ unique learners" },
+  "Well Rated": { description: "Maintained a 4.0+ average rating" },
+  "Top Rated": { description: "Maintained a 4.5+ average rating" },
+  "Exceptional": { description: "Maintained a 4.8+ rating with 20+ reviews" },
+  "Loved": { description: "Received 50+ likes" },
+  "Popular": { description: "Accumulated 50+ followers" },
+  "Favorite": { description: "Reached 25+ followers and 50+ likes" }
 };
 
 const ReviewsSection = ({ userId }) => {
@@ -168,6 +169,7 @@ export default function Profile() {
   const [followersCount, setFollowersCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [badgeImages, setBadgeImages] = useState({});
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -178,6 +180,27 @@ export default function Profile() {
   useEffect(() => {
     fetchProfile();
   }, [id]);
+
+  useEffect(() => {
+    if (profile && profile.role === 'MENTOR' && profile.badges && profile.badges.length > 0) {
+      const loadBadgeImages = async () => {
+        const loaded = {};
+        for (const badgeName of profile.badges) {
+          try {
+            const fileName = BADGE_FILE_NAMES[badgeName];
+            if (fileName) {
+              const module = await import(`../assets/Badges/${fileName}.webp`);
+              loaded[badgeName] = module.default;
+            }
+          } catch (err) {
+            console.error(`Failed to load badge image for ${badgeName}`, err);
+          }
+        }
+        setBadgeImages(loaded);
+      };
+      loadBadgeImages();
+    }
+  }, [profile]);
 
   const fetchProfile = async () => {
     try {
@@ -610,11 +633,15 @@ export default function Profile() {
                         <div key={i} className="group relative">
                           {/* Badge Image */}
                           <div className="w-22 h-22 transition-transform hover:scale-110 cursor-pointer">
-                            <img
-                              src={BADGE_INFO[badgeName]?.image || BADGE_INFO[badgeName]}
-                              alt={badgeName}
-                              className="w-full h-full object-contain drop-shadow-sm"
-                            />
+                            {badgeImages[badgeName] ? (
+                              <img
+                                src={badgeImages[badgeName]}
+                                alt={badgeName}
+                                className="w-full h-full object-contain drop-shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 rounded-full animate-pulse" />
+                            )}
                           </div>
 
                           {/* Tooltip */}
