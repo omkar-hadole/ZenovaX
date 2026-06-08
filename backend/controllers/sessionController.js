@@ -364,14 +364,7 @@ exports.bookSession = async (req, res, next) => {
             });
 
             // Recalculate unique learners for the mentor and update the denormalized database field
-            const uniqueLearners = await tx.booking.findMany({
-                where: {
-                    session: { mentorId: currentSession.mentorId },
-                    status: { in: ['CONFIRMED', 'COMPLETED'] }
-                },
-                distinct: ['userId'],
-                select: { userId: true }
-            }).then(bookings => bookings.length);
+            const uniqueLearners = await getUniqueLearnersCount(tx, currentSession.mentorId);
 
             await tx.user.update({
                 where: { id: currentSession.mentorId },
@@ -766,6 +759,7 @@ exports.verifyAttendance = async (req, res, next) => {
 };
 
 const { calculateBadges } = require("../utils/badges");
+const { getFinishedSessionsCount, getUniqueLearnersCount } = require("../utils/sessionUtils");
 
 exports.getRecentActivity = async (req, res, next) => {
     try {
@@ -788,31 +782,8 @@ exports.getRecentActivity = async (req, res, next) => {
         });
 
         if (user) {
-            const now = new Date();
-            const finishedSessionsCount = await req.prisma.session.count({
-                where: {
-                    mentorId: userId,
-                    OR: [
-                        { status: 'COMPLETED' },
-                        {
-                            AND: [
-                                { status: { in: ['UPCOMING', 'LIVE'] } },
-                                { scheduledAt: { lt: now } }
-                            ]
-                        }
-                    ]
-                }
-            });
-
-
-            const uniqueLearners = await req.prisma.booking.findMany({
-                where: {
-                    session: { mentorId: userId },
-                    status: { in: ['CONFIRMED', 'COMPLETED'] }
-                },
-                distinct: ['userId'],
-                select: { userId: true }
-            }).then(b => b.length);
+            const finishedSessionsCount = await getFinishedSessionsCount(req.prisma, userId);
+            const uniqueLearners = await getUniqueLearnersCount(req.prisma, userId);
 
             const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
 

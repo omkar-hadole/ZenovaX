@@ -123,6 +123,7 @@ exports.completeProfile = async (req, res, next) => {
 
 
 const { calculateBadges } = require("../utils/badges");
+const { getFinishedSessionsCount, getUniqueLearnersCount } = require("../utils/sessionUtils");
 
 exports.getMe = async (req, res, next) => {
     try {
@@ -187,18 +188,7 @@ exports.getMe = async (req, res, next) => {
             // Calculate unique learners helped
             uniqueLearners = 0;
             if (user.role === 'MENTOR') {
-                uniqueLearners = await req.prisma.booking.findMany({
-                    where: {
-                        session: {
-                            mentorId: user.id
-                        },
-                        status: { in: ['CONFIRMED', 'COMPLETED'] }
-                    },
-                    distinct: ['userId'],
-                    select: {
-                        userId: true
-                    }
-                }).then(bookings => bookings.length);
+                uniqueLearners = await getUniqueLearnersCount(req.prisma, user.id);
 
                 // Self-healing DB update
                 if (user.uniqueLearners !== uniqueLearners) {
@@ -211,21 +201,7 @@ exports.getMe = async (req, res, next) => {
             }
 
             // count finished sessions
-            const now = new Date();
-            finishedSessionsCount = await req.prisma.session.count({
-                where: {
-                    mentorId: req.user.id,
-                    OR: [
-                        { status: 'COMPLETED' },
-                        {
-                            AND: [
-                                { status: { in: ['UPCOMING', 'LIVE'] } },
-                                { scheduledAt: { lt: now } }
-                            ]
-                        }
-                    ]
-                }
-            });
+            finishedSessionsCount = await getFinishedSessionsCount(req.prisma, req.user.id);
 
             const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
 
@@ -589,14 +565,7 @@ exports.getProfileById = async (req, res, next) => {
         } else {
             uniqueLearners = 0;
             if (user.role === 'MENTOR') {
-                uniqueLearners = await req.prisma.booking.findMany({
-                    where: {
-                        session: { mentorId: user.id },
-                        status: { in: ['CONFIRMED', 'COMPLETED'] }
-                    },
-                    distinct: ['userId'],
-                    select: { userId: true }
-                }).then(b => b.length);
+                uniqueLearners = await getUniqueLearnersCount(req.prisma, user.id);
 
                 // Self-healing DB update
                 if (user.uniqueLearners !== uniqueLearners) {
@@ -609,21 +578,7 @@ exports.getProfileById = async (req, res, next) => {
             }
 
             // count finished sessions
-            const now = new Date();
-            finishedSessionsCount = await req.prisma.session.count({
-                where: {
-                    mentorId: user.id,
-                    OR: [
-                        { status: 'COMPLETED' },
-                        {
-                            AND: [
-                                { status: { in: ['UPCOMING', 'LIVE'] } },
-                                { scheduledAt: { lt: now } }
-                            ]
-                        }
-                    ]
-                }
-            });
+            finishedSessionsCount = await getFinishedSessionsCount(req.prisma, user.id);
 
             const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
 

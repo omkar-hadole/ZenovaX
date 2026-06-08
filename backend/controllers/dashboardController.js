@@ -1,4 +1,5 @@
 const { calculateBadges } = require("../utils/badges");
+const { getFinishedSessionsCount, getUniqueLearnersCount } = require("../utils/sessionUtils");
 
 exports.getDashboardData = async (req, res, next) => {
     try {
