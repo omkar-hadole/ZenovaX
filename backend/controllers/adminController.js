@@ -133,22 +133,35 @@ exports.rejectSession = async (req, res) => {
             return res.status(400).json({ error: "Request ID is required" });
         }
 
-        await prisma.sessionRequest.update({
+        // Validate existence and status before touching the DB write path
+        const sessionRequest = await prisma.sessionRequest.findUnique({
             where: { id: requestId },
-            data: { status: 'REJECTED', reviewedAt: new Date() }
+            select: { id: true, mentorId: true, title: true, status: true }
         });
 
-        const request = await prisma.sessionRequest.findUnique({ where: { id: requestId } });
-        if (request) {
-            await prisma.notification.create({
+        if (!sessionRequest) {
+            return res.status(404).json({ error: "Session request not found" });
+        }
+
+        if (sessionRequest.status !== 'PENDING') {
+            return res.status(400).json({ error: "Only pending requests can be rejected" });
+        }
+
+        // Atomically update the request and create the notification in one transaction
+        await prisma.$transaction([
+            prisma.sessionRequest.update({
+                where: { id: requestId },
+                data: { status: 'REJECTED', reviewedAt: new Date() }
+            }),
+            prisma.notification.create({
                 data: {
-                    userId: request.mentorId,
+                    userId: sessionRequest.mentorId,
                     type: 'SESSION_REQUEST_REJECTED',
                     title: 'Session Rejected',
-                    message: `Your session request "${request.title}" has been rejected.`,
+                    message: `Your session request "${sessionRequest.title}" has been rejected.`,
                 }
-            });
-        }
+            })
+        ]);
 
         res.json({ message: "Session rejected successfully" });
     } catch (error) {
