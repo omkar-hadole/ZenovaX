@@ -122,6 +122,7 @@ app.use("/api/coding-questions", codingChallengeRoutes);
 app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/help", require("./routes/helpRoutes"));
+app.use("/api/dashboard", require("./routes/dashboard"));
 
 const PORT = config.port;
 
