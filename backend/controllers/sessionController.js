@@ -431,118 +431,132 @@ exports.getMyBookings = async (req, res, next) => {
 
 exports.getAllSessions = async (req, res, next) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
         const skip = (page - 1) * limit;
         const type = req.query.type || 'upcoming';
         const mode = req.query.mode;
         const priceType = req.query.priceType;
         const now = new Date();
-        const cacheKey = `all_sessions_${req.user.id}_${page}_${limit}_${type}_${mode || 'all'}_${priceType || 'all'}`;
+        
+        // Shared cache key without user specific parameters
+        const cacheKey = `all_sessions_${page}_${limit}_${type}_${mode || 'all'}_${priceType || 'all'}`;
+
+        let cachedData;
 
         if (req.cache && req.cache.has(cacheKey)) {
-            return res.json(req.cache.get(cacheKey));
-        }
-
-        let whereClause = {};
-
-        if (type === 'past') {
-            whereClause = {
-                OR: [
-                    { status: 'COMPLETED' },
-                    { status: 'CANCELLED' },
-                    {
-                        AND: [
-                            { status: 'UPCOMING' },
-                            { scheduledAt: { lt: now } }
-                        ]
-                    }
-                ]
-            };
+            cachedData = req.cache.get(cacheKey);
         } else {
-            // Default: UPCOMING (and LIVE)
-            whereClause = {
-                OR: [
-                    { status: 'LIVE' },
-                    {
-                        AND: [
-                            { status: 'UPCOMING' },
-                            { scheduledAt: { gt: now } }
-                        ]
-                    }
-                ]
+            let whereClause = {};
+
+            if (type === 'past') {
+                whereClause = {
+                    OR: [
+                        { status: 'COMPLETED' },
+                        { status: 'CANCELLED' },
+                        {
+                            AND: [
+                                { status: 'UPCOMING' },
+                                { scheduledAt: { lt: now } }
+                            ]
+                        }
+                    ]
+                };
+            } else {
+                // Default: UPCOMING (and LIVE)
+                whereClause = {
+                    OR: [
+                        { status: 'LIVE' },
+                        {
+                            AND: [
+                                { status: 'UPCOMING' },
+                                { scheduledAt: { gt: now } }
+                            ]
+                        }
+                    ]
+                };
+            }
+
+            if (mode) {
+                whereClause.mode = mode;
+            }
+
+            if (priceType) {
+                whereClause.priceType = priceType;
+            }
+
+            const [sessions, total] = await Promise.all([
+                req.prisma.session.findMany({
+                    where: whereClause,
+                    skip,
+                    take: limit,
+                    include: {
+                        mentor: {
+                            select: {
+                                id: true,
+                                name: true,
+                                profilePicture: true,
+                                department: true,
+                                year: true,
+                                averageRating: true
+                            }
+                        },
+                        resources: {
+                            select: { id: true, title: true, fileType: true, fileUrl: true }
+                        },
+                        quizzes: {
+                            select: { id: true, title: true, status: true }
+                        },
+                        reviews: {
+                            take: 3,
+                            orderBy: { createdAt: 'desc' },
+                            include: {
+                                author: { select: { name: true, profilePicture: true } }
+                            }
+                        }
+                    },
+                    orderBy: { scheduledAt: type === 'past' ? 'desc' : 'asc' }
+                }),
+                req.prisma.session.count({
+                    where: whereClause
+                })
+            ]);
+
+            cachedData = {
+                sessions,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.ceil(total / limit)
+                }
             };
+
+            if (req.cache) {
+                req.cache.set(cacheKey, cachedData);
+            }
         }
 
-        if (mode) {
-            whereClause.mode = mode;
-        }
+        // Fetch user specific bookings to merge isBooked status dynamically
+        const sessionIds = cachedData.sessions.map(s => s.id);
+        const userBookings = await req.prisma.booking.findMany({
+            where: {
+                userId: req.user.id,
+                sessionId: { in: sessionIds }
+            },
+            select: { sessionId: true }
+        });
+        const userBookedSessionIds = new Set(userBookings.map(b => b.sessionId));
 
-        if (priceType) {
-            whereClause.priceType = priceType;
-        }
-
-        const [sessions, total] = await Promise.all([
-            req.prisma.session.findMany({
-                where: whereClause,
-                skip,
-                take: limit,
-                include: {
-                    mentor: {
-                        select: {
-                            id: true,
-                            name: true,
-                            profilePicture: true,
-                            department: true,
-                            year: true,
-                            averageRating: true
-                        }
-                    },
-                    bookings: {
-                        where: { userId: req.user.id },
-                        select: { id: true }
-                    },
-                    resources: {
-                        select: { id: true, title: true, fileType: true, fileUrl: true }
-                    },
-                    quizzes: {
-                        select: { id: true, title: true, status: true }
-                    },
-                    reviews: {
-                        take: 3,
-                        orderBy: { createdAt: 'desc' },
-                        include: {
-                            author: { select: { name: true, profilePicture: true } }
-                        }
-                    }
-                },
-                orderBy: { scheduledAt: type === 'past' ? 'desc' : 'asc' }
-            }),
-            req.prisma.session.count({
-                where: whereClause
-            })
-        ]);
-
-        const mappedSessions = sessions.map(s => ({
+        const mappedSessions = cachedData.sessions.map(s => ({
             ...s,
-            isBooked: s.bookings.length > 0
+            isBooked: userBookedSessionIds.has(s.id)
         }));
 
-        const response = {
+        return res.json({
             sessions: mappedSessions,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
-        };
-
-        if (req.cache) {
-            req.cache.set(cacheKey, response);
-        }
-
-        return res.json(response);
+            pagination: cachedData.pagination
+        });
     } catch (error) {
         return next(error);
     }
