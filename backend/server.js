@@ -11,6 +11,7 @@ const quizRoutes = require('./routes/quiz');
 const resourceRoutes = require('./routes/resource');
 const reviewRoutes = require('./routes/reviews');
 const codingChallengeRoutes = require('./routes/codingChallengeRoutes');
+const { generalLimiter } = require("./middleware/rateLimiter");
 
 const { PrismaClient } = require('@prisma/client');
 
@@ -48,6 +49,7 @@ app.use(cors({
 app.options('*', cors());
 
 app.use(express.json());
+app.use("/api", generalLimiter);
 
 app.use((req, res, next) => {
   req.prisma = prisma;
