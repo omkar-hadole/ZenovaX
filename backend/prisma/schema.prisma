@@ -53,6 +53,7 @@ model User {
   badgeLevel        BadgeLevel?
   points            Int       @default(0)
   totalReviews      Int       @default(0)
+  uniqueLearners    Int       @default(0)
   
   // Timestamps
   createdAt         DateTime  @default(now())

@@ -19,6 +19,10 @@ router.post("/follow/:id", protect, async (req, res, next) => {
             },
         });
 
+        if (req.cache) {
+            req.cache.del(`profile_stats_${followingId}`);
+        }
+
         return res.json({ success: true, follow });
     } catch (error) {
         if (error.code === 'P2002') {
@@ -41,6 +45,10 @@ router.delete("/follow/:id", protect, async (req, res, next) => {
                 },
             },
         });
+
+        if (req.cache) {
+            req.cache.del(`profile_stats_${followingId}`);
+        }
 
         return res.json({ success: true });
     } catch (error) {
@@ -67,6 +75,10 @@ router.post("/like/:id", protect, async (req, res, next) => {
             },
         });
 
+        if (req.cache) {
+            req.cache.del(`profile_stats_${mentorId}`);
+        }
+
         return res.json({ success: true, like });
     } catch (error) {
         if (error.code === 'P2002') {
@@ -89,6 +101,10 @@ router.delete("/like/:id", protect, async (req, res, next) => {
                 },
             },
         });
+
+        if (req.cache) {
+            req.cache.del(`profile_stats_${mentorId}`);
+        }
 
         return res.json({ success: true });
     } catch (error) {

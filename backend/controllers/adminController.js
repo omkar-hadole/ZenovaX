@@ -180,10 +180,19 @@ exports.deleteSession = async (req, res) => {
         const prisma = req.prisma;
         const { id } = req.params;
 
+        const session = await prisma.session.findUnique({
+            where: { id },
+            select: { mentorId: true }
+        });
+
         await prisma.session.update({
             where: { id },
             data: { isDeleted: true, deletedAt: new Date() }
         });
+
+        if (session && req.cache) {
+            req.cache.del(`profile_stats_${session.mentorId}`);
+        }
 
         res.json({ message: "Session deleted successfully" });
     } catch (error) {
@@ -279,6 +288,11 @@ exports.handleReportAction = async (req, res) => {
                     where: { id: reportId },
                     data: { status: 'RESOLVED', resolvedAt: new Date() }
                 });
+
+                if (req.cache && report.session) {
+                    req.cache.del(`profile_stats_${report.session.mentorId}`);
+                }
+
                 res.json({ message: "Session deleted and report marked as resolved" });
             } else {
                 await prisma.report.update({

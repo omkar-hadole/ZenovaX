@@ -363,8 +363,29 @@ exports.bookSession = async (req, res, next) => {
                 }
             });
 
-            return { booking, sessionId: currentSessionId };
+            // Recalculate unique learners for the mentor and update the denormalized database field
+            const uniqueLearners = await tx.booking.findMany({
+                where: {
+                    session: { mentorId: currentSession.mentorId },
+                    status: { in: ['CONFIRMED', 'COMPLETED'] }
+                },
+                distinct: ['userId'],
+                select: { userId: true }
+            }).then(bookings => bookings.length);
+
+            await tx.user.update({
+                where: { id: currentSession.mentorId },
+                data: { uniqueLearners }
+            });
+
+            return { booking, sessionId: currentSessionId, mentorId: currentSession.mentorId };
         });
+
+        // Invalidate profile stats cache for learner and mentor
+        if (req.cache) {
+            req.cache.del(`profile_stats_${req.user.id}`);
+            req.cache.del(`profile_stats_${result.mentorId}`);
+        }
 
         return res.status(201).json({
             success: true,
@@ -721,6 +742,12 @@ exports.verifyAttendance = async (req, res, next) => {
             where: { id: bookingId },
             data: { attended: true, joinedAt: new Date() }
         });
+
+        // Invalidate profile stats cache for learner and mentor
+        if (req.cache) {
+            req.cache.del(`profile_stats_${session.mentorId}`);
+            req.cache.del(`profile_stats_${booking.userId}`);
+        }
 
 
         return res.json({

@@ -72,6 +72,10 @@ router.post('/create', protect, async (req, res) => {
             timeout: 20000
         });
 
+        if (req.cache) {
+            req.cache.del(`profile_stats_${session.mentorId}`);
+        }
+
         res.status(201).json({ message: 'Review submitted successfully' });
     } catch (error) {
         next(error);

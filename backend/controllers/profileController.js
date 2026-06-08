@@ -108,6 +108,10 @@ exports.completeProfile = async (req, res, next) => {
             data,
         });
 
+        if (req.cache) {
+            req.cache.del(`profile_stats_${req.user.id}`);
+        }
+
         return res.json({
             success: true,
             user: updatedUser,
@@ -142,6 +146,7 @@ exports.getMe = async (req, res, next) => {
                 totalSessions: true,
                 averageRating: true,
                 totalReviews: true,
+                uniqueLearners: true,
                 _count: {
                     select: {
                         followers: true,
@@ -167,59 +172,76 @@ exports.getMe = async (req, res, next) => {
             }
         }
 
-        // Calculate unique learners helped
-        let uniqueLearners = 0;
-        if (user.role === 'MENTOR') {
-            uniqueLearners = await req.prisma.booking.findMany({
-                where: {
-                    session: {
-                        mentorId: user.id
+        const cacheKey = `profile_stats_${user.id}`;
+        let cachedStats = req.cache && req.cache.get(cacheKey);
+
+        let uniqueLearners;
+        let finishedSessionsCount;
+        let badges;
+
+        if (cachedStats) {
+            uniqueLearners = cachedStats.uniqueLearners;
+            finishedSessionsCount = cachedStats.finishedSessionsCount;
+            badges = cachedStats.badges;
+        } else {
+            // Calculate unique learners helped
+            uniqueLearners = 0;
+            if (user.role === 'MENTOR') {
+                uniqueLearners = await req.prisma.booking.findMany({
+                    where: {
+                        session: {
+                            mentorId: user.id
+                        },
+                        status: { in: ['CONFIRMED', 'COMPLETED'] }
                     },
-                    status: { in: ['CONFIRMED', 'COMPLETED'] }
-                },
-                distinct: ['userId'],
-                select: {
-                    userId: true
+                    distinct: ['userId'],
+                    select: {
+                        userId: true
+                    }
+                }).then(bookings => bookings.length);
+
+                // Self-healing DB update
+                if (user.uniqueLearners !== uniqueLearners) {
+                    await req.prisma.user.update({
+                        where: { id: user.id },
+                        data: { uniqueLearners }
+                    });
+                    user.uniqueLearners = uniqueLearners;
                 }
-            }).then(bookings => bookings.length);
+            }
+
+            // count finished sessions
+            const now = new Date();
+            finishedSessionsCount = await req.prisma.session.count({
+                where: {
+                    mentorId: req.user.id,
+                    OR: [
+                        { status: 'COMPLETED' },
+                        {
+                            AND: [
+                                { status: { in: ['UPCOMING', 'LIVE'] } },
+                                { scheduledAt: { lt: now } }
+                            ]
+                        }
+                    ]
+                }
+            });
+
+            const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
+            badges = user.role === 'MENTOR'
+                ? calculateBadges({
+                    ...user,
+                    totalSessions: effectiveSessions
+                }, uniqueLearners)
+                : [];
+
+            if (req.cache) {
+                req.cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
+            }
         }
 
-        // CORRECTED: Count sessions that are actually finished (COMPLETED or Past UPCOMING/LIVE)
-        // Using current time for comparison
-        const now = new Date();
-        const finishedSessionsCount = await req.prisma.session.count({
-            where: {
-                mentorId: req.user.id,
-                OR: [
-                    { status: 'COMPLETED' },
-                    {
-                        AND: [
-                            { status: { in: ['UPCOMING', 'LIVE'] } },
-                            { scheduledAt: { lt: now } }
-                        ]
-                    }
-                ]
-            }
-        });
-
         const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
-
-        console.log("DEBUG BADGES:", {
-            userId: user.id,
-            dbTotalSessions: user.totalSessions,
-            finishedSessionsCount,
-            effectiveSessions,
-            uniqueLearners
-        });
-
-        const badges = user.role === 'MENTOR'
-            ? calculateBadges({
-                ...user,
-                totalSessions: effectiveSessions
-            }, uniqueLearners)
-            : [];
-
-        console.log("Calculated Badges:", badges);
 
         const responseUser = {
             ...user,
@@ -334,6 +356,10 @@ exports.updateProfile = async (req, res, next) => {
             } catch (e) {
                 updatedUser.mentorSkills = [];
             }
+        }
+
+        if (req.cache) {
+            req.cache.del(`profile_stats_${req.user.id}`);
         }
 
         return res.json({
@@ -517,6 +543,7 @@ exports.getProfileById = async (req, res, next) => {
                 totalSessions: true,
                 averageRating: true,
                 totalReviews: true,
+                uniqueLearners: true,
                 _count: {
                     select: {
                         followers: true,
@@ -548,51 +575,71 @@ exports.getProfileById = async (req, res, next) => {
             }
         }
 
-        let uniqueLearners = 0;
-        if (user.role === 'MENTOR') {
-            uniqueLearners = await req.prisma.booking.findMany({
+        const cacheKey = `profile_stats_${user.id}`;
+        let cachedStats = req.cache && req.cache.get(cacheKey);
+
+        let uniqueLearners;
+        let finishedSessionsCount;
+        let badges;
+
+        if (cachedStats) {
+            uniqueLearners = cachedStats.uniqueLearners;
+            finishedSessionsCount = cachedStats.finishedSessionsCount;
+            badges = cachedStats.badges;
+        } else {
+            uniqueLearners = 0;
+            if (user.role === 'MENTOR') {
+                uniqueLearners = await req.prisma.booking.findMany({
+                    where: {
+                        session: { mentorId: user.id },
+                        status: { in: ['CONFIRMED', 'COMPLETED'] }
+                    },
+                    distinct: ['userId'],
+                    select: { userId: true }
+                }).then(b => b.length);
+
+                // Self-healing DB update
+                if (user.uniqueLearners !== uniqueLearners) {
+                    await req.prisma.user.update({
+                        where: { id: user.id },
+                        data: { uniqueLearners }
+                    });
+                    user.uniqueLearners = uniqueLearners;
+                }
+            }
+
+            // count finished sessions
+            const now = new Date();
+            finishedSessionsCount = await req.prisma.session.count({
                 where: {
-                    session: { mentorId: user.id },
-                    status: { in: ['CONFIRMED', 'COMPLETED'] }
-                },
-                distinct: ['userId'],
-                select: { userId: true }
-            }).then(b => b.length);
+                    mentorId: user.id,
+                    OR: [
+                        { status: 'COMPLETED' },
+                        {
+                            AND: [
+                                { status: { in: ['UPCOMING', 'LIVE'] } },
+                                { scheduledAt: { lt: now } }
+                            ]
+                        }
+                    ]
+                }
+            });
+
+            const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
+            badges = user.role === 'MENTOR'
+                ? calculateBadges({
+                    ...user,
+                    totalSessions: effectiveSessions
+                }, uniqueLearners)
+                : [];
+
+            if (req.cache) {
+                req.cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
+            }
         }
 
-        // CORRECTED: Count sessions that are actually finished
-        const now = new Date();
-        const finishedSessionsCount = await req.prisma.session.count({
-            where: {
-                mentorId: user.id,
-                OR: [
-                    { status: 'COMPLETED' },
-                    {
-                        AND: [
-                            { status: { in: ['UPCOMING', 'LIVE'] } },
-                            { scheduledAt: { lt: now } }
-                        ]
-                    }
-                ]
-            }
-        });
-
         const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
-
-        console.log("DEBUG BADGES (ById):", {
-            userId: user.id,
-            dbTotalSessions: user.totalSessions,
-            finishedSessionsCount,
-            effectiveSessions,
-            uniqueLearners
-        });
-
-        const badges = user.role === 'MENTOR'
-            ? calculateBadges({
-                ...user,
-                totalSessions: effectiveSessions
-            }, uniqueLearners)
-            : [];
 
         const responseUser = {
             ...user,
