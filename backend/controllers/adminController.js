@@ -1,5 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
-
 exports.getDashboardStats = async (req, res) => {
     try {
         const prisma = req.prisma;

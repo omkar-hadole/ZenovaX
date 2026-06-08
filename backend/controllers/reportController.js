@@ -1,8 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-
 const createReport = async (req, res) => {
     try {
+        const prisma = req.prisma;
         const { sessionId, reason } = req.body;
         const userId = req.user.id;
 
@@ -28,6 +26,7 @@ const createReport = async (req, res) => {
 
 const getReportsForMentor = async (req, res) => {
     try {
+        const prisma = req.prisma;
         const mentorId = req.user.id; // From auth middleware
 
         // Find sessions owned by this mentor
