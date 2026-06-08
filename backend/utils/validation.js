@@ -29,6 +29,17 @@ function isValidUrl(url) {
   }
 }
 
+// Stricter variant: must be a valid URL AND use https:// only.
+// Use this for meetingLink to block http://, javascript:, etc.
+function isHttpsUrl(url) {
+  if (!isValidUrl(url)) return false;
+  try {
+    return new URL(url).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function sanitizeString(str) {
   if (typeof str !== 'string') return '';
   return xss(str.trim()); 
@@ -44,6 +55,7 @@ module.exports = {
   isValidName,
   isValidBio,
   isValidUrl,
+  isHttpsUrl,
   sanitizeString,
   isValidArray,
 };

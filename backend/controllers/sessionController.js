@@ -1,4 +1,4 @@
-const { sanitizeString, isValidArray } = require("../utils/validation");
+const { sanitizeString, isValidArray, isHttpsUrl } = require("../utils/validation");
 const logger = require("../utils/logger");
 
 exports.createSessionRequest = async (req, res, next) => {
@@ -29,6 +29,10 @@ exports.createSessionRequest = async (req, res, next) => {
 
         if (mode === "ONLINE" && !meetingLink) {
             return res.status(400).json({ error: "Meeting link is required for online sessions" });
+        }
+
+        if (meetingLink && !isHttpsUrl(meetingLink)) {
+            return res.status(400).json({ error: "meetingLink must be a valid https:// URL" });
         }
 
         const sessionDate = new Date(proposedDate);
@@ -142,6 +146,10 @@ exports.updateSessionRequest = async (req, res, next) => {
             return res.status(400).json({ error: "Only pending requests can be updated" });
         }
 
+        if (meetingLink !== undefined && !isHttpsUrl(meetingLink)) {
+            return res.status(400).json({ error: "meetingLink must be a valid https:// URL" });
+        }
+
         const requestUpdateData = {
             title: title ? sanitizeString(title) : undefined,
             description: description ? sanitizeString(description) : undefined,
@@ -153,7 +161,7 @@ exports.updateSessionRequest = async (req, res, next) => {
             price: (price !== undefined && !isNaN(parseFloat(price))) ? parseFloat(price) : undefined,
             maxSeats: (maxSeats !== undefined && !isNaN(parseInt(maxSeats))) ? parseInt(maxSeats) : undefined,
             venue: venue ? sanitizeString(venue) : undefined,
-            meetingLink,
+            meetingLink: meetingLink !== undefined ? meetingLink : undefined,
             proposedDate: proposedDate ? new Date(proposedDate) : undefined,
             duration: (duration !== undefined && !isNaN(parseInt(duration))) ? parseInt(duration) : undefined,
         };

@@ -1,4 +1,4 @@
-const { sanitizeString } = require("../utils/validation");
+const { sanitizeString, isValidUrl } = require("../utils/validation");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const logger = require("../utils/logger");
 
@@ -66,6 +66,10 @@ exports.completeProfile = async (req, res, next) => {
         const trimmedBio = bio ? bio.trim() : null;
         const trimmedPhone = phone ? phone.trim() : null;
         const trimmedLinkedin = linkedin ? linkedin.trim() : null;
+
+        if (trimmedLinkedin && !isValidUrl(trimmedLinkedin)) {
+            return res.status(400).json({ error: "linkedinUrl must be a valid URL (e.g. https://linkedin.com/in/yourname)" });
+        }
 
         let parsedSkills = [];
         if (skills) {
@@ -274,7 +278,11 @@ exports.updateProfile = async (req, res, next) => {
         }
 
         if (linkedin !== undefined) {
-            updateData.linkedinUrl = linkedin ? linkedin.trim() : null;
+            const trimmedLinkedin = linkedin ? linkedin.trim() : null;
+            if (trimmedLinkedin && !isValidUrl(trimmedLinkedin)) {
+                return res.status(400).json({ error: "linkedinUrl must be a valid URL (e.g. https://linkedin.com/in/yourname)" });
+            }
+            updateData.linkedinUrl = trimmedLinkedin;
         }
 
         if (skills !== undefined) {
