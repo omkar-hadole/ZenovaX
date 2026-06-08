@@ -821,23 +821,27 @@ exports.getRecentActivity = async (req, res, next) => {
                 totalSessions: effectiveSessions
             }, uniqueLearners);
 
-            for (const badge of earnedBadges) {
-                const existingNotif = await req.prisma.notification.findFirst({
+            if (earnedBadges.length > 0) {
+                const existingNotifications = await req.prisma.notification.findMany({
                     where: {
                         userId: userId,
                         type: 'ACHIEVEMENT_UNLOCKED',
-                        title: badge
-                    }
+                        title: { in: earnedBadges }
+                    },
+                    select: { title: true }
                 });
 
-                if (!existingNotif) {
-                    await req.prisma.notification.create({
-                        data: {
+                const existingBadgeTitles = new Set(existingNotifications.map(n => n.title));
+                const newBadges = earnedBadges.filter(badge => !existingBadgeTitles.has(badge));
+
+                if (newBadges.length > 0) {
+                    await req.prisma.notification.createMany({
+                        data: newBadges.map(badge => ({
                             userId: userId,
                             type: 'ACHIEVEMENT_UNLOCKED',
                             title: badge,
                             message: `Congratulations! You have unlocked the "${badge}" badge.`
-                        }
+                        }))
                     });
                 }
             }
