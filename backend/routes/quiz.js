@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { protect } = require("../middleware/auth");
+const { protect, authorize } = require("../middleware/auth");
 
-router.post("/create", protect, async (req, res, next) => {
+router.post("/create", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { sessionId, title, description, duration, totalMarks, passingMarks, questions } = req.body;
 
@@ -49,7 +49,7 @@ router.post("/create", protect, async (req, res, next) => {
     }
 });
 
-router.post("/:id/launch", protect, async (req, res, next) => {
+router.post("/:id/launch", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { id } = req.params;
 

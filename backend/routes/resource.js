@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
-router.post('/create', protect, async (req, res, next) => {
+router.post('/create', protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { title, description, fileUrl, fileType, sessionId } = req.body;
         const uploaderId = req.user.id;
