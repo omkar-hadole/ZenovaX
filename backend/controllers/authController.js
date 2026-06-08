@@ -97,7 +97,7 @@ exports.login = async (req, res, next) => {
 
         const { password: _, ...user } = userRecord;
 
-        const token = jwt.sign({ userId: user.id }, config.jwtSecret, {
+        const token = jwt.sign({ userId: user.id, role: user.role }, config.jwtSecret, {
             expiresIn: "7d",
         });
 

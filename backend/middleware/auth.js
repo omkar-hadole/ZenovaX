@@ -15,7 +15,7 @@ function auth(req, res, next) {
   try {
 
     const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = { id: decoded.userId };
+    req.user = { id: decoded.userId, role: decoded.role };
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -30,14 +30,9 @@ const protect = auth;
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      // Note: role needs to be in req.user, check jwt payload
-      // For now, if role is not in token, this might fail or we need to fetch user
-      // Assuming simplified auth for now or skipping role check if not available
-      // But let's export it to prevent crash
-      next();
-    } else {
-      next();
+      return res.status(403).json({ error: "Access denied: Insufficient permissions" });
     }
+    next();
   };
 };
 
