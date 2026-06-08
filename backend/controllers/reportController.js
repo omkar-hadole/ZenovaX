@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 const createReport = async (req, res) => {
     try {
         const prisma = req.prisma;
@@ -19,7 +21,7 @@ const createReport = async (req, res) => {
 
         res.status(201).json({ message: "Report submitted successfully", report });
     } catch (error) {
-        console.error("Error creating report:", error);
+        logger.error("Error creating report:", error);
         res.status(500).json({ error: "Failed to submit report" });
     }
 };
@@ -59,7 +61,7 @@ const getReportsForMentor = async (req, res) => {
 
         res.json({ reports });
     } catch (error) {
-        console.error("Error fetching mentor reports:", error);
+        logger.error("Error fetching mentor reports:", error);
         res.status(500).json({ error: "Failed to fetch reports" });
     }
 };

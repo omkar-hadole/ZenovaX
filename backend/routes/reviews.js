@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
+const logger = require('../utils/logger');
 
 router.post('/create', protect, async (req, res) => {
     const { sessionId, rating, comment, isAnonymous } = req.body;
@@ -240,7 +241,7 @@ router.get('/stats', protect, async (req, res) => {
             distribution
         });
     } catch (error) {
-        console.error('Fetch review stats error:', error);
+        logger.error('Fetch review stats error:', error);
         res.status(500).json({ error: 'Failed to fetch review stats' });
     }
 });

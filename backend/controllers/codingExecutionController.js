@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 
 const PISTON_API = 'https://emkc.org/api/v2/piston/execute';
 
@@ -144,7 +145,7 @@ exports.executeCode = async (req, res) => {
         res.json({ success: true, results });
 
     } catch (error) {
-        console.error("Execution Error:", error.message);
+        logger.error("Execution Error:", { message: error.message });
         res.status(500).json({ error: "Failed to execute code" });
     }
 };

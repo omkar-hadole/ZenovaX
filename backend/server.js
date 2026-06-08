@@ -13,6 +13,7 @@ const resourceRoutes = require('./routes/resource');
 const reviewRoutes = require('./routes/reviews');
 const codingChallengeRoutes = require('./routes/codingChallengeRoutes');
 const { generalLimiter } = require("./middleware/rateLimiter");
+const logger = require("./utils/logger");
 
 const { PrismaClient } = require('@prisma/client');
 
@@ -141,7 +142,7 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 const PORT = config.port;
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(err.stack);
   res.status(500).json({
     error: 'Something went wrong!',
     details: config.nodeEnv === 'development' ? err.message : undefined
@@ -150,7 +151,7 @@ app.use((err, req, res, next) => {
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    logger.info(`Server running on port ${PORT}`);
   });
 }
 

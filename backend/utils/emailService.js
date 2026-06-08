@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger');
 // import logo from 
 // Configure transporter
 // In production, these should be env variables. 
@@ -21,11 +22,8 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (to, subject, html) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn("⚠️  Email credentials not found in environment. Email NOT sent.");
-            console.log("--- EMAIL SIMULATION ---");
-            console.log(`To: ${to}`);
-            console.log(`Subject: ${subject}`);
-            console.log("--- END SIMULATION ---");
+            logger.warn("Email credentials not found in environment. Email NOT sent.");
+            logger.debug("Email simulation", { to, subject });
             return;
         }
 
@@ -37,7 +35,7 @@ const sendEmail = async (to, subject, html) => {
         });
         // console.log(`📧 Email sent to ${to}`);
     } catch (error) {
-        console.error("Failed to send email:", error);
+        logger.error("Failed to send email:", error);
         // Don't throw, just log. We don't want to break the auth flow if email fails (though ideally we would handle it).
     }
 };

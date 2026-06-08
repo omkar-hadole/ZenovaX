@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 exports.getDashboardStats = async (req, res) => {
     try {
         const prisma = req.prisma;
@@ -28,7 +30,7 @@ exports.getDashboardStats = async (req, res) => {
             recentSessions
         });
     } catch (error) {
-        console.error("Get Dashboard Stats Error:", error);
+        logger.error("Get Dashboard Stats Error:", error);
         res.status(500).json({ error: "Failed to fetch dashboard stats" });
     }
 };
@@ -47,7 +49,7 @@ exports.getPendingSessions = async (req, res) => {
         });
         res.json(pendingSessions);
     } catch (error) {
-        console.error("Get Pending Sessions Error:", error);
+        logger.error("Get Pending Sessions Error:", error);
         res.status(500).json({ error: "Failed to fetch pending sessions" });
     }
 };
@@ -117,7 +119,7 @@ exports.approveSession = async (req, res) => {
 
         res.json({ message: "Session approved successfully", session: result });
     } catch (error) {
-        console.error("Approve Session Error:", error);
+        logger.error("Approve Session Error:", error);
         res.status(500).json({ error: "Failed to approve session", details: error.message });
     }
 };
@@ -150,7 +152,7 @@ exports.rejectSession = async (req, res) => {
 
         res.json({ message: "Session rejected successfully" });
     } catch (error) {
-        console.error("Reject Session Error:", error);
+        logger.error("Reject Session Error:", error);
         res.status(500).json({ error: "Failed to reject session" });
     }
 };
@@ -168,7 +170,7 @@ exports.getAllSessions = async (req, res) => {
         });
         res.json(sessions);
     } catch (error) {
-        console.error("Get All Sessions Error:", error);
+        logger.error("Get All Sessions Error:", error);
         res.status(500).json({ error: "Failed to fetch sessions" });
     }
 };
@@ -194,7 +196,7 @@ exports.deleteSession = async (req, res) => {
 
         res.json({ message: "Session deleted successfully" });
     } catch (error) {
-        console.error("Delete Session Error:", error);
+        logger.error("Delete Session Error:", error);
         res.status(500).json({ error: "Failed to delete session" });
     }
 };
@@ -215,7 +217,7 @@ exports.getAllUsers = async (req, res) => {
         });
         res.json(users);
     } catch (error) {
-        console.error("Get All Users Error:", error);
+        logger.error("Get All Users Error:", error);
         res.status(500).json({ error: "Failed to fetch users" });
     }
 };
@@ -232,7 +234,7 @@ exports.deleteUser = async (req, res) => {
 
         res.json({ message: "User deleted successfully" });
     } catch (error) {
-        console.error("Delete User Error:", error);
+        logger.error("Delete User Error:", error);
         res.status(500).json({ error: "Failed to delete user" });
     }
 };
@@ -253,7 +255,7 @@ exports.getReports = async (req, res) => {
         });
         res.json(reports);
     } catch (error) {
-        console.error("Get Reports Error:", error);
+        logger.error("Get Reports Error:", error);
         res.status(500).json({ error: "Failed to fetch reports" });
     }
 };
@@ -315,7 +317,7 @@ exports.handleReportAction = async (req, res) => {
             res.status(400).json({ error: "Invalid action" });
         }
     } catch (error) {
-        console.error("Handle Report Action Error:", error);
+        logger.error("Handle Report Action Error:", error);
         res.status(500).json({ error: "Failed to handle report action" });
     }
 };

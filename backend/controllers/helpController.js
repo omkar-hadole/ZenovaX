@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const logger = require("../utils/logger");
 
 // PERFORMANCE: Fail fast if no key
 if (!process.env.GEMINI_API_KEY) throw new Error("Missing GEMINI_API_KEY");
@@ -62,7 +63,7 @@ exports.askAI = async (req, res) => {
   } catch (error) {
     // PERFORMANCE: Minimal error handling logic
     // 429 = Quota limit (System overloaded)
-    console.error("AI Service Error:", error.message);
+    logger.error("AI Service Error:", { message: error.message, status: error.status });
 
     if (error.status === 429 || error.message.includes("429")) {
       return res.json({ answer: "API Quota Exceeded (429). Your Google Project has no quota left. Please create a NEW Project." });

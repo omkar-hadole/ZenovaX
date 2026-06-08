@@ -1,4 +1,5 @@
 const { sanitizeString, isValidArray } = require("../utils/validation");
+const logger = require("../utils/logger");
 
 exports.createSessionRequest = async (req, res, next) => {
     try {
@@ -85,12 +86,10 @@ exports.getSessionRequestById = async (req, res, next) => {
             return res.status(401).json({ error: "User not found" });
         }
 
-        console.log("getSessionRequestById Debug:");
-        console.log("User:", user.id, "Role:", user.role);
-        console.log("Request Mentor:", request.mentorId);
+        logger.debug("getSessionRequestById Debug:", { userId: user.id, role: user.role, requestMentorId: request.mentorId });
 
         if (request.mentorId !== user.id && user.role !== 'ADMIN') {
-            console.log("Access Denied: User is not mentor and not ADMIN");
+            logger.warn("Access Denied: User is not mentor and not ADMIN", { userId: user.id, requestMentorId: request.mentorId });
             return res.status(403).json({ error: "Unauthorized to view this request" });
         }
 
@@ -167,7 +166,7 @@ exports.updateSessionRequest = async (req, res, next) => {
         // If Admin is updating an APPROVED request, also update the linked Session
         if (user.role === 'ADMIN' && request.status === 'APPROVED') {
             try {
-                console.log("Attempting to update linked session for Request ID:", id);
+                logger.debug("Attempting to update linked session for Request ID:", { id });
                 await req.prisma.session.update({
                     where: { requestId: id },
                     data: {
@@ -186,9 +185,9 @@ exports.updateSessionRequest = async (req, res, next) => {
                         duration: requestUpdateData.duration,
                     }
                 });
-                console.log("Linked session updated successfully");
+                logger.debug("Linked session updated successfully");
             } catch (sessionError) {
-                console.error("Failed to update linked session:", sessionError);
+                logger.error("Failed to update linked session:", sessionError);
                 if (sessionError.code !== 'P2025') {
                 }
             }

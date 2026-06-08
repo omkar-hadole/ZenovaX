@@ -1,5 +1,6 @@
 const { v2: cloudinary } = require("cloudinary");
 const config = require("../config");
+const logger = require("./logger");
 
 cloudinary.config({
     cloud_name: config.cloudinary.cloudName,
@@ -8,7 +9,7 @@ cloudinary.config({
 });
 
 if (!config.cloudinary.cloudName || !config.cloudinary.apiKey || !config.cloudinary.apiSecret) {
-    console.warn("WARNING: Cloudinary environment variables are missing!");
+    logger.warn("Cloudinary environment variables are missing!");
 }
 
 const uploadToCloudinary = (fileBuffer, filename = "") => {
@@ -21,7 +22,7 @@ const uploadToCloudinary = (fileBuffer, filename = "") => {
             },
             (error, result) => {
                 if (error) {
-                    console.error("Cloudinary Upload Error:", error);
+                    logger.error("Cloudinary Upload Error:", error);
                     return reject(error);
                 }
                 return resolve(result);

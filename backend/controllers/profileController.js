@@ -1,5 +1,6 @@
 const { sanitizeString } = require("../utils/validation");
 const { uploadToCloudinary } = require("../utils/cloudinary");
+const logger = require("../utils/logger");
 
 exports.completeProfile = async (req, res, next) => {
     try {
@@ -14,7 +15,7 @@ exports.completeProfile = async (req, res, next) => {
         } = req.body;
 
         if (!role || !department || !yearOfStudy) {
-            console.error("Validation Failed: Missing required fields", { role, department, yearOfStudy });
+            logger.warn("Validation Failed: Missing required fields", { role, department, yearOfStudy });
             return res
                 .status(400)
                 .json({ error: "role, department and yearOfStudy are required" });
@@ -22,7 +23,7 @@ exports.completeProfile = async (req, res, next) => {
 
         const roleValue = role.toLowerCase();
         if (!["mentor", "learner"].includes(roleValue)) {
-            console.error("Validation Failed: Invalid role", roleValue);
+            logger.warn("Validation Failed: Invalid role", { roleValue });
             return res.status(400).json({ error: "Invalid role provided" });
         }
 
@@ -30,12 +31,12 @@ exports.completeProfile = async (req, res, next) => {
         const parsedYear = parseInt(yearOfStudy, 10);
 
         if (Number.isNaN(parsedYear) || parsedYear < 1) {
-            console.error("Validation Failed: Invalid year", parsedYear);
+            logger.warn("Validation Failed: Invalid year", { parsedYear });
             return res.status(400).json({ error: "Invalid yearOfStudy" });
         }
 
         if (normalizedRole === "MENTOR" && (!phone || !phone.trim())) {
-            console.error("Validation Failed: Mentor missing phone");
+            logger.warn("Validation Failed: Mentor missing phone");
             return res
                 .status(400)
                 .json({ error: "Phone number is required for mentors" });
@@ -53,7 +54,7 @@ exports.completeProfile = async (req, res, next) => {
                 );
                 profileImageUrl = uploadResult.secure_url;
             } catch (error) {
-                console.error("Image upload failed details:", error);
+                logger.error("Image upload failed details:", error);
                 return res.status(400).json({
                     error: "Image upload failed",
                     details: error.message || "Unknown Cloudinary error"
@@ -298,7 +299,7 @@ exports.updateProfile = async (req, res, next) => {
                 );
                 updateData.profilePicture = uploadResult.secure_url;
             } catch (error) {
-                console.error("Image upload failed details:", error);
+                logger.error("Image upload failed details:", error);
                 return res.status(400).json({
                     error: "Image upload failed",
                     details: error.message || "Unknown Cloudinary error"

@@ -1,4 +1,6 @@
 // Use req.prisma injected from middleware
+const logger = require("../utils/logger");
+
 exports.createCodingQuestion = async (req, res) => {
     try {
         const { title, description, testCases, difficulty, sessionId } = req.body;
@@ -40,7 +42,7 @@ exports.createCodingQuestion = async (req, res) => {
 
         res.status(201).json({ success: true, codingQuestion });
     } catch (error) {
-        console.error('Create Coding Question Error:', error);
+        logger.error('Create Coding Question Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
@@ -69,7 +71,7 @@ exports.launchCodingQuestion = async (req, res) => {
 
         res.json({ success: true, message: 'Coding question launched successfully', question: updated });
     } catch (error) {
-        console.error('Launch Coding Question Error:', error);
+        logger.error('Launch Coding Question Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
@@ -98,7 +100,7 @@ exports.getCodingQuestionsBySession = async (req, res) => {
 
         res.json({ success: true, questions: formattedQuestions });
     } catch (error) {
-        console.error('Get Coding Questions Error:', error);
+        logger.error('Get Coding Questions Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
@@ -122,7 +124,7 @@ exports.submitCodingQuestion = async (req, res) => {
 
         res.json({ success: true, submission });
     } catch (error) {
-        console.error('Submit Coding Question Error:', error);
+        logger.error('Submit Coding Question Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
@@ -154,7 +156,7 @@ exports.getCodingQuestionById = async (req, res) => {
 
         res.json({ success: true, question: questionWithStatus });
     } catch (error) {
-        console.error('Get Coding Question Error:', error);
+        logger.error('Get Coding Question Error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
