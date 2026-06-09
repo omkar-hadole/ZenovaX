@@ -2,9 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 if (!process.env.JWT_SECRET) {
-    const logger = require("../utils/logger");
-    logger.error("FATAL ERROR: JWT_SECRET is not defined. Please set it in environment variables.");
-    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in environment variables.");
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Cannot start server.");
 }
 
 module.exports = {
