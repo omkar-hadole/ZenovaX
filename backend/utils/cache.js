@@ -95,11 +95,39 @@ const cache = {
     async delPattern(pattern) {
         if (redisClient) {
             try {
-                const keys = await redisClient.keys(pattern);
-                if (keys.length > 0) {
-                    await redisClient.del(keys);
-                }
-                logger.info(`Redis pattern del for "${pattern}" deleted ${keys.length} keys.`);
+                const stream = redisClient.scanStream({
+                    match: pattern,
+                    count: 100
+                });
+
+                let deletedCount = 0;
+
+                await new Promise((resolve, reject) => {
+                    stream.on("data", (keys) => {
+                        if (keys && keys.length > 0) {
+                            stream.pause();
+                            redisClient.del(keys)
+                                .then(() => {
+                                    deletedCount += keys.length;
+                                    stream.resume();
+                                })
+                                .catch((err) => {
+                                    logger.error(`Redis scanStream del error: ${err.message}`);
+                                    stream.resume();
+                                });
+                        }
+                    });
+
+                    stream.on("end", () => {
+                        resolve();
+                    });
+
+                    stream.on("error", (err) => {
+                        reject(err);
+                    });
+                });
+
+                logger.info(`Redis pattern del for "${pattern}" deleted ${deletedCount} keys.`);
                 return true;
             } catch (err) {
                 logger.error(`Redis delPattern error for ${pattern}: ${err.message}`);
