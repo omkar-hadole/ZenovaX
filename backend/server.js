@@ -110,13 +110,52 @@ app.use((err, req, res, next) => {
   });
 });
 
+process.on('uncaughtException', (err) => {
+  logger.error('UNCAUGHT EXCEPTION! Shutting down...', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+  logger.error('UNHANDLED REJECTION! Shutting down...', err);
+  process.exit(1);
+});
+
 const { startQueueWorker } = require("./utils/queue");
 
+let server;
 if (require.main === module) {
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);
     startQueueWorker(prisma);
   });
 }
+
+const gracefulShutdown = (signal) => {
+  logger.info(`Received ${signal}. Starting graceful shutdown...`);
+  if (server) {
+    server.close(async () => {
+      logger.info('HTTP server closed.');
+      try {
+        await prisma.$disconnect();
+        logger.info('Prisma database client disconnected.');
+        process.exit(0);
+      } catch (err) {
+        logger.error('Error during database disconnection:', err);
+        process.exit(1);
+      }
+    });
+
+    // Force exit if shutdown takes too long (10s)
+    setTimeout(() => {
+      logger.error('Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 10000);
+  } else {
+    process.exit(0);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 module.exports = app;
