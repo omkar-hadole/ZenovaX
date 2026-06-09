@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Trash2, User } from 'lucide-react';
+import Pagination from '../../components/common/Pagination';
 
 export default function UsersList() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 10;
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (page) => {
         try {
             setLoading(true);
-            const data = await apiCall('/admin/users');
-            setUsers(data);
+            const data = await apiCall(`/admin/users?page=${page}&limit=${itemsPerPage}`);
+            setUsers(data.users || []);
+            setTotalPages(data.pagination?.totalPages || 1);
         } catch (error) {
             console.error("Failed to fetch users", error);
         } finally {
@@ -19,14 +24,14 @@ export default function UsersList() {
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        fetchUsers(currentPage);
+    }, [currentPage]);
 
     const handleDelete = async (userId) => {
         if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
         try {
             await apiCall(`/admin/users/${userId}`, 'DELETE');
-            fetchUsers();
+            fetchUsers(currentPage);
         } catch (error) {
             console.error("Failed to delete user", error);
             alert("Failed to delete user");
@@ -98,6 +103,11 @@ export default function UsersList() {
                     </table>
                 </div>
             </div>
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
         </div>
     );
 }

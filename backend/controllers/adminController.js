@@ -173,15 +173,33 @@ exports.rejectSession = async (req, res) => {
 exports.getAllSessions = async (req, res) => {
     try {
         const prisma = req.prisma;
-        const sessions = await prisma.session.findMany({
-            include: {
-                mentor: {
-                    select: { name: true }
-                }
-            },
-            orderBy: { scheduledAt: 'desc' }
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const skip = (page - 1) * limit;
+
+        const [sessions, total] = await Promise.all([
+            prisma.session.findMany({
+                skip,
+                take: limit,
+                include: {
+                    mentor: {
+                        select: { name: true }
+                    }
+                },
+                orderBy: { scheduledAt: 'desc' }
+            }),
+            prisma.session.count()
+        ]);
+
+        res.json({
+            sessions,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
         });
-        res.json(sessions);
     } catch (error) {
         logger.error("Get All Sessions Error:", error);
         res.status(500).json({ error: "Failed to fetch sessions" });
@@ -217,18 +235,36 @@ exports.deleteSession = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         const prisma = req.prisma;
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                department: true,
-                createdAt: true
-            },
-            orderBy: { createdAt: 'desc' }
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const skip = (page - 1) * limit;
+
+        const [users, total] = await Promise.all([
+            prisma.user.findMany({
+                skip,
+                take: limit,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    department: true,
+                    createdAt: true
+                },
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.user.count()
+        ]);
+
+        res.json({
+            users,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
         });
-        res.json(users);
     } catch (error) {
         logger.error("Get All Users Error:", error);
         res.status(500).json({ error: "Failed to fetch users" });
@@ -255,18 +291,36 @@ exports.deleteUser = async (req, res) => {
 exports.getReports = async (req, res) => {
     try {
         const prisma = req.prisma;
-        const reports = await prisma.report.findMany({
-            include: {
-                reporter: {
-                    select: { name: true, email: true }
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const skip = (page - 1) * limit;
+
+        const [reports, total] = await Promise.all([
+            prisma.report.findMany({
+                skip,
+                take: limit,
+                include: {
+                    reporter: {
+                        select: { name: true, email: true }
+                    },
+                    session: {
+                        select: { title: true, requestId: true }
+                    }
                 },
-                session: {
-                    select: { title: true, requestId: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.report.count()
+        ]);
+
+        res.json({
+            reports,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
         });
-        res.json(reports);
     } catch (error) {
         logger.error("Get Reports Error:", error);
         res.status(500).json({ error: "Failed to fetch reports" });

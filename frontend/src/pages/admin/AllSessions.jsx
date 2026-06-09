@@ -7,13 +7,15 @@ export default function AllSessions() {
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const itemsPerPage = 10;
 
-    const fetchSessions = async () => {
+    const fetchSessions = async (page) => {
         try {
             setLoading(true);
-            const data = await apiCall('/admin/sessions');
-            setSessions(data);
+            const data = await apiCall(`/admin/sessions?page=${page}&limit=${itemsPerPage}`);
+            setSessions(data.sessions || []);
+            setTotalPages(data.pagination?.totalPages || 1);
         } catch (error) {
             console.error("Failed to fetch sessions", error);
         } finally {
@@ -22,24 +24,19 @@ export default function AllSessions() {
     };
 
     useEffect(() => {
-        fetchSessions();
-    }, []);
+        fetchSessions(currentPage);
+    }, [currentPage]);
 
     const handleDelete = async (sessionId) => {
         if (!window.confirm("Are you sure you want to delete this session? This action cannot be undone.")) return;
         try {
             await apiCall(`/admin/sessions/${sessionId}`, 'DELETE');
-            fetchSessions();
+            fetchSessions(currentPage);
         } catch (error) {
             console.error("Failed to delete session", error);
             alert("Failed to delete session");
         }
     };
-
-    // Pagination Logic
-    const totalPages = Math.ceil(sessions.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentSessions = sessions.slice(startIndex, startIndex + itemsPerPage);
 
     if (loading) return <div className="p-8">Loading sessions...</div>;
 
@@ -61,7 +58,7 @@ export default function AllSessions() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {currentSessions.map((session) => (
+                            {sessions.map((session) => (
                                 <tr key={session.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="text-sm font-medium text-gray-900">{session.title}</div>

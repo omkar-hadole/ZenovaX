@@ -2,18 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Trash2, Edit, Flag, CheckCircle, Search, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Pagination from '../../components/common/Pagination';
 
 export default function Reports() {
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 10;
 
-    const fetchReports = async () => {
+    const fetchReports = async (page) => {
         try {
             setLoading(true);
-            const data = await apiCall('/admin/reports');
-            setReports(data);
+            const data = await apiCall(`/admin/reports?page=${page}&limit=${itemsPerPage}`);
+            setReports(data.reports || []);
+            setTotalPages(data.pagination?.totalPages || 1);
         } catch (error) {
             console.error("Failed to fetch reports", error);
         } finally {
@@ -22,8 +27,8 @@ export default function Reports() {
     };
 
     useEffect(() => {
-        fetchReports();
-    }, []);
+        fetchReports(currentPage);
+    }, [currentPage]);
 
     // Debug log to verify data
     console.log("Reports Data:", reports);
@@ -40,7 +45,7 @@ export default function Reports() {
 
         try {
             await apiCall('/admin/reports/action', 'POST', { reportId, action });
-            fetchReports();
+            fetchReports(currentPage);
         } catch (error) {
             console.error("Failed to handle report action", error);
             alert("Failed to process action");
@@ -196,6 +201,11 @@ export default function Reports() {
                     </table>
                 </div>
             </div>
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
         </div>
     );
 }
