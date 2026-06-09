@@ -265,6 +265,8 @@ exports.bookSession = async (prisma, cache, userId, sessionId) => {
         });
 
         return { booking, sessionId, mentorId: currentSession.mentorId };
+    }, {
+        timeout: 15000
     });
 
     // Invalidate profile stats cache for learner and mentor

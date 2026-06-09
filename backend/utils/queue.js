@@ -62,6 +62,8 @@ async function startQueueWorker(prisma) {
                         attempts: { increment: 1 }
                     }
                 });
+            }, {
+                timeout: 10000
             });
 
             if (!job) return;
