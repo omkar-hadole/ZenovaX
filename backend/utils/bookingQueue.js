@@ -1,9 +1,16 @@
-const { Queue, Worker } = require("bullmq");
 const Redis = require("ioredis");
 const logger = require("./logger");
 const config = require("../config");
 
 const activeWorkers = new Map();
+
+// Lazy-load bullmq — avoids Vercel NFT trace issues with semver
+let Queue, Worker;
+try {
+    ({ Queue, Worker } = require("bullmq"));
+} catch (err) {
+    logger.warn(`BullMQ not available for booking queue: ${err.message}`);
+}
 
 // Helper to get a Redis connection for BullMQ (maxRetriesPerRequest must be null)
 function getRedisConnection() {
@@ -13,9 +20,22 @@ function getRedisConnection() {
 }
 
 // Global reference connection to avoid creating too many clients
-const connection = getRedisConnection();
+let connection = null;
+if (config.redisUrl && config.redisUrl.trim()) {
+    try {
+        connection = getRedisConnection();
+    } catch (err) {
+        logger.error(`Failed to create Redis connection for booking queue: ${err.message}`);
+    }
+}
 
 async function addBookingJob(prisma, cache, userId, sessionId) {
+    if (!Queue || !connection) {
+        logger.warn("BullMQ not available — executing booking synchronously");
+        const sessionService = require("../services/sessionService");
+        return await sessionService.executeBookingTransaction(prisma, cache, userId, sessionId);
+    }
+
     const queueName = `booking-${sessionId}`;
     const queue = new Queue(queueName, { connection });
 
@@ -30,6 +50,8 @@ async function addBookingJob(prisma, cache, userId, sessionId) {
 }
 
 function startBookingWorker(prisma, cache, sessionId) {
+    if (!Worker || !connection) return;
+
     const existing = activeWorkers.get(sessionId);
     if (existing) {
         if (existing.idleTimeout) {
@@ -47,11 +69,11 @@ function startBookingWorker(prisma, cache, sessionId) {
     const worker = new Worker(queueName, async (job) => {
         const { userId } = job.data;
         const sessionService = require("../services/sessionService");
-        
+
         try {
             // Call the core booking transaction logic
             const result = await sessionService.executeBookingTransaction(prisma, cache, userId, sessionId);
-            
+
             // Cache success result for polling
             if (cache) {
                 await cache.set(`booking_result:${userId}:${sessionId}`, {

@@ -10,15 +10,19 @@ let myQueue;
 
 if (config.redisUrl && config.redisUrl.trim()) {
     try {
-        // Lazily require bullmq only when Redis is configured — avoids NFT trace issues on Vercel
-        const { Queue } = require("bullmq");
         connection = new Redis(config.redisUrl, {
             maxRetriesPerRequest: null
         });
-        myQueue = new Queue("ZenovaXQueue", { connection });
-        logger.info("BullMQ Queue initialized successfully.");
+        // Lazily require bullmq — may fail on Vercel if semver submodules are not bundled
+        try {
+            const { Queue } = require("bullmq");
+            myQueue = new Queue("ZenovaXQueue", { connection });
+            logger.info("BullMQ Queue initialized successfully.");
+        } catch (bullmqErr) {
+            logger.warn(`BullMQ not available (queue features disabled): ${bullmqErr.message}`);
+        }
     } catch (err) {
-        logger.error(`Failed to initialize BullMQ Redis connection: ${err.message}`);
+        logger.error(`Failed to initialize Redis connection: ${err.message}`);
     }
 }
 
@@ -84,7 +88,13 @@ function startQueueWorker(prisma) {
     logger.info('BullMQ worker starting...');
 
     // Lazy require Worker to avoid loading bullmq when Redis is unavailable
-    const { Worker } = require("bullmq");
+    let Worker;
+    try {
+        ({ Worker } = require("bullmq"));
+    } catch (err) {
+        logger.warn(`BullMQ Worker not available: ${err.message}`);
+        return;
+    }
     const worker = new Worker("ZenovaXQueue", async (job) => {
         logger.info(`Processing job: ${job.name} (ID: ${job.id})`);
         await processJob(prisma, { type: job.name, payload: JSON.stringify(job.data) });
