@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import logo from '../../../assets/mentorlogo.svg';
+import { logout } from '../../../utils/api';
 
 export default function MentorSidebar({ activeTab, onTabChange }) {
     const navigate = useNavigate();
@@ -26,7 +27,12 @@ export default function MentorSidebar({ activeTab, onTabChange }) {
         }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/');

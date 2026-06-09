@@ -101,7 +101,14 @@ exports.login = async (req, res, next) => {
             expiresIn: "7d",
         });
 
-        return res.status(200).json({ token, user });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        return res.status(200).json({ user });
     } catch (error) {
         next(error);
     }
@@ -183,3 +190,17 @@ exports.resendVerification = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.logout = async (req, res, next) => {
+    try {
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "Strict"
+        });
+        return res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
+

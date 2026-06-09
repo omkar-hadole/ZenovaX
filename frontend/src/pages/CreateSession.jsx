@@ -4,7 +4,7 @@ import {
   ArrowLeft, Calendar, Clock, Video, MapPin,
   DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code
 } from 'lucide-react';
-import { apiCall } from '../utils/api';
+import { apiCall, logout } from '../utils/api';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/mentorlogo.svg'
@@ -172,7 +172,12 @@ export default function CreateSession() {
             ]}
             activeTab="Reports"
             setActiveTab={() => { }}
-            onLogout={() => {
+            onLogout={async () => {
+              try {
+                await logout();
+              } catch (err) {
+                console.error("Logout error:", err);
+              }
               localStorage.removeItem('token');
               localStorage.removeItem('user');
               navigate('/');

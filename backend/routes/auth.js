@@ -8,5 +8,6 @@ router.post("/register", registerLimiter, authController.register);
 router.post("/login", loginLimiter, authController.login);
 router.post("/verify-email", authController.verifyEmail);
 router.post("/resend-verification", authController.resendVerification);
+router.post("/logout", authController.logout);
 
 module.exports = router;

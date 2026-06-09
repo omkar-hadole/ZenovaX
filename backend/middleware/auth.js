@@ -2,15 +2,18 @@ const jwt = require("jsonwebtoken");
 const config = require("../config");
 
 function auth(req, res, next) {
-  const authHeader = req.headers.authorization;
+  let token = req.cookies ? req.cookies.token : null;
 
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No token provided" });
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    }
   }
 
-
-  const token = authHeader.slice(7);
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
 
   try {
 

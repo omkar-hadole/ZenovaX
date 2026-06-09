@@ -1,6 +1,7 @@
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const compression = require("compression");
 const NodeCache = require("node-cache");
 const config = require("./config");
@@ -91,6 +92,7 @@ app.use(
   })
 );
 app.use(compression());
+app.use(cookieParser());
 
 const allowedOrigins = [
   'http://localhost:5173',

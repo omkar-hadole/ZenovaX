@@ -11,13 +11,19 @@ import {
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/adminlogo.svg';
+import { logout } from '../utils/api';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
     const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
     const [activeTab, setActiveTab] = useState('Dashboard');
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/');
