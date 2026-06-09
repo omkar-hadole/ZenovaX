@@ -1,390 +1,91 @@
-const logger = require("../utils/logger");
+const adminService = require("../services/adminService");
 
-exports.getDashboardStats = async (req, res) => {
+exports.getDashboardStats = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-
-        const [
-            totalSessions,
-            totalLearners,
-            totalMentors,
-            pendingApprovals,
-            recentSessions
-        ] = await Promise.all([
-            prisma.session.count(),
-            prisma.user.count({ where: { role: 'LEARNER' } }),
-            prisma.user.count({ where: { role: 'MENTOR' } }),
-            prisma.sessionRequest.count({ where: { status: 'PENDING' } }),
-            prisma.session.findMany({
-                take: 5,
-                orderBy: { createdAt: 'desc' },
-                include: { mentor: { select: { name: true } } }
-            })
-        ]);
-
-        res.json({
-            totalSessions,
-            totalLearners,
-            totalMentors,
-            pendingApprovals,
-            recentSessions
-        });
+        const stats = await adminService.getDashboardStats(req.prisma);
+        return res.json(stats);
     } catch (error) {
-        logger.error("Get Dashboard Stats Error:", error);
-        res.status(500).json({ error: "Failed to fetch dashboard stats" });
+        return next(error);
     }
 };
 
-exports.getPendingSessions = async (req, res) => {
+exports.getPendingSessions = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const pendingSessions = await prisma.sessionRequest.findMany({
-            where: { status: 'PENDING' },
-            include: {
-                mentor: {
-                    select: { name: true, email: true }
-                }
-            },
-            orderBy: { requestedAt: 'desc' }
-        });
-        res.json(pendingSessions);
+        const pendingSessions = await adminService.getPendingSessions(req.prisma);
+        return res.json(pendingSessions);
     } catch (error) {
-        logger.error("Get Pending Sessions Error:", error);
-        res.status(500).json({ error: "Failed to fetch pending sessions" });
+        return next(error);
     }
 };
 
-exports.approveSession = async (req, res) => {
+exports.approveSession = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const { requestId } = req.body;
-
-        if (!requestId) {
-            return res.status(400).json({ error: "Request ID is required" });
-        }
-
-        const sessionRequest = await prisma.sessionRequest.findUnique({
-            where: { id: requestId }
-        });
-
-        if (!sessionRequest) {
-            return res.status(404).json({ error: "Session request not found" });
-        }
-
-        if (sessionRequest.status !== 'PENDING') {
-            return res.status(400).json({ error: "Request is not pending" });
-        }
-
-        const result = await prisma.$transaction(async (tx) => {
-            await tx.sessionRequest.update({
-                where: { id: requestId },
-                data: { status: 'APPROVED', reviewedAt: new Date() }
-            });
-
-            const session = await tx.session.create({
-                data: {
-                    title: sessionRequest.title,
-                    description: sessionRequest.description,
-                    subject: sessionRequest.subject,
-                    department: sessionRequest.department,
-                    topics: sessionRequest.topics,
-                    mentorId: sessionRequest.mentorId,
-                    mode: sessionRequest.mode,
-                    priceType: sessionRequest.priceType,
-                    price: sessionRequest.price,
-                    maxSeats: sessionRequest.maxSeats,
-                    availableSeats: sessionRequest.maxSeats,
-                    venue: sessionRequest.venue,
-                    meetingLink: sessionRequest.meetingLink,
-                    scheduledAt: sessionRequest.proposedDate,
-                    duration: sessionRequest.duration,
-                    requestId: sessionRequest.id
-                }
-            });
-
-            await tx.notification.create({
-                data: {
-                    userId: sessionRequest.mentorId,
-                    type: 'SESSION_REQUEST_APPROVED',
-                    title: 'Session Approved',
-                    message: `Your session request "${sessionRequest.title}" has been approved.`,
-                    link: `/sessions/${session.id}`
-                }
-            });
-
-            return session;
-        }, {
-            timeout: 10000
-        });
-
-        res.json({ message: "Session approved successfully", session: result });
+        const session = await adminService.approveSession(req.prisma, req.body);
+        return res.json({ message: "Session approved successfully", session });
     } catch (error) {
-        logger.error("Approve Session Error:", error);
-        res.status(500).json({ error: "Failed to approve session", details: error.message });
+        return next(error);
     }
 };
 
-exports.rejectSession = async (req, res) => {
+exports.rejectSession = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const { requestId } = req.body;
-
-        if (!requestId) {
-            return res.status(400).json({ error: "Request ID is required" });
-        }
-
-        // Validate existence and status before touching the DB write path
-        const sessionRequest = await prisma.sessionRequest.findUnique({
-            where: { id: requestId },
-            select: { id: true, mentorId: true, title: true, status: true }
-        });
-
-        if (!sessionRequest) {
-            return res.status(404).json({ error: "Session request not found" });
-        }
-
-        if (sessionRequest.status !== 'PENDING') {
-            return res.status(400).json({ error: "Only pending requests can be rejected" });
-        }
-
-        // Atomically update the request and create the notification in one transaction
-        await prisma.$transaction([
-            prisma.sessionRequest.update({
-                where: { id: requestId },
-                data: { status: 'REJECTED', reviewedAt: new Date() }
-            }),
-            prisma.notification.create({
-                data: {
-                    userId: sessionRequest.mentorId,
-                    type: 'SESSION_REQUEST_REJECTED',
-                    title: 'Session Rejected',
-                    message: `Your session request "${sessionRequest.title}" has been rejected.`,
-                }
-            })
-        ]);
-
-        res.json({ message: "Session rejected successfully" });
+        await adminService.rejectSession(req.prisma, req.body);
+        return res.json({ message: "Session rejected successfully" });
     } catch (error) {
-        logger.error("Reject Session Error:", error);
-        res.status(500).json({ error: "Failed to reject session" });
+        return next(error);
     }
 };
 
-exports.getAllSessions = async (req, res) => {
+exports.getAllSessions = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 10;
-        const skip = (page - 1) * limit;
-
-        const [sessions, total] = await Promise.all([
-            prisma.session.findMany({
-                skip,
-                take: limit,
-                include: {
-                    mentor: {
-                        select: { name: true }
-                    }
-                },
-                orderBy: { scheduledAt: 'desc' }
-            }),
-            prisma.session.count()
-        ]);
-
-        res.json({
-            sessions,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
-        });
+        const { sessions, pagination } = await adminService.getAllSessions(req.prisma, req.query);
+        return res.json({ sessions, pagination });
     } catch (error) {
-        logger.error("Get All Sessions Error:", error);
-        res.status(500).json({ error: "Failed to fetch sessions" });
+        return next(error);
     }
 };
 
-exports.deleteSession = async (req, res) => {
+exports.deleteSession = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const { id } = req.params;
-
-        const session = await prisma.session.findUnique({
-            where: { id },
-            select: { mentorId: true }
-        });
-
-        await prisma.session.update({
-            where: { id },
-            data: { isDeleted: true, deletedAt: new Date() }
-        });
-
-        if (session && req.cache) {
-            await req.cache.del(`profile_stats_${session.mentorId}`);
-        }
-
-        res.json({ message: "Session deleted successfully" });
+        await adminService.deleteSession(req.prisma, req.cache, req.params.id);
+        return res.json({ message: "Session deleted successfully" });
     } catch (error) {
-        logger.error("Delete Session Error:", error);
-        res.status(500).json({ error: "Failed to delete session" });
+        return next(error);
     }
 };
 
-exports.getAllUsers = async (req, res) => {
+exports.getAllUsers = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 10;
-        const skip = (page - 1) * limit;
-
-        const [users, total] = await Promise.all([
-            prisma.user.findMany({
-                skip,
-                take: limit,
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                    department: true,
-                    createdAt: true
-                },
-                orderBy: { createdAt: 'desc' }
-            }),
-            prisma.user.count()
-        ]);
-
-        res.json({
-            users,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
-        });
+        const { users, pagination } = await adminService.getAllUsers(req.prisma, req.query);
+        return res.json({ users, pagination });
     } catch (error) {
-        logger.error("Get All Users Error:", error);
-        res.status(500).json({ error: "Failed to fetch users" });
+        return next(error);
     }
 };
 
-exports.deleteUser = async (req, res) => {
+exports.deleteUser = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const { id } = req.params;
-
-        await prisma.user.update({
-            where: { id },
-            data: { isDeleted: true, deletedAt: new Date() }
-        });
-
-        res.json({ message: "User deleted successfully" });
+        await adminService.deleteUser(req.prisma, req.params.id);
+        return res.json({ message: "User deleted successfully" });
     } catch (error) {
-        logger.error("Delete User Error:", error);
-        res.status(500).json({ error: "Failed to delete user" });
+        return next(error);
     }
 };
 
-exports.getReports = async (req, res) => {
+exports.getReports = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 10;
-        const skip = (page - 1) * limit;
-
-        const [reports, total] = await Promise.all([
-            prisma.report.findMany({
-                skip,
-                take: limit,
-                include: {
-                    reporter: {
-                        select: { name: true, email: true }
-                    },
-                    session: {
-                        select: { title: true, requestId: true }
-                    }
-                },
-                orderBy: { createdAt: 'desc' }
-            }),
-            prisma.report.count()
-        ]);
-
-        res.json({
-            reports,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
-        });
+        const { reports, pagination } = await adminService.getReports(req.prisma, req.query);
+        return res.json({ reports, pagination });
     } catch (error) {
-        logger.error("Get Reports Error:", error);
-        res.status(500).json({ error: "Failed to fetch reports" });
+        return next(error);
     }
 };
 
-exports.handleReportAction = async (req, res) => {
+exports.handleReportAction = async (req, res, next) => {
     try {
-        const prisma = req.prisma;
-        const { reportId, action } = req.body;
-
-        if (!reportId || !action) {
-            return res.status(400).json({ error: "Report ID and action are required" });
-        }
-
-        const report = await prisma.report.findUnique({
-            where: { id: reportId },
-            include: { session: true }
-        });
-
-        if (!report) {
-            return res.status(404).json({ error: "Report not found" });
-        }
-
-        if (action === 'DELETE_SESSION') {
-            if (report.sessionId) {
-                await prisma.session.update({
-                    where: { id: report.sessionId },
-                    data: { isDeleted: true, deletedAt: new Date() }
-                });
-                await prisma.report.update({
-                    where: { id: reportId },
-                    data: { status: 'RESOLVED', resolvedAt: new Date() }
-                });
-
-                if (req.cache && report.session) {
-                    await req.cache.del(`profile_stats_${report.session.mentorId}`);
-                }
-
-                res.json({ message: "Session deleted and report marked as resolved" });
-            } else {
-                await prisma.report.update({
-                    where: { id: reportId },
-                    data: { status: 'RESOLVED', resolvedAt: new Date() }
-                });
-                res.json({ message: "Session already deleted, report marked as resolved" });
-            }
-        } else if (action === 'IGNORE') {
-            await prisma.report.update({
-                where: { id: reportId },
-                data: { status: 'IGNORED', resolvedAt: new Date() }
-            });
-            res.json({ message: "Report ignored" });
-        } else if (action === 'RESOLVE') {
-            await prisma.report.update({
-                where: { id: reportId },
-                data: { status: 'RESOLVED', resolvedAt: new Date() }
-            });
-            res.json({ message: "Report resolved" });
-        } else {
-            res.status(400).json({ error: "Invalid action" });
-        }
+        const result = await adminService.handleReportAction(req.prisma, req.cache, req.body);
+        return res.json(result);
     } catch (error) {
-        logger.error("Handle Report Action Error:", error);
-        res.status(500).json({ error: "Failed to handle report action" });
+        return next(error);
     }
 };

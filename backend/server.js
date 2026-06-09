@@ -99,8 +99,10 @@ const PORT = config.port;
 
 app.use((err, req, res, next) => {
   logger.error(err.stack);
-  res.status(500).json({
-    error: 'Something went wrong!',
+  const statusCode = err.statusCode || 500;
+  const message = err.statusCode ? err.message : 'Something went wrong!';
+  res.status(statusCode).json({
+    error: message,
     details: config.nodeEnv === 'development' ? err.message : undefined
   });
 });
