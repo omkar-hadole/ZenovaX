@@ -141,6 +141,9 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/help", require("./routes/helpRoutes"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 
+// 404 Handler
+app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
+
 const PORT = config.port;
 
 app.use((err, req, res, next) => {
