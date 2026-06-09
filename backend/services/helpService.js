@@ -4,12 +4,10 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const logger = require("../utils/logger");
 const { BadRequestError } = require("../utils/errors");
 
-// Fail fast if no key
-if (!process.env.GEMINI_API_KEY) {
-    throw new Error("Missing GEMINI_API_KEY");
-}
+// Lazily initialized on first askAI call so a missing key
+// doesn't crash the server at startup.
+let model = null;
 
-const model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
 const HELP_CONTEXT = fs.readFileSync(path.join(__dirname, '../../HELP_CENTER.md'), 'utf8');
 
 const SYSTEM_PROMPT = `You're ZenovaX support. Context:\n${HELP_CONTEXT}\n\nAnswer ONLY using context. If unrelated, say "I can’t help with this. Please contact WhatsApp support."\n\nQuestion: `;
@@ -56,6 +54,15 @@ exports.askAI = async (user, { question, username } = {}) => {
         return {
             answer: responses[Math.floor(Math.random() * responses.length)]
         };
+    }
+
+    // Lazy initialization — only instantiate the model when it is actually needed.
+    if (!model) {
+        if (!process.env.GEMINI_API_KEY) {
+            logger.warn("GEMINI_API_KEY is not set. AI assistant is unavailable.");
+            return { answer: "The AI assistant is not configured right now. Please contact WhatsApp support for help." };
+        }
+        model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
     }
 
     try {
