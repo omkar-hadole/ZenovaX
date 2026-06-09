@@ -329,117 +329,141 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
     const limit = parseInt(queryParams.limit, 10) || 10;
     const skip = (page - 1) * limit;
 
-    const cacheKey = `mentor_list_${userId}_${page}_${limit}`;
-    if (cache && await cache.has(cacheKey)) {
-        return await cache.get(cacheKey);
-    }
+    const cacheKey = `mentor_list_${page}_${limit}`;
+    let cachedData;
 
-    // 1. Query total count and paginate + sort the mentors at database level
-    const [mentors, total] = await Promise.all([
-        prisma.user.findMany({
-            where: {
-                role: "MENTOR",
-                isProfileComplete: true
-            },
-            orderBy: [
-                { averageRating: 'desc' },
-                { totalSessions: 'desc' }
-            ],
-            skip,
-            take: limit,
-            select: {
-                id: true,
-                name: true,
-                department: true,
-                profilePicture: true,
-                mentorSkills: true,
-                averageRating: true,
-                totalSessions: true,
-                totalReviews: true,
-                uniqueLearners: true,
-                _count: {
-                    select: {
-                        followers: true,
-                        likesReceived: true,
-                        receivedReviews: true,
-                        mentorSessions: {
-                            where: {
-                                status: { in: ['COMPLETED', 'LIVE', 'UPCOMING'] },
-                                bookings: {
-                                    some: {
-                                        status: { in: ['CONFIRMED', 'COMPLETED'] }
+    if (cache && await cache.has(cacheKey)) {
+        cachedData = await cache.get(cacheKey);
+    } else {
+        // 1. Query total count and paginate + sort the mentors at database level
+        const [mentors, total] = await Promise.all([
+            prisma.user.findMany({
+                where: {
+                    role: "MENTOR",
+                    isProfileComplete: true
+                },
+                orderBy: [
+                    { averageRating: 'desc' },
+                    { totalSessions: 'desc' }
+                ],
+                skip,
+                take: limit,
+                select: {
+                    id: true,
+                    name: true,
+                    department: true,
+                    profilePicture: true,
+                    mentorSkills: true,
+                    averageRating: true,
+                    totalSessions: true,
+                    totalReviews: true,
+                    uniqueLearners: true,
+                    _count: {
+                        select: {
+                            followers: true,
+                            likesReceived: true,
+                            receivedReviews: true,
+                            mentorSessions: {
+                                where: {
+                                    status: { in: ['COMPLETED', 'LIVE', 'UPCOMING'] },
+                                    bookings: {
+                                        some: {
+                                            status: { in: ['CONFIRMED', 'COMPLETED'] }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                },
-                followers: {
-                    where: { followerId: userId },
-                    select: { id: true }
-                },
-                likesReceived: {
-                    where: { userId: userId },
-                    select: { id: true }
                 }
+            }),
+            prisma.user.count({
+                where: {
+                    role: "MENTOR",
+                    isProfileComplete: true
+                }
+            })
+        ]);
+
+        // 2. Map and hydrate the paginated results for shared caching (excluding user-specific flags)
+        const basicMentors = mentors.map((mentor) => {
+            const effectiveSessions = mentor._count.mentorSessions;
+            let skills = [];
+            try {
+                skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
+            } catch (e) { }
+
+            const uniqueLearners = mentor.uniqueLearners || 0;
+            const badges = calculateBadges({
+                ...mentor,
+                totalSessions: effectiveSessions
+            }, uniqueLearners);
+
+            return {
+                id: mentor.id,
+                name: mentor.name,
+                department: mentor.department,
+                profilePicture: mentor.profilePicture,
+                mentorSkills: skills,
+                averageRating: mentor.averageRating,
+                totalSessions: effectiveSessions,
+                totalReviews: mentor.totalReviews,
+                followersCount: mentor._count.followers,
+                likesCount: mentor._count.likesReceived,
+                uniqueLearners,
+                badges
+            };
+        });
+
+        const totalPages = Math.ceil(total / limit);
+        cachedData = {
+            mentors: basicMentors,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages
             }
-        }),
-        prisma.user.count({
+        };
+
+        if (cache) {
+            await cache.set(cacheKey, cachedData, 300);
+        }
+    }
+
+    // 3. Dynamically merge user-specific relations (isFollowing and isLiked) outside the cache boundary
+    const mentorIds = cachedData.mentors.map(m => m.id);
+
+    const [userFollows, userLikes] = await Promise.all([
+        prisma.follow.findMany({
             where: {
-                role: "MENTOR",
-                isProfileComplete: true
-            }
+                followerId: userId,
+                followingId: { in: mentorIds }
+            },
+            select: { followingId: true }
+        }),
+        prisma.like.findMany({
+            where: {
+                userId: userId,
+                mentorId: { in: mentorIds }
+            },
+            select: { mentorId: true }
         })
     ]);
 
-    // 2. Map and hydrate the paginated results
-    const fullyHydratedMentors = mentors.map((mentor) => {
-        const effectiveSessions = mentor._count.mentorSessions;
-        let skills = [];
-        try {
-            skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
-        } catch (e) { }
+    const userFollowedIds = new Set(userFollows.map(f => f.followingId));
+    const userLikedIds = new Set(userLikes.map(l => l.mentorId));
 
-        const uniqueLearners = mentor.uniqueLearners || 0;
-        const badges = calculateBadges({
-            ...mentor,
-            totalSessions: effectiveSessions
-        }, uniqueLearners);
+    const fullyHydratedMentors = cachedData.mentors.map((mentor) => ({
+        ...mentor,
+        isFollowing: userFollowedIds.has(mentor.id),
+        isLiked: userLikedIds.has(mentor.id)
+    }));
 
-        return {
-            id: mentor.id,
-            name: mentor.name,
-            department: mentor.department,
-            profilePicture: mentor.profilePicture,
-            mentorSkills: skills,
-            averageRating: mentor.averageRating,
-            totalSessions: effectiveSessions,
-            totalReviews: mentor.totalReviews,
-            followersCount: mentor._count.followers,
-            likesCount: mentor._count.likesReceived,
-            isFollowing: mentor.followers.length > 0,
-            isLiked: mentor.likesReceived.length > 0,
-            uniqueLearners,
-            badges
-        };
-    });
-
-    const totalPages = Math.ceil(total / limit);
-    const response = {
+    return {
         mentors: fullyHydratedMentors,
-        pagination: {
-            page,
-            limit,
-            total,
-            totalPages
-        }
+        pagination: cachedData.pagination
     };
-
-    if (cache) {
-        await cache.set(cacheKey, response, 300);
-    }
-
-    return response;
 };
 
 exports.getProfileById = async (prisma, cache, userId, id) => {
