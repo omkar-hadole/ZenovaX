@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import BrowseSessionsView from '../../components/dashboard/learner/BrowseSessionsView';
+import InlineError from '../../components/InlineError';
 
 export default function SessionsPage() {
     const navigate = useNavigate();
@@ -11,10 +12,12 @@ export default function SessionsPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [filterType, setFilterType] = useState('upcoming');
     const [filters, setFilters] = useState({ mode: '', priceType: '' });
+    const [error, setError] = useState(null);
 
     const fetchSessions = async (pageNum = 1, type = filterType, currentFilters = filters) => {
         try {
             setIsLoading(true);
+            setError(null);
 
             let query = `/sessions/all?page=${pageNum}&limit=9&type=${type}`;
             if (currentFilters.mode) query += `&mode=${currentFilters.mode}`;
@@ -25,8 +28,9 @@ export default function SessionsPage() {
             setSessions(data.sessions || []);
             setTotalPages(data.pagination?.totalPages || 1);
             setPage(pageNum);
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || 'Failed to fetch sessions');
         } finally {
             setIsLoading(false);
         }
@@ -49,6 +53,31 @@ export default function SessionsPage() {
             navigate(`/sessions/${session.id}`);
         }
     };
+
+    if (isLoading) {
+        return (
+            <BrowseSessionsView
+                sessions={[]}
+                isLoading={true}
+                setSelectedSession={setSelectedSession}
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                filterType={filterType}
+                setFilterType={setFilterType}
+                filters={filters}
+                setFilters={setFilters}
+            />
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-8">
+                <InlineError message={error} onRetry={() => fetchSessions(page, filterType, filters)} />
+            </div>
+        );
+    }
 
     return (
         <BrowseSessionsView

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Star, User, Calendar, MessageSquare, ThumbsUp } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
+import InlineError from '../../InlineError';
 
 export default function ReviewsReceived() {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 });
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchReviews();
@@ -14,6 +16,7 @@ export default function ReviewsReceived() {
     const fetchReviews = async () => {
         try {
             setLoading(true);
+            setError(null);
             const [reviewsData, statsData] = await Promise.all([
                 apiCall('/reviews/my-reviews'),
                 apiCall('/sessions/stats')
@@ -28,6 +31,7 @@ export default function ReviewsReceived() {
             }
         } catch (error) {
             console.error('Failed to fetch reviews', error);
+            setError(error.message || 'Failed to fetch reviews');
         } finally {
             setLoading(false);
         }
@@ -54,6 +58,14 @@ export default function ReviewsReceived() {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9C7F5]"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-8">
+                <InlineError message={error} onRetry={fetchReviews} />
             </div>
         );
     }

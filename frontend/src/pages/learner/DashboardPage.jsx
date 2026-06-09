@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import DashboardView from '../../components/dashboard/learner/DashboardView';
 import DashboardSkeleton from '../../components/dashboard/DashboardSkeleton';
+import InlineError from '../../components/InlineError';
 
 export default function DashboardPage() {
     const navigate = useNavigate();
@@ -10,22 +11,26 @@ export default function DashboardPage() {
     const [sessions, setSessions] = useState([]);
     const [myBookings, setMyBookings] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const loadData = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            await Promise.all([
+                fetchMentors(),
+                fetchSessions(),
+                fetchMyBookings()
+            ]);
+        } catch (err) {
+            console.error("Failed to load dashboard data", err);
+            setError(err.message || "Failed to load dashboard data");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
-            try {
-                await Promise.all([
-                    fetchMentors(),
-                    fetchSessions(),
-                    fetchMyBookings()
-                ]);
-            } catch (error) {
-                console.error("Failed to load dashboard data", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         loadData();
     }, []);
 
@@ -35,6 +40,7 @@ export default function DashboardPage() {
             setMentors(response.mentors?.slice(0, 3) || []);
         } catch (err) {
             console.error(err);
+            throw new Error("Failed to load mentors");
         }
     };
 
@@ -42,8 +48,9 @@ export default function DashboardPage() {
         try {
             const data = await apiCall('/sessions/all?limit=10');
             setSessions(data.sessions || []);
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+            throw new Error("Failed to load sessions");
         }
     };
 
@@ -51,8 +58,9 @@ export default function DashboardPage() {
         try {
             const data = await apiCall('/sessions/my-bookings');
             setMyBookings(data.sessions || []);
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+            throw new Error("Failed to load bookings");
         }
     };
 
@@ -68,6 +76,14 @@ export default function DashboardPage() {
     };
 
     if (isLoading) return <DashboardSkeleton />;
+
+    if (error) {
+        return (
+            <div className="p-8">
+                <InlineError message={error} onRetry={loadData} />
+            </div>
+        );
+    }
 
     return (
         <DashboardView

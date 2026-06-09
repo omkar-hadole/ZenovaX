@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Users, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import InlineError from '../../components/InlineError';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -11,22 +12,35 @@ export default function AdminDashboard() {
         recentSessions: []
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const fetchStats = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await apiCall('/admin/stats');
+            setStats(data);
+        } catch (error) {
+            console.error("Failed to fetch admin stats", error);
+            setError(error.message || "Failed to fetch admin stats");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const data = await apiCall('/admin/stats');
-                setStats(data);
-            } catch (error) {
-                console.error("Failed to fetch admin stats", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchStats();
     }, []);
 
     if (loading) return <div className="p-8">Loading stats...</div>;
+
+    if (error) {
+        return (
+            <div className="p-8">
+                <InlineError message={error} onRetry={fetchStats} />
+            </div>
+        );
+    }
 
     const StatCard = ({ title, value, icon: Icon, color }) => (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">

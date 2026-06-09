@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../utils/api';
 import { Search, Filter, Star, MapPin, Briefcase, User } from 'lucide-react';
-
 import Pagination from '../components/common/Pagination';
+import InlineError from '../components/InlineError';
 
 export default function MentorsList() {
     const navigate = useNavigate();
@@ -12,6 +12,7 @@ export default function MentorsList() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDepartment, setFilterDepartment] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
+    const [error, setError] = useState(null);
     const itemsPerPage = 6;
 
     useEffect(() => {
@@ -21,10 +22,12 @@ export default function MentorsList() {
     const fetchMentors = async () => {
         try {
             setLoading(true);
+            setError(null);
             const response = await apiCall('/profile/mentors');
             setMentors(response.mentors || []);
         } catch (error) {
             console.error("Failed to fetch mentors", error);
+            setError(error.message || "Failed to fetch mentors");
         } finally {
             setLoading(false);
         }
@@ -108,6 +111,8 @@ export default function MentorsList() {
                         </div>
                     ))}
                 </div>
+            ) : error ? (
+                <InlineError message={error} onRetry={fetchMentors} />
             ) : filteredMentors.length > 0 ? (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

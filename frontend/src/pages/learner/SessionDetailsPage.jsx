@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import SessionDetailsView from '../../components/dashboard/learner/SessionDetailsView';
 import SessionDetailsSkeleton from '../../components/dashboard/learner/SessionDetailsSkeleton';
+import InlineError from '../../components/InlineError';
 
 export default function SessionDetailsPage() {
     const { id } = useParams();
@@ -11,20 +12,23 @@ export default function SessionDetailsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRegistering, setIsRegistering] = useState(false);
     const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+    const [error, setError] = useState(null);
+
+    const fetchSessionDetails = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const data = await apiCall(`/sessions/${id}`);
+            setSession(data.session);
+        } catch (err) {
+            console.error("Failed to fetch session details", err);
+            setError(err.message || "Failed to fetch session details");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchSessionDetails = async () => {
-            setIsLoading(true);
-            try {
-                const data = await apiCall(`/sessions/${id}`);
-                setSession(data.session);
-            } catch (error) {
-                console.error("Failed to fetch session details", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         if (id) {
             fetchSessionDetails();
         }
@@ -51,6 +55,23 @@ export default function SessionDetailsPage() {
     };
 
     if (isLoading) return <SessionDetailsSkeleton />;
+
+    if (error) {
+        return (
+            <div className="p-8">
+                <div className="mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="text-sm text-gray-500 hover:text-gray-900 font-medium"
+                    >
+                        &larr; Back
+                    </button>
+                </div>
+                <InlineError message={error} onRetry={fetchSessionDetails} />
+            </div>
+        );
+    }
+
     if (!session) return <div className="p-8 text-center">Session not found</div>;
 
     return (

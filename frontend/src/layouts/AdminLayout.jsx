@@ -12,6 +12,7 @@ import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/adminlogo.svg';
 import { logout } from '../utils/api';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
@@ -39,20 +40,24 @@ export default function AdminLayout() {
     ];
 
     return (
-        <div className="flex h-screen bg-[#F5F6FA] font-outfit">
-            <Sidebar
-                logo={logo}
-                logoClassName="w-56 h-auto"
-                items={sidebarItems}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                onLogout={handleLogout}
-            />
+        <ErrorBoundary>
+            <div className="flex h-screen bg-[#F5F6FA] font-outfit">
+                <Sidebar
+                    logo={logo}
+                    logoClassName="w-56 h-auto"
+                    items={sidebarItems}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    onLogout={handleLogout}
+                />
 
-            <main className="flex-1 overflow-y-auto">
-                <Header user={user} title="Admin Dashboard" searchPlaceholder="Search admin..." />
-                <Outlet />
-            </main>
-        </div>
+                <main className="flex-1 overflow-y-auto">
+                    <Header user={user} title="Admin Dashboard" searchPlaceholder="Search admin..." />
+                    <ErrorBoundary>
+                        <Outlet />
+                    </ErrorBoundary>
+                </main>
+            </div>
+        </ErrorBoundary>
     );
 }
