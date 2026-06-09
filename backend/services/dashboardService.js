@@ -1,11 +1,16 @@
 const { calculateBadges } = require("../utils/badges");
 
-exports.getDashboardData = async (prisma, userId) => {
+exports.getDashboardData = async (prisma, cache, userId) => {
     const now = new Date();
 
-    const [rawUpcomingSessions, topMentors, activeBookings] = await Promise.all([
-        // 1. Fetch 5 upcoming sessions that have not ended yet
-        prisma.session.findMany({
+    // 1. Fetch upcoming sessions (cached or fresh)
+    const upcomingSessionsCacheKey = "dashboard_upcoming_sessions";
+    let cachedUpcomingSessions;
+
+    if (cache && await cache.has(upcomingSessionsCacheKey)) {
+        cachedUpcomingSessions = await cache.get(upcomingSessionsCacheKey);
+    } else {
+        cachedUpcomingSessions = await prisma.session.findMany({
             where: {
                 status: 'UPCOMING',
                 scheduledAt: { gt: now }
@@ -21,16 +26,23 @@ exports.getDashboardData = async (prisma, userId) => {
                         department: true,
                         averageRating: true
                     }
-                },
-                bookings: {
-                    where: { userId },
-                    select: { id: true }
                 }
             }
-        }),
+        });
 
-        // 2. Fetch top 3 mentors by average rating and session volume
-        prisma.user.findMany({
+        if (cache) {
+            await cache.set(upcomingSessionsCacheKey, cachedUpcomingSessions, 60); // 60 seconds TTL
+        }
+    }
+
+    // 2. Fetch top mentors (cached or fresh)
+    const topMentorsCacheKey = "dashboard_top_mentors";
+    let cachedTopMentors;
+
+    if (cache && await cache.has(topMentorsCacheKey)) {
+        cachedTopMentors = await cache.get(topMentorsCacheKey);
+    } else {
+        const topMentors = await prisma.user.findMany({
             where: {
                 role: 'MENTOR',
                 isProfileComplete: true
@@ -49,6 +61,7 @@ exports.getDashboardData = async (prisma, userId) => {
                 totalSessions: true,
                 totalReviews: true,
                 mentorSkills: true,
+                uniqueLearners: true,
                 _count: {
                     select: {
                         followers: true,
@@ -56,9 +69,46 @@ exports.getDashboardData = async (prisma, userId) => {
                     }
                 }
             }
-        }),
+        });
 
-        // 3. Fetch active bookings (CONFIRMED/upcoming) for the current user
+        cachedTopMentors = topMentors.map(mentor => {
+            let skills = [];
+            try {
+                skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
+            } catch (e) {}
+
+            const uniqueLearners = mentor.uniqueLearners || 0;
+            const badges = calculateBadges({
+                ...mentor,
+                totalSessions: mentor.totalSessions
+            }, uniqueLearners);
+
+            return {
+                id: mentor.id,
+                name: mentor.name,
+                department: mentor.department,
+                profilePicture: mentor.profilePicture,
+                mentorSkills: skills,
+                averageRating: mentor.averageRating,
+                totalSessions: mentor.totalSessions,
+                totalReviews: mentor.totalReviews,
+                followersCount: mentor._count.followers,
+                likesCount: mentor._count.likesReceived,
+                uniqueLearners,
+                badges
+            };
+        });
+
+        if (cache) {
+            await cache.set(topMentorsCacheKey, cachedTopMentors, 60); // 60 seconds TTL
+        }
+    }
+
+    // 3. Fetch user active bookings & check which upcoming sessions are booked by the user
+    const upcomingSessionIds = cachedUpcomingSessions.map(s => s.id);
+
+    const [activeBookings, userUpcomingBookings] = await Promise.all([
+        // Active bookings for the current user (must be fetched fresh)
         prisma.booking.findMany({
             where: {
                 userId,
@@ -82,83 +132,28 @@ exports.getDashboardData = async (prisma, userId) => {
                 }
             },
             orderBy: { session: { scheduledAt: 'asc' } }
+        }),
+
+        // Check if user is booked for the cached upcoming sessions
+        prisma.booking.findMany({
+            where: {
+                userId,
+                sessionId: { in: upcomingSessionIds },
+                status: { in: ['CONFIRMED', 'COMPLETED'] }
+            },
+            select: { sessionId: true }
         })
     ]);
 
-    // 1. Mapped upcoming sessions (append isBooked flag)
-    const upcomingSessions = rawUpcomingSessions.map(s => {
-        const { bookings, ...sessionData } = s;
-        return {
-            ...sessionData,
-            isBooked: bookings.length > 0
-        };
-    });
+    const userBookedSessionIds = new Set(userUpcomingBookings.map(b => b.sessionId));
 
-    // 2. Hydrate top 3 mentors with unique learners and badges
-    const topMentorIds = topMentors.map(m => m.id);
-    
-    let uniqueLearnersMap = new Map();
-    if (topMentorIds.length > 0) {
-        // Get unique learner counts for the top 3 mentors
-        const topMentorBookings = await prisma.booking.groupBy({
-            by: ['sessionId', 'userId'],
-            where: {
-                status: { in: ['CONFIRMED', 'COMPLETED'] },
-                session: { mentorId: { in: topMentorIds } }
-            }
-        });
+    // Map the upcoming sessions to attach user-specific isBooked flag
+    const upcomingSessions = cachedUpcomingSessions.map(s => ({
+        ...s,
+        isBooked: userBookedSessionIds.has(s.id)
+    }));
 
-        const topMentorSessions = await prisma.session.findMany({
-            where: { mentorId: { in: topMentorIds } },
-            select: { id: true, mentorId: true }
-        });
-        const sessionToMentorMap = new Map(topMentorSessions.map(s => [s.id, s.mentorId]));
-
-        const mentorLearnersSetMap = new Map();
-        for (const booking of topMentorBookings) {
-            const mentorId = sessionToMentorMap.get(booking.sessionId);
-            if (mentorId) {
-                if (!mentorLearnersSetMap.has(mentorId)) {
-                    mentorLearnersSetMap.set(mentorId, new Set());
-                }
-                mentorLearnersSetMap.get(mentorId).add(booking.userId);
-            }
-        }
-
-        for (const [mentorId, learnersSet] of mentorLearnersSetMap.entries()) {
-            uniqueLearnersMap.set(mentorId, learnersSet.size);
-        }
-    }
-
-    const hydratedTopMentors = topMentors.map(mentor => {
-        let skills = [];
-        try {
-            skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
-        } catch (e) {}
-
-        const uniqueLearners = uniqueLearnersMap.get(mentor.id) || 0;
-        const badges = calculateBadges({
-            ...mentor,
-            totalSessions: mentor.totalSessions
-        }, uniqueLearners);
-
-        return {
-            id: mentor.id,
-            name: mentor.name,
-            department: mentor.department,
-            profilePicture: mentor.profilePicture,
-            mentorSkills: skills,
-            averageRating: mentor.averageRating,
-            totalSessions: mentor.totalSessions,
-            totalReviews: mentor.totalReviews,
-            followersCount: mentor._count.followers,
-            likesCount: mentor._count.likesReceived,
-            uniqueLearners,
-            badges
-        };
-    });
-
-    // 3. Mapped active bookings (flatten session detail)
+    // Flatten myBookings active sessions details
     const myBookings = activeBookings.map(b => ({
         bookingId: b.id,
         bookingStatus: b.status,
@@ -168,7 +163,7 @@ exports.getDashboardData = async (prisma, userId) => {
 
     return {
         upcomingSessions,
-        topMentors: hydratedTopMentors,
+        topMentors: cachedTopMentors,
         myBookings
     };
 };
