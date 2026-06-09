@@ -141,6 +141,15 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/help", require("./routes/helpRoutes"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 
+app.get('/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', db: 'connected' });
+  } catch (e) {
+    res.status(500).json({ status: 'error', db: 'disconnected' });
+  }
+});
+
 // 404 Handler
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
