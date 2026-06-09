@@ -179,7 +179,7 @@ exports.getMe = async (req, res, next) => {
         }
 
         const cacheKey = `profile_stats_${user.id}`;
-        let cachedStats = req.cache && req.cache.get(cacheKey);
+        let cachedStats = req.cache ? await req.cache.get(cacheKey) : null;
 
         let uniqueLearners;
         let finishedSessionsCount;
@@ -218,7 +218,7 @@ exports.getMe = async (req, res, next) => {
                 : [];
 
             if (req.cache) {
-                req.cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
+                await req.cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
             }
         }
 
@@ -344,7 +344,7 @@ exports.updateProfile = async (req, res, next) => {
         }
 
         if (req.cache) {
-            req.cache.del(`profile_stats_${req.user.id}`);
+            await req.cache.del(`profile_stats_${req.user.id}`);
         }
 
         return res.json({
@@ -362,6 +362,11 @@ exports.getMentors = async (req, res, next) => {
         const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 10;
         const skip = (page - 1) * limit;
+
+        const cacheKey = `mentor_list_${userId}_${page}_${limit}`;
+        if (req.cache && await req.cache.has(cacheKey)) {
+            return res.json(await req.cache.get(cacheKey));
+        }
 
         // 1. Group bookings by sessionId and userId to get all unique learner-session pairs
         const bookings = await req.prisma.booking.groupBy({
@@ -495,6 +500,10 @@ exports.getMentors = async (req, res, next) => {
             }
         };
 
+        if (req.cache) {
+            await req.cache.set(cacheKey, response, 300);
+        }
+
         return res.json(response);
 
     } catch (error) {
@@ -561,7 +570,7 @@ exports.getProfileById = async (req, res, next) => {
         }
 
         const cacheKey = `profile_stats_${user.id}`;
-        let cachedStats = req.cache && req.cache.get(cacheKey);
+        let cachedStats = req.cache ? await req.cache.get(cacheKey) : null;
 
         let uniqueLearners;
         let finishedSessionsCount;
@@ -599,7 +608,7 @@ exports.getProfileById = async (req, res, next) => {
                 : [];
 
             if (req.cache) {
-                req.cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
+                await req.cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
             }
         }
 

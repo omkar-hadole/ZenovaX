@@ -313,8 +313,8 @@ exports.bookSession = async (req, res, next) => {
 
         // Invalidate profile stats cache for learner and mentor
         if (req.cache) {
-            req.cache.del(`profile_stats_${req.user.id}`);
-            req.cache.del(`profile_stats_${result.mentorId}`);
+            await req.cache.del(`profile_stats_${req.user.id}`);
+            await req.cache.del(`profile_stats_${result.mentorId}`);
         }
 
         return res.status(201).json({
@@ -395,8 +395,8 @@ exports.getAllSessions = async (req, res, next) => {
 
         let cachedData;
 
-        if (req.cache && req.cache.has(cacheKey)) {
-            cachedData = req.cache.get(cacheKey);
+        if (req.cache && await req.cache.has(cacheKey)) {
+            cachedData = await req.cache.get(cacheKey);
         } else {
             let whereClause = {};
 
@@ -484,7 +484,7 @@ exports.getAllSessions = async (req, res, next) => {
             };
 
             if (req.cache) {
-                req.cache.set(cacheKey, cachedData);
+                await req.cache.set(cacheKey, cachedData, 300);
             }
         }
 
@@ -589,8 +589,8 @@ exports.getMentorStats = async (req, res, next) => {
         const mentorId = req.user.id;
         const cacheKey = `mentor_stats_${mentorId}`;
 
-        if (req.cache && req.cache.has(cacheKey)) {
-            return res.json(req.cache.get(cacheKey));
+        if (req.cache && await req.cache.has(cacheKey)) {
+            return res.json(await req.cache.get(cacheKey));
         }
 
         const [totalSessions, totalLearners, sessionStats, mentor] = await Promise.all([
@@ -616,7 +616,7 @@ exports.getMentorStats = async (req, res, next) => {
         };
 
         if (req.cache) {
-            req.cache.set(cacheKey, { stats });
+            await req.cache.set(cacheKey, { stats }, 300);
         }
 
         return res.json({ stats });
@@ -675,8 +675,8 @@ exports.verifyAttendance = async (req, res, next) => {
 
         // Invalidate profile stats cache for learner and mentor
         if (req.cache) {
-            req.cache.del(`profile_stats_${session.mentorId}`);
-            req.cache.del(`profile_stats_${booking.userId}`);
+            await req.cache.del(`profile_stats_${session.mentorId}`);
+            await req.cache.del(`profile_stats_${booking.userId}`);
         }
 
 

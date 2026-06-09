@@ -9,6 +9,7 @@ module.exports = {
     port: process.env.PORT || 5000,
     jwtSecret: process.env.JWT_SECRET,
     nodeEnv: process.env.NODE_ENV || 'development',
+    redisUrl: process.env.REDIS_URL || '',
     cloudinary: {
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,
         apiKey: process.env.CLOUDINARY_API_KEY,

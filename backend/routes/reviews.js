@@ -75,7 +75,8 @@ router.post('/create', protect, async (req, res) => {
         });
 
         if (req.cache) {
-            req.cache.del(`profile_stats_${session.mentorId}`);
+            await req.cache.del(`profile_stats_${session.mentorId}`);
+            await req.cache.delPattern("mentor_list_*");
         }
 
         await addJob(req.prisma, 'CALCULATE_BADGES', { userId: session.mentorId });

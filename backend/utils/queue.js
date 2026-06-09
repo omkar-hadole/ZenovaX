@@ -98,7 +98,7 @@ async function processCalculateBadges(prisma, payload) {
     }
 
     // Invalidate caches
-    cache.del(`profile_stats_${userId}`);
+    await cache.del(`profile_stats_${userId}`);
     logger.debug(`Invalidated cache for profile_stats_${userId}`);
 }
 

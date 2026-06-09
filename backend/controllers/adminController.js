@@ -222,7 +222,7 @@ exports.deleteSession = async (req, res) => {
         });
 
         if (session && req.cache) {
-            req.cache.del(`profile_stats_${session.mentorId}`);
+            await req.cache.del(`profile_stats_${session.mentorId}`);
         }
 
         res.json({ message: "Session deleted successfully" });
@@ -357,7 +357,7 @@ exports.handleReportAction = async (req, res) => {
                 });
 
                 if (req.cache && report.session) {
-                    req.cache.del(`profile_stats_${report.session.mentorId}`);
+                    await req.cache.del(`profile_stats_${report.session.mentorId}`);
                 }
 
                 res.json({ message: "Session deleted and report marked as resolved" });

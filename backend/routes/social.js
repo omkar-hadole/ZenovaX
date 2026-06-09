@@ -21,7 +21,8 @@ router.post("/follow/:id", protect, async (req, res, next) => {
         });
 
         if (req.cache) {
-            req.cache.del(`profile_stats_${followingId}`);
+            await req.cache.del(`profile_stats_${followingId}`);
+            await req.cache.delPattern("mentor_list_*");
         }
 
         await addJob(req.prisma, 'CALCULATE_BADGES', { userId: followingId });
@@ -50,7 +51,8 @@ router.delete("/follow/:id", protect, async (req, res, next) => {
         });
 
         if (req.cache) {
-            req.cache.del(`profile_stats_${followingId}`);
+            await req.cache.del(`profile_stats_${followingId}`);
+            await req.cache.delPattern("mentor_list_*");
         }
 
         return res.json({ success: true });
@@ -79,7 +81,8 @@ router.post("/like/:id", protect, async (req, res, next) => {
         });
 
         if (req.cache) {
-            req.cache.del(`profile_stats_${mentorId}`);
+            await req.cache.del(`profile_stats_${mentorId}`);
+            await req.cache.delPattern("mentor_list_*");
         }
 
         await addJob(req.prisma, 'CALCULATE_BADGES', { userId: mentorId });
@@ -108,7 +111,8 @@ router.delete("/like/:id", protect, async (req, res, next) => {
         });
 
         if (req.cache) {
-            req.cache.del(`profile_stats_${mentorId}`);
+            await req.cache.del(`profile_stats_${mentorId}`);
+            await req.cache.delPattern("mentor_list_*");
         }
 
         return res.json({ success: true });
