@@ -17,6 +17,9 @@ export const login = async (email, password) => {
   }
 
   localStorage.setItem('user', JSON.stringify(data.user));
+  if (data.csrfToken) {
+    localStorage.setItem('csrfToken', data.csrfToken);
+  }
 
   return data;
 };
@@ -42,15 +45,23 @@ export const register = async (name, email, password) => {
 
 export const logout = async () => {
   try {
+    const csrfToken = localStorage.getItem('csrfToken');
+    const headers = {};
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
     const response = await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
+      headers,
       credentials: 'include',
     });
     const data = await response.json();
     localStorage.removeItem('user');
+    localStorage.removeItem('csrfToken');
     return data;
   } catch (error) {
     localStorage.removeItem('user');
+    localStorage.removeItem('csrfToken');
     throw error;
   }
 };
@@ -75,6 +86,12 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
 
   if (!isFormData && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
+  }
+
+  const csrfToken = localStorage.getItem('csrfToken');
+  const method = (options.method || 'GET').toUpperCase();
+  if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    headers['X-CSRF-Token'] = csrfToken;
   }
 
   let body = options.body;

@@ -1,5 +1,6 @@
 const authService = require("../services/authService");
 const { ForbiddenError } = require("../utils/errors");
+const crypto = require("crypto");
 
 exports.register = async (req, res, next) => {
     try {
@@ -17,6 +18,8 @@ exports.login = async (req, res, next) => {
     try {
         const { user, token } = await authService.login(req.prisma, req.body);
 
+        const csrfToken = crypto.randomBytes(32).toString('hex');
+
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
@@ -24,7 +27,14 @@ exports.login = async (req, res, next) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
-        return res.status(200).json({ user });
+        res.cookie('csrfToken', csrfToken, {
+            httpOnly: false,
+            secure: true,
+            sameSite: 'None',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        return res.status(200).json({ user, csrfToken });
     } catch (error) {
         // Special case: frontend checks for needsVerification flag in some places
         if (error instanceof ForbiddenError && error.message.includes("verified")) {
@@ -62,7 +72,30 @@ exports.logout = async (req, res, next) => {
             secure: true,
             sameSite: "None"
         });
+        res.clearCookie("csrfToken", {
+            httpOnly: false,
+            secure: true,
+            sameSite: "None"
+        });
         return res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getCsrfToken = async (req, res, next) => {
+    try {
+        let csrfToken = req.cookies ? req.cookies.csrfToken : null;
+        if (!csrfToken) {
+            csrfToken = crypto.randomBytes(32).toString('hex');
+            res.cookie('csrfToken', csrfToken, {
+                httpOnly: false,
+                secure: true,
+                sameSite: 'None',
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
+        }
+        return res.status(200).json({ csrfToken });
     } catch (error) {
         next(error);
     }

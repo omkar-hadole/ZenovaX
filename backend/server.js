@@ -55,7 +55,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept', 'X-CSRF-Token']
 }));
 
 // Enable pre-flight for all routes
@@ -69,6 +69,9 @@ app.use((req, res, next) => {
   req.cache = cache;
   next();
 });
+
+const csrfProtection = require("./middleware/csrf");
+app.use(csrfProtection);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);

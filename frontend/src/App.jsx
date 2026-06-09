@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
@@ -36,6 +37,25 @@ import Reports from './pages/admin/Reports';
 import MentorSessionDetailsPage from './pages/mentor/MentorSessionDetailsPage';
 
 function App() {
+    useEffect(() => {
+        const fetchCsrfToken = async () => {
+            if (localStorage.getItem('user')) {
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (data.csrfToken) {
+                        localStorage.setItem('csrfToken', data.csrfToken);
+                    }
+                } catch (error) {
+                    console.error("Failed to bootstrap CSRF token:", error);
+                }
+            }
+        };
+        fetchCsrfToken();
+    }, []);
+
     return (
         <BrowserRouter>
             <Routes>
