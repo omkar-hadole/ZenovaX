@@ -30,8 +30,7 @@ export default function Reports() {
         fetchReports(currentPage);
     }, [currentPage]);
 
-    // Debug log to verify data
-    console.log("Reports Data:", reports);
+
 
     const handleAction = async (reportId, action) => {
         let confirmMsg = "";
