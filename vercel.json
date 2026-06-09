@@ -8,30 +8,19 @@
   ],
   "functions": {
     "backend/api/index.js": {
-      "includeFiles": [
-        "backend/node_modules/semver/**"
-      ]
+      "includeFiles": "backend/node_modules/semver/**"
     },
     "backend/server.js": {
-      "includeFiles": [
-        "backend/node_modules/semver/**"
-      ]
+      "includeFiles": "backend/node_modules/semver/**"
     },
     "api/index.js": {
-      "includeFiles": [
-        "node_modules/semver/**"
-      ]
+      "includeFiles": "node_modules/semver/**"
     },
     "server.js": {
-      "includeFiles": [
-        "node_modules/semver/**"
-      ]
+      "includeFiles": "node_modules/semver/**"
     },
     "**/*.js": {
-      "includeFiles": [
-        "backend/node_modules/semver/**",
-        "node_modules/semver/**"
-      ]
+      "includeFiles": "{backend/,}node_modules/semver/**"
     }
   }
 }
