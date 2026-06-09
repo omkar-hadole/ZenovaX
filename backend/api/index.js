@@ -1,1 +1,3 @@
-const app = require("../server.js"); module.exports = app;
+require("../utils/vercel-nft-fix.js");
+const app = require("../server.js");
+module.exports = app;

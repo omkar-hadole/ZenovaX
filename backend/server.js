@@ -1,3 +1,4 @@
+require("./utils/vercel-nft-fix.js");
 const express = require("express"); // Trigger nodemon reload
 const helmet = require("helmet");
 const cors = require("cors");
