@@ -1,6 +1,6 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
-const { BadRequestError, NotFoundError, ForbiddenError } = require("../utils/errors");
+const { AppError, BadRequestError, NotFoundError, ForbiddenError } = require("../utils/errors");
 
 const PISTON_API = 'https://emkc.org/api/v2/piston/execute';
 
