@@ -1,6 +1,7 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextIndex"]
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -170,6 +171,7 @@ model SessionRequest {
   @@index([requestedAt])
   @@index([subject])
   @@index([department])
+  @@fulltext([topics])
   @@map("session_requests")
 }
 
@@ -254,6 +256,7 @@ model Session {
   @@index([status])
   @@index([availableSeats])
   @@index([isLive])
+  @@fulltext([topics])
   @@map("sessions")
 }
 
