@@ -200,7 +200,7 @@ exports.getMySessions = async (prisma, userId) => {
     });
 };
 
-exports.bookSession = async (prisma, cache, userId, sessionId) => {
+exports.executeBookingTransaction = async (prisma, cache, userId, sessionId) => {
     const result = await prisma.$transaction(async (tx) => {
         const currentSession = await tx.session.findUnique({
             where: { id: sessionId }
@@ -276,6 +276,66 @@ exports.bookSession = async (prisma, cache, userId, sessionId) => {
     }
 
     return result;
+};
+
+exports.bookSession = async (prisma, cache, userId, sessionId) => {
+    // 1. Fast fail if there is a cached failed status
+    if (cache) {
+        const cachedResult = await cache.get(`booking_result:${userId}:${sessionId}`);
+        if (cachedResult && cachedResult.status === 'FAILED') {
+            throw new BadRequestError(cachedResult.error);
+        }
+        if (cachedResult && cachedResult.status === 'CONFIRMED') {
+            throw new BadRequestError("You have already booked this session");
+        }
+    }
+
+    // 2. Check if a booking already exists in the database
+    const existingBooking = await prisma.booking.findUnique({
+        where: {
+            userId_sessionId: {
+                userId,
+                sessionId
+            }
+        }
+    });
+
+    if (existingBooking) {
+        throw new BadRequestError("You have already booked this session");
+    }
+
+    // 3. Delegate to booking queue
+    const bookingQueue = require("../utils/bookingQueue");
+    await bookingQueue.addBookingJob(prisma, cache, userId, sessionId);
+
+    return { status: "PROCESSING", message: "Booking is in progress" };
+};
+
+exports.getBookingStatus = async (prisma, cache, userId, sessionId) => {
+    // 1. Check if confirmed booking exists
+    const booking = await prisma.booking.findUnique({
+        where: {
+            userId_sessionId: {
+                userId,
+                sessionId
+            }
+        }
+    });
+
+    if (booking) {
+        return { status: 'CONFIRMED', booking };
+    }
+
+    // 2. Check if a failed or pending status is in cache
+    if (cache) {
+        const cachedResult = await cache.get(`booking_result:${userId}:${sessionId}`);
+        if (cachedResult) {
+            return cachedResult;
+        }
+    }
+
+    // 3. Otherwise, still in progress
+    return { status: 'PROCESSING', message: 'Booking is in progress' };
 };
 
 exports.getMyBookings = async (prisma, userId) => {
