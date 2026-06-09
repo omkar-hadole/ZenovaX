@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
+import Toast from '../components/Toast';
 
 const BADGE_FILE_NAMES = {
   "First Step": "Fisrt_Step",
@@ -170,6 +171,7 @@ export default function Profile() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [badgeImages, setBadgeImages] = useState({});
+  const [toast, setToast] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -220,34 +222,54 @@ export default function Profile() {
   };
 
   const handleFollow = async () => {
+    const prevIsFollowing = isFollowing;
+    const prevFollowersCount = followersCount;
+
+    const nextIsFollowing = !prevIsFollowing;
+    const nextFollowersCount = nextIsFollowing 
+      ? prevFollowersCount + 1 
+      : Math.max(0, prevFollowersCount - 1);
+
+    setIsFollowing(nextIsFollowing);
+    setFollowersCount(nextFollowersCount);
+
     try {
-      if (isFollowing) {
+      if (prevIsFollowing) {
         await apiCall(`/social/follow/${profile.id}`, { method: 'DELETE' });
-        setFollowersCount(prev => Math.max(0, prev - 1));
-        setIsFollowing(false);
       } else {
         await apiCall(`/social/follow/${profile.id}`, { method: 'POST' });
-        setFollowersCount(prev => prev + 1);
-        setIsFollowing(true);
       }
     } catch (err) {
       console.error('Follow action failed', err);
+      setIsFollowing(prevIsFollowing);
+      setFollowersCount(prevFollowersCount);
+      setToast({ message: err.message || 'Follow action failed. Please try again.', type: 'error' });
     }
   };
 
   const handleLike = async () => {
+    const prevIsLiked = isLiked;
+    const prevLikesCount = likesCount;
+
+    const nextIsLiked = !prevIsLiked;
+    const nextLikesCount = nextIsLiked 
+      ? prevLikesCount + 1 
+      : Math.max(0, prevLikesCount - 1);
+
+    setIsLiked(nextIsLiked);
+    setLikesCount(nextLikesCount);
+
     try {
-      if (isLiked) {
+      if (prevIsLiked) {
         await apiCall(`/social/like/${profile.id}`, { method: 'DELETE' });
-        setLikesCount(prev => Math.max(0, prev - 1));
-        setIsLiked(false);
       } else {
         await apiCall(`/social/like/${profile.id}`, { method: 'POST' });
-        setLikesCount(prev => prev + 1);
-        setIsLiked(true);
       }
     } catch (err) {
       console.error('Like action failed', err);
+      setIsLiked(prevIsLiked);
+      setLikesCount(prevLikesCount);
+      setToast({ message: err.message || 'Like action failed. Please try again.', type: 'error' });
     }
   };
 
@@ -670,6 +692,7 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
