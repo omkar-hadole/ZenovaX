@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/backend/api/index.js"
+    }
+  ],
+  "functions": {
+    "backend/api/index.js": {
+      "includeFiles": "backend/node_modules/semver/**"
+    }
+  }
+}
