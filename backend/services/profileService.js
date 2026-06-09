@@ -334,39 +334,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
         return await cache.get(cacheKey);
     }
 
-    // 1. Group bookings by sessionId and userId to get all unique learner-session pairs
-    const bookings = await prisma.booking.groupBy({
-        by: ['sessionId', 'userId'],
-        where: {
-            status: { in: ['CONFIRMED', 'COMPLETED'] }
-        }
-    });
-
-    // 2. Fetch all session mappings to mentorIds to resolve the unique learners per mentor
-    const sessions = await prisma.session.findMany({
-        select: { id: true, mentorId: true }
-    });
-    const sessionToMentorMap = new Map(sessions.map(s => [s.id, s.mentorId]));
-
-    // 3. Build a set of unique learner userIds per mentorId
-    const mentorLearnersSetMap = new Map();
-    for (const booking of bookings) {
-        const mentorId = sessionToMentorMap.get(booking.sessionId);
-        if (mentorId) {
-            if (!mentorLearnersSetMap.has(mentorId)) {
-                mentorLearnersSetMap.set(mentorId, new Set());
-            }
-            mentorLearnersSetMap.get(mentorId).add(booking.userId);
-        }
-    }
-
-    // 4. Create unique learners count map keyed by mentorId
-    const uniqueLearnersMap = new Map();
-    for (const [mentorId, learnersSet] of mentorLearnersSetMap.entries()) {
-        uniqueLearnersMap.set(mentorId, learnersSet.size);
-    }
-
-    // 5. Query total count and paginate + sort the mentors at database level
+    // 1. Query total count and paginate + sort the mentors at database level
     const [mentors, total] = await Promise.all([
         prisma.user.findMany({
             where: {
@@ -388,6 +356,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
                 averageRating: true,
                 totalSessions: true,
                 totalReviews: true,
+                uniqueLearners: true,
                 _count: {
                     select: {
                         followers: true,
@@ -423,7 +392,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
         })
     ]);
 
-    // 6. Map and hydrate the paginated results
+    // 2. Map and hydrate the paginated results
     const fullyHydratedMentors = mentors.map((mentor) => {
         const effectiveSessions = mentor._count.mentorSessions;
         let skills = [];
@@ -431,7 +400,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
             skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
         } catch (e) { }
 
-        const uniqueLearners = uniqueLearnersMap.get(mentor.id) || 0;
+        const uniqueLearners = mentor.uniqueLearners || 0;
         const badges = calculateBadges({
             ...mentor,
             totalSessions: effectiveSessions
