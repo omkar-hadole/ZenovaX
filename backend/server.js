@@ -3,6 +3,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const compression = require("compression");
+const timeout = require("connect-timeout");
 const cache = require("./utils/cache");
 const config = require("./config");
 const authRoutes = require("./routes/auth");
@@ -73,6 +74,8 @@ app.use((req, res, next) => {
 const csrfProtection = require("./middleware/csrf");
 app.use(csrfProtection);
 
+app.use(timeout('30s'));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/social", socialRoutes);
@@ -85,6 +88,10 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/help", require("./routes/helpRoutes"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+
+app.use((req, res, next) => {
+  if (!req.timedout) next();
+});
 
 app.get('/health', async (req, res) => {
   try {

@@ -66,7 +66,7 @@ exports.askAI = async (user, { question, username } = {}) => {
     }
 
     try {
-        const result = await model.generateContent(SYSTEM_PROMPT + question);
+        const result = await model.generateContent(SYSTEM_PROMPT + question, { timeout: 30000 });
         return { answer: result.response.text() };
     } catch (error) {
         logger.error("AI Service Error:", { message: error.message, status: error.status });

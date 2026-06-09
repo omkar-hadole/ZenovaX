@@ -19,6 +19,7 @@ const uploadToCloudinary = (fileBuffer, filename = "") => {
                 folder: "zenovax/profiles",
                 resource_type: "image",
                 public_id: filename ? filename.split(".")[0].replace(/[^a-zA-Z0-9]/g, "_") : undefined,
+                timeout: 30000, // 30 seconds timeout
             },
             (error, result) => {
                 if (error) {
