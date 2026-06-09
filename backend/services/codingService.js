@@ -1,6 +1,11 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
 const { AppError, BadRequestError, NotFoundError, ForbiddenError } = require("../utils/errors");
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 
 const PISTON_API = 'https://emkc.org/api/v2/piston/execute';
 
@@ -40,7 +45,7 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        String[] inputs = {${inputs.map(i => `"${i}"`).join(',')}};
+        String[] inputs = {${inputs.map(i => JSON.stringify(i)).join(',')}};
         List<String> results = new ArrayList<>();
         
         Solution s = new Solution();
@@ -172,6 +177,60 @@ exports.getCodingQuestionById = async (prisma, userId, id) => {
     };
 };
 
+const executeLocally = async (language, sourceContent) => {
+    const tempDir = path.join(__dirname, '../temp');
+    if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+    }
+    const uniqueId = Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    
+    if (language === 'python') {
+        const filePath = path.join(tempDir, `solution_${uniqueId}.py`);
+        await fs.promises.writeFile(filePath, sourceContent);
+        try {
+            const { stdout, stderr } = await execAsync(`python3 "${filePath}"`, { timeout: 5000 });
+            return { stdout: stdout || '', stderr: stderr || '' };
+        } catch (error) {
+            if (error.killed) {
+                return { stdout: '', stderr: "Execution timed out (infinite loop or taking too long)." };
+            }
+            return { stdout: error.stdout || '', stderr: error.stderr || error.message || '' };
+        } finally {
+            try {
+                await fs.promises.unlink(filePath);
+            } catch (e) {
+                logger.error(`Failed to delete temp file ${filePath}:`, e);
+            }
+        }
+    }
+
+    if (language === 'java') {
+        const executionDir = path.join(tempDir, `java_${uniqueId}`);
+        await fs.promises.mkdir(executionDir, { recursive: true });
+        
+        const filePath = path.join(executionDir, 'Main.java');
+        await fs.promises.writeFile(filePath, sourceContent);
+        try {
+            await execAsync(`javac Main.java`, { cwd: executionDir, timeout: 5000 });
+            const { stdout, stderr } = await execAsync(`java Main`, { cwd: executionDir, timeout: 5000 });
+            return { stdout: stdout || '', stderr: stderr || '' };
+        } catch (error) {
+            if (error.killed) {
+                return { stdout: '', stderr: "Execution timed out (infinite loop or taking too long)." };
+            }
+            return { stdout: error.stdout || '', stderr: error.stderr || error.message || '' };
+        } finally {
+            try {
+                await fs.promises.rm(executionDir, { recursive: true, force: true });
+            } catch (e) {
+                logger.error(`Failed to delete java run folder ${executionDir}:`, e);
+            }
+        }
+    }
+
+    throw new Error(`Unsupported language for local execution: ${language}`);
+};
+
 exports.executeCode = async ({ language, code, testCases }) => {
     if (!code || typeof code !== 'string' || code.length > 10000) {
         throw new BadRequestError("Code must be a string and under 10,000 characters");
@@ -193,29 +252,14 @@ exports.executeCode = async ({ language, code, testCases }) => {
     }
 
     const sourceContent = getDriverCode(language, code, testCases);
-    const pistonLang = language === 'python' ? 'python' : 'java';
-    const version = language === 'python' ? '3.10.0' : '15.0.2';
-
-    const payload = {
-        language: pistonLang,
-        version: version,
-        files: [
-            {
-                content: sourceContent
-            }
-        ]
-    };
-
-    let response;
+    
+    let run;
     try {
-        response = await axios.post(PISTON_API, payload, { timeout: 10000 });
-    } catch (error) {
-        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-            throw new AppError("Code execution timed out. The execution engine took too long to respond.", 504);
-        }
-        throw error;
+        const { stdout, stderr } = await executeLocally(language, sourceContent);
+        run = { stdout, stderr };
+    } catch (err) {
+        throw new AppError(`Code execution failed: ${err.message}`, 500);
     }
-    const { run } = response.data;
 
     if (run.stderr) {
         return { error: run.stderr };
