@@ -45,8 +45,8 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     
-    // Check if the origin starts with any of the allowed origins (to handle trailing slashes)
-    const isAllowed = allowedOrigins.some(allowedOrigin => origin.startsWith(allowedOrigin));
+    // Strict equality check — prefix matching (startsWith) allows subdomain spoofing attacks
+    const isAllowed = allowedOrigins.some(allowedOrigin => origin === allowedOrigin);
     if (isAllowed) {
       callback(null, true);
     } else {
