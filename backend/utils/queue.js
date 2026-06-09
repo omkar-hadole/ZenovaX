@@ -1,20 +1,53 @@
+const { Queue, Worker } = require("bullmq");
+const Redis = require("ioredis");
 const logger = require("./logger");
 const cache = require("./cache");
+const config = require("../config");
 const badgeService = require("../services/badgeService");
+
+// Dedicated Redis connection for BullMQ with maxRetriesPerRequest: null
+let connection;
+let myQueue;
+
+if (config.redisUrl && config.redisUrl.trim()) {
+    try {
+        connection = new Redis(config.redisUrl, {
+            maxRetriesPerRequest: null
+        });
+        myQueue = new Queue("ZenovaXQueue", { connection });
+        logger.info("BullMQ Queue initialized successfully.");
+    } catch (err) {
+        logger.error(`Failed to initialize BullMQ Redis connection: ${err.message}`);
+    }
+}
 
 async function addJob(prisma, type, payload) {
     try {
-        const job = await prisma.job.create({
-            data: {
-                type,
-                payload: JSON.stringify(payload),
-                status: 'PENDING'
+        if (!myQueue) {
+            logger.warn(`BullMQ is not initialized (no REDIS_URL). Simulating job execution for type: ${type}`);
+            // Fallback: If no Redis (e.g. offline testing), execute immediately/operationally
+            // to prevent complete failure.
+            setTimeout(async () => {
+                try {
+                    await processJob(prisma, { type, payload: JSON.stringify(payload) });
+                } catch (err) {
+                    logger.error(`Simulated job processing failed: ${err.message}`);
+                }
+            }, 0);
+            return { id: "simulated" };
+        }
+
+        const job = await myQueue.add(type, payload, {
+            attempts: 3,
+            backoff: {
+                type: 'exponential',
+                delay: 1000
             }
         });
-        logger.info(`Job added to queue: ${type} (ID: ${job.id})`);
+        logger.info(`Job added to BullMQ: ${type} (ID: ${job.id})`);
         return job;
     } catch (error) {
-        logger.error(`Failed to add job to queue: ${error.message}`, error);
+        logger.error(`Failed to add job to BullMQ: ${error.message}`, error);
         throw error;
     }
 }
@@ -38,59 +71,36 @@ async function processJob(prisma, job) {
 
 let isWorkerRunning = false;
 
-async function startQueueWorker(prisma) {
+function startQueueWorker(prisma) {
     if (isWorkerRunning) return;
     isWorkerRunning = true;
 
-    logger.info('Queue worker started.');
+    if (!connection) {
+        logger.warn("Skipping BullMQ Worker initialization: REDIS_URL is not set.");
+        return;
+    }
 
-    // 1. Process jobs queue loop
-    setInterval(async () => {
-        try {
-            // Find one pending job and lock it
-            const job = await prisma.$transaction(async (tx) => {
-                const pendingJob = await tx.job.findFirst({
-                    where: { status: 'PENDING' },
-                    orderBy: { createdAt: 'asc' }
-                });
-                if (!pendingJob) return null;
+    logger.info('BullMQ worker starting...');
 
-                return await tx.job.update({
-                    where: { id: pendingJob.id },
-                    data: {
-                        status: 'PROCESSING',
-                        attempts: { increment: 1 }
-                    }
-                });
-            }, {
-                timeout: 10000
-            });
+    const worker = new Worker("ZenovaXQueue", async (job) => {
+        logger.info(`Processing job: ${job.name} (ID: ${job.id})`);
+        await processJob(prisma, { type: job.name, payload: JSON.stringify(job.data) });
+    }, {
+        connection,
+        concurrency: 5
+    });
 
-            if (!job) return;
+    worker.on("completed", (job) => {
+        logger.info(`Job completed: ${job.name} (ID: ${job.id})`);
+    });
 
-            try {
-                await processJob(prisma, job);
-                await prisma.job.update({
-                    where: { id: job.id },
-                    data: { status: 'COMPLETED' }
-                });
-            } catch (jobErr) {
-                logger.error(`Job processing error (ID: ${job.id}): ${jobErr.message}`, jobErr);
-                const shouldRetry = job.attempts < job.maxAttempts;
-                await prisma.job.update({
-                    where: { id: job.id },
-                    data: {
-                        status: shouldRetry ? 'PENDING' : 'FAILED',
-                        error: jobErr.stack || jobErr.message
-                    }
-                });
-            }
-        } catch (err) {
-            logger.error(`Queue worker loop error: ${err.message}`, err);
-        }
-    }, 3000); // Check every 3 seconds
+    worker.on("failed", (job, err) => {
+        logger.error(`Job failed: ${job.name} (ID: ${job.id}). Error: ${err.message}`, err);
+    });
 
-    // 2. Periodic check to mark sessions completed and queue badge jobs
+    logger.info('BullMQ worker started.');
+
+    // Periodic check to mark ended sessions as COMPLETED and queue badge jobs
     setInterval(async () => {
         try {
             const now = new Date();
@@ -114,14 +124,14 @@ async function startQueueWorker(prisma) {
                         data: { status: 'COMPLETED' }
                     });
                     logger.info(`Session ${session.id} marked as COMPLETED.`);
-                    // Queue badge calculation for the mentor
+                    // Queue badge calculation for the mentor via BullMQ
                     await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
                 }
             }
         } catch (err) {
             logger.error(`Session completion worker loop error: ${err.message}`, err);
         }
-    }, 60000); // Check every 60 seconds (1 minute)
+    }, 60000); // Check every 60 seconds
 }
 
 module.exports = {
