@@ -1,4 +1,3 @@
-const { Queue, Worker } = require("bullmq");
 const Redis = require("ioredis");
 const logger = require("./logger");
 const cache = require("./cache");
@@ -11,6 +10,8 @@ let myQueue;
 
 if (config.redisUrl && config.redisUrl.trim()) {
     try {
+        // Lazily require bullmq only when Redis is configured — avoids NFT trace issues on Vercel
+        const { Queue } = require("bullmq");
         connection = new Redis(config.redisUrl, {
             maxRetriesPerRequest: null
         });
@@ -82,6 +83,8 @@ function startQueueWorker(prisma) {
 
     logger.info('BullMQ worker starting...');
 
+    // Lazy require Worker to avoid loading bullmq when Redis is unavailable
+    const { Worker } = require("bullmq");
     const worker = new Worker("ZenovaXQueue", async (job) => {
         logger.info(`Processing job: ${job.name} (ID: ${job.id})`);
         await processJob(prisma, { type: job.name, payload: JSON.stringify(job.data) });
