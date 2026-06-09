@@ -9,13 +9,13 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "node_modules/semver/**"
+      "includeFiles": "**/node_modules/semver/**"
     },
     "server.js": {
-      "includeFiles": "node_modules/semver/**"
+      "includeFiles": "**/node_modules/semver/**"
     },
     "**/*.js": {
-      "includeFiles": "node_modules/semver/**"
+      "includeFiles": "**/node_modules/semver/**"
     }
   }
 }
