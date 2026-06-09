@@ -5,7 +5,7 @@ const config = require("../config");
 
 let redisClient = null;
 
-// Read REDIS_URL from config or environment variables
+const isProduction = config.nodeEnv === 'production';
 const redisUrl = config.redisUrl || process.env.REDIS_URL;
 
 if (redisUrl && redisUrl.trim()) {
@@ -13,11 +13,20 @@ if (redisUrl && redisUrl.trim()) {
         redisClient = new Redis(redisUrl, {
             maxRetriesPerRequest: 3,
             connectTimeout: 5000,
-            lazyConnect: true
+            lazyConnect: true,
+            retryStrategy(times) {
+                // Exponential backoff up to 3000ms
+                const delay = Math.min(times * 100, 3000);
+                return delay;
+            }
         });
 
         redisClient.on("error", (err) => {
-            logger.error(`Redis Error: ${err.message}`);
+            if (isProduction) {
+                logger.error(`CRITICAL: Redis Error in production: ${err.message}`);
+            } else {
+                logger.error(`Redis Error: ${err.message}`);
+            }
         });
 
         redisClient.on("connect", () => {
@@ -25,34 +34,52 @@ if (redisUrl && redisUrl.trim()) {
         });
 
         redisClient.connect().catch((err) => {
-            logger.error(`Redis connection failed: ${err.message}`);
-            redisClient = null;
+            if (isProduction) {
+                logger.error(`CRITICAL: Redis initial connection failed in production: ${err.message}`);
+            } else {
+                logger.error(`Redis connection failed: ${err.message}`);
+                redisClient = null;
+            }
         });
     } catch (err) {
-        logger.error(`Failed to initialize Redis: ${err.message}`);
-        redisClient = null;
+        if (isProduction) {
+            logger.error(`CRITICAL: Failed to initialize Redis in production: ${err.message}`);
+        } else {
+            logger.error(`Failed to initialize Redis: ${err.message}`);
+            redisClient = null;
+        }
     }
 } else {
-    logger.warn("REDIS_URL not set. Falling back to in-memory NodeCache.");
+    if (isProduction) {
+        logger.error("CRITICAL: REDIS_URL not set in production! Caching will be disabled.");
+    } else {
+        logger.warn("REDIS_URL not set. Falling back to in-memory NodeCache.");
+    }
 }
 
 const fallbackCache = new NodeCache({ stdTTL: 600 });
 
 const cache = {
+    isRedisAvailable() {
+        return !!(redisClient && redisClient.status === 'ready');
+    },
+
     async get(key) {
-        if (redisClient) {
+        if (this.isRedisAvailable()) {
             try {
                 const data = await redisClient.get(key);
                 return data ? JSON.parse(data) : undefined;
             } catch (err) {
                 logger.error(`Redis get error for key ${key}: ${err.message}`);
+                if (isProduction) return undefined;
             }
         }
+        if (isProduction) return undefined;
         return fallbackCache.get(key);
     },
 
     async set(key, value, ttlSeconds = 600) {
-        if (redisClient) {
+        if (this.isRedisAvailable()) {
             try {
                 const data = JSON.stringify(value);
                 if (ttlSeconds) {
@@ -63,37 +90,43 @@ const cache = {
                 return true;
             } catch (err) {
                 logger.error(`Redis set error for key ${key}: ${err.message}`);
+                if (isProduction) return false;
             }
         }
+        if (isProduction) return false;
         return fallbackCache.set(key, value, ttlSeconds);
     },
 
     async del(key) {
-        if (redisClient) {
+        if (this.isRedisAvailable()) {
             try {
                 await redisClient.del(key);
                 return true;
             } catch (err) {
                 logger.error(`Redis del error for key ${key}: ${err.message}`);
+                if (isProduction) return false;
             }
         }
+        if (isProduction) return false;
         return fallbackCache.del(key);
     },
 
     async has(key) {
-        if (redisClient) {
+        if (this.isRedisAvailable()) {
             try {
                 const exists = await redisClient.exists(key);
                 return exists === 1;
             } catch (err) {
                 logger.error(`Redis has error for key ${key}: ${err.message}`);
+                if (isProduction) return false;
             }
         }
+        if (isProduction) return false;
         return fallbackCache.has(key);
     },
 
     async delPattern(pattern) {
-        if (redisClient) {
+        if (this.isRedisAvailable()) {
             try {
                 const stream = redisClient.scanStream({
                     match: pattern,
@@ -131,8 +164,11 @@ const cache = {
                 return true;
             } catch (err) {
                 logger.error(`Redis delPattern error for ${pattern}: ${err.message}`);
+                if (isProduction) return false;
             }
         }
+        if (isProduction) return false;
+
         // Fallback pattern matching
         const keys = fallbackCache.keys();
         const matches = keys.filter(k => k.includes(pattern.replace('*', '')));
