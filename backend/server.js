@@ -16,66 +16,9 @@ const codingChallengeRoutes = require('./routes/codingChallengeRoutes');
 const { generalLimiter } = require("./middleware/rateLimiter");
 const logger = require("./utils/logger");
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require("./utils/db");
 
 const app = express();
-const basePrisma = new PrismaClient({
-  log: ['warn', 'error'],
-});
-
-const prisma = basePrisma.$extends({
-  query: {
-    user: {
-      async findUnique({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return basePrisma.user.findFirst(args);
-      },
-      async findFirst({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async findMany({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async count({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-    },
-    session: {
-      async findUnique({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return basePrisma.session.findFirst(args);
-      },
-      async findFirst({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async findMany({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async count({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async aggregate({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-    },
-  },
-});
 
 app.use(helmet());
 app.use(
