@@ -2,6 +2,7 @@ const express = require("express");
 const { protect } = require("../middleware/auth");
 
 const router = express.Router();
+const { addJob } = require("../utils/queue");
 
 router.post("/follow/:id", protect, async (req, res, next) => {
     try {
@@ -22,6 +23,8 @@ router.post("/follow/:id", protect, async (req, res, next) => {
         if (req.cache) {
             req.cache.del(`profile_stats_${followingId}`);
         }
+
+        await addJob(req.prisma, 'CALCULATE_BADGES', { userId: followingId });
 
         return res.json({ success: true, follow });
     } catch (error) {
@@ -78,6 +81,8 @@ router.post("/like/:id", protect, async (req, res, next) => {
         if (req.cache) {
             req.cache.del(`profile_stats_${mentorId}`);
         }
+
+        await addJob(req.prisma, 'CALCULATE_BADGES', { userId: mentorId });
 
         return res.json({ success: true, like });
     } catch (error) {

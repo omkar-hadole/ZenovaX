@@ -3,7 +3,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const compression = require("compression");
-const NodeCache = require("node-cache");
+const cache = require("./utils/cache");
 const config = require("./config");
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
@@ -76,7 +76,6 @@ const prisma = basePrisma.$extends({
     },
   },
 });
-const cache = new NodeCache({ stdTTL: 600 });
 
 app.use(helmet());
 app.use(
@@ -163,9 +162,12 @@ app.use((err, req, res, next) => {
   });
 });
 
+const { startQueueWorker } = require("./utils/queue");
+
 if (require.main === module) {
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);
+    startQueueWorker(prisma);
   });
 }
 

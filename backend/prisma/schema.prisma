@@ -748,3 +748,18 @@ model CodingSubmission {
   @@index([codingQuestionId])
   @@map("coding_submissions")
 }
+
+model Job {
+  id          String   @id @default(uuid())
+  type        String
+  payload     String   @db.Text
+  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  error       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@map("jobs")
+}

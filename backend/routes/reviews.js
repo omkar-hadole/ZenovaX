@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 const logger = require('../utils/logger');
+const { addJob } = require('../utils/queue');
 
 router.post('/create', protect, async (req, res) => {
     const { sessionId, rating, comment, isAnonymous } = req.body;
@@ -76,6 +77,8 @@ router.post('/create', protect, async (req, res) => {
         if (req.cache) {
             req.cache.del(`profile_stats_${session.mentorId}`);
         }
+
+        await addJob(req.prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
 
         res.status(201).json({ message: 'Review submitted successfully' });
     } catch (error) {

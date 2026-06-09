@@ -695,65 +695,9 @@ exports.verifyAttendance = async (req, res, next) => {
     }
 };
 
-const { calculateBadges } = require("../utils/badges");
-const { getFinishedSessionsCount, getUniqueLearnersCount } = require("../utils/sessionUtils");
-
 exports.getRecentActivity = async (req, res, next) => {
     try {
         const userId = req.user.id;
-
-        const user = await req.prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                totalSessions: true,
-                averageRating: true,
-                totalReviews: true,
-                _count: {
-                    select: {
-                        followers: true,
-                        likesReceived: true,
-                        receivedReviews: true
-                    }
-                }
-            }
-        });
-
-        if (user) {
-            const finishedSessionsCount = await getFinishedSessionsCount(req.prisma, userId);
-            const uniqueLearners = await getUniqueLearnersCount(req.prisma, userId);
-
-            const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
-
-            const earnedBadges = calculateBadges({
-                ...user,
-                totalSessions: effectiveSessions
-            }, uniqueLearners);
-
-            if (earnedBadges.length > 0) {
-                const existingNotifications = await req.prisma.notification.findMany({
-                    where: {
-                        userId: userId,
-                        type: 'ACHIEVEMENT_UNLOCKED',
-                        title: { in: earnedBadges }
-                    },
-                    select: { title: true }
-                });
-
-                const existingBadgeTitles = new Set(existingNotifications.map(n => n.title));
-                const newBadges = earnedBadges.filter(badge => !existingBadgeTitles.has(badge));
-
-                if (newBadges.length > 0) {
-                    await req.prisma.notification.createMany({
-                        data: newBadges.map(badge => ({
-                            userId: userId,
-                            type: 'ACHIEVEMENT_UNLOCKED',
-                            title: badge,
-                            message: `Congratulations! You have unlocked the "${badge}" badge.`
-                        }))
-                    });
-                }
-            }
-        }
 
         const notifications = await req.prisma.notification.findMany({
             where: { userId: userId },
