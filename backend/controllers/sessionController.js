@@ -235,33 +235,7 @@ exports.getMySessions = async (req, res, next) => {
             }
         });
 
-        const approvedRequests = await req.prisma.sessionRequest.findMany({
-            where: {
-                mentorId: req.user.id,
-                status: 'APPROVED'
-            },
-            include: { session: true },
-            orderBy: { proposedDate: 'asc' }
-        });
-
-        const mappedRequests = approvedRequests
-            .filter(req => !req.session)
-            .map(req => ({
-                id: `req-${req.id}`,
-                title: req.title,
-                scheduledAt: req.proposedDate,
-                duration: req.duration,
-                mode: req.mode,
-                maxSeats: req.maxSeats,
-                _count: { bookings: 0 },
-                isRequest: true
-            }));
-
-        const allSessions = [...sessions, ...mappedRequests].sort((a, b) =>
-            new Date(a.scheduledAt) - new Date(b.scheduledAt)
-        );
-
-        return res.json({ sessions: allSessions });
+        return res.json({ sessions });
     } catch (error) {
         return next(error);
     }
@@ -272,53 +246,9 @@ exports.bookSession = async (req, res, next) => {
         const sessionId = req.params.id;
 
         const result = await req.prisma.$transaction(async (tx) => {
-            let currentSessionId = sessionId;
-            let currentSession;
-
-            if (currentSessionId.startsWith('req-')) {
-                const requestId = currentSessionId.replace('req-', '');
-
-                currentSession = await tx.session.findUnique({
-                    where: { requestId }
-                });
-
-                if (!currentSession) {
-                    const request = await tx.sessionRequest.findUnique({
-                        where: { id: requestId }
-                    });
-
-                    if (!request) {
-                        throw new Error("SESSION_REQUEST_NOT_FOUND");
-                    }
-
-                    currentSession = await tx.session.create({
-                        data: {
-                            title: request.title,
-                            description: request.description,
-                            subject: request.subject,
-                            department: request.department,
-                            topics: request.topics,
-                            mentorId: request.mentorId,
-                            mode: request.mode,
-                            priceType: request.priceType,
-                            price: request.price,
-                            maxSeats: request.maxSeats,
-                            availableSeats: request.maxSeats,
-                            venue: request.venue,
-                            meetingLink: request.meetingLink,
-                            scheduledAt: request.proposedDate,
-                            duration: request.duration,
-                            requestId: request.id,
-                            status: 'UPCOMING'
-                        }
-                    });
-                }
-                currentSessionId = currentSession.id;
-            } else {
-                currentSession = await tx.session.findUnique({
-                    where: { id: currentSessionId }
-                });
-            }
+            const currentSession = await tx.session.findUnique({
+                where: { id: sessionId }
+            });
 
             if (!currentSession) {
                 throw new Error("SESSION_NOT_FOUND");
@@ -334,7 +264,7 @@ exports.bookSession = async (req, res, next) => {
                 where: {
                     userId_sessionId: {
                         userId: req.user.id,
-                        sessionId: currentSessionId
+                        sessionId: sessionId
                     }
                 }
             });
@@ -347,7 +277,7 @@ exports.bookSession = async (req, res, next) => {
             try {
                 await tx.session.update({
                     where: {
-                        id: currentSessionId,
+                        id: sessionId,
                         availableSeats: { gt: 0 }
                     },
                     data: {
@@ -364,7 +294,7 @@ exports.bookSession = async (req, res, next) => {
             const booking = await tx.booking.create({
                 data: {
                     userId: req.user.id,
-                    sessionId: currentSessionId,
+                    sessionId: sessionId,
                     status: 'CONFIRMED',
                     amountPaid: 0
                 }
@@ -378,7 +308,7 @@ exports.bookSession = async (req, res, next) => {
                 data: { uniqueLearners }
             });
 
-            return { booking, sessionId: currentSessionId, mentorId: currentSession.mentorId };
+            return { booking, sessionId, mentorId: currentSession.mentorId };
         });
 
         // Invalidate profile stats cache for learner and mentor
@@ -395,7 +325,7 @@ exports.bookSession = async (req, res, next) => {
         });
 
     } catch (error) {
-        if (error.message === "SESSION_REQUEST_NOT_FOUND" || error.message === "SESSION_NOT_FOUND") {
+        if (error.message === "SESSION_NOT_FOUND") {
             return res.status(404).json({ error: "Session not found" });
         }
         if (error.message === "ALREADY_BOOKED") {
