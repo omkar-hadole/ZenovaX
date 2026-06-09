@@ -170,6 +170,10 @@ const Zen = () => {
                                         style={{ backgroundColor: m.role === 'user' ? BRAND_COLOR : undefined }}
                                     >
                                         <div className={`prose prose-sm max-w-none ${m.role === 'user' ? 'prose-invert' : ''}`}>
+                                            {/* XSS Safety: ReactMarkdown does not use dangerouslySetInnerHTML by default.
+                                                Raw HTML tags in AI-generated markdown are stripped because rehype-raw
+                                                is not installed. If rehype-raw is ever added, wrap m.text with
+                                                sanitizeHTML() from src/utils/sanitize.js before passing it here. */}
                                             <ReactMarkdown>{m.text}</ReactMarkdown>
                                         </div>
                                     </div>

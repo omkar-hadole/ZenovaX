@@ -39,6 +39,9 @@ export default function MyBookingsView({
                 height: ticketRef.current.offsetHeight * 2
             });
 
+            // Security: This anchor element is created programmatically for file download only.
+            // 'dataUrl' is a PNG data URL produced by dom-to-image-more from a local DOM node,
+            // not from user input, so there is no XSS risk here.
             const link = document.createElement('a');
             link.download = `ZenovaX-Ticket-${showTicket.title.replace(/\s+/g, '-')}.png`;
             link.href = dataUrl;
