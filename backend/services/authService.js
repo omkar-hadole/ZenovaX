@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { SignJWT, jwtVerify } = require("jose");
 const crypto = require("crypto");
 const { sendVerificationEmail } = require("../utils/emailService");
 const {
@@ -82,9 +82,12 @@ exports.login = async (prisma, { email, password } = {}) => {
 
     const { password: _, ...user } = userRecord;
 
-    const token = jwt.sign({ userId: user.id, role: user.role }, config.jwtSecret, {
-        expiresIn: "7d",
-    });
+    const secret = new TextEncoder().encode(config.jwtSecret);
+    const token = await new SignJWT({ userId: user.id, role: user.role })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(secret);
 
     return { user, token };
 };

@@ -1,7 +1,7 @@
-const jwt = require("jsonwebtoken");
+const { jwtVerify } = require("jose");
 const config = require("../config");
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
   let token = req.cookies ? req.cookies.token : null;
 
   if (!token) {
@@ -16,12 +16,12 @@ function auth(req, res, next) {
   }
 
   try {
-
-    const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = { id: decoded.userId, role: decoded.role };
+    const secret = new TextEncoder().encode(config.jwtSecret);
+    const { payload } = await jwtVerify(token, secret);
+    req.user = { id: payload.userId, role: payload.role };
     next();
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
+    if (err.code === "ERR_JWT_EXPIRED") {
       return res.status(401).json({ error: "Token expired" });
     }
     return res.status(401).json({ error: "Invalid token" });
