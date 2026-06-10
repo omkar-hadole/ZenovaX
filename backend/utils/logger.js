@@ -1,8 +1,7 @@
 const winston = require('winston');
 
-// Determine log level based on environment
-// Development outputs 'debug' and above; Production outputs 'warn' and above.
-const level = process.env.NODE_ENV === 'development' ? 'debug' : 'warn';
+// Determine log level based on environment or override
+const level = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
 
 const logger = winston.createLogger({
   level: level,
