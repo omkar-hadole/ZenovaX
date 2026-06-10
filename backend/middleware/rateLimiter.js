@@ -1,4 +1,16 @@
 const rateLimit = require('express-rate-limit');
+const { RedisStore } = require('rate-limit-redis');
+const cache = require('../utils/cache');
+
+const redisClient = cache.redisClient;
+
+// Helper to create a new RedisStore instance for each limiter
+const createRedisStore = (prefix) => {
+  return redisClient ? new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+    prefix: `rl:${prefix}:`,
+  }) : undefined;
+};
 
 // Strict rate limiter for login: 10 requests per 15 minutes per IP
 const loginLimiter = rateLimit({
@@ -7,6 +19,7 @@ const loginLimiter = rateLimit({
   message: { error: "Too many login attempts. Please try again after 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
+  store: createRedisStore('login'),
 });
 
 // Strict rate limiter for registration: 5 registrations per hour per IP
@@ -16,6 +29,7 @@ const registerLimiter = rateLimit({
   message: { error: "Too many accounts created from this IP. Please try again after an hour." },
   standardHeaders: true,
   legacyHeaders: false,
+  store: createRedisStore('register'),
 });
 
 // General rate limiter: 100 requests per minute per IP for all other API routes
@@ -25,6 +39,7 @@ const generalLimiter = rateLimit({
   message: { error: "Too many requests from this IP, please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
+  store: createRedisStore('general'),
   skip: (req) => {
     // Skip general rate limiting for login and register routes since they have stricter limits
     const path = req.originalUrl || '';

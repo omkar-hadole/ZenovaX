@@ -180,4 +180,6 @@ const cache = {
     }
 };
 
+cache.redisClient = redisClient;
+
 module.exports = cache;
