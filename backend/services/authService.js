@@ -19,7 +19,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
         throw new BadRequestError("Only @nst.rishihood.edu.in email addresses are allowed to register.");
     }
     if (!isValidPassword(password)) {
-        throw new BadRequestError("Password must be at least 6 characters");
+        throw new BadRequestError("Password must be at least 8 characters and contain at least one number or special character.");
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -202,8 +202,8 @@ exports.resetPassword = async (prisma, token, newPassword) => {
     if (!token) {
         throw new BadRequestError("Token is required");
     }
-    if (!isValidPassword(newPassword) || newPassword.length < 8) {
-        throw new BadRequestError("Password must be at least 8 characters");
+    if (!isValidPassword(newPassword)) {
+        throw new BadRequestError("Password must be at least 8 characters and contain at least one number or special character.");
     }
 
     const user = await prisma.user.findUnique({

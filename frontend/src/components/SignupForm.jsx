@@ -40,8 +40,9 @@ export default function SignupForm({ onToggle, showToast }) {
       return;
     }
 
-    if (formData.password.length < 6) {
-      showToast({ message: 'Password must be at least 6 characters', type: 'error' });
+    const hasNumberOrSpecial = /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password);
+    if (formData.password.length < 8 || !hasNumberOrSpecial) {
+      showToast({ message: 'Password must be at least 8 characters and contain at least one number or special character.', type: 'error' });
       return;
     }
 
@@ -147,7 +148,7 @@ export default function SignupForm({ onToggle, showToast }) {
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             required
-            minLength="6"
+            minLength="8"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
@@ -160,6 +161,9 @@ export default function SignupForm({ onToggle, showToast }) {
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-2 font-light">
+          Must be at least 8 characters and contain at least one number or special character
+        </p>
 
         <div className="relative">
           <input
