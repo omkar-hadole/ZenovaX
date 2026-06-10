@@ -650,25 +650,22 @@ class Solution {
                             )}
 
                             {activeTab === 'console' && (
-                                <div className="p-6 h-full flex flex-col justify-between">
+                                <div className="p-6 font-mono text-sm leading-relaxed h-full overflow-y-auto bg-black/10 select-text">
                                     {output.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3 py-10 opacity-50">
-                                            <Terminal className="w-8 h-8" />
-                                            <p className="font-medium text-sm">No output logs yet.</p>
+                                        <div className="flex flex-col items-center justify-center text-gray-500 gap-2 py-10 opacity-40">
+                                            <Terminal className="w-5 h-5" />
+                                            <span className="text-xs">No console logs to display.</span>
                                         </div>
                                     ) : (
-                                        <div className="space-y-2 font-mono text-sm">
+                                        <div className="space-y-1.5">
                                             {output.map((log, i) => (
-                                                <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border-l-4 transition-all duration-200 ${
-                                                    log.type === 'error' 
-                                                        ? 'bg-rose-500/5 border-rose-500 text-rose-300/90' 
-                                                        : 'bg-white/5 border-indigo-500/40 text-gray-200 hover:bg-white/10'
-                                                }`}>
-                                                    <span className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${
-                                                        log.type === 'error' ? 'bg-rose-500/20 text-rose-400' : 'bg-indigo-500/20 text-indigo-400'
-                                                    }`}>
-                                                        {log.type === 'error' ? 'error' : 'log'}
-                                                    </span>
+                                                <div 
+                                                    key={i} 
+                                                    className={`flex items-start gap-3 font-mono text-sm leading-relaxed ${
+                                                        log.type === 'error' ? 'text-rose-400' : 'text-gray-300'
+                                                    }`}
+                                                >
+                                                    <span className="text-gray-600 select-none text-right min-w-[20px] font-mono">{i + 1}</span>
                                                     <pre className="flex-1 whitespace-pre-wrap font-mono m-0 text-sm leading-relaxed">{log.text}</pre>
                                                 </div>
                                             ))}
