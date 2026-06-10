@@ -16,58 +16,26 @@ if (process.env.NODE_ENV === 'production') {
   basePrisma = global.basePrisma;
 }
 
-const prisma = basePrisma.$extends({
-  query: {
-    user: {
-      async findUnique({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return basePrisma.user.findFirst(args);
-      },
-      async findFirst({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async findMany({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async count({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-    },
-    session: {
-      async findUnique({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return basePrisma.session.findFirst(args);
-      },
-      async findFirst({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async findMany({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async count({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-      async aggregate({ model, operation, args, query }) {
-        args.where = args.where || {};
-        args.where.isDeleted = false;
-        return query(args);
-      },
-    },
-  },
+const prisma = basePrisma;
+
+prisma.$use(async (params, next) => {
+  const softDeleteModels = ['User', 'Session']; // add any other soft-deleted models
+  
+  if (softDeleteModels.includes(params.model)) {
+    params.args = params.args || {};
+    if (params.action === 'findUnique' || params.action === 'findFirst') {
+      params.action = 'findFirst';
+      params.args.where = { ...params.args.where, isDeleted: false };
+    }
+    if (params.action === 'findMany') {
+      params.args.where = { ...params.args.where, isDeleted: false };
+    }
+    if (params.action === 'count') {
+      params.args.where = { ...params.args.where, isDeleted: false };
+    }
+  }
+  
+  return next(params);
 });
 
 module.exports = prisma;
