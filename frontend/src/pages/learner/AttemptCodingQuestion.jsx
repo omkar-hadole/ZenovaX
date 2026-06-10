@@ -454,14 +454,22 @@ class Solution {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleFormatCode}
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
-                        title={`Format Code (${modifierName} + ${shiftName} + F)`}
-                    >
-                        <Wand2 className="w-3.5 h-3.5" />
-                        Format
-                    </button>
+                    <div className="relative group">
+                        <button
+                            onClick={handleFormatCode}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+                        >
+                            <Wand2 className="w-3.5 h-3.5" />
+                            Format
+                        </button>
+                        {/* Custom Tooltip */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-[#262626] border border-white/10 rounded-lg shadow-xl text-[11px] text-gray-200 whitespace-nowrap z-50 pointer-events-none">
+                            <span>Format</span>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">{modifierName}</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">{shiftName}</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">F</kbd>
+                        </div>
+                    </div>
 
                     <div className="h-6 w-px bg-white/5 mx-1"></div>
 
@@ -475,24 +483,38 @@ class Solution {
                         <option value="java">Java</option>
                     </select>
 
-                    <button
-                        onClick={() => runCode('run')}
-                        disabled={isRunning}
-                        className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20"
-                        title={`Run Code (${modifierName} + ')`}
-                    >
-                        {isRunning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                        Run
-                    </button>
+                    <div className="relative group">
+                        <button
+                            onClick={() => runCode('run')}
+                            disabled={isRunning}
+                            className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20"
+                        >
+                            {isRunning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                            Run
+                        </button>
+                        {/* Custom Tooltip */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-[#262626] border border-white/10 rounded-lg shadow-xl text-[11px] text-gray-200 whitespace-nowrap z-50 pointer-events-none">
+                            <span>Run</span>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">{modifierName}</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">'</kbd>
+                        </div>
+                    </div>
 
-                    <button
-                        onClick={() => runCode('submit')}
-                        disabled={isRunning}
-                        className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
-                        title={`Submit Code (${modifierName} + Enter)`}
-                    >
-                        Submit
-                    </button>
+                    <div className="relative group">
+                        <button
+                            onClick={() => runCode('submit')}
+                            disabled={isRunning}
+                            className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                        >
+                            Submit
+                        </button>
+                        {/* Custom Tooltip */}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-[#262626] border border-white/10 rounded-lg shadow-xl text-[11px] text-gray-200 whitespace-nowrap z-50 pointer-events-none">
+                            <span>Submit</span>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">{modifierName}</kbd>
+                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">↵</kbd>
+                        </div>
+                    </div>
                 </div>
             </header>
 
