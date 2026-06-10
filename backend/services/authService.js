@@ -16,7 +16,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
         throw new BadRequestError("Name must be at least 2 characters");
     }
     if (!isValidEmail(email)) {
-        throw new BadRequestError("Email must end with @nst.rishihood.edu.in");
+        throw new BadRequestError("Only @nst.rishihood.edu.in email addresses are allowed to register.");
     }
     if (!isValidPassword(password)) {
         throw new BadRequestError("Password must be at least 6 characters");

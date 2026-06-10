@@ -131,7 +131,7 @@ export default function SignupForm({ onToggle, showToast }) {
         <div>
           <input
             type="email"
-            placeholder="Email"
+            placeholder="yourname@nst.rishihood.edu.in"
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}

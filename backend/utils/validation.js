@@ -2,13 +2,17 @@ const xss = require('xss');
 
 function isValidEmail(email) {
   if (typeof email !== 'string') return false;
-  const trimmed = email.trim();
-  const basicFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return basicFormat.test(trimmed);
+  const trimmed = email.trim().toLowerCase();
+  return trimmed.endsWith('@nst.rishihood.edu.in');
 }
 
 function isValidPassword(password) {
-  return typeof password === 'string' && password.trim().length >= 6;
+  if (typeof password !== 'string') return false;
+  const trimmed = password.trim();
+  if (trimmed.length < 8) return false;
+  // At least one number or special character
+  const hasNumberOrSpecial = /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(trimmed);
+  return hasNumberOrSpecial;
 }
 
 function isValidName(name) {
