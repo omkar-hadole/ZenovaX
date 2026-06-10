@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /mentor/dashboard
+Sitemap: https://zenova-x.vercel.app/sitemap.xml
