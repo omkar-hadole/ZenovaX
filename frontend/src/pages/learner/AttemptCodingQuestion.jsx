@@ -292,6 +292,21 @@ class Solution {
 
         // Javascript Client Exec
         const newResults = [];
+        const logs = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        console.log = (...args) => {
+            const text = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+            logs.push({ type: 'log', text });
+            originalLog(...args);
+        };
+        console.error = (...args) => {
+            const text = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+            logs.push({ type: 'error', text });
+            originalError(...args);
+        };
+
         await new Promise(resolve => setTimeout(resolve, 500));
 
         try {
@@ -326,9 +341,14 @@ class Solution {
                 });
             }
             await processResults(newResults, null);
+            if (logs.length > 0) {
+                setOutput(prev => [...prev, ...logs]);
+            }
         } catch (globalError) {
             await processResults(null, globalError.message);
         } finally {
+            console.log = originalLog;
+            console.error = originalError;
             setIsRunning(false);
         }
     };
@@ -609,14 +629,26 @@ class Solution {
                             )}
 
                             {activeTab === 'console' && (
-                                <div className="p-6 font-mono text-sm leading-relaxed">
+                                <div className="p-6 h-full flex flex-col justify-between">
                                     {output.length === 0 ? (
-                                        <div className="text-gray-600 italic">No output logs.</div>
+                                        <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3 py-10 opacity-50">
+                                            <Terminal className="w-8 h-8" />
+                                            <p className="font-medium text-sm">No output logs yet.</p>
+                                        </div>
                                     ) : (
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 font-mono text-sm">
                                             {output.map((log, i) => (
-                                                <div key={i} className={`p-2 rounded border-l-2 ${log.type === 'error' ? 'text-red-300 border-red-500 bg-red-500/5' : 'text-gray-300 border-gray-600'}`}>
-                                                    {log.text}
+                                                <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border-l-4 transition-all duration-200 ${
+                                                    log.type === 'error' 
+                                                        ? 'bg-rose-500/5 border-rose-500 text-rose-300/90' 
+                                                        : 'bg-white/5 border-indigo-500/40 text-gray-200 hover:bg-white/10'
+                                                }`}>
+                                                    <span className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${
+                                                        log.type === 'error' ? 'bg-rose-500/20 text-rose-400' : 'bg-indigo-500/20 text-indigo-400'
+                                                    }`}>
+                                                        {log.type === 'error' ? 'error' : 'log'}
+                                                    </span>
+                                                    <pre className="flex-1 whitespace-pre-wrap font-mono m-0 text-sm leading-relaxed">{log.text}</pre>
                                                 </div>
                                             ))}
                                         </div>
