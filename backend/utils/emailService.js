@@ -156,3 +156,120 @@ exports.sendVerificationEmail = async (email, token) => {
 
     await sendEmail(email, subject, html);
 };
+
+/**
+ * Send password reset email
+ * @param {string} email - User email
+ * @param {string} name - User name
+ * @param {string} resetUrl - Password reset URL
+ */
+exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
+    const subject = "Reset your ZenovaX Password";
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset your password</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6fb; font-family: Arial, sans-serif;">
+  
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6fb; padding:40px 0;">
+    <tr>
+      <td align="center">
+
+        <!-- Card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background:#ffffff; border-radius:12px; padding:32px; box-shadow:0 10px 30px rgba(0,0,0,0.06);">
+          
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <h1 style="margin:0; font-size:28px; color:#7A79E6;">
+                ZenovaX
+              </h1>
+              <p style="margin:8px 0 0; color:#6b7280; font-size:14px;">
+                Learn. Mentor. Grow.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="color:#111827; font-size:16px; line-height:1.6;">
+              <p style="margin-top:0;">Hey ${name} 👋</p>
+
+              <p>
+                We received a request to reset the password for your <strong>ZenovaX</strong> account.
+                Please click the button below to set a new password.
+              </p>
+
+              <!-- Button -->
+              <div style="text-align:center; margin:32px 0;">
+                <a href="${resetUrl}"
+                   style="
+                     display:inline-block;
+                     background:#7A79E6;
+                     color:#ffffff;
+                     text-decoration:none;
+                     padding:14px 32px;
+                     border-radius:8px;
+                     font-size:16px;
+                     font-weight:600;
+                   ">
+                  Reset Password
+                </a>
+              </div>
+
+              <p style="font-size:14px; color:#6b7280;">
+                This link is valid for <strong>1 hour</strong>.
+              </p>
+
+              <p style="font-size:14px; color:#6b7280;">
+                If you did not request a password reset, you can safely ignore this email.
+              </p>
+
+              <p style="font-size:14px; color:#6b7280;">
+                If the button doesn’t work, copy and paste this link:
+              </p>
+
+              <p style="word-break:break-all; font-size:13px;">
+                <a href="${resetUrl}" style="color:#7A79E6;">
+                  ${resetUrl}
+                </a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:24px 0;">
+              <hr style="border:none; border-top:1px solid #e5e7eb;" />
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="font-size:12px; color:#9ca3af; text-align:center;">
+              <p style="margin:0;">
+                If you didn’t request this, you can safely ignore this email.
+              </p>
+              <p style="margin:8px 0 0;">
+                © ${new Date().getFullYear()} ZenovaX. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- End Card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+`;
+
+    await sendEmail(email, subject, html);
+};

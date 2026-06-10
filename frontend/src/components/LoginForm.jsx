@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { login as apiLogin, apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -157,9 +157,9 @@ export default function LoginForm({ onToggle, showToast }) {
             />
             <span className="ml-2">Remember me</span>
           </label>
-          <a href="#" className="text-blue-600 hover:text-blue-700 font-light">
+          <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-light">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         <button

@@ -10,6 +10,8 @@ router.post("/verify-email", authController.verifyEmail);
 router.post("/resend-verification", authController.resendVerification);
 router.post("/logout", authController.logout);
 router.post("/refresh", authController.refresh);
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
 router.get("/csrf", authController.getCsrfToken);
 
 module.exports = router;

@@ -168,3 +168,22 @@ exports.refresh = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.forgotPassword = async (req, res, next) => {
+    try {
+        await authService.forgotPassword(req.prisma, req.body.email);
+        return res.status(200).json({ message: "If this email exists, a reset link has been sent." });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { token, password } = req.body;
+        await authService.resetPassword(req.prisma, token, password);
+        return res.status(200).json({ message: "Password has been successfully reset." });
+    } catch (error) {
+        next(error);
+    }
+};

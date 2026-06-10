@@ -4,6 +4,8 @@ import { useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 import LearnerLayout from './layouts/LearnerLayout';
 import DashboardPage from './pages/learner/DashboardPage';
@@ -65,6 +67,9 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/login" element={<Navigate to="/auth" replace />} />
 
                 <Route
                     path="/complete-profile"
