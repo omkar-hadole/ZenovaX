@@ -1,3 +1,10 @@
+const Sentry = require('@sentry/node');
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV || 'development',
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  enabled: !!process.env.SENTRY_DSN,
+});
 require("./utils/vercel-nft-fix.js");
 const express = require("express"); // Trigger nodemon reload
 const helmet = require("helmet");
@@ -107,6 +114,7 @@ app.get('/health', async (req, res) => {
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
 const PORT = config.port;
+app.use(Sentry.expressErrorHandler());
 
 app.use((err, req, res, next) => {
   logger.error(err.stack);
