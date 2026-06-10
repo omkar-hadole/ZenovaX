@@ -309,6 +309,7 @@ class Solution {
 
         await new Promise(resolve => setTimeout(resolve, 500));
 
+        let hasAnyError = false;
         try {
             for (let i = 0; i < testCasesToRun.length; i++) {
                 const tc = testCasesToRun[i];
@@ -319,7 +320,14 @@ class Solution {
                 let error = null;
 
                 try {
-                    const userFunc = new Function('input', code + `\nreturn solve(input);`);
+                    // Try to parse the code first to capture syntax errors
+                    let userFunc;
+                    try {
+                        userFunc = new Function('input', code + `\nreturn solve(input);`);
+                    } catch (syntaxErr) {
+                        throw new SyntaxError(syntaxErr.message);
+                    }
+
                     const result = userFunc(inputVal);
                     if (typeof result === 'object') {
                         userOutput = JSON.stringify(result);
@@ -330,6 +338,12 @@ class Solution {
                     }
                 } catch (err) {
                     error = err.message;
+                    hasAnyError = true;
+                    // If it is a SyntaxError, throw it so it gets processed globally
+                    if (err instanceof SyntaxError) {
+                        throw err;
+                    }
+                    logs.push({ type: 'error', text: `Test Case ${i + 1} Error: ${err.message}` });
                 }
 
                 const passed = !error && userOutput && userOutput.trim() === expectedVal;
@@ -343,6 +357,9 @@ class Solution {
             await processResults(newResults, null);
             if (logs.length > 0) {
                 setOutput(prev => [...prev, ...logs]);
+            }
+            if (hasAnyError) {
+                setActiveTab('console');
             }
         } catch (globalError) {
             await processResults(null, globalError.message);
