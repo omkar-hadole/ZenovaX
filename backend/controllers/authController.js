@@ -16,15 +16,22 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     try {
-        const { user, token } = await authService.login(req.prisma, req.body);
+        const { user, accessToken, refreshToken } = await authService.login(req.prisma, req.body);
 
         const csrfToken = crypto.randomBytes(32).toString('hex');
 
-        res.cookie('token', token, {
+        res.cookie('token', accessToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'None',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 15 * 60 * 1000 // 15 min
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.cookie('csrfToken', csrfToken, {
@@ -67,7 +74,19 @@ exports.resendVerification = async (req, res, next) => {
 
 exports.logout = async (req, res, next) => {
     try {
+        const { refreshToken } = req.cookies || {};
+        if (refreshToken) {
+            await req.prisma.refreshToken.deleteMany({
+                where: { token: refreshToken }
+            });
+        }
+
         res.clearCookie("token", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None"
+        });
+        res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: true,
             sameSite: "None"
@@ -96,6 +115,55 @@ exports.getCsrfToken = async (req, res, next) => {
             });
         }
         return res.status(200).json({ csrfToken });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.refresh = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.cookies || {};
+        if (!refreshToken) {
+            return res.status(401).json({ error: "Refresh token missing" });
+        }
+
+        const dbToken = await req.prisma.refreshToken.findUnique({
+            where: { token: refreshToken },
+            include: { user: true }
+        });
+
+        if (!dbToken || dbToken.revoked || dbToken.expiresAt < new Date()) {
+            return res.status(401).json({ error: "Invalid or expired refresh token" });
+        }
+
+        // Delete old refresh token (rotation)
+        await req.prisma.refreshToken.delete({
+            where: { id: dbToken.id }
+        });
+
+        // Generate fresh pair
+        const { accessToken, refreshToken: newRefreshToken } = await authService.generateTokens(
+            req.prisma,
+            dbToken.userId,
+            dbToken.user.role
+        );
+
+        // Set cookies
+        res.cookie('token', accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+            maxAge: 15 * 60 * 1000 // 15 min
+        });
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        return res.status(200).json({ success: true });
     } catch (error) {
         next(error);
     }

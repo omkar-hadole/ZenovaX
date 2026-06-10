@@ -66,6 +66,12 @@ export const logout = async () => {
   }
 };
 
+let authFailureHandler = null;
+
+export const registerAuthFailureHandler = (handler) => {
+  authFailureHandler = handler;
+};
+
 export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) => {
   let options = {};
 
@@ -99,12 +105,53 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
     body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  let response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
     body,
     credentials: 'include',
   });
+
+  // Intercept 401 and attempt token refresh
+  if (response.status === 401 && endpoint !== '/auth/refresh') {
+    try {
+      const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
+        },
+        credentials: 'include',
+      });
+
+      if (refreshResponse.ok) {
+        // Retry the original request once
+        response = await fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers,
+          body,
+          credentials: 'include',
+        });
+      } else {
+        if (authFailureHandler) {
+          authFailureHandler();
+        } else {
+          localStorage.removeItem('user');
+          localStorage.removeItem('csrfToken');
+          window.location.href = '/login';
+        }
+      }
+    } catch (err) {
+      console.error('Auto-refresh token failed:', err);
+      if (authFailureHandler) {
+        authFailureHandler();
+      } else {
+        localStorage.removeItem('user');
+        localStorage.removeItem('csrfToken');
+        window.location.href = '/login';
+      }
+    }
+  }
 
   const data = await response.json();
 

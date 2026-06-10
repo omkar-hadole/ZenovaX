@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { apiCall } from '../utils/api';
+import { apiCall, registerAuthFailureHandler } from '../utils/api';
 
 const AuthContext = createContext(null);
 
@@ -19,6 +19,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => { fetchUser(); }, [fetchUser]);
+
+  useEffect(() => {
+    registerAuthFailureHandler(() => {
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('csrfToken');
+    });
+  }, []);
 
   const login = (userData) => setUser(userData);
   

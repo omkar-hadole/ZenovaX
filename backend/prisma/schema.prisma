@@ -91,6 +91,7 @@ model User {
   likesReceived     Like[]    @relation("UserLikesReceived")
   likesGiven        Like[]    @relation("UserLikesGiven")
   reportsFiled      Report[]  @relation("ReportedBy")
+  refreshTokens     RefreshToken[]
 }
 
 model Follow {
@@ -762,4 +763,18 @@ model Job {
 
   @@index([status])
   @@map("jobs")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
 }

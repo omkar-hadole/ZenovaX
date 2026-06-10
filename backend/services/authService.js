@@ -82,14 +82,30 @@ exports.login = async (prisma, { email, password } = {}) => {
 
     const { password: _, ...user } = userRecord;
 
+    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role);
+
+    return { user, accessToken, refreshToken };
+};
+
+exports.generateTokens = async (prisma, userId, userRole) => {
     const secret = new TextEncoder().encode(config.jwtSecret);
-    const token = await new SignJWT({ userId: user.id, role: user.role })
+    const accessToken = await new SignJWT({ userId, role: userRole })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("7d")
+        .setExpirationTime("15m")
         .sign(secret);
 
-    return { user, token };
+    const refreshToken = crypto.randomBytes(64).toString('hex');
+
+    await prisma.refreshToken.create({
+        data: {
+            token: refreshToken,
+            userId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }
+    });
+
+    return { accessToken, refreshToken };
 };
 
 exports.verifyEmail = async (prisma, token) => {
