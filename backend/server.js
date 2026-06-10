@@ -24,6 +24,7 @@ const reviewRoutes = require('./routes/reviews');
 const codingChallengeRoutes = require('./routes/codingChallengeRoutes');
 const { generalLimiter } = require("./middleware/rateLimiter");
 const logger = require("./utils/logger");
+const { NotFoundError } = require("./utils/errors");
 
 const prisma = require("./utils/db");
 
@@ -111,7 +112,9 @@ app.get('/health', async (req, res) => {
 });
 
 // 404 Handler
-app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
+app.use((req, res, next) => {
+  next(new NotFoundError(`Route ${req.method} ${req.originalUrl} not found`));
+});
 
 const PORT = config.port;
 app.use(Sentry.expressErrorHandler());
