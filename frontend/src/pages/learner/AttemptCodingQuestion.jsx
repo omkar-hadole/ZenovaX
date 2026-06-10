@@ -374,6 +374,48 @@ class Solution {
         }
     };
 
+    // Refs to hold latest functions to avoid stale closures in event listeners
+    const runCodeRef = useRef(null);
+    const formatCodeRef = useRef(null);
+    
+    useEffect(() => {
+        runCodeRef.current = runCode;
+    }, [runCode]);
+
+    useEffect(() => {
+        formatCodeRef.current = handleFormatCode;
+    }, [handleFormatCode]);
+
+    // Detect OS for shortcuts
+    const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const modifierName = isMac ? '⌘' : 'Ctrl';
+    const shiftName = isMac ? '⇧' : 'Shift';
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const platformModifier = isMac ? e.metaKey : e.ctrlKey;
+            
+            // Format: Cmd + Shift + F / Ctrl + Shift + F
+            if (platformModifier && e.shiftKey && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                if (formatCodeRef.current) formatCodeRef.current();
+            }
+            // Run: Cmd + ' / Ctrl + '
+            else if (platformModifier && e.key === "'") {
+                e.preventDefault();
+                if (runCodeRef.current) runCodeRef.current('run');
+            }
+            // Submit: Cmd + Enter / Ctrl + Enter
+            else if (platformModifier && e.key === 'Enter') {
+                e.preventDefault();
+                if (runCodeRef.current) runCodeRef.current('submit');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isMac]);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#1e1e1e]">
@@ -415,7 +457,7 @@ class Solution {
                     <button
                         onClick={handleFormatCode}
                         className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
-                        title="Auto-Format Code"
+                        title={`Format Code (${modifierName} + ${shiftName} + F)`}
                     >
                         <Wand2 className="w-3.5 h-3.5" />
                         Format
@@ -437,6 +479,7 @@ class Solution {
                         onClick={() => runCode('run')}
                         disabled={isRunning}
                         className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20"
+                        title={`Run Code (${modifierName} + ')`}
                     >
                         {isRunning ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                         Run
@@ -446,6 +489,7 @@ class Solution {
                         onClick={() => runCode('submit')}
                         disabled={isRunning}
                         className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                        title={`Submit Code (${modifierName} + Enter)`}
                     >
                         Submit
                     </button>
@@ -522,7 +566,24 @@ class Solution {
                                 language={language}
                                 value={code}
                                 theme="vs-dark"
-                                onMount={(editor) => { editorRef.current = editor; }}
+                                onMount={(editor, monaco) => {
+                                    editorRef.current = editor;
+                                    
+                                    // Submit command: Cmd+Enter (Mac) / Ctrl+Enter (Win/Linux)
+                                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                                        if (runCodeRef.current) runCodeRef.current('submit');
+                                    });
+
+                                    // Run command: Cmd+' (Mac) / Ctrl+' (Win/Linux)
+                                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.US_QUOTE, () => {
+                                        if (runCodeRef.current) runCodeRef.current('run');
+                                    });
+
+                                    // Format command: Cmd+Shift+F (Mac) / Ctrl+Shift+F (Win/Linux)
+                                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF, () => {
+                                        if (formatCodeRef.current) formatCodeRef.current();
+                                    });
+                                }}
                                 onChange={(value) => setCode(value)}
                                 options={{
                                     minimap: { enabled: false },
