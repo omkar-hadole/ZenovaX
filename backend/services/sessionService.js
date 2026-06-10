@@ -370,8 +370,15 @@ exports.getMyBookings = async (prisma, userId) => {
 };
 
 exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
-    const page = parseInt(queryParams.page, 10) || 1;
-    const limit = parseInt(queryParams.limit, 10) || 10;
+    const pageVal = parseInt(queryParams.page, 10);
+    const limitVal = parseInt(queryParams.limit, 10);
+
+    if (!isNaN(limitVal) && limitVal > 50) {
+        throw new BadRequestError('Maximum page size is 50');
+    }
+
+    const page = Math.max(1, isNaN(pageVal) ? 1 : pageVal);
+    const limit = Math.max(1, isNaN(limitVal) ? 12 : limitVal);
     const skip = (page - 1) * limit;
     const type = queryParams.type || 'upcoming';
     const mode = queryParams.mode;
