@@ -14,7 +14,7 @@ const getUniqueLearnersCount = async (tx, mentorId) => {
     return result.length;
 };
 
-exports.createSessionRequest = async (prisma, mentorId, data) => {
+exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
     const {
         title,
         description,
@@ -66,7 +66,7 @@ exports.createSessionRequest = async (prisma, mentorId, data) => {
         throw new BadRequestError('duration must be between 15 and 480 minutes');
     }
 
-    return await prisma.sessionRequest.create({
+    const sessionRequest = await prisma.sessionRequest.create({
         data: {
             mentorId,
             title: sanitizeString(title),
@@ -85,6 +85,13 @@ exports.createSessionRequest = async (prisma, mentorId, data) => {
             status: "PENDING"
         }
     });
+
+    if (cache) {
+        await cache.del('dashboard_upcoming_sessions');
+        await cache.del('dashboard_top_mentors');
+    }
+
+    return sessionRequest;
 };
 
 exports.getSessionRequestById = async (prisma, userId, userRole, id) => {
@@ -104,7 +111,7 @@ exports.getSessionRequestById = async (prisma, userId, userRole, id) => {
     return request;
 };
 
-exports.updateSessionRequest = async (prisma, userId, userRole, id, data) => {
+exports.updateSessionRequest = async (prisma, cache, userId, userRole, id, data) => {
     const {
         title,
         description,
@@ -188,6 +195,11 @@ exports.updateSessionRequest = async (prisma, userId, userRole, id, data) => {
         } catch (sessionError) {
             logger.error("Failed to update linked session:", sessionError);
         }
+    }
+
+    if (cache) {
+        await cache.del('dashboard_upcoming_sessions');
+        await cache.del('dashboard_top_mentors');
     }
 
     return updatedRequest;

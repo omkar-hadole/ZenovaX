@@ -1,4 +1,3 @@
-const { ForbiddenError } = require("../utils/errors");
 
 function csrfProtection(req, res, next) {
     // 1. Safe methods (GET, HEAD, OPTIONS) do not need CSRF protection

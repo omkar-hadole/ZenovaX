@@ -116,7 +116,7 @@ app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 const PORT = config.port;
 app.use(Sentry.expressErrorHandler());
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   logger.error(err.stack);
   const statusCode = err.statusCode || 500;
   const message = err.statusCode ? err.message : 'Something went wrong!';

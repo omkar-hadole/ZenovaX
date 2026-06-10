@@ -13,5 +13,9 @@ const semverModules = [
   'semver/ranges/simplify',
 ];
 for (const mod of semverModules) {
-  try { require(mod); } catch (_) {}
+  try {
+    require(mod);
+  } catch (_) {
+    // Ignore missing module error
+  }
 }

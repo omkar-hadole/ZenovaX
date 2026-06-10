@@ -20,7 +20,7 @@ exports.getPendingSessions = async (req, res, next) => {
 
 exports.approveSession = async (req, res, next) => {
     try {
-        const session = await adminService.approveSession(req.prisma, req.body);
+        const session = await adminService.approveSession(req.prisma, req.cache, req.body);
         return res.json({ message: "Session approved successfully", session });
     } catch (error) {
         return next(error);

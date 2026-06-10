@@ -110,6 +110,7 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
 
     if (cache) {
         await cache.del(`profile_stats_${userId}`);
+        await cache.del('dashboard_top_mentors');
     }
 
     return updatedUser;
@@ -319,6 +320,7 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
 
     if (cache) {
         await cache.del(`profile_stats_${userId}`);
+        await cache.del('dashboard_top_mentors');
     }
 
     return updatedUser;
@@ -391,7 +393,9 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
             let skills = [];
             try {
                 skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
-            } catch (e) { }
+            } catch (e) {
+                // Ignore parsing errors
+            }
 
             const uniqueLearners = mentor.uniqueLearners || 0;
             const badges = calculateBadges({

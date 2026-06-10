@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { SignJWT, jwtVerify } = require("jose");
+const { SignJWT } = require("jose");
 const crypto = require("crypto");
 const { sendVerificationEmail, sendPasswordResetEmail } = require("../utils/emailService");
 const {

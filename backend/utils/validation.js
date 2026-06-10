@@ -10,8 +10,7 @@ function isValidPassword(password) {
   if (typeof password !== 'string') return false;
   const trimmed = password.trim();
   if (trimmed.length < 8) return false;
-  // At least one number or special character
-  const hasNumberOrSpecial = /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(trimmed);
+  const hasNumberOrSpecial = /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(trimmed);
   return hasNumberOrSpecial;
 }
 

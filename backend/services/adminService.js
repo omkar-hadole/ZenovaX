@@ -1,4 +1,3 @@
-const logger = require("../utils/logger");
 const { BadRequestError, NotFoundError } = require("../utils/errors");
 
 exports.getDashboardStats = async (prisma) => {
@@ -41,7 +40,7 @@ exports.getPendingSessions = async (prisma) => {
     });
 };
 
-exports.approveSession = async (prisma, { requestId }) => {
+exports.approveSession = async (prisma, cache, { requestId }) => {
     if (!requestId) {
         throw new BadRequestError("Request ID is required");
     }
@@ -58,13 +57,13 @@ exports.approveSession = async (prisma, { requestId }) => {
         throw new BadRequestError("Request is not pending");
     }
 
-    return await prisma.$transaction(async (tx) => {
+    const session = await prisma.$transaction(async (tx) => {
         await tx.sessionRequest.update({
             where: { id: requestId },
             data: { status: 'APPROVED', reviewedAt: new Date() }
         });
 
-        const session = await tx.session.create({
+        const newSession = await tx.session.create({
             data: {
                 title: sessionRequest.title,
                 description: sessionRequest.description,
@@ -91,14 +90,21 @@ exports.approveSession = async (prisma, { requestId }) => {
                 type: 'SESSION_REQUEST_APPROVED',
                 title: 'Session Approved',
                 message: `Your session request "${sessionRequest.title}" has been approved.`,
-                link: `/sessions/${session.id}`
+                link: `/sessions/${newSession.id}`
             }
         });
 
-        return session;
+        return newSession;
     }, {
         timeout: 10000
     });
+
+    if (cache) {
+        await cache.del('dashboard_upcoming_sessions');
+        await cache.del('dashboard_top_mentors');
+    }
+
+    return session;
 };
 
 exports.rejectSession = async (prisma, { requestId }) => {
@@ -184,6 +190,8 @@ exports.deleteSession = async (prisma, cache, id) => {
 
     if (cache) {
         await cache.del(`profile_stats_${session.mentorId}`);
+        await cache.del('dashboard_upcoming_sessions');
+        await cache.del('dashboard_top_mentors');
     }
 
     return { success: true };

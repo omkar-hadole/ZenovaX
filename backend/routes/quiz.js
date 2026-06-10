@@ -207,7 +207,7 @@ router.post("/:id/submit", protect, async (req, res, next) => {
 
         const isPassed = score >= quiz.passingMarks;
 
-        const attempt = await req.prisma.quizAttempt.create({
+        await req.prisma.quizAttempt.create({
             data: {
                 userId: req.user.id,
                 quizId: id,

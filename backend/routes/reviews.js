@@ -5,7 +5,7 @@ const { sanitizeString } = require('../utils/validation');
 const logger = require('../utils/logger');
 const { addJob } = require('../utils/queue');
 
-router.post('/create', protect, async (req, res) => {
+router.post('/create', protect, async (req, res, next) => {
     const { sessionId, rating, comment, isAnonymous } = req.body;
     const userId = req.user.id;
 
@@ -140,7 +140,7 @@ router.get('/session/:sessionId', async (req, res, next) => {
     }
 });
 
-router.get('/mentor/:mentorId', async (req, res) => {
+router.get('/mentor/:mentorId', async (req, res, next) => {
     try {
         const reviews = await req.prisma.review.findMany({
             where: { mentorId: req.params.mentorId },
@@ -250,7 +250,7 @@ router.get('/stats', protect, async (req, res) => {
     }
 });
 
-router.get('/stats/:mentorId', async (req, res) => {
+router.get('/stats/:mentorId', async (req, res, next) => {
     try {
         const userId = req.params.mentorId;
 

@@ -2,7 +2,7 @@ const sessionService = require("../services/sessionService");
 
 exports.createSessionRequest = async (req, res, next) => {
     try {
-        const sessionRequest = await sessionService.createSessionRequest(req.prisma, req.user.id, req.body);
+        const sessionRequest = await sessionService.createSessionRequest(req.prisma, req.cache, req.user.id, req.body);
         return res.status(201).json({
             success: true,
             message: "Session request submitted successfully",
@@ -24,7 +24,7 @@ exports.getSessionRequestById = async (req, res, next) => {
 
 exports.updateSessionRequest = async (req, res, next) => {
     try {
-        const updatedRequest = await sessionService.updateSessionRequest(req.prisma, req.user.id, req.user.role, req.params.id, req.body);
+        const updatedRequest = await sessionService.updateSessionRequest(req.prisma, req.cache, req.user.id, req.user.role, req.params.id, req.body);
         return res.json({
             success: true,
             message: "Session request updated successfully",

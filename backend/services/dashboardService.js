@@ -75,7 +75,9 @@ exports.getDashboardData = async (prisma, cache, userId) => {
             let skills = [];
             try {
                 skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
-            } catch (e) {}
+            } catch (e) {
+                // Ignore parsing errors
+            }
 
             const uniqueLearners = mentor.uniqueLearners || 0;
             const badges = calculateBadges({
