@@ -89,6 +89,9 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
     if (profileImageUrl) {
         data.profilePicture = profileImageUrl;
     } else if (profilePicture) {
+        if (normalizedRole === "MENTOR") {
+            throw new BadRequestError("Mentors are required to upload a profile image file");
+        }
         data.profilePicture = profilePicture;
     }
 
@@ -279,6 +282,13 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
     }
 
     if (profilePicture !== undefined) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true }
+        });
+        if (user && user.role === 'MENTOR') {
+            throw new BadRequestError("Mentors are required to upload a profile image file");
+        }
         updateData.profilePicture = profilePicture;
     }
 

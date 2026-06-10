@@ -646,7 +646,7 @@ export default function Profile() {
                     )
                   )}
                 </div>
-                {isEditing && (
+                {isEditing && profile.role === 'LEARNER' && (
                   <div className="mb-6">
                     <p className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
                     <div className="flex justify-center gap-2 flex-wrap">
