@@ -4,6 +4,7 @@ import { apiCall } from '../../utils/api';
 import SessionDetailsView from '../../components/dashboard/learner/SessionDetailsView';
 import SessionDetailsSkeleton from '../../components/dashboard/learner/SessionDetailsSkeleton';
 import InlineError from '../../components/InlineError';
+import { useAuth } from '../../context/AuthContext';
 
 export default function SessionDetailsPage() {
     const { id } = useParams();
@@ -11,7 +12,7 @@ export default function SessionDetailsPage() {
     const [session, setSession] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRegistering, setIsRegistering] = useState(false);
-    const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+    const { user } = useAuth();
     const [error, setError] = useState(null);
 
     const fetchSessionDetails = async () => {
@@ -80,7 +81,7 @@ export default function SessionDetailsPage() {
             onBack={() => navigate(-1)}
             onRegister={handleRegister}
             isRegistering={isRegistering}
-            user={user}
+            user={user || {}}
         />
     );
 }

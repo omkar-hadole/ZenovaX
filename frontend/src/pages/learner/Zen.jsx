@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { Send, Sparkles } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, "").replace(/\/api$/, "");
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
@@ -85,7 +86,7 @@ const Zen = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
-    const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+    const { user } = useAuth();
 
 
     const getGreeting = () => {
@@ -106,7 +107,7 @@ const Zen = () => {
         setChat(prev => [...prev, { role: 'user', text: q }]);
 
         try {
-            const username = user.name || user.firstName || "Creator";
+            const username = user?.name || user?.firstName || "Creator";
             const { data } = await axios.post(API_ENDPOINT, { question: q, username });
             setChat(prev => [...prev, { role: 'assistant', text: data.answer }]);
         } catch {
@@ -149,7 +150,7 @@ const Zen = () => {
                         {chat.length === 0 && (
                             <div className="space-y-2">
                                 <h1 className="text-[2.5rem] font-semibold text-[#1F1F1F] tracking-[-0.02em]">
-                                    {getGreeting()}, {user.name || 'Judha'}
+                                    {getGreeting()}, {user?.name || 'Judha'}
                                 </h1>
                                 <h2 className="text-[2.5rem] font-semibold text-[#1F1F1F] tracking-[-0.02em]">
                                     How Can I <span style={{ color: BRAND_COLOR }} className="">Assist You Today?</span>

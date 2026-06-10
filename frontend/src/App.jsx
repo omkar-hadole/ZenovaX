@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
@@ -37,9 +38,11 @@ import Reports from './pages/admin/Reports';
 import MentorSessionDetailsPage from './pages/mentor/MentorSessionDetailsPage';
 
 function App() {
+    const { user } = useAuth();
+
     useEffect(() => {
         const fetchCsrfToken = async () => {
-            if (localStorage.getItem('user')) {
+            if (user) {
                 try {
                     const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
                         credentials: 'include'
@@ -54,7 +57,7 @@ function App() {
             }
         };
         fetchCsrfToken();
-    }, []);
+    }, [user]);
 
     return (
         <BrowserRouter>

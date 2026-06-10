@@ -20,12 +20,13 @@ import {
   Code
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/dashboard/Header';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 
 export default function LaunchQuiz() {
   const navigate = useNavigate();
-  const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -49,14 +50,15 @@ export default function LaunchQuiz() {
   });
 
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    if (user && user.id) {
+      fetchSessions();
+    }
+  }, [user]);
 
   const fetchSessions = async () => {
     try {
       const data = await apiCall('/sessions/all');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const mySessions = data.sessions.filter(s => s.mentorId === user.id && s.status !== 'COMPLETED');
+      const mySessions = data.sessions.filter(s => s.mentorId === user?.id && s.status !== 'COMPLETED');
       setSessions(mySessions);
     } catch (error) {
       console.error('Failed to fetch sessions', error);
@@ -195,7 +197,7 @@ export default function LaunchQuiz() {
         <MentorSidebar activeTab="Launch Code" />
 
         <main className="flex-1 overflow-y-auto relative">
-          <Header user={user} title="Launch Quiz" />
+          <Header user={user || {}} title="Launch Quiz" />
 
           <div className="p-8 max-w-6xl mx-auto space-y-8">
             <div className="flex items-center justify-between">

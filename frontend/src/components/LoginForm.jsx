@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import { login, apiCall } from '../utils/api';
+import { login as apiLogin, apiCall } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginForm({ onToggle, showToast }) {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,8 +33,8 @@ export default function LoginForm({ onToggle, showToast }) {
     setNeedsVerification(false);
 
     try {
-      const data = await login(formData.email, formData.password);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const data = await apiLogin(formData.email, formData.password);
+      login(data.user);
       showToast({ message: 'Login successful!', type: 'success' });
 
       setTimeout(() => {

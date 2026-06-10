@@ -4,10 +4,11 @@ import { Upload, Link, FileText, Video, Image, ArrowLeft, LayoutDashboard, Calen
 import { apiCall } from '../utils/api';
 import Header from '../components/dashboard/Header';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
+import { useAuth } from '../context/AuthContext';
 
 export default function UploadResource() {
     const navigate = useNavigate();
-    const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+    const { user } = useAuth();
     const [sessions, setSessions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ export default function UploadResource() {
                 <MentorSidebar activeTab="Dashboard" />
 
                 <main className="flex-1 overflow-y-auto">
-                    <Header user={user} title="Upload Resource" />
+                    <Header user={user || {}} title="Upload Resource" />
 
                     <div className="p-8 max-w-6xl mx-auto">
                         <div className="flex items-center gap-4 mb-8">

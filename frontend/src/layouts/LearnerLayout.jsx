@@ -12,12 +12,12 @@ import {
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/logo.svg';
-import { logout } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function LearnerLayout() {
     const navigate = useNavigate();
-    const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+    const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('Dashboard');
 
     const handleLogout = async () => {
@@ -27,7 +27,6 @@ export default function LearnerLayout() {
             console.error('Logout error:', err);
         }
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
         navigate('/');
     };
 
@@ -67,7 +66,7 @@ export default function LearnerLayout() {
                 </Sidebar>
 
                 <main className="flex-1 overflow-y-auto">
-                    <Header user={user} title={`Welcome back ${user.name || 'Learner'}`} searchPlaceholder="Search courses" />
+                    <Header user={user || {}} title={`Welcome back ${user?.name || 'Learner'}`} searchPlaceholder="Search courses" />
                     <ErrorBoundary>
                         <Outlet />
                     </ErrorBoundary>

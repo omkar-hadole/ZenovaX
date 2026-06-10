@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, Layout, CheckCircle, Sparkles, QrCode } from 'lucide-react';
 import QRScanner from './dashboard/mentor/QRScanner';
+import { useAuth } from '../context/AuthContext';
 
 export default function DesktopOnlyGuard({ children }) {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
     const [showScanner, setShowScanner] = useState(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         const handleResize = () => {
@@ -84,28 +86,20 @@ export default function DesktopOnlyGuard({ children }) {
                                     <span>Need help? Chat on WhatsApp</span>
                                 </a>
 
-                                {(() => {
-                                    const userStr = localStorage.getItem('user');
-                                    const user = userStr ? JSON.parse(userStr) : null;
-
-                                    if (user?.role === 'MENTOR') {
-                                        return (
-                                            <>
-                                                <button
-                                                    onClick={() => setShowScanner(true)}
-                                                    className="w-full flex items-center justify-center gap-3 bg-black text-white px-6 py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-95"
-                                                >
-                                                    <QrCode size={20} />
-                                                    Scan Ticket (Mentor)
-                                                </button>
-                                                <p className="text-xs text-gray-400 mt-2">
-                                                    Open scanner to verify attendance
-                                                </p>
-                                            </>
-                                        );
-                                    }
-                                    return null;
-                                })()}
+                                {user?.role === 'MENTOR' && (
+                                    <>
+                                        <button
+                                            onClick={() => setShowScanner(true)}
+                                            className="w-full flex items-center justify-center gap-3 bg-black text-white px-6 py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-95"
+                                        >
+                                            <QrCode size={20} />
+                                            Scan Ticket (Mentor)
+                                        </button>
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            Open scanner to verify attendance
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

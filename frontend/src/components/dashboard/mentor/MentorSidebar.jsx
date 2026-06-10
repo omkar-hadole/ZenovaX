@@ -12,11 +12,12 @@ import {
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import logo from '../../../assets/mentorlogo.svg';
-import { logout } from '../../../utils/api';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function MentorSidebar({ activeTab, onTabChange }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useAuth();
 
     const handleNavigation = (tabName) => {
         if (onTabChange) {
@@ -34,7 +35,6 @@ export default function MentorSidebar({ activeTab, onTabChange }) {
             console.error('Logout error:', err);
         }
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
         navigate('/');
     };
 

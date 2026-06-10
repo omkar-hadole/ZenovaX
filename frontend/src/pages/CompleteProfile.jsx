@@ -7,6 +7,7 @@ import {
     CheckCircle,
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import { StepIndicator } from '../components/profile-setup/FormComponents';
 import RoleSelectionStep from '../components/profile-setup/RoleSelectionStep';
 import BasicInfoStep from '../components/profile-setup/BasicInfoStep';
@@ -14,6 +15,7 @@ import MentorInfoStep from '../components/profile-setup/MentorInfoStep';
 
 export default function CompleteProfile() {
     const navigate = useNavigate();
+    const { updateUser } = useAuth();
     const [currentStep, setCurrentStep] = useState(1);
     const [role, setRole] = useState('');
     const [basicInfo, setBasicInfo] = useState({
@@ -144,7 +146,7 @@ export default function CompleteProfile() {
             });
 
             if (response?.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
+                updateUser(response.user);
             }
 
             setStatus({ type: 'success', message: 'Profile completed! Redirecting to dashboard...' });

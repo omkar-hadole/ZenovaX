@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import LoginForm from '../components/LoginForm';
 import SignupForm from '../components/SignupForm';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'signup');
   const [toast, setToast] = useState(null);
   const [currentImage, setCurrentImage] = useState(0);
+  const { user } = useAuth();
 
   const images = [
     'https://images.pexels.com/photos/10643964/pexels-photo-10643964.jpeg',
@@ -19,25 +21,16 @@ export default function Auth() {
   ];
 
   useEffect(() => {
-    // already logged in
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        if (user && user.id) {
-          if (!user.isProfileComplete) {
-            navigate('/complete-profile');
-          } else if (user.role === 'MENTOR') {
-            navigate('/mentor-dashboard');
-          } else {
-            navigate('/dashboard');
-          }
-        }
-      } catch (e) {
-        localStorage.removeItem('user');
+    if (user && user.id) {
+      if (!user.isProfileComplete) {
+        navigate('/complete-profile');
+      } else if (user.role === 'MENTOR') {
+        navigate('/mentor-dashboard');
+      } else {
+        navigate('/dashboard');
       }
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   useEffect(() => {
     // image 

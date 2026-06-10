@@ -4,7 +4,8 @@ import {
   ArrowLeft, Calendar, Clock, Video, MapPin,
   DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code
 } from 'lucide-react';
-import { apiCall, logout } from '../utils/api';
+import { apiCall, logout as apiLogout } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/mentorlogo.svg'
@@ -15,7 +16,7 @@ export default function CreateSession() {
   const { id } = useParams();
   const isEditing = !!id;
 
-  const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -179,7 +180,6 @@ export default function CreateSession() {
                 console.error("Logout error:", err);
               }
               localStorage.removeItem('token');
-              localStorage.removeItem('user');
               navigate('/');
             }}
           >
@@ -190,7 +190,7 @@ export default function CreateSession() {
         )}
 
         <main className="flex-1 overflow-y-auto">
-          <Header user={user} title={isEditing ? "Edit Session Request" : "Create New Session"} />
+          <Header user={user || {}} title={isEditing ? "Edit Session Request" : "Create New Session"} />
 
           <div className="p-8 max-w-6xl mx-auto">
             <div className="flex items-center gap-4 mb-8">

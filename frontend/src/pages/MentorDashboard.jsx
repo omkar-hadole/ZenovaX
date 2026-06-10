@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiCall } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/dashboard/Header';
 import MySessions from '../components/dashboard/mentor/MySessions';
 import MentorDashboardView from '../components/dashboard/mentor/MentorDashboardView';
@@ -21,7 +22,7 @@ import {
 export default function MentorDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [user] = useState(() => JSON.parse(localStorage.getItem('user') || '{}'));
+  const { user } = useAuth();
 
   // Initialize tab from query param or default to 'Dashboard'
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Dashboard');
@@ -123,7 +124,7 @@ export default function MentorDashboard() {
           />
 
           <main className="flex-1 overflow-y-auto">
-            <Header user={user} title={`Hello, ${user.name || 'Mentor'}!`} searchPlaceholder="Search sessions, learners..." />
+            <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search sessions, learners..." />
 
             <div className="p-8">
               <ErrorBoundary>
