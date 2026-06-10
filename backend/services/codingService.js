@@ -14,23 +14,34 @@ const getDriverCode = (language, userCode, testCases) => {
         const inputs = testCases.map(tc => tc.input);
         return `
 import sys
+import io
 
 ${userCode}
 
 def driver():
+    user_stdout = io.StringIO()
+    old_stdout = sys.stdout
+    
     inputs = ${JSON.stringify(inputs)}
     results = []
     for i in inputs:
+        sys.stdout = user_stdout
         try:
             if 'solve' not in globals():
+                sys.stdout = old_stdout
                 results.append("Error: Function 'solve' not found")
                 continue
                 
             res = solve(i)
+            sys.stdout = old_stdout
             results.append(str(res))
         except Exception as e:
+            sys.stdout = old_stdout
             results.append(f"Error: {str(e)}")
-    
+            
+    sys.stdout = old_stdout
+    print(user_stdout.getvalue(), end="")
+    print("===LOGS_DONE===")
     print("|||".join(results))
 
 if __name__ == "__main__":
@@ -42,24 +53,34 @@ if __name__ == "__main__":
         const inputs = testCases.map(tc => tc.input);
         return `
 import java.util.*;
+import java.io.*;
 
 public class Main {
     public static void main(String[] args) {
         String[] inputs = {${inputs.map(i => JSON.stringify(i)).join(',')}};
         List<String> results = new ArrayList<>();
         
+        PrintStream oldOut = System.out;
+        ByteArrayOutputStream userOut = new ByteArrayOutputStream();
+        PrintStream newOut = new PrintStream(userOut);
+        
         Solution s = new Solution();
         
         for (String input : inputs) {
+            System.setOut(newOut);
             try {
                 String res = s.solve(input);
+                System.setOut(oldOut);
                 results.add(res);
             } catch (Exception e) {
+                System.setOut(oldOut);
                 results.add("Error: " + e.getMessage());
             }
         }
         
-        System.out.println(String.join("|||", results));
+        System.out.print(userOut.toString());
+        System.out.println("===LOGS_DONE===");
+        System.out.print(String.join("|||", results));
     }
 }
 
@@ -265,8 +286,17 @@ exports.executeCode = async ({ language, code, testCases }) => {
         return { error: run.stderr };
     }
 
-    const rawOutput = run.stdout.trim();
-    const outputs = rawOutput.split('|||');
+    const rawOutput = run.stdout;
+    let logs = '';
+    let resultsOutput = rawOutput;
+    
+    if (rawOutput.includes('===LOGS_DONE===')) {
+        const parts = rawOutput.split('===LOGS_DONE===');
+        logs = parts[0].trim();
+        resultsOutput = parts[1].trim();
+    }
+
+    const outputs = resultsOutput.split('|||');
 
     const results = testCases.map((tc, index) => {
         const actual = outputs[index] ? outputs[index].replace(/\n/g, '') : 'No Output';
@@ -278,5 +308,5 @@ exports.executeCode = async ({ language, code, testCases }) => {
         };
     });
 
-    return { results };
+    return { results, logs };
 };

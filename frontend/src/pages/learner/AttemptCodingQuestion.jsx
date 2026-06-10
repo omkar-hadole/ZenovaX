@@ -276,11 +276,15 @@ class Solution {
 
         if (language === 'python' || language === 'java') {
             try {
-                const { results, error } = await apiCall('/coding-questions/execute', {
+                const { results, logs, error } = await apiCall('/coding-questions/execute', {
                     method: 'POST',
                     body: JSON.stringify({ language, code, testCases: testCasesToRun })
                 });
                 await processResults(results, error);
+                if (logs) {
+                    const formattedLogs = logs.split('\n').filter(line => line.trim() !== '').map(text => ({ type: 'log', text }));
+                    setOutput(prev => [...prev, ...formattedLogs]);
+                }
             } catch (err) {
                 setOutput(prev => [...prev, { type: 'error', text: `Network Error: ${err.message}` }]);
                 setActiveTab('console');
