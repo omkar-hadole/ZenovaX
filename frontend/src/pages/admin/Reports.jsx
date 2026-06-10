@@ -3,6 +3,8 @@ import { apiCall } from '../../utils/api';
 import { Trash2, Edit, Flag, CheckCircle, Search, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import Toast from '../../components/Toast';
 
 export default function Reports() {
     const navigate = useNavigate();
@@ -12,6 +14,8 @@ export default function Reports() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const itemsPerPage = 10;
+    const [toast, setToast] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, type: 'danger' });
 
     const fetchReports = async (page) => {
         try {
@@ -32,29 +36,55 @@ export default function Reports() {
 
 
 
-    const handleAction = async (reportId, action) => {
+    const handleAction = (reportId, action) => {
         let confirmMsg = "";
+        let title = "";
+        let type = "danger";
         switch (action) {
-            case 'DELETE_SESSION': confirmMsg = "Are you sure you want to delete the reported session?"; break;
-            case 'RESOLVE': confirmMsg = "Are you sure you want to resolve this report?"; break;
+            case 'DELETE_SESSION': 
+                confirmMsg = "Are you sure you want to delete the reported session?"; 
+                title = "Delete Reported Session";
+                type = "danger";
+                break;
+            case 'RESOLVE': 
+                confirmMsg = "Are you sure you want to resolve this report?"; 
+                title = "Resolve Report";
+                type = "info";
+                break;
             default: return;
         }
 
-        if (!window.confirm(confirmMsg)) return;
-
-        try {
-            await apiCall('/admin/reports/action', 'POST', { reportId, action });
-            fetchReports(currentPage);
-        } catch (error) {
-            console.error("Failed to handle report action", error);
-            alert("Failed to process action");
-        }
+        setConfirmModal({
+            isOpen: true,
+            title,
+            message: confirmMsg,
+            type,
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await apiCall('/admin/reports/action', 'POST', { reportId, action });
+                    setToast({ message: 'Action processed successfully!', type: 'success' });
+                    fetchReports(currentPage);
+                } catch (error) {
+                    console.error("Failed to handle report action", error);
+                    setToast({ message: "Failed to process action", type: 'error' });
+                }
+            }
+        });
     };
 
     const handleEdit = (sessionId) => {
         if (!sessionId) return;
-        if (!window.confirm("Are you sure you want to edit this session? This will take you to the session editing page.")) return;
-        navigate(`/mentor/edit-session/${sessionId}`);
+        setConfirmModal({
+            isOpen: true,
+            title: "Edit Session",
+            message: "Are you sure you want to edit this session? This will take you to the session editing page.",
+            type: "info",
+            onConfirm: () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                navigate(`/mentor/edit-session/${sessionId}`);
+            }
+        });
     };
 
     const getStatusColor = (status) => {
@@ -204,6 +234,16 @@ export default function Reports() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+            />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

@@ -20,8 +20,9 @@ import {
 } from "lucide-react";
 import { apiCall } from '../../../utils/api';
 import { getOptimizedImageUrl } from '../../../utils/cloudinary';
+import Toast from '../../Toast';
 
-const WriteReview = ({ sessionId, onReviewSubmit }) => {
+const WriteReview = ({ sessionId, onReviewSubmit, onShowToast }) => {
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
@@ -30,7 +31,7 @@ const WriteReview = ({ sessionId, onReviewSubmit }) => {
 
     const handleSubmit = async () => {
         if (rating === 0) {
-            alert("Please select a rating");
+            onShowToast({ message: "Please select a rating", type: "error" });
             return;
         }
         setIsSubmitting(true);
@@ -44,7 +45,7 @@ const WriteReview = ({ sessionId, onReviewSubmit }) => {
             setComment('');
             setIsAnonymous(false);
         } catch (error) {
-            alert(error.message || "Failed to submit review");
+            onShowToast({ message: error.message || "Failed to submit review", type: "error" });
         } finally {
             setIsSubmitting(false);
         }
@@ -106,7 +107,7 @@ const WriteReview = ({ sessionId, onReviewSubmit }) => {
     );
 };
 
-const ReviewsSection = ({ session, onReviewSubmit }) => {
+const ReviewsSection = ({ session, onReviewSubmit, onShowToast }) => {
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, distribution: [] });
     const [isLoading, setIsLoading] = useState(true);
@@ -167,7 +168,7 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
             </div>
 
             {canReview && (
-                <WriteReview sessionId={session.id} onReviewSubmit={handleReviewSubmitSuccess} />
+                <WriteReview sessionId={session.id} onReviewSubmit={handleReviewSubmitSuccess} onShowToast={onShowToast} />
             )}
 
             <div className="flex flex-col md:flex-row gap-8">
@@ -255,6 +256,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [reportReason, setReportReason] = useState('');
+    const [toast, setToast] = useState(null);
 
     const handleReportSubmit = async (e) => {
         e.preventDefault();
@@ -266,11 +268,11 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     reason: reportReason
                 })
             });
-            alert('Report submitted successfully.');
+            setToast({ message: 'Report submitted successfully.', type: 'success' });
             setIsReportModalOpen(false);
             setReportReason('');
         } catch (error) {
-            alert(error.message || 'Failed to submit report');
+            setToast({ message: error.message || 'Failed to submit report', type: 'error' });
         }
     };
 
@@ -316,7 +318,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
     const handleReviewSubmit = () => {
         setReviewSubmitted(true);
         S.hasReviewed = true;
-        alert("Review submitted successfully!");
+        setToast({ message: "Review submitted successfully!", type: "success" });
     };
 
     const isSessionTimeOver = new Date(new Date(S.scheduledAt).getTime() + S.duration * 60000) < new Date();
@@ -552,7 +554,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                         )}
 
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                            <ReviewsSection session={S} onReviewSubmit={handleReviewSubmit} />
+                            <ReviewsSection session={S} onReviewSubmit={handleReviewSubmit} onShowToast={setToast} />
                         </div>
 
                     </div>
@@ -728,6 +730,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     </div>
                 </div>
             )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div >
     );
 }

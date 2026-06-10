@@ -14,6 +14,7 @@ import ReportsView from '../components/dashboard/mentor/ReportsView';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import ErrorBoundary from '../components/ErrorBoundary';
 import InlineError from '../components/InlineError';
+import Toast from '../components/Toast';
 import {
   Settings,
   QrCode
@@ -47,6 +48,7 @@ export default function MentorDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [showScanner, setShowScanner] = useState(false);
+  const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({
     sessions: null,
     requests: null,
@@ -204,7 +206,12 @@ export default function MentorDashboard() {
         </div>
 
         {/* QR Scanner Modal */}
-        {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
+        {showScanner && (
+          <QRScanner 
+            onClose={() => setShowScanner(false)} 
+            onCameraError={(msg) => setToast({ message: msg, type: 'error' })}
+          />
+        )}
 
         {/* Mobile Scan FAB */}
         <button
@@ -214,6 +221,7 @@ export default function MentorDashboard() {
           <QrCode className="w-6 h-6" />
         </button>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </ErrorBoundary>
   );
 }

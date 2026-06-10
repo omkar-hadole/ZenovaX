@@ -23,6 +23,7 @@ import { apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/dashboard/Header';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
+import Toast from '../components/Toast';
 
 export default function LaunchQuiz() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function LaunchQuiz() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const [quizData, setQuizData] = useState({
     title: '',
@@ -126,7 +128,7 @@ export default function LaunchQuiz() {
   const handleSaveDraft = () => {
     const error = validateQuiz();
     if (error) {
-      alert(error);
+      setToast({ message: error, type: 'error' });
       return;
     }
     submitQuiz(false);
@@ -135,7 +137,7 @@ export default function LaunchQuiz() {
   const handleLaunchClick = () => {
     const error = validateQuiz();
     if (error) {
-      alert(error);
+      setToast({ message: error, type: 'error' });
       return;
     }
     setShowConfirmModal(true);
@@ -164,14 +166,16 @@ export default function LaunchQuiz() {
 
       if (launch && response.quiz) {
         await apiCall(`/quiz/${response.quiz.id}/launch`, { method: 'POST' });
-        alert('Quiz created and launched successfully!');
+        setToast({ message: 'Quiz created and launched successfully!', type: 'success' });
       } else {
-        alert('Quiz draft created successfully!');
+        setToast({ message: 'Quiz draft created successfully!', type: 'success' });
       }
-      navigate('/mentor-dashboard');
+      setTimeout(() => {
+        navigate('/mentor-dashboard');
+      }, 1500);
     } catch (error) {
       console.error('Failed to create quiz', error);
-      alert(error.message || 'Failed to create quiz');
+      setToast({ message: error.message || 'Failed to create quiz', type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -438,6 +442,7 @@ export default function LaunchQuiz() {
           )}
         </main>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

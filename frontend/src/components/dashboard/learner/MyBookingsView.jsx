@@ -4,6 +4,7 @@ import SessionSkeleton from '../SessionSkeleton';
 import SessionCard from './SessionCard';
 import QRCodeGenerator from '../../common/QRCodeGenerator';
 import domtoimage from 'dom-to-image-more';
+import Toast from '../../Toast';
 
 export default function MyBookingsView({
     myBookings,
@@ -12,6 +13,7 @@ export default function MyBookingsView({
     setActiveTab
 }) {
     const [showTicket, setShowTicket] = useState(null);
+    const [toast, setToast] = useState(null);
     const ticketRef = useRef(null);
 
     const handleDownloadTicket = async () => {
@@ -48,7 +50,7 @@ export default function MyBookingsView({
             link.click();
         } catch (error) {
             console.error("Failed to download ticket", error);
-            alert("Could not download ticket. Please try again.");
+            setToast({ message: "Could not download ticket. Please try again.", type: "error" });
         }
     };
 
@@ -188,6 +190,7 @@ export default function MyBookingsView({
                     </div>
                 </div>
             )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 }

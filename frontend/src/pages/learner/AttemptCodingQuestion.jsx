@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle } from 'lucide-react';
 import { apiCall } from '../../utils/api';
+import Toast from '../../components/Toast';
 
 export default function AttemptCodingQuestion() {
     const { id } = useParams();
@@ -21,6 +22,7 @@ export default function AttemptCodingQuestion() {
     const [isRunning, setIsRunning] = useState(false);
     const [indentError, setIndentError] = useState(null);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [toast, setToast] = useState(null);
 
     // Language Change Modal State
     const [showLanguagePopup, setShowLanguagePopup] = useState(false);
@@ -141,8 +143,10 @@ class Solution {
                 const data = await apiCall(`/coding-questions/${id}`);
                 setQuestion(data.question);
                 if (data.question && data.question.status !== 'LIVE') {
-                    alert('This question is not live yet.');
-                    navigate(-1);
+                    setToast({ message: 'This question is not live yet.', type: 'error' });
+                    setTimeout(() => {
+                        navigate(-1);
+                    }, 1500);
                 }
             } catch (error) {
                 console.error('Failed to fetch question', error);
@@ -269,7 +273,7 @@ class Solution {
                     setShowSuccessPopup(true);
                 } catch (submitErr) {
                     console.error("Submission failed", submitErr);
-                    alert("All tests passed, but failed to save submission.");
+                    setToast({ message: "All tests passed, but failed to save submission.", type: 'error' });
                 }
             }
         };
@@ -816,6 +820,7 @@ class Solution {
                     </div>
                 </div>
             )}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 }

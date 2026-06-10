@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Trash2, User } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import Toast from '../../components/Toast';
 
 export default function UsersList() {
     const [users, setUsers] = useState([]);
@@ -9,6 +11,8 @@ export default function UsersList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const itemsPerPage = 10;
+    const [toast, setToast] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     const fetchUsers = async (page) => {
         try {
@@ -27,15 +31,25 @@ export default function UsersList() {
         fetchUsers(currentPage);
     }, [currentPage]);
 
-    const handleDelete = async (userId) => {
-        if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-        try {
-            await apiCall(`/admin/users/${userId}`, 'DELETE');
-            fetchUsers(currentPage);
-        } catch (error) {
-            console.error("Failed to delete user", error);
-            alert("Failed to delete user");
-        }
+    const handleDelete = (userId) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete User",
+            message: "Are you sure you want to delete this user? This action cannot be undone.",
+            confirmText: "Delete",
+            type: "danger",
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await apiCall(`/admin/users/${userId}`, 'DELETE');
+                    setToast({ message: 'User deleted successfully!', type: 'success' });
+                    fetchUsers(currentPage);
+                } catch (error) {
+                    console.error("Failed to delete user", error);
+                    setToast({ message: "Failed to delete user", type: 'error' });
+                }
+            }
+        });
     };
 
     if (loading) return <div className="p-8">Loading users...</div>;
@@ -107,6 +121,16 @@ export default function UsersList() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+            />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

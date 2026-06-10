@@ -3,7 +3,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { X, CheckCircle, AlertCircle, Camera, RefreshCw } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
 
-export default function QRScanner({ onClose }) {
+export default function QRScanner({ onClose, onCameraError }) {
     const [scanResult, setScanResult] = useState(null);
     const [error, setError] = useState(null);
     const [permissionError, setPermissionError] = useState(false);
@@ -140,7 +140,9 @@ export default function QRScanner({ onClose }) {
     const handleRetry = () => {
         setPermissionError(false);
         onClose();
-        setTimeout(() => alert("Please ensure you allow camera permissions."), 500);
+        if (onCameraError) {
+            onCameraError("Please ensure you allow camera permissions.");
+        }
     };
 
     return (

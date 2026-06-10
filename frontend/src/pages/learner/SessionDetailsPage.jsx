@@ -5,6 +5,7 @@ import SessionDetailsView from '../../components/dashboard/learner/SessionDetail
 import SessionDetailsSkeleton from '../../components/dashboard/learner/SessionDetailsSkeleton';
 import InlineError from '../../components/InlineError';
 import { useAuth } from '../../context/AuthContext';
+import Toast from '../../components/Toast';
 
 export default function SessionDetailsPage() {
     const { id } = useParams();
@@ -14,6 +15,7 @@ export default function SessionDetailsPage() {
     const [isRegistering, setIsRegistering] = useState(false);
     const { user } = useAuth();
     const [error, setError] = useState(null);
+    const [toast, setToast] = useState(null);
 
     const fetchSessionDetails = async () => {
         setIsLoading(true);
@@ -47,9 +49,9 @@ export default function SessionDetailsPage() {
                 availableSeats: prev.availableSeats - 1
             }));
 
-            alert('Registration confirmed!');
+            setToast({ message: 'Registration confirmed!', type: 'success' });
         } catch (error) {
-            alert(error.message || 'Registration failed');
+            setToast({ message: error.message || 'Registration failed', type: 'error' });
         } finally {
             setIsRegistering(false);
         }
@@ -76,12 +78,15 @@ export default function SessionDetailsPage() {
     if (!session) return <div className="p-8 text-center">Session not found</div>;
 
     return (
-        <SessionDetailsView
-            session={session}
-            onBack={() => navigate(-1)}
-            onRegister={handleRegister}
-            isRegistering={isRegistering}
-            user={user || {}}
-        />
+        <>
+            <SessionDetailsView
+                session={session}
+                onBack={() => navigate(-1)}
+                onRegister={handleRegister}
+                isRegistering={isRegistering}
+                user={user || {}}
+            />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        </>
     );
 }

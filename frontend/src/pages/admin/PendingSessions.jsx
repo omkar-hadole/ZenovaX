@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Check, X, Clock } from 'lucide-react';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import Toast from '../../components/Toast';
 
 export default function PendingSessions() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     const fetchRequests = async () => {
         try {
@@ -22,28 +26,48 @@ export default function PendingSessions() {
         fetchRequests();
     }, []);
 
-    const handleApprove = async (requestId) => {
-        if (!window.confirm("Are you sure you want to approve this session?")) return;
-        try {
-            await apiCall('/admin/approve-session', 'POST', { requestId });
-            fetchRequests();
-        } catch (error) {
-            console.error("Failed to approve session", error);
-            const errorMsg = error.message || error.error || JSON.stringify(error);
-            alert(`Failed to approve session: ${errorMsg}`);
-        }
+    const handleApprove = (requestId) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Approve Session",
+            message: "Are you sure you want to approve this session request?",
+            confirmText: "Approve",
+            type: "info",
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await apiCall('/admin/approve-session', 'POST', { requestId });
+                    setToast({ message: 'Session approved successfully!', type: 'success' });
+                    fetchRequests();
+                } catch (error) {
+                    console.error("Failed to approve session", error);
+                    const errorMsg = error.message || error.error || JSON.stringify(error);
+                    setToast({ message: `Failed to approve session: ${errorMsg}`, type: 'error' });
+                }
+            }
+        });
     };
 
-    const handleReject = async (requestId) => {
-        if (!window.confirm("Are you sure you want to reject this session?")) return;
-        try {
-            await apiCall('/admin/reject-session', 'POST', { requestId });
-            fetchRequests();
-        } catch (error) {
-            console.error("Failed to reject session", error);
-            const errorMsg = error.message || error.error || JSON.stringify(error);
-            alert(`Failed to reject session: ${errorMsg}`);
-        }
+    const handleReject = (requestId) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Reject Session",
+            message: "Are you sure you want to reject this session request?",
+            confirmText: "Reject",
+            type: "danger",
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await apiCall('/admin/reject-session', 'POST', { requestId });
+                    setToast({ message: 'Session rejected successfully!', type: 'success' });
+                    fetchRequests();
+                } catch (error) {
+                    console.error("Failed to reject session", error);
+                    const errorMsg = error.message || error.error || JSON.stringify(error);
+                    setToast({ message: `Failed to reject session: ${errorMsg}`, type: 'error' });
+                }
+            }
+        });
     };
 
     if (loading) {
@@ -141,6 +165,16 @@ export default function PendingSessions() {
                     </div>
                 )}
             </div>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

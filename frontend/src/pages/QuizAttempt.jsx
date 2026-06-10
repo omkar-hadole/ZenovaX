@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiCall } from '../utils/api';
 import { Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, ArrowLeft, HelpCircle, BookOpen, Trophy, Star } from 'lucide-react';
+import Toast from '../components/Toast';
 
 export default function QuizAttempt() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ export default function QuizAttempt() {
   const [timeLeft, setTimeLeft] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchQuiz();
@@ -70,7 +72,7 @@ export default function QuizAttempt() {
       });
       setResult(response.result);
     } catch (err) {
-      alert(err.message || 'Failed to submit quiz');
+      setToast({ message: err.message || 'Failed to submit quiz', type: 'error' });
       setSubmitting(false);
     }
   };
@@ -326,6 +328,7 @@ export default function QuizAttempt() {
           </div>
         </div>
       </main>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

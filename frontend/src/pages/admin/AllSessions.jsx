@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Trash2, ExternalLink } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import Toast from '../../components/Toast';
 
 export default function AllSessions() {
     const [sessions, setSessions] = useState([]);
@@ -9,6 +11,8 @@ export default function AllSessions() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const itemsPerPage = 10;
+    const [toast, setToast] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
     const fetchSessions = async (page) => {
         try {
@@ -27,15 +31,25 @@ export default function AllSessions() {
         fetchSessions(currentPage);
     }, [currentPage]);
 
-    const handleDelete = async (sessionId) => {
-        if (!window.confirm("Are you sure you want to delete this session? This action cannot be undone.")) return;
-        try {
-            await apiCall(`/admin/sessions/${sessionId}`, 'DELETE');
-            fetchSessions(currentPage);
-        } catch (error) {
-            console.error("Failed to delete session", error);
-            alert("Failed to delete session");
-        }
+    const handleDelete = (sessionId) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Session",
+            message: "Are you sure you want to delete this session? This action cannot be undone.",
+            confirmText: "Delete",
+            type: "danger",
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    await apiCall(`/admin/sessions/${sessionId}`, 'DELETE');
+                    setToast({ message: 'Session deleted successfully!', type: 'success' });
+                    fetchSessions(currentPage);
+                } catch (error) {
+                    console.error("Failed to delete session", error);
+                    setToast({ message: "Failed to delete session", type: 'error' });
+                }
+            }
+        });
     };
 
     if (loading) return <div className="p-8">Loading sessions...</div>;
@@ -109,6 +123,16 @@ export default function AllSessions() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+            />
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                type={confirmModal.type}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

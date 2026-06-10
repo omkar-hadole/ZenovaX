@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Rocket, Plus, Trash2, Code } from 'lucide-react'; // Added Code icon here for sidebar use later if needed, but not used in body yet
 import { apiCall } from '../utils/api';
+import Toast from '../components/Toast';
 
 export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
     const [selectedSessionId, setSelectedSessionId] = useState('');
@@ -11,6 +12,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
         testCases: [{ input: '', output: '' }]
     });
     const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -40,18 +42,18 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
 
     const handleSubmit = async (isLaunch = false) => {
         if (!selectedSessionId) {
-            alert('Please select a session');
+            setToast({ message: 'Please select a session', type: 'error' });
             return;
         }
         if (!questionData.title || !questionData.description) {
-            alert('Please fill in title and description');
+            setToast({ message: 'Please fill in title and description', type: 'error' });
             return;
         }
 
         // Basic test case validation
         const validTestCases = questionData.testCases.filter(tc => tc.input && tc.output);
         if (validTestCases.length === 0) {
-            alert('Please add at least one valid test case (input/output pair)');
+            setToast({ message: 'Please add at least one valid test case (input/output pair)', type: 'error' });
             return;
         }
 
@@ -68,15 +70,17 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
             if (response.success) {
                 if (isLaunch) {
                     await apiCall(`/coding-questions/${response.codingQuestion.id}/launch`, 'PUT');
-                    alert('Coding Question Launched Successfully!');
+                    setToast({ message: 'Coding Question Launched Successfully!', type: 'success' });
                 } else {
-                    alert('Draft Saved Successfully!');
+                    setToast({ message: 'Draft Saved Successfully!', type: 'success' });
                 }
-                setActiveTab('Dashboard');
+                setTimeout(() => {
+                    setActiveTab('Dashboard');
+                }, 1500);
             }
         } catch (error) {
             console.error('Submission error:', error);
-            alert('Failed to save/launch question');
+            setToast({ message: 'Failed to save/launch question', type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -218,6 +222,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                     </button>
                 </div>
             </div>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 }

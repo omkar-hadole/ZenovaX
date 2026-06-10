@@ -5,6 +5,7 @@ import { apiCall } from '../utils/api';
 import Header from '../components/dashboard/Header';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import { useAuth } from '../context/AuthContext';
+import Toast from '../components/Toast';
 
 export default function UploadResource() {
     const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function UploadResource() {
         fileType: 'PDF',
         sessionId: ''
     });
+    const [toast, setToast] = useState(null);
 
     useEffect(() => {
         fetchSessions();
@@ -41,11 +43,13 @@ export default function UploadResource() {
                 method: 'POST',
                 body: JSON.stringify(formData)
             });
-            alert('Resource uploaded successfully!');
-            navigate('/mentor-dashboard');
+            setToast({ message: 'Resource uploaded successfully!', type: 'success' });
+            setTimeout(() => {
+                navigate('/mentor-dashboard');
+            }, 1500);
         } catch (error) {
             console.error('Upload failed', error);
-            alert(error.message || 'Failed to upload resource');
+            setToast({ message: error.message || 'Failed to upload resource', type: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -211,6 +215,7 @@ export default function UploadResource() {
                     </div>
                 </main>
             </div>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 }

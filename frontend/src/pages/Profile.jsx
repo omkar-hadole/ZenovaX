@@ -342,9 +342,10 @@ export default function Profile() {
 
       setProfile(response.user);
       setIsEditing(false);
+      setToast({ message: 'Profile updated successfully!', type: 'success' });
     } catch (error) {
       console.error("Failed to update profile", error);
-      alert("Failed to update profile: " + error.message);
+      setToast({ message: "Failed to update profile: " + error.message, type: 'error' });
     } finally {
       setIsSaving(false);
     }
