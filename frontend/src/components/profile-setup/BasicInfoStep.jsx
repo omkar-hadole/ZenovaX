@@ -47,25 +47,27 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                     </div>
                 </div>
 
-                <div className="mt-6">
-                    <p className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
-                    <div className="flex gap-2 flex-wrap">
-                        {PREDEFINED_AVATARS.map((avatar, idx) => (
-                            <button
-                                key={idx}
-                                type="button"
-                                onClick={() => handleSelectPredefinedAvatar(avatar)}
-                                className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
-                                    basicInfo.profilePicture?.avatarUrl === avatar 
-                                        ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100' 
-                                        : 'border-gray-200 hover:border-indigo-400'
-                                }`}
-                            >
-                                <img src={avatar} className="w-full h-full object-cover" alt={`Avatar ${idx}`} />
-                            </button>
-                        ))}
+                {role === 'learner' && (
+                    <div className="mt-6">
+                        <p className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
+                        <div className="flex gap-2 flex-wrap">
+                            {PREDEFINED_AVATARS.map((avatar, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleSelectPredefinedAvatar(avatar)}
+                                    className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
+                                        basicInfo.profilePicture?.avatarUrl === avatar 
+                                            ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100' 
+                                            : 'border-gray-200 hover:border-indigo-400'
+                                    }`}
+                                >
+                                    <img src={avatar} className="w-full h-full object-cover" alt={`Avatar ${idx}`} />
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
             </FieldGroup>
 
             <div className="grid md:grid-cols-2 gap-6">
