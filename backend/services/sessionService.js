@@ -52,6 +52,20 @@ exports.createSessionRequest = async (prisma, mentorId, data) => {
         throw new BadRequestError("Cannot create a session in the past. Please choose a future date and time.");
     }
 
+    const parsedSeats = parseInt(maxSeats);
+    const parsedPrice = parseFloat(price);
+    const parsedDuration = parseInt(duration);
+
+    if (isNaN(parsedSeats) || parsedSeats < 1 || parsedSeats > 500) {
+        throw new BadRequestError('maxSeats must be between 1 and 500');
+    }
+    if (isNaN(parsedPrice) || parsedPrice < 0 || parsedPrice > 10000) {
+        throw new BadRequestError('price must be between 0 and 10,000');
+    }
+    if (isNaN(parsedDuration) || parsedDuration < 15 || parsedDuration > 480) {
+        throw new BadRequestError('duration must be between 15 and 480 minutes');
+    }
+
     return await prisma.sessionRequest.create({
         data: {
             mentorId,
@@ -62,12 +76,12 @@ exports.createSessionRequest = async (prisma, mentorId, data) => {
             topics: JSON.stringify(isValidArray(topics) ? topics : []),
             mode,
             priceType: priceType || "FREE",
-            price: parseFloat(price) || 0,
-            maxSeats: parseInt(maxSeats) || 0,
+            price: parsedPrice,
+            maxSeats: parsedSeats,
             venue: venue ? sanitizeString(venue) : null,
             meetingLink,
             proposedDate: new Date(proposedDate),
-            duration: parseInt(duration),
+            duration: parsedDuration,
             status: "PENDING"
         }
     });
