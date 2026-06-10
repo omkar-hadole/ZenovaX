@@ -14,6 +14,7 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
         skills,
         phone,
         linkedin,
+        profilePicture,
     } = body;
 
     if (!role || !department || !yearOfStudy) {
@@ -87,6 +88,8 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
 
     if (profileImageUrl) {
         data.profilePicture = profileImageUrl;
+    } else if (profilePicture) {
+        data.profilePicture = profilePicture;
     }
 
     if (trimmedPhone) {
@@ -228,6 +231,7 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
         skills,
         phone,
         linkedin,
+        profilePicture,
     } = body;
 
     const updateData = {};
@@ -272,6 +276,10 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
         } catch (error) {
             updateData.mentorSkills = null;
         }
+    }
+
+    if (profilePicture !== undefined) {
+        updateData.profilePicture = profilePicture;
     }
 
     if (file) {

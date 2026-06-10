@@ -6,7 +6,16 @@ import { getOptimizedImageUrl } from '../../utils/cloudinary';
 const departmentOptions = ['CSE', 'AI/ML', 'IT', 'BBA', 'ECON', 'DESIGN', 'PSY', 'MEDIA'];
 const yearOptions = ['1', '2', '3', '4'];
 
-export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUpload, role }) {
+const PREDEFINED_AVATARS = [
+    '/avatars/Boy_1.png',
+    '/avatars/Boy_2.png',
+    '/avatars/Boy_3.png',
+    '/avatars/Girl_1.png',
+    '/avatars/Girl_2.png',
+    '/avatars/Girl_3.png',
+];
+
+export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUpload, handleSelectPredefinedAvatar, role }) {
     return (
         <div className="space-y-8">
             <FieldGroup label="Profile picture" required={role !== 'learner'} description="Square images (1:1) work best. Max 3MB.">
@@ -25,7 +34,7 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                             <Shield className="w-10 h-10 text-[#C9C7F5]" />
                         )}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 w-full">
                         <input id="profile-picture-input" type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                         <label
                             htmlFor="profile-picture-input"
@@ -35,6 +44,26 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                             Upload new photo
                         </label>
                         <p className="text-xs text-gray-500 mt-2">Accepted: JPG, PNG, HEIC.</p>
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <p className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
+                    <div className="flex gap-2 flex-wrap">
+                        {PREDEFINED_AVATARS.map((avatar, idx) => (
+                            <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleSelectPredefinedAvatar(avatar)}
+                                className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
+                                    basicInfo.profilePicture?.avatarUrl === avatar 
+                                        ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100' 
+                                        : 'border-gray-200 hover:border-indigo-400'
+                                }`}
+                            >
+                                <img src={avatar} className="w-full h-full object-cover" alt={`Avatar ${idx}`} />
+                            </button>
+                        ))}
                     </div>
                 </div>
             </FieldGroup>

@@ -21,6 +21,15 @@ import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import Toast from '../components/Toast';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
 
+const PREDEFINED_AVATARS = [
+  '/avatars/Boy_1.png',
+  '/avatars/Boy_2.png',
+  '/avatars/Boy_3.png',
+  '/avatars/Girl_1.png',
+  '/avatars/Girl_2.png',
+  '/avatars/Girl_3.png',
+];
+
 const BADGE_FILE_NAMES = {
   "First Step": "Fisrt_Step",
   "Session Pro": "Session_Pro",
@@ -186,6 +195,7 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({});
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
 
   useEffect(() => {
     fetchProfile();
@@ -294,6 +304,7 @@ export default function Profile() {
       });
       setPreviewImage(profile.profilePicture);
       setSelectedFile(null);
+      setSelectedAvatar(null);
     }
     setIsEditing(!isEditing);
   };
@@ -307,12 +318,19 @@ export default function Profile() {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
+      setSelectedAvatar(null);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleSelectPredefinedAvatar = (avatarUrl) => {
+    setPreviewImage(avatarUrl);
+    setSelectedFile(null);
+    setSelectedAvatar(avatarUrl);
   };
 
   const handleSave = async () => {
@@ -333,6 +351,8 @@ export default function Profile() {
 
       if (selectedFile) {
         formData.append('profileImage', selectedFile);
+      } else if (selectedAvatar) {
+        formData.append('profilePicture', selectedAvatar);
       }
 
       const response = await apiCall('/profile/update', {
@@ -626,6 +646,27 @@ export default function Profile() {
                     )
                   )}
                 </div>
+                {isEditing && (
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
+                    <div className="flex justify-center gap-2 flex-wrap">
+                      {PREDEFINED_AVATARS.map((avatar, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSelectPredefinedAvatar(avatar)}
+                          className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
+                            previewImage === avatar 
+                              ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100' 
+                              : 'border-gray-200 hover:border-indigo-400'
+                          }`}
+                        >
+                          <img src={avatar} className="w-full h-full object-cover" alt={`Avatar ${idx}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">{profile.name}</h2>
                 <p className="text-gray-500 font-medium mb-6">{profile.role === 'MENTOR' ? 'Mentor' : 'Learner'}</p>
 

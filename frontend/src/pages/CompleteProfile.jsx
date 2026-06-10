@@ -62,6 +62,17 @@ export default function CompleteProfile() {
         }));
     };
 
+    const handleSelectPredefinedAvatar = (avatarUrl) => {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
+        setBasicInfo((prev) => ({
+            ...prev,
+            profilePicture: { avatarUrl, preview: avatarUrl },
+        }));
+    };
+
     const toggleSkill = (skill) => {
         setMentorInfo((prev) => ({
             ...prev,
@@ -79,7 +90,7 @@ export default function CompleteProfile() {
         () => ({
             1: !!role,
             2:
-                (role === 'learner' || !!basicInfo.profilePicture?.file) &&
+                (role === 'learner' || !!basicInfo.profilePicture?.file || !!basicInfo.profilePicture?.avatarUrl) &&
                 basicInfo.department.length > 0 &&
                 basicInfo.year.length > 0 &&
                 basicInfo.bio.length <= 150,
@@ -118,6 +129,8 @@ export default function CompleteProfile() {
 
         if (basicInfo.profilePicture?.file) {
             formData.append('profileImage', basicInfo.profilePicture.file);
+        } else if (basicInfo.profilePicture?.avatarUrl) {
+            formData.append('profilePicture', basicInfo.profilePicture.avatarUrl);
         }
 
         if (role === 'mentor') {
@@ -196,6 +209,7 @@ export default function CompleteProfile() {
                     basicInfo={basicInfo}
                     setBasicInfo={setBasicInfo}
                     handleImageUpload={handleImageUpload}
+                    handleSelectPredefinedAvatar={handleSelectPredefinedAvatar}
                     role={role}
                 />
             );
