@@ -47,22 +47,20 @@ function App() {
 
     useEffect(() => {
         const fetchCsrfToken = async () => {
-            if (user) {
-                try {
-                    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
-                        credentials: 'include'
-                    });
-                    const data = await response.json();
-                    if (data.csrfToken) {
-                        localStorage.setItem('csrfToken', data.csrfToken);
-                    }
-                } catch (error) {
-                    console.error("Failed to bootstrap CSRF token:", error);
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.csrfToken) {
+                    localStorage.setItem('csrfToken', data.csrfToken);
                 }
+            } catch (error) {
+                console.error("Failed to bootstrap CSRF token:", error);
             }
         };
         fetchCsrfToken();
-    }, [user]);
+    }, []);
 
     return (
         <BrowserRouter>

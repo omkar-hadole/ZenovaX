@@ -1,5 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
 export const login = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
@@ -45,7 +52,10 @@ export const register = async (name, email, password) => {
 
 export const logout = async () => {
   try {
-    const csrfToken = localStorage.getItem('csrfToken');
+    let csrfToken = localStorage.getItem('csrfToken');
+    if (!csrfToken) {
+      csrfToken = getCookie('csrfToken');
+    }
     const headers = {};
     if (csrfToken) {
       headers['X-CSRF-Token'] = csrfToken;
@@ -94,7 +104,13 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
     headers['Content-Type'] = 'application/json';
   }
 
-  const csrfToken = localStorage.getItem('csrfToken');
+  let csrfToken = localStorage.getItem('csrfToken');
+  if (!csrfToken) {
+    csrfToken = getCookie('csrfToken');
+    if (csrfToken) {
+      localStorage.setItem('csrfToken', csrfToken);
+    }
+  }
   const method = (options.method || 'GET').toUpperCase();
   if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
     headers['X-CSRF-Token'] = csrfToken;

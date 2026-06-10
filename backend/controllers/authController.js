@@ -1,6 +1,7 @@
 const authService = require("../services/authService");
 const { ForbiddenError } = require("../utils/errors");
 const crypto = require("crypto");
+const config = require("../config");
 
 exports.register = async (req, res, next) => {
     try {
@@ -20,24 +21,26 @@ exports.login = async (req, res, next) => {
 
         const csrfToken = crypto.randomBytes(32).toString('hex');
 
+        const isProd = config.nodeEnv === 'production';
+
         res.cookie('token', accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'None',
+            secure: isProd,
+            sameSite: isProd ? 'None' : 'Lax',
             maxAge: 15 * 60 * 1000 // 15 min
         });
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'None',
+            secure: isProd,
+            sameSite: isProd ? 'None' : 'Lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.cookie('csrfToken', csrfToken, {
             httpOnly: false,
-            secure: true,
-            sameSite: 'None',
+            secure: isProd,
+            sameSite: isProd ? 'None' : 'Lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -81,20 +84,21 @@ exports.logout = async (req, res, next) => {
             });
         }
 
+        const isProd = config.nodeEnv === 'production';
         res.clearCookie("token", {
             httpOnly: true,
-            secure: true,
-            sameSite: "None"
+            secure: isProd,
+            sameSite: isProd ? "None" : "Lax"
         });
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure: true,
-            sameSite: "None"
+            secure: isProd,
+            sameSite: isProd ? "None" : "Lax"
         });
         res.clearCookie("csrfToken", {
             httpOnly: false,
-            secure: true,
-            sameSite: "None"
+            secure: isProd,
+            sameSite: isProd ? "None" : "Lax"
         });
         return res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
@@ -107,10 +111,11 @@ exports.getCsrfToken = async (req, res, next) => {
         let csrfToken = req.cookies ? req.cookies.csrfToken : null;
         if (!csrfToken) {
             csrfToken = crypto.randomBytes(32).toString('hex');
+            const isProd = config.nodeEnv === 'production';
             res.cookie('csrfToken', csrfToken, {
                 httpOnly: false,
-                secure: true,
-                sameSite: 'None',
+                secure: isProd,
+                sameSite: isProd ? 'None' : 'Lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
         }
@@ -149,17 +154,18 @@ exports.refresh = async (req, res, next) => {
         );
 
         // Set cookies
+        const isProd = config.nodeEnv === 'production';
         res.cookie('token', accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'None',
+            secure: isProd,
+            sameSite: isProd ? 'None' : 'Lax',
             maxAge: 15 * 60 * 1000 // 15 min
         });
 
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'None',
+            secure: isProd,
+            sameSite: isProd ? 'None' : 'Lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 

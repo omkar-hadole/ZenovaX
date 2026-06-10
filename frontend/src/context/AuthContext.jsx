@@ -9,7 +9,7 @@ export function AuthProvider({ children }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const data = await apiCall('/auth/me');
+      const data = await apiCall('/profile/me');
       setUser(data.user || null);
     } catch {
       setUser(null);
