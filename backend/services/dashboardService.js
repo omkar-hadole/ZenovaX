@@ -31,7 +31,7 @@ exports.getDashboardData = async (prisma, cache, userId) => {
         });
 
         if (cache) {
-            await cache.set(upcomingSessionsCacheKey, cachedUpcomingSessions, 60); // 60 seconds TTL
+            await cache.set(upcomingSessionsCacheKey, cachedUpcomingSessions, 300); // 5 minutes TTL
         }
     }
 
@@ -100,7 +100,7 @@ exports.getDashboardData = async (prisma, cache, userId) => {
         });
 
         if (cache) {
-            await cache.set(topMentorsCacheKey, cachedTopMentors, 60); // 60 seconds TTL
+            await cache.set(topMentorsCacheKey, cachedTopMentors, 300); // 5 minutes TTL
         }
     }
 
