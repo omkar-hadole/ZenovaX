@@ -24,7 +24,7 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
                         {logo ? (
                             <img
                                 src={getOptimizedImageUrl(logo)}
-                                width={120}
+                                width={190}
                                 height={32}
                                 fetchpriority="high"
                                 alt={title || "ZenovaX Logo"}
