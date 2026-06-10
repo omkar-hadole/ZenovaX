@@ -3,17 +3,15 @@ const logger = require("../utils/logger");
 const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = require("../utils/errors");
 
 const getUniqueLearnersCount = async (tx, mentorId) => {
-    const sessions = await tx.session.findMany({
-        where: { mentorId },
-        select: { id: true }
+    const result = await tx.booking.groupBy({
+        by: ['userId'],
+        where: {
+            session: { mentorId },
+            status: { in: ['CONFIRMED', 'COMPLETED'] }
+        },
+        _count: { userId: true }
     });
-    const sessionIds = sessions.map(s => s.id);
-    const bookings = await tx.booking.findMany({
-        where: { sessionId: { in: sessionIds } },
-        select: { userId: true }
-    });
-    const uniqueUserIds = new Set(bookings.map(b => b.userId));
-    return uniqueUserIds.size;
+    return result.length;
 };
 
 exports.createSessionRequest = async (prisma, mentorId, data) => {
