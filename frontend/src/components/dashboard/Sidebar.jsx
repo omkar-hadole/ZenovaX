@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { useNavigate, NavLink } from 'react-router-dom';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain" }) {
     const navigate = useNavigate();
@@ -21,7 +22,14 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
                 <div className="p-8">
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {logo ? (
-                            <img src={logo} alt="Logo" className={logoClassName} />
+                            <img
+                                src={getOptimizedImageUrl(logo)}
+                                width={120}
+                                height={32}
+                                fetchpriority="high"
+                                alt={title || "ZenovaX Logo"}
+                                className={logoClassName}
+                            />
                         ) : (
                             <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white text-lg">Z</span>
                         )}

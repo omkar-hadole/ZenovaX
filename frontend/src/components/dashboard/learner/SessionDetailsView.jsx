@@ -19,6 +19,7 @@ import {
     Code
 } from "lucide-react";
 import { apiCall } from '../../../utils/api';
+import { getOptimizedImageUrl } from '../../../utils/cloudinary';
 
 const WriteReview = ({ sessionId, onReviewSubmit }) => {
     const [rating, setRating] = useState(0);
@@ -193,7 +194,14 @@ const ReviewsSection = ({ session, onReviewSubmit }) => {
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                                                 {review.author.profilePicture ? (
-                                                    <img src={review.author.profilePicture} alt={review.author.name} className="w-full h-full object-cover" />
+                                                    <img
+                                                        src={getOptimizedImageUrl(review.author.profilePicture, { width: 80, height: 80 })}
+                                                        width={40}
+                                                        height={40}
+                                                        loading="lazy"
+                                                        alt={review.author.name || "Review author avatar"}
+                                                        className="w-full h-full object-cover"
+                                                    />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-600 font-bold text-lg">
                                                         {review.author.name.charAt(0)}
@@ -563,7 +571,14 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
                                 <div className="flex flex-col items-center text-center mb-6">
                                     <div className="w-24 h-24 rounded-2xl overflow-hidden mb-4 shadow-lg ring-4 ring-gray-50">
-                                        <img src={S.mentor.profilePicture} alt={S.mentor.name} className="w-full h-full object-cover" />
+                                        <img
+                                            src={getOptimizedImageUrl(S.mentor.profilePicture, { width: 192, height: 192 })}
+                                            width={96}
+                                            height={96}
+                                            loading="lazy"
+                                            alt={S.mentor.name || "Mentor profile picture"}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                     <h4 className="text-xl font-bold text-gray-900 mb-1">{S.mentor.name}</h4>
                                     <p className="text-sm text-gray-500 font-medium">{S.mentor.department}</p>

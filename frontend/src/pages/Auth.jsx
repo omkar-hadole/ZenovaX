@@ -5,6 +5,7 @@ import LoginForm from '../components/LoginForm';
 import SignupForm from '../components/SignupForm';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -64,8 +65,11 @@ export default function Auth() {
 
             <div className="flex-1 flex flex-col justify-center text-white relative">
               <img
-                src={images[currentImage]}
-                alt="Showcase"
+                src={getOptimizedImageUrl(images[currentImage], { width: 1152, height: 1400 })}
+                width={576}
+                height={700}
+                fetchpriority="high"
+                alt="ZenovaX platform feature showcase"
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>

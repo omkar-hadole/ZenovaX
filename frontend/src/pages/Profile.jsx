@@ -19,6 +19,7 @@ import {
 import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import Toast from '../components/Toast';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 const BADGE_FILE_NAMES = {
   "First Step": "Fisrt_Step",
@@ -125,7 +126,14 @@ const ReviewsSection = ({ userId }) => {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                       {review.author.profilePicture ? (
-                        <img src={review.author.profilePicture} alt={review.author.name} className="w-full h-full object-cover" />
+                        <img
+                          src={getOptimizedImageUrl(review.author.profilePicture, { width: 80, height: 80 })}
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          alt={review.author.name || "Review author avatar"}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-600 font-bold text-lg">
                           {review.author.name.charAt(0)}
@@ -582,7 +590,14 @@ export default function Profile() {
                   {isEditing ? (
                     <>
                       {previewImage ? (
-                        <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+                        <img
+                          src={getOptimizedImageUrl(previewImage, { width: 256, height: 256 })}
+                          width={128}
+                          height={128}
+                          loading="lazy"
+                          alt="Profile picture preview"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-500 text-4xl font-bold">
                           {profile.name?.charAt(0)}
@@ -595,7 +610,14 @@ export default function Profile() {
                     </>
                   ) : (
                     profile.profilePicture ? (
-                      <img src={profile.profilePicture} alt={profile.name} className="w-full h-full object-cover" />
+                      <img
+                        src={getOptimizedImageUrl(profile.profilePicture, { width: 256, height: 256 })}
+                        width={128}
+                        height={128}
+                        fetchpriority="high"
+                        alt={profile.name || "User profile picture"}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-500 text-4xl font-bold">
                         {profile.name?.charAt(0)}
@@ -658,7 +680,10 @@ export default function Profile() {
                             {badgeImages[badgeName] ? (
                               <img
                                 src={badgeImages[badgeName]}
-                                alt={badgeName}
+                                width={88}
+                                height={88}
+                                loading="lazy"
+                                alt={badgeName || "Achievement badge icon"}
                                 className="w-full h-full object-contain drop-shadow-sm"
                               />
                             ) : (

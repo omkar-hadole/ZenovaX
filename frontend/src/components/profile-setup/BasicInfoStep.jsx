@@ -1,6 +1,7 @@
 import React from 'react';
 import { UploadCloud, Shield } from 'lucide-react';
 import { FieldGroup } from './FormComponents';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 const departmentOptions = ['CSE', 'AI/ML', 'IT', 'BBA', 'ECON', 'DESIGN', 'PSY', 'MEDIA'];
 const yearOptions = ['1', '2', '3', '4'];
@@ -13,8 +14,11 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                     <div className="w-28 h-28 rounded-[1.5rem] border-2 border-dashed border-[#C9C7F5] bg-white flex items-center justify-center overflow-hidden">
                         {basicInfo.profilePicture?.preview ? (
                             <img
-                                src={basicInfo.profilePicture.preview}
-                                alt="Profile Preview"
+                                src={getOptimizedImageUrl(basicInfo.profilePicture.preview, { width: 224, height: 224 })}
+                                width={112}
+                                height={112}
+                                loading="lazy"
+                                alt="Profile picture preview"
                                 className="w-full h-full object-cover"
                             />
                         ) : (

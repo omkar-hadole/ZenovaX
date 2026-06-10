@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
+import { getOptimizedImageUrl } from '../../../utils/cloudinary';
 
 export default function SessionCard({ session, footer, extraBadges, onClick }) {
     return (
@@ -11,7 +12,14 @@ export default function SessionCard({ session, footer, extraBadges, onClick }) {
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 shadow-inner">
                         {session.mentor?.profilePicture ? (
-                            <img src={session.mentor.profilePicture} alt={session.mentor.name} className="w-full h-full object-cover" />
+                            <img
+                                src={getOptimizedImageUrl(session.mentor.profilePicture, { width: 96, height: 96 })}
+                                width={48}
+                                height={48}
+                                loading="lazy"
+                                alt={session.mentor.name || "Mentor avatar"}
+                                className="w-full h-full object-cover"
+                            />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-[#A9C1F7]/20 text-[#5B8DEF] font-bold text-lg">
                                 {session.mentor?.name?.[0]}

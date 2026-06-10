@@ -62,6 +62,9 @@ export default function HeroSection({ handlePrimaryCTA }) {
                     <div className="w-full max-w-8xl">
                         <img
                             src={dashboard}
+                            width={1200}
+                            height={875}
+                            fetchpriority="high"
                             alt="ZenovaX peer learning dashboard preview"
                             className="w-full rounded-[32px] shadow-2xl border border-[#eceafd] rounded-b-[0px]"
                         />

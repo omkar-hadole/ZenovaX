@@ -4,7 +4,14 @@ import logo from '../../assets/footerlogo.svg';
 
 const Logo = () => (
     <div className="flex items-center gap-3">
-        <img src={logo} alt="ZenovaX Logo" className="w-38" />
+        <img
+            src={logo}
+            width={152}
+            height={30}
+            loading="lazy"
+            alt="ZenovaX Logo"
+            className="w-38"
+        />
     </div>
 );
 

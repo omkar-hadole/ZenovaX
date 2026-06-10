@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 export default function Header({ user, title, searchPlaceholder = "Search..." }) {
     const navigate = useNavigate();
@@ -30,8 +31,11 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                 >
                     {user.profilePicture ? (
                         <img
-                            src={user.profilePicture}
-                            alt={user.name}
+                            src={getOptimizedImageUrl(user.profilePicture, { width: 80, height: 80 })}
+                            width={40}
+                            height={40}
+                            fetchpriority="high"
+                            alt={user.name || "User profile picture"}
                             className="w-full h-full object-cover"
                         />
                     ) : (

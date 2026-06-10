@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, User, Calendar, MessageSquare, ThumbsUp } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
 import InlineError from '../../InlineError';
+import { getOptimizedImageUrl } from '../../../utils/cloudinary';
 
 export default function ReviewsReceived() {
     const [reviews, setReviews] = useState([]);
@@ -143,8 +144,11 @@ export default function ReviewsReceived() {
                                 <div className="flex items-start gap-4">
                                     {review.author.profilePicture ? (
                                         <img
-                                            src={review.author.profilePicture}
-                                            alt={review.author.name}
+                                            src={getOptimizedImageUrl(review.author.profilePicture, { width: 96, height: 96 })}
+                                            width={48}
+                                            height={48}
+                                            loading="lazy"
+                                            alt={review.author.name || "Review author avatar"}
                                             className="w-12 h-12 rounded-xl object-cover ring-2 ring-white shadow-sm"
                                         />
                                     ) : (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getOptimizedImageUrl } from '../../../utils/cloudinary';
 
 export default function MentorsList({ mentors, onFollow }) {
     const navigate = useNavigate();
@@ -26,8 +27,11 @@ export default function MentorsList({ mentors, onFollow }) {
                         <div className="w-12 h-12 rounded-2xl overflow-hidden border border-black/5 shadow-sm group-hover:scale-105 transition-transform">
                             {mentor.profilePicture ? (
                                 <img
-                                    src={mentor.profilePicture}
-                                    alt={mentor.name}
+                                    src={getOptimizedImageUrl(mentor.profilePicture, { width: 96, height: 96 })}
+                                    width={48}
+                                    height={48}
+                                    loading="lazy"
+                                    alt={mentor.name || "Mentor profile picture"}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (

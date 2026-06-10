@@ -4,6 +4,7 @@ import { apiCall } from '../utils/api';
 import { Search, Filter, Star, MapPin, Briefcase, User } from 'lucide-react';
 import Pagination from '../components/common/Pagination';
 import InlineError from '../components/InlineError';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 export default function MentorsList() {
     const navigate = useNavigate();
@@ -127,7 +128,14 @@ export default function MentorsList() {
                                 <div className="relative z-10 flex flex-col items-center text-center">
                                     <div className="w-24 h-24 rounded-2xl overflow-hidden mb-4 shadow-lg ring-4 ring-gray-50 group-hover:ring-indigo-50 transition-all">
                                         {mentor.profilePicture ? (
-                                            <img src={mentor.profilePicture} alt={mentor.name} className="w-full h-full object-cover" />
+                                            <img
+                                                src={getOptimizedImageUrl(mentor.profilePicture, { width: 192, height: 192 })}
+                                                width={96}
+                                                height={96}
+                                                loading="lazy"
+                                                alt={mentor.name || "Mentor profile picture"}
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
                                             <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center text-white text-2xl font-bold">
                                                 {mentor.name.charAt(0)}

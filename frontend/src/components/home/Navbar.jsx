@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import logo from "../../assets/logo.svg";
+import { getOptimizedImageUrl } from "../../utils/cloudinary";
 
 export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
   const navigate = useNavigate();
@@ -25,7 +26,14 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
       >
         <div className="flex items-center gap-3">
 
-          <img src={logo} alt="ZenovaX Logo" className="h-6 object-contain drop-shadow-sm" />
+          <img
+            src={getOptimizedImageUrl(logo)}
+            width={120}
+            height={24}
+            fetchpriority="high"
+            alt="ZenovaX Logo"
+            className="h-6 object-contain drop-shadow-sm"
+          />
         </div>
 
         <div className="hidden md:flex items-center gap-8">
