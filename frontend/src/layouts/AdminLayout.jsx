@@ -25,8 +25,7 @@ export default function AdminLayout() {
         } catch (err) {
             console.error('Logout error:', err);
         }
-        localStorage.removeItem('token');
-        navigate('/');
+        navigate('/login');
     };
 
     const sidebarItems = [

@@ -179,8 +179,7 @@ export default function CreateSession() {
               } catch (err) {
                 console.error("Logout error:", err);
               }
-              localStorage.removeItem('token');
-              navigate('/');
+              navigate('/login');
             }}
           >
             {/* Admin specific sidebar children if any */}

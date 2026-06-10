@@ -26,8 +26,7 @@ export default function LearnerLayout() {
         } catch (err) {
             console.error('Logout error:', err);
         }
-        localStorage.removeItem('token');
-        navigate('/');
+        navigate('/login');
     };
 
     const sidebarItems = [
