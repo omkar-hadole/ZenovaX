@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
 import { getOptimizedImageUrl } from '../../../utils/cloudinary';
+import { stripMarkdown } from '../../../utils/descriptionFormatter';
 
 export default function SessionCard({ session, footer, extraBadges, onClick }) {
     return (
@@ -40,7 +41,7 @@ export default function SessionCard({ session, footer, extraBadges, onClick }) {
             </div>
 
             <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">{session.title}</h3>
-            <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed flex-1">{session.description || 'Join this session to learn more.'}</p>
+            <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed flex-1">{stripMarkdown(session.description) || 'Join this session to learn more.'}</p>
 
             <div className="flex items-center justify-between text-sm text-gray-500 mb-4 bg-[#F5F6FA] p-3 rounded-xl">
                 <div className="flex items-center gap-2">

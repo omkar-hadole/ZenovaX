@@ -3,6 +3,7 @@ import { apiCall } from '../../utils/api';
 import { Check, X, Clock } from 'lucide-react';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import Toast from '../../components/Toast';
+import { stripMarkdown } from '../../utils/descriptionFormatter';
 
 export default function PendingSessions() {
     const [requests, setRequests] = useState([]);
@@ -103,7 +104,7 @@ export default function PendingSessions() {
                                 {request.title}
                             </h3>
                             <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
-                                {request.description}
+                                {stripMarkdown(request.description)}
                             </p>
                         </div>
 

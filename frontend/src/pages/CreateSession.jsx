@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, Video, MapPin,
-  DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code
+  DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code, Eye
 } from 'lucide-react';
 import { apiCall, logout as apiLogout } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,9 @@ import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
 import logo from '../assets/mentorlogo.svg'
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
+import DescriptionEditor from '../components/dashboard/mentor/DescriptionEditor';
+import SessionPreviewModal from '../components/dashboard/mentor/SessionPreviewModal';
+import { cleanDescription } from '../utils/descriptionFormatter';
 
 export default function CreateSession() {
   const navigate = useNavigate();
@@ -19,6 +22,7 @@ export default function CreateSession() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -124,6 +128,7 @@ export default function CreateSession() {
 
       const payload = {
         ...formData,
+        description: cleanDescription(formData.description),
         proposedDate: dateTime.toISOString(),
         topics: topicsArray,
         price: formData.price ? parseFloat(formData.price) : 0,
@@ -234,14 +239,11 @@ export default function CreateSession() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">What will they learn?</label>
-                      <textarea
-                        name="description"
-                        required
-                        rows="4"
+                      <label htmlFor="session-description" className="block text-sm font-semibold text-gray-700 mb-2">What will they learn?</label>
+                      <DescriptionEditor
+                        id="session-description"
                         value={formData.description}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all resize-none placeholder:text-gray-400"
+                        onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
                         placeholder="Describe the key takeaways and learning outcomes..."
                       />
                     </div>
@@ -418,6 +420,15 @@ export default function CreateSession() {
                 </div>
 
                 <button
+                  type="button"
+                  onClick={() => setShowPreview(true)}
+                  className="w-full bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-[1.5rem] font-bold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-3 shadow-sm"
+                >
+                  <Eye className="w-6 h-6" />
+                  Preview Session
+                </button>
+
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-[#C9C7F5] text-[#5a59b5] py-4 rounded-[1.5rem] font-bold text-lg hover:bg-[#b8b6e5] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm hover:shadow-md hover:-translate-y-1"
@@ -439,6 +450,14 @@ export default function CreateSession() {
           </div>
         </main>
       </div>
+
+      {showPreview && (
+        <SessionPreviewModal
+          formData={formData}
+          user={user}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </div >
   );
 }

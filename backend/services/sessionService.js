@@ -35,6 +35,16 @@ exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
         throw new BadRequestError("Missing required fields");
     }
 
+    if (typeof description === 'string') {
+        const descriptionLines = description.split('\n').length;
+        if (descriptionLines > 15) {
+            throw new BadRequestError(`Description must not exceed 15 lines (received ${descriptionLines})`);
+        }
+        if (description.length > 5000) {
+            throw new BadRequestError("Description must not exceed 5000 characters");
+        }
+    }
+
     if (mode === "OFFLINE" && !venue) {
         throw new BadRequestError("Venue is required for offline sessions");
     }
@@ -142,6 +152,16 @@ exports.updateSessionRequest = async (prisma, cache, userId, userRole, id, data)
 
     if (request.status !== 'PENDING' && userRole !== 'ADMIN') {
         throw new BadRequestError("Only pending requests can be updated");
+    }
+
+    if (description !== undefined && typeof description === 'string') {
+        const descriptionLines = description.split('\n').length;
+        if (descriptionLines > 15) {
+            throw new BadRequestError(`Description must not exceed 15 lines (received ${descriptionLines})`);
+        }
+        if (description.length > 5000) {
+            throw new BadRequestError("Description must not exceed 5000 characters");
+        }
     }
 
     if (meetingLink !== undefined && !isHttpsUrl(meetingLink)) {
