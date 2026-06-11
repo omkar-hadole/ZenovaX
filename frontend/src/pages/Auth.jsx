@@ -25,7 +25,9 @@ export default function Auth() {
     if (user && user.id) {
       if (!user.isProfileComplete) {
         navigate('/complete-profile');
-      } else if (user.role === 'MENTOR') {
+      } else if (user.role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else if (user.role === 'MENTOR' || user.role === 'BOTH') {
         navigate('/mentor-dashboard');
       } else {
         navigate('/dashboard');

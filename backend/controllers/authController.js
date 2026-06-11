@@ -138,6 +138,18 @@ exports.refresh = async (req, res, next) => {
         });
 
         if (!dbToken || dbToken.revoked || dbToken.expiresAt < new Date()) {
+            // Clear stale refresh cookie on failure
+            const isProd = config.nodeEnv === 'production';
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? "None" : "Lax"
+            });
+            res.clearCookie("token", {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? "None" : "Lax"
+            });
             return res.status(401).json({ error: "Invalid or expired refresh token" });
         }
 

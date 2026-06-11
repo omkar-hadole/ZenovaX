@@ -13,6 +13,7 @@ const Auth = lazy(() => import('./pages/Auth'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 
 const DashboardPage = lazy(() => import('./pages/learner/DashboardPage'));
 const SessionsPage = lazy(() => import('./pages/learner/SessionsPage'));
@@ -51,12 +52,15 @@ function App() {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
                     credentials: 'include'
                 });
+                if (!response.ok) return;
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) return;
                 const data = await response.json();
-                if (data.csrfToken) {
+                if (data?.csrfToken) {
                     localStorage.setItem('csrfToken', data.csrfToken);
                 }
-            } catch (error) {
-                console.error("Failed to bootstrap CSRF token:", error);
+            } catch {
+                // CSRF bootstrap failure is non-critical
             }
         };
         fetchCsrfToken();
@@ -64,14 +68,22 @@ function App() {
 
     return (
         <BrowserRouter>
-            <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>}>
+            <Suspense fallback={
+                <div className="flex justify-center items-center h-screen bg-[#F5F6FA]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-10 h-10 border-4 border-[#7A79E6] border-t-transparent rounded-full animate-spin" />
+                        <p className="text-gray-500 text-sm">Loading...</p>
+                    </div>
+                </div>
+            }>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/login" element={<Navigate to="/auth" replace />} />
+                    <Route path="/unauthorized" element={<Unauthorized />} />
 
                     <Route
                         path="/complete-profile"
@@ -174,6 +186,17 @@ function App() {
                         <Route path="reports" element={<Reports />} />
                         <Route path="settings" element={<ComingSoonPage />} />
                     </Route>
+
+                    {/* 404 catch-all */}
+                    <Route path="*" element={
+                        <div className="flex justify-center items-center h-screen bg-[#F5F6FA]">
+                            <div className="text-center">
+                                <h1 className="text-6xl font-bold text-gray-300 mb-4">404</h1>
+                                <p className="text-gray-500 mb-6">Page not found</p>
+                                <Navigate to="/" replace />
+                            </div>
+                        </div>
+                    } />
                 </Routes>
             </Suspense>
         </BrowserRouter>

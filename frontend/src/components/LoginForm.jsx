@@ -37,17 +37,15 @@ export default function LoginForm({ onToggle, showToast }) {
       login(data.user);
       showToast({ message: 'Login successful!', type: 'success' });
 
-      setTimeout(() => {
-        if (!data.user.isProfileComplete) {
-          navigate('/complete-profile');
-        } else if (data.user.role === 'ADMIN') {
-          navigate('/admin/dashboard');
-        } else if (data.user.role === 'MENTOR' || data.user.role === 'BOTH') {
-          navigate('/mentor-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      }, 600);
+      if (!data.user.isProfileComplete) {
+        navigate('/complete-profile');
+      } else if (data.user.role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else if (data.user.role === 'MENTOR' || data.user.role === 'BOTH') {
+        navigate('/mentor-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       if (err.needsVerification) {
         setNeedsVerification(true);

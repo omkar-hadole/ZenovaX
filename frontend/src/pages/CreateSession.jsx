@@ -179,7 +179,7 @@ export default function CreateSession() {
               } catch (err) {
                 console.error("Logout error:", err);
               }
-              navigate('/login');
+              navigate('/auth');
             }}
           >
             {/* Admin specific sidebar children if any */}

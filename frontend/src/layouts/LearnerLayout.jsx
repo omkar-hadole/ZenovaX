@@ -26,7 +26,7 @@ export default function LearnerLayout() {
         } catch (err) {
             console.error('Logout error:', err);
         }
-        navigate('/login');
+        navigate('/auth');
     };
 
     const sidebarItems = [

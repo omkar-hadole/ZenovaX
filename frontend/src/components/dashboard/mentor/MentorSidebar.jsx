@@ -34,7 +34,7 @@ export default function MentorSidebar({ activeTab, onTabChange }) {
         } catch (err) {
             console.error('Logout error:', err);
         }
-        navigate('/login');
+        navigate('/auth');
     };
 
     const items = [

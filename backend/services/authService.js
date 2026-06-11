@@ -225,5 +225,11 @@ exports.resetPassword = async (prisma, token, newPassword) => {
         }
     });
 
+    // Revoke ALL existing refresh tokens for this user (security: prevent stale token usage)
+    await prisma.refreshToken.updateMany({
+        where: { userId: user.id },
+        data: { revoked: true }
+    });
+
     return { success: true };
 };

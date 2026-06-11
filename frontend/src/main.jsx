@@ -13,9 +13,26 @@ Sentry.init({
   integrations: [Sentry.browserTracingIntegration()],
 });
 
+const RootErrorFallback = () => (
+  <div className="flex justify-center items-center h-screen bg-[#F5F6FA]">
+    <div className="text-center max-w-md p-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-3">Something went wrong</h1>
+      <p className="text-gray-500 mb-6">
+        An unexpected error occurred. Please try refreshing the page.
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        className="bg-[#7A79E6] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#6c6bd6] transition-colors"
+      >
+        Refresh Page
+      </button>
+    </div>
+  </div>
+);
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p>Something went wrong. Please refresh.</p>}>
+    <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
       <AuthProvider>
         <App />
       </AuthProvider>

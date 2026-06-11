@@ -25,7 +25,7 @@ export default function AdminLayout() {
         } catch (err) {
             console.error('Logout error:', err);
         }
-        navigate('/login');
+        navigate('/auth');
     };
 
     const sidebarItems = [

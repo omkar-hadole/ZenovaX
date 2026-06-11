@@ -164,7 +164,10 @@ export default function CompleteProfile() {
 
             setStatus({ type: 'success', message: 'Profile completed! Redirecting to dashboard...' });
             setTimeout(() => {
-                if (response.user.role === 'MENTOR') {
+                const role = response?.user?.role;
+                if (role === 'ADMIN') {
+                    navigate('/admin/dashboard');
+                } else if (role === 'MENTOR' || role === 'BOTH') {
                     navigate('/mentor-dashboard');
                 } else {
                     navigate('/dashboard');

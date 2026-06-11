@@ -7,6 +7,14 @@ const getCookie = (name) => {
   return null;
 };
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error) => {
+  failedQueue.forEach(({ reject }) => reject(error));
+  failedQueue = [];
+};
+
 export const login = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
@@ -128,8 +136,32 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
     credentials: 'include',
   });
 
-  // Intercept 401 and attempt token refresh
+  // Intercept 401 and attempt token refresh with mutex
   if (response.status === 401 && endpoint !== '/auth/refresh') {
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then(() => {
+        // After refresh succeeds, retry original request
+        return fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers,
+          body,
+          credentials: 'include',
+        }).then(retryResponse => {
+          if (!retryResponse.ok) {
+            return retryResponse.json().then(errData => {
+              throw new Error(errData.error || 'Request failed');
+            });
+          }
+          return retryResponse.json();
+        });
+      });
+    }
+
+    isRefreshing = true;
+    let handledFailure = false;
+
     try {
       const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
@@ -141,31 +173,56 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
       });
 
       if (refreshResponse.ok) {
-        // Retry the original request once
+        // Update CSRF token from refresh response if provided
+        const refreshData = await refreshResponse.json().catch(() => ({}));
+        if (refreshData.csrfToken) {
+          localStorage.setItem('csrfToken', csrfToken = refreshData.csrfToken);
+        }
+
+        processQueue(null);
+
+        // Retry the original request once with potentially updated CSRF
+        const retryHeaders = { ...headers };
+        if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+          retryHeaders['X-CSRF-Token'] = csrfToken;
+        }
+
         response = await fetch(`${API_URL}${endpoint}`, {
           ...options,
-          headers,
+          headers: retryHeaders,
           body,
           credentials: 'include',
         });
       } else {
+        handledFailure = true;
+        // Clear stale refresh cookie on failure
+        document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+
+        const error = new Error('Session expired');
+        processQueue(error);
+
         if (authFailureHandler) {
           authFailureHandler();
         } else {
           localStorage.removeItem('user');
           localStorage.removeItem('csrfToken');
-          window.location.href = '/login';
+          window.location.href = '/auth';
         }
+        throw error;
       }
     } catch (err) {
-      console.error('Auto-refresh token failed:', err);
+      if (handledFailure) throw err;
       if (authFailureHandler) {
         authFailureHandler();
       } else {
         localStorage.removeItem('user');
         localStorage.removeItem('csrfToken');
-        window.location.href = '/login';
+        window.location.href = '/auth';
       }
+      throw err;
+    } finally {
+      isRefreshing = false;
     }
   }
 
