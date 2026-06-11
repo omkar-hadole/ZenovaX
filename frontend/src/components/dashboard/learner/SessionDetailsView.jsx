@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
     ArrowLeft,
-    Video,
-    Users,
     FileText,
     CheckCircle,
     Star,
-    ExternalLink,
     HelpCircle,
     AlertTriangle,
     Download,
@@ -319,137 +316,6 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
         setToast({ message: "Review submitted successfully!", type: "success" });
     };
 
-    const isSessionTimeOver = new Date(new Date(S.scheduledAt).getTime() + S.duration * 60000) < new Date();
-
-    const sidebar = (
-        <div className="sticky top-24 space-y-6">
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                <div className="flex items-start justify-between mb-6">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Instructor</h3>
-                    <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100">
-                        <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-bold text-yellow-700">{S.mentor.averageRating ? S.mentor.averageRating.toFixed(1) : 'N/A'}</span>
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-center text-center mb-6">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden mb-4 shadow-lg ring-4 ring-gray-50">
-                        <img
-                            src={getOptimizedImageUrl(S.mentor.profilePicture, { width: 192, height: 192 })}
-                            width={96}
-                            height={96}
-                            loading="lazy"
-                            alt={S.mentor.name || "Mentor profile picture"}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-1">{S.mentor.name}</h4>
-                    <p className="text-sm text-gray-500 font-medium">{S.mentor.department}</p>
-                </div>
-
-                <button
-                    onClick={() => window.open(`/profile/${S.mentor.id}`, '_blank')}
-                    className="w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
-                >
-                    View Profile <ExternalLink size={14} />
-                </button>
-            </div>
-
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-white/50">
-                <div className="mb-8">
-                    <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-3">Registration Fee</p>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-bold text-gray-900 tracking-tight">
-                            {S.priceType === 'FREE' ? 'Free' : `₹${S.price}`}
-                        </span>
-                        {S.priceType === 'PAID' && <span className="text-gray-400 text-sm font-medium">per person</span>}
-                    </div>
-                </div>
-
-                <div className="space-y-5 mb-8 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500 flex items-center gap-2 font-medium"><Users className="w-4 h-4" /> Seats Available</span>
-                        <span className="font-bold text-gray-900">{S.availableSeats} <span className="text-gray-400 font-normal">/ {S.maxSeats}</span></span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                        <div
-                            className="bg-blue-600 h-full rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: `${((S.maxSeats - S.availableSeats) / S.maxSeats) * 100}%` }}
-                        />
-                    </div>
-                    <p className="text-xs text-center text-gray-400 font-medium">
-                        {S.availableSeats < 5 ? '🔥 Selling out fast!' : 'Book your spot now'}
-                    </p>
-                </div>
-
-                {S.isBooked ? (
-                    <div className="space-y-4">
-                        <button
-                            disabled
-                            className="w-full bg-green-50 text-green-600 border border-green-200 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
-                        >
-                            <CheckCircle className="w-5 h-5" />
-                            Registered
-                        </button>
-
-                        {S.status === 'COMPLETED' || new Date(new Date(S.scheduledAt).getTime() + S.duration * 60000) < new Date() ? (
-                            <button
-                                disabled
-                                className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
-                            >
-                                <CheckCircle className="w-5 h-5" />
-                                Session Completed
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => window.open(`/session/${S.id}/live`, '_blank')}
-                                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
-                            >
-                                <Video className="w-5 h-5" />
-                                Join Live Class
-                            </button>
-                        )}
-                    </div>
-                ) : user?.role === 'MENTOR' ? (
-                    <button
-                        disabled
-                        className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
-                    >
-                        Register Now (Disabled for Mentors)
-                    </button>
-                ) : isSessionTimeOver ? (
-                    <button
-                        disabled
-                        className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
-                    >
-                        Registration Closed
-                    </button>
-                ) : (
-                    <button
-                        onClick={onRegister}
-                        disabled={S.availableSeats === 0 || isRegistering}
-                        className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1
-                            ${S.availableSeats === 0
-                                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                                : 'bg-black text-white hover:bg-gray-800 hover:shadow-2xl shadow-gray-400/20'}`}
-                    >
-                        {S.availableSeats === 0 ? 'Full' : isRegistering ? 'Registering...' : 'Register Now'}
-                    </button>
-                )}
-
-                <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                    <button
-                        onClick={() => setIsReportModalOpen(true)}
-                        className="text-gray-400 text-xs font-bold hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto uppercase tracking-wider group"
-                    >
-                        <AlertTriangle className="w-3.5 h-3.5 group-hover:animate-bounce" />
-                        Report an issue
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
         <div className="min-h-screen bg-[#F8F9FC]">
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
@@ -480,7 +346,10 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <SessionPreviewContent
                     session={S}
-                    sidebar={sidebar}
+                    onRegister={onRegister}
+                    isRegistering={isRegistering}
+                    onReport={() => setIsReportModalOpen(true)}
+                    userRole={user?.role}
                 >
                     {S.isBooked && (
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">

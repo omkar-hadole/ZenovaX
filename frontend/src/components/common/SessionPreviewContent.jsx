@@ -1,7 +1,9 @@
 import React from 'react';
-import { Calendar, Clock, Video, MapPin, CheckCircle, FileText } from 'lucide-react';
+import { Calendar, Clock, Video, MapPin, CheckCircle, FileText, Users, Star, ExternalLink, AlertTriangle } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
+import { cleanDescription } from '../../utils/descriptionFormatter';
 
 function parseTopics(topics) {
   if (!topics) return [];
@@ -17,9 +19,10 @@ function parseTopics(topics) {
   return [];
 }
 
-export default function SessionPreviewContent({ session, isPreview, children, sidebar }) {
+export default function SessionPreviewContent({ session, isPreview, children, onRegister, isRegistering, onReport, userRole }) {
   const scheduledAt = session.scheduledAt ? new Date(session.scheduledAt) : new Date();
   const topics = parseTopics(session.topics);
+  const isSessionTimeOver = new Date(new Date(session.scheduledAt).getTime() + session.duration * 60000) < new Date();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -34,11 +37,7 @@ export default function SessionPreviewContent({ session, isPreview, children, si
                   ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
                   : 'bg-orange-50 text-orange-600 border border-orange-100'
               }`}>
-                {session.mode === 'ONLINE' ? (
-                  <span className="flex items-center gap-1"><Video size={12} /> Online</span>
-                ) : (
-                  <span className="flex items-center gap-1"><MapPin size={12} /> In-Person</span>
-                )}
+                {session.mode} Session
               </span>
               {isPreview && (
                 <span className="px-3 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-xs font-bold uppercase">
@@ -57,32 +56,18 @@ export default function SessionPreviewContent({ session, isPreview, children, si
             </h1>
 
             <div className="flex flex-wrap items-center gap-6 text-gray-600">
-              {!isNaN(scheduledAt.getTime()) && (
-                <>
-                  <div className="flex items-center gap-2.5 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                    <Calendar className="text-indigo-500" size={18} />
-                    <span className="font-medium text-sm">
-                      {scheduledAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                    <Clock className="text-purple-500" size={18} />
-                    <span className="font-medium text-sm">
-                      {scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {session.duration || 0} min
-                    </span>
-                  </div>
-                </>
-              )}
-              {session.priceType === 'PAID' && (
-                <div className="flex items-center gap-2.5 bg-green-50 px-4 py-2 rounded-xl border border-green-100">
-                  <span className="font-bold text-green-700">₹{session.price || 0}</span>
-                </div>
-              )}
-              {session.priceType === 'FREE' && (
-                <div className="flex items-center gap-2.5 bg-green-50 px-4 py-2 rounded-xl border border-green-100">
-                  <span className="font-bold text-green-700">Free</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2.5 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                <Calendar className="text-indigo-500" size={18} />
+                <span className="font-medium text-sm">
+                  {scheduledAt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                <Clock className="text-purple-500" size={18} />
+                <span className="font-medium text-sm">
+                  {scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {session.duration || 0} min
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -92,8 +77,8 @@ export default function SessionPreviewContent({ session, isPreview, children, si
             <FileText className="w-5 h-5 text-gray-400" />
             About this Session
           </h3>
-          <div className="text-gray-600 leading-relaxed text-lg prose prose-gray max-w-none prose-p:my-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0">
-            <Markdown remarkPlugins={[remarkBreaks]}>{session.description || '_No description provided yet.'}</Markdown>
+          <div className="text-gray-600 leading-relaxed text-lg [&_p]:my-1 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-0 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_strong]:font-semibold [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-semibold">
+            <Markdown remarkPlugins={[remarkBreaks]}>{cleanDescription(session.description || '')}</Markdown>
           </div>
         </div>
 
@@ -104,7 +89,7 @@ export default function SessionPreviewContent({ session, isPreview, children, si
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {topics.length > 0 ? topics.map((t, i) => (
-              <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+              <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors">
                 <div className="mt-1 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                   <CheckCircle size={12} className="text-green-600" />
                 </div>
@@ -119,11 +104,151 @@ export default function SessionPreviewContent({ session, isPreview, children, si
         {children}
       </div>
 
-      {sidebar && (
-        <div className="lg:col-span-4">
-          {sidebar}
+      <div className="lg:col-span-4 space-y-6">
+        <div className="sticky top-24 space-y-6">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between mb-6">
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Instructor</h3>
+              <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg border border-yellow-100">
+                <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-bold text-yellow-700">{session.mentor?.averageRating ? session.mentor.averageRating.toFixed(1) : 'N/A'}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden mb-4 shadow-lg ring-4 ring-gray-50">
+                {session.mentor?.profilePicture ? (
+                  <img
+                    src={getOptimizedImageUrl(session.mentor.profilePicture, { width: 192, height: 192 })}
+                    width={96}
+                    height={96}
+                    loading="lazy"
+                    alt={session.mentor.name || "Mentor profile picture"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#A9C1F7]/20 text-[#5B8DEF] font-bold text-3xl">
+                    {(session.mentor?.name || 'M')?.[0]}
+                  </div>
+                )}
+              </div>
+              <h4 className="text-xl font-bold text-gray-900 mb-1">{session.mentor?.name || 'Mentor Name'}</h4>
+              <p className="text-sm text-gray-500 font-medium">{session.mentor?.department || 'Department'}</p>
+            </div>
+
+            {session.mentor?.id && (
+              <button
+                onClick={() => window.open(`/profile/${session.mentor.id}`, '_blank')}
+                className="w-full py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
+              >
+                View Profile <ExternalLink size={14} />
+              </button>
+            )}
+          </div>
+
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-white/50">
+            <div className="mb-8">
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-3">Registration Fee</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold text-gray-900 tracking-tight">
+                  {session.priceType === 'FREE' ? 'Free' : `₹${session.price}`}
+                </span>
+                {session.priceType === 'PAID' && <span className="text-gray-400 text-sm font-medium">per person</span>}
+              </div>
+            </div>
+
+            <div className="space-y-5 mb-8 bg-gray-50/50 p-5 rounded-2xl border border-gray-100">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500 flex items-center gap-2 font-medium"><Users className="w-4 h-4" /> Seats Available</span>
+                <span className="font-bold text-gray-900">{session.availableSeats} <span className="text-gray-400 font-normal">/ {session.maxSeats}</span></span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="bg-blue-600 h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${session.maxSeats > 0 ? ((session.maxSeats - session.availableSeats) / session.maxSeats) * 100 : 0}%` }}
+                />
+              </div>
+              <p className="text-xs text-center text-gray-400 font-medium">
+                {session.availableSeats < 5 ? '🔥 Selling out fast!' : 'Book your spot now'}
+              </p>
+            </div>
+
+            {isPreview ? (
+              <button
+                disabled
+                className="w-full py-4 rounded-2xl font-bold text-lg bg-gray-100 text-gray-400 cursor-not-allowed"
+              >
+                Register Now
+              </button>
+            ) : session.isBooked ? (
+              <div className="space-y-4">
+                <button
+                  disabled
+                  className="w-full bg-green-50 text-green-600 border border-green-200 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Registered
+                </button>
+
+                {session.status === 'COMPLETED' || isSessionTimeOver ? (
+                  <button
+                    disabled
+                    className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    Session Completed
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
+                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
+                  >
+                    <Video className="w-5 h-5" />
+                    Join Live Class
+                  </button>
+                )}
+              </div>
+            ) : userRole === 'MENTOR' ? (
+              <button
+                disabled
+                className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+              >
+                Register Now (Disabled for Mentors)
+              </button>
+            ) : isSessionTimeOver ? (
+              <button
+                disabled
+                className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+              >
+                Registration Closed
+              </button>
+            ) : (
+              <button
+                onClick={onRegister}
+                disabled={session.availableSeats === 0 || isRegistering}
+                className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1
+                    ${session.availableSeats === 0
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    : 'bg-black text-white hover:bg-gray-800 hover:shadow-2xl shadow-gray-400/20'}`}
+              >
+                {session.availableSeats === 0 ? 'Full' : isRegistering ? 'Registering...' : 'Register Now'}
+              </button>
+            )}
+
+            {!isPreview && (
+              <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+                <button
+                  onClick={onReport}
+                  className="text-gray-400 text-xs font-bold hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto uppercase tracking-wider group"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 group-hover:animate-bounce" />
+                  Report an issue
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
