@@ -1,76 +1,126 @@
-import React from 'react';
-import { CheckCircle, LineChart } from 'lucide-react';
+import { useLayoutEffect, useRef } from 'react';
+import { Search, Ticket, QrCode, Presentation, Code2, Star } from 'lucide-react';
+import { gsap } from '../../utils/gsapSetup';
 
-const efficiencyCards = [
-    {
-        title: 'Clear Your Doubts Faster',
-        description: 'Learn directly from peers who mastered the same topic recently.',
-    },
-    {
-        title: 'Learn by Solving Together',
-        description: 'Collaborative practice builds deeper understanding and speed.',
-    },
-    {
-        title: 'Get Notes & Quizzes After Sessions',
-        description: 'Continue learning with resources tailored to your topic.',
-    },
-    {
-        title: 'Rate Mentors & Improve Learning Quality',
-        description: 'Your feedback shapes better sessions for everyone.',
-    },
+const steps = [
+  {
+    icon: Search,
+    title: 'Browse and filter',
+    body: 'Find sessions by topic, level, price, or mentor on your dashboard.',
+  },
+  {
+    icon: Ticket,
+    title: 'Reserve your seat',
+    body: 'A queued, lock-protected transaction confirms your booking instantly, with no double-booking races.',
+  },
+  {
+    icon: QrCode,
+    title: 'Get your QR ticket',
+    body: 'Offline meetups generate a downloadable entry pass with a secure QR code.',
+  },
+  {
+    icon: Presentation,
+    title: 'Attend the session',
+    body: 'Join live online or show your ticket on campus. Mentors verify entry with a quick scan.',
+  },
+  {
+    icon: Code2,
+    title: 'Practice immediately',
+    body: 'Reinforce concepts with quizzes and coding challenges in the built-in Monaco sandbox.',
+  },
+  {
+    icon: Star,
+    title: 'Rate and grow',
+    body: 'Review your mentor after attending. Great mentors earn points and unlock verified badges.',
+  },
 ];
+
 export default function TrackingSection() {
-    return (
-        <section id="tracking" className="mt-24 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-            <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-6">
-                    <h2 className="text-3xl lg:text-4xl font-bold">
-                        Learn Faster With Real Peer Support
-                    </h2>
-                    <p className="text-slate-500">
-                        Book topic-based sessions, solve doubts live, access resources, and improve together with honest mentor ratings.
-                    </p>
-                    <div className="grid grid-cols-1 gap-5">
-                        {efficiencyCards.map((card) => (
-                            <div key={card.title} className="flex gap-4">
-                                <div className="w-10 h-10 rounded-full bg-[#ededff] text-[#9190F8] flex items-center justify-center">
-                                    <CheckCircle className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-slate-900 text-sm">{card.title}</p>
-                                    <p className="text-sm text-slate-500">{card.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="bg-white rounded-[32px] border border-[#eceafd] p-8 space-y-6">
+  const scope = useRef(null);
 
-                    <div className="bg-[#f7f6ff] rounded-3xl p-6 border border-[#eceafd]">
-                        <p className="text-sm text-slate-500">Upcoming Session</p>
-                        <h3 className="mt-2 font-semibold text-slate-900">Math — Trigonometric Identities</h3>
-                        <p className="mt-1 text-xs text-slate-500">Mentor: Aditi Sharma • Free Session</p>
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo(
+          '[data-journey-line]',
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: 'none',
+            transformOrigin: 'top center',
+            scrollTrigger: {
+              trigger: scope.current,
+              start: 'top 55%',
+              end: 'bottom 75%',
+              scrub: true,
+            },
+          }
+        );
+        gsap.utils.toArray('[data-step]').forEach((el) => {
+          gsap.fromTo(
+            el,
+            { x: -32, opacity: 0 },
+            {
+              x: 0,
+              opacity: 1,
+              duration: 0.7,
+              ease: 'power3.out',
+              scrollTrigger: { trigger: el, start: 'top 82%', once: true },
+            }
+          );
+        });
+      });
+    }, scope);
+    return () => ctx.revert();
+  }, []);
 
-                        <button className="mt-4 px-4 py-2 rounded-lg bg-[#9190F8] text-white text-sm font-semibold">
-                            Join Session
-                        </button>
-                    </div>
+  return (
+    <section id="journey" ref={scope} className="relative bg-bg py-28 overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="absolute top-1/3 -left-40 h-[420px] w-[420px] rounded-full blur-[130px] pointer-events-none"
+        style={{ background: 'var(--color-glow-soft)' }}
+      />
+      <div className="relative max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div className="lg:sticky lg:top-32 self-start">
+          <p className="text-sm font-semibold tracking-widest uppercase text-accent">
+            The learner journey
+          </p>
+          <h2 className="mt-4 text-4xl md:text-5xl font-semibold tracking-tight text-text">
+            From stuck to solved,
+            <span className="text-text-subtle"> in six steps.</span>
+          </h2>
+          <p className="mt-5 text-lg text-text-muted leading-relaxed max-w-md">
+            Every booking flows through a transaction-safe pipeline, from
+            discovery to attendance to hands-on practice, so you can focus on
+            learning instead of logistics.
+          </p>
+        </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="rounded-2xl border border-[#eceafd] p-4">
-                            <p className="text-xs text-slate-500">Resources</p>
-                            <h3 className="text-lg font-semibold text-slate-900 mt-1">Notes + 5 Quizzes</h3>
-                            <p className="text-xs text-slate-500">For your last session</p>
-                        </div>
-                        <div className="rounded-2xl border border-[#eceafd] p-4">
-                            <p className="text-xs text-slate-500">Your Ratings</p>
-                            <h3 className="text-lg font-semibold text-slate-900 mt-1">4.5⭐ Mentor Avg</h3>
-                            <p className="text-xs text-slate-500">Based on 3 sessions</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-    );
+        <ol className="relative list-none space-y-10">
+          <div
+            aria-hidden="true"
+            data-journey-line
+            className="absolute left-[22px] top-2 bottom-2 w-px"
+            style={{ background: 'linear-gradient(to bottom, var(--color-accent), var(--color-accent-soft), transparent)' }}
+          />
+          {steps.map(({ icon: Icon, title, body }, i) => (
+            <li key={title} data-step className="relative flex gap-6">
+              <div className="relative z-10 flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full bg-surface border border-border-accent shadow-[var(--shadow-sm)]">
+                <Icon className="w-5 h-5 text-accent" aria-hidden="true" />
+              </div>
+              <div className="pt-1">
+                <h3 className="text-lg font-semibold text-text">
+                  <span className="text-text-subtle font-mono text-sm mr-2">0{i + 1}</span>
+                  {title}
+                </h3>
+                <p className="mt-2 text-text-muted leading-relaxed">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
 }

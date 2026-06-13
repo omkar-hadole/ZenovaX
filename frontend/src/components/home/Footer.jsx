@@ -1,88 +1,72 @@
-import React from 'react';
-import { ArrowRight, Globe, MessageSquare, Users } from 'lucide-react';
-import logo from '../../assets/footerlogo.svg';
+import footerLogo from '../../assets/footerlogo.svg';
 
-const Logo = () => (
-    <div className="flex items-center gap-3">
-        <img
-            src={logo}
-            width={152}
-            height={30}
-            loading="lazy"
-            alt="ZenovaX Logo"
-            className="w-38"
-        />
-    </div>
-);
+const columns = [
+  {
+    heading: 'Platform',
+    links: [
+      { name: 'Features', href: '#features' },
+      { name: 'How it works', href: '#journey' },
+      { name: 'FAQ', href: '#faq' },
+    ],
+  },
+  {
+    heading: 'Get started',
+    links: [
+      { name: 'Log in', href: '/auth?mode=login' },
+      { name: 'Sign up', href: '/auth?mode=signup' },
+    ],
+  },
+];
 
 export default function Footer() {
-    return (
-        <footer className="mt-24 bg-[#0b0b1f] text-slate-400 py-16">
-            <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-4 gap-10">
-                
-                <div>
-                    <Logo />
-                    <p className="mt-4 text-sm text-slate-500 max-w-xs">
-                        Learn smarter with real peer sessions, shared problem-solving, resources, and honest mentor reviews.
-                    </p>
-                    <div className="mt-6 flex">
-                        <input
-                            type="email"
-                            placeholder="Get updates about new mentors"
-                            className="flex-1 px-4 py-3 rounded-l-2xl bg-[#141432] text-white text-sm placeholder:text-slate-500 border border-slate-700"
-                        />
-                        <button className="px-4 py-3 rounded-r-2xl bg-[#9190F8] text-white text-sm font-semibold">
-                            <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
+  return (
+    <footer id="contact" className="relative bg-bg-subtle border-t border-border">
+      <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="md:col-span-2">
+            <img
+              src={footerLogo}
+              alt="ZenovaX"
+              width={140}
+              height={28}
+              className="h-7 object-contain"
+            />
+            <p className="mt-5 max-w-sm text-text-muted leading-relaxed">
+              A peer-to-peer learning platform where students teach students,
+              with safe bookings, live practice, and verified mentorship.
+            </p>
+          </div>
 
-                <div>
-                    <p className="text-sm font-semibold text-white mb-4">Explore</p>
-                    <ul className="space-y-3 text-sm">
-                        <li>Home</li>
-                        <li>Find Mentors</li>
-                        <li>Book a Session</li>
-                        <li>Resources</li>
-                        <li>Quizzes</li>
-                    </ul>
-                </div>
+          {columns.map((col) => (
+            <nav key={col.heading} aria-label={col.heading}>
+              <h3 className="text-sm font-semibold tracking-widest uppercase text-text-subtle">
+                {col.heading}
+              </h3>
+              <ul className="mt-5 space-y-3 list-none">
+                {col.links.map((link) => (
+                  <li key={link.name}>
+                    <a
+                      href={link.href}
+                      className="text-text-muted hover:text-accent transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded"
+                    >
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
 
-                <div>
-                    <p className="text-sm font-semibold text-white mb-4">Support</p>
-                    <ul className="space-y-3 text-sm">
-                        <li>How ZenovaX Works</li>
-                        <li>Help Center</li>
-                        <li>Student Community</li>
-                        <li>Report a Mentor</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <p className="text-sm font-semibold text-white mb-4">Legal</p>
-                    <ul className="space-y-3 text-sm">
-                        <li>Privacy Policy</li>
-                        <li>Terms & Conditions</li>
-                        <li>Refund Policy</li>
-                        <li>Community Guidelines</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div className="max-w-6xl mx-auto px-4 mt-12 border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between text-sm">
-                <p>© {new Date().getFullYear()} ZenovaX. All rights reserved.</p>
-                <div className="flex gap-3 text-slate-500">
-                    <button className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:text-white">
-                        <Globe className="w-4 h-4" />
-                    </button>
-                    <button className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:text-white">
-                        <MessageSquare className="w-4 h-4" />
-                    </button>
-                    <button className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:text-white">
-                        <Users className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-        </footer>
-    );
+        <div className="mt-14 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-text-subtle">
+            &copy; {new Date().getFullYear()} ZenovaX. All rights reserved.
+          </p>
+          <p className="text-sm text-text-subtle">
+            Peer learning, engineered with care.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
 }

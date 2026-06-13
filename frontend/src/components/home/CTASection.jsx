@@ -1,35 +1,44 @@
-import React from 'react';
+import { ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function CTASection({ handlePrimaryCTA }) {
-    return (
-        <section className="mt-24 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-600">
-            <div className="max-w-5xl mx-auto rounded-[40px] bg-gradient-to-r from-[#f5f0ff] to-[#e6faff] border border-white shadow-xl text-center p-12">
-                
-                <p className="text-[#9190F8] font-semibold">
-                    Peer-to-Peer Sessions. Real Learning.
-                </p>
-
-                <h2 className="mt-4 text-3xl font-bold text-slate-900">
-                    Start Learning Together With Verified Student Mentors
-                </h2>
-
-                <p className="mt-4 text-slate-500">
-                    Book free or paid sessions, solve topics live, access resources, and track progress through quizzes — all in one platform.
-                </p>
-
-                <div className="mt-8 flex flex-wrap justify-center gap-4">
-                    <button 
-                        onClick={handlePrimaryCTA} 
-                        className="px-6 py-3 rounded-2xl bg-[#9190F8] text-white font-semibold"
-                    >
-                        Book Your First Session
-                    </button>
-                    
-                    <button className="px-6 py-3 rounded-2xl border border-[#d4d6ff] text-[#9190F8] font-semibold">
-                        Browse Mentors
-                    </button>
-                </div>
+  return (
+    <section className="relative bg-bg pb-28 pt-4">
+      <div className="max-w-6xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="relative overflow-hidden rounded-[32px] border border-border bg-surface-invert px-8 py-20 md:py-24 text-center"
+        >
+          <div
+            aria-hidden="true"
+            className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[640px] rounded-full blur-[120px] pointer-events-none"
+            style={{ background: 'var(--color-glow)' }}
+          />
+          <div className="relative">
+            <h2 className="text-4xl md:text-6xl font-semibold tracking-tight text-text-on-invert leading-tight">
+              Stop watching.
+              <br />
+              <span className="text-gradient">Start solving with peers.</span>
+            </h2>
+            <p className="mt-6 max-w-xl mx-auto text-lg text-text-on-invert/70">
+              Book a focused session, practice in the sandbox, and turn the
+              concepts you struggle with into the ones you teach next.
+            </p>
+            <div className="mt-10 flex justify-center">
+              <button
+                onClick={handlePrimaryCTA}
+                className="group inline-flex items-center gap-2 px-9 py-4 rounded-full bg-gradient-accent text-text-on-accent font-semibold text-lg shadow-[var(--shadow-accent)] hover:-translate-y-0.5 hover:brightness-105 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Get started for free
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              </button>
             </div>
-        </section>
-    );
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
 }

@@ -17,7 +17,10 @@
     "date-fns": "^4.1.0",
     "dom-to-image-more": "^3.7.2",
     "dompurify": "^3.4.8",
+    "framer-motion": "^11.18.2",
+    "gsap": "^3.13.0",
     "html5-qrcode": "^2.3.8",
+    "lenis": "^1.1.18",
     "lucide-react": "^0.552.0",
     "prismjs": "^1.30.0",
     "qrcode": "^1.5.4",
@@ -29,7 +32,8 @@
     "react-simple-code-editor": "^0.14.1",
     "react-syntax-highlighter": "^16.1.0",
     "remark-breaks": "^4.0.0",
-    "tailwindcss": "^4.1.16"
+    "tailwindcss": "^4.1.16",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

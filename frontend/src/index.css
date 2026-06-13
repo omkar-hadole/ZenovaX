@@ -1,14 +1,181 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS
+   ------------------------------------------------------------
+   All colors live here as CSS custom properties so the entire
+   homepage consumes tokens (never hardcoded hex). Only the LIGHT
+   theme is implemented today. The [data-theme="dark"] block is a
+   STRUCTURED PLACEHOLDER: it mirrors every token name so a future
+   Light/Dark toggle can be enabled with zero component refactors.
+   Toggle by setting data-theme="dark" on <html> (see ThemeContext).
+   ============================================================ */
+:root,
+[data-theme="light"] {
+  /* Surfaces */
+  --color-bg: #f7f7fb;            /* page background */
+  --color-bg-subtle: #eeeef6;    /* alternating / sunken sections */
+  --color-surface: #ffffff;      /* cards, nav, panels */
+  --color-surface-2: #f2f2f9;    /* nested surfaces */
+  --color-surface-invert: #0e0e1a; /* dark feature spotlight on light page */
+
+  /* Text */
+  --color-text: #14141f;         /* primary headings */
+  --color-text-muted: #4b4b5c;   /* body copy */
+  --color-text-subtle: #6e6e80;  /* captions, meta */
+  --color-text-on-accent: #ffffff;
+  --color-text-on-invert: #f4f4fa;
+
+  /* Brand accent (kept the product's purple identity) */
+  --color-accent: #6361e0;
+  --color-accent-strong: #4f4dd4;
+  --color-accent-soft: #9190f8;
+  --color-accent-tint: rgba(99, 97, 224, 0.10);
+  --color-accent-tint-strong: rgba(99, 97, 224, 0.18);
+
+  /* Lines & borders */
+  --color-border: rgba(20, 20, 31, 0.08);
+  --color-border-strong: rgba(20, 20, 31, 0.14);
+  --color-border-accent: rgba(99, 97, 224, 0.40);
+
+  /* Effects */
+  --color-glow: rgba(99, 97, 224, 0.28);
+  --color-glow-soft: rgba(145, 144, 248, 0.18);
+  --shadow-sm: 0 1px 2px rgba(20, 20, 31, 0.06), 0 1px 3px rgba(20, 20, 31, 0.05);
+  --shadow-md: 0 8px 30px rgba(20, 20, 31, 0.08);
+  --shadow-lg: 0 24px 60px rgba(20, 20, 31, 0.12);
+  --shadow-accent: 0 10px 40px rgba(99, 97, 224, 0.35);
+
+  /* Gradients */
+  --gradient-accent: linear-gradient(135deg, #6361e0 0%, #9190f8 100%);
+  --gradient-text: linear-gradient(120deg, #4f4dd4 0%, #9190f8 60%, #6361e0 100%);
+  --nav-surface: rgba(255, 255, 255, 0.72);
+  --nav-surface-scrolled: rgba(255, 255, 255, 0.88);
+}
+
+/* ----------------------------------------------------------------
+   DARK THEME PLACEHOLDER (not designed/built yet).
+   Same token names, dark values reserved from the previous design.
+   Fill in / refine when Dark mode is officially built. Components
+   already consume the tokens above, so enabling this needs no JSX
+   changes — only setting data-theme="dark" on the root element.
+   ---------------------------------------------------------------- */
+[data-theme="dark"] {
+  --color-bg: #070710;
+  --color-bg-subtle: #0b0b16;
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-surface-2: rgba(255, 255, 255, 0.06);
+  --color-surface-invert: #ffffff;
+
+  --color-text: #f1f1f6;
+  --color-text-muted: #aeaebd;
+  --color-text-subtle: #8a8a9a;
+  --color-text-on-accent: #ffffff;
+  --color-text-on-invert: #14141f;
+
+  --color-accent: #7a79e6;
+  --color-accent-strong: #9190f8;
+  --color-accent-soft: #9190f8;
+  --color-accent-tint: rgba(122, 121, 230, 0.15);
+  --color-accent-tint-strong: rgba(122, 121, 230, 0.25);
+
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border-accent: rgba(145, 144, 248, 0.40);
+
+  --color-glow: rgba(122, 121, 230, 0.30);
+  --color-glow-soft: rgba(145, 144, 248, 0.18);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 40px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-accent: 0 0 40px rgba(145, 144, 248, 0.5);
+
+  --gradient-accent: linear-gradient(135deg, #7a79e6 0%, #9190f8 100%);
+  --gradient-text: linear-gradient(120deg, #9190f8 0%, #c4c3ff 60%, #7a79e6 100%);
+  --nav-surface: rgba(11, 11, 22, 0.55);
+  --nav-surface-scrolled: rgba(11, 11, 22, 0.85);
+}
+
+/* ---------------------------------------------------------------
+   Tailwind v4 theme bridge: expose tokens as Tailwind color/shadow
+   utilities so components can use e.g. bg-bg, text-text, border-border,
+   text-accent, shadow-md, etc., all backed by the CSS variables above.
+   --------------------------------------------------------------- */
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-subtle: var(--color-bg-subtle);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-surface-invert: var(--color-surface-invert);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-subtle: var(--color-text-subtle);
+  --color-text-on-accent: var(--color-text-on-accent);
+  --color-text-on-invert: var(--color-text-on-invert);
+  --color-accent: var(--color-accent);
+  --color-accent-strong: var(--color-accent-strong);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-border-accent: var(--color-border-accent);
+}
 
 * {
   font-family: 'Outfit', sans-serif;
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* When Lenis drives the scroll we disable native smooth-scroll to avoid
+   fighting it; Lenis adds .lenis to <html>. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
 body {
   margin: 0;
   padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Reduced motion: stop smooth scrolling entirely and keep everything visible. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Reusable token-driven helpers used across the homepage */
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-accent {
+  background: var(--gradient-accent);
+}
+
+.surface-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .glass {
@@ -19,7 +186,6 @@ body {
 }
 
 .glass-dark {
-  /* padding: 0.5rem 1rem; */
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);

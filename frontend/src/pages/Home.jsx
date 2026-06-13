@@ -9,6 +9,8 @@ import TestimonialsSection from '../components/home/TestimonialsSection';
 import FAQSection from '../components/home/FAQSection';
 import CTASection from '../components/home/CTASection';
 import Footer from '../components/home/Footer';
+import { ScrollTrigger } from '../utils/gsapSetup';
+import useSmoothScroll from '../utils/useSmoothScroll';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -16,10 +18,19 @@ export default function Home() {
   const isLoggedIn = !!user;
   const [scrolled, setScrolled] = useState(false);
 
+  // Premium Lenis smooth scroll wired into GSAP (no-ops under reduced motion).
+  useSmoothScroll();
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Recalculate trigger positions once lazy content (hero canvas, images) settles.
+    const t = setTimeout(() => ScrollTrigger.refresh(), 600);
+    return () => clearTimeout(t);
   }, []);
 
   const getDashboardPath = () => {
@@ -35,10 +46,10 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 bg-transparent">
+    <div className="min-h-screen bg-bg text-text antialiased selection:bg-[var(--color-accent-tint-strong)]">
       <Navbar scrolled={scrolled} isLoggedIn={isLoggedIn} handlePrimaryCTA={handlePrimaryCTA} />
 
-      <main className="">
+      <main>
         <HeroSection handlePrimaryCTA={handlePrimaryCTA} />
         <FeaturesSection />
         <TrackingSection />
