@@ -40,6 +40,7 @@ model User {
   
   // Profile completion
   isProfileComplete Boolean   @default(false)
+  isPhoneVisible    Boolean   @default(true)
   
   // Email verification
   isEmailVerified   Boolean   @default(false)

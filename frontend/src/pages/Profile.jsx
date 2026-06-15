@@ -14,7 +14,8 @@ import {
   Award,
   Camera,
   Save,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
@@ -244,8 +245,8 @@ export default function Profile() {
     const prevFollowersCount = followersCount;
 
     const nextIsFollowing = !prevIsFollowing;
-    const nextFollowersCount = nextIsFollowing 
-      ? prevFollowersCount + 1 
+    const nextFollowersCount = nextIsFollowing
+      ? prevFollowersCount + 1
       : Math.max(0, prevFollowersCount - 1);
 
     setIsFollowing(nextIsFollowing);
@@ -270,8 +271,8 @@ export default function Profile() {
     const prevLikesCount = likesCount;
 
     const nextIsLiked = !prevIsLiked;
-    const nextLikesCount = nextIsLiked 
-      ? prevLikesCount + 1 
+    const nextLikesCount = nextIsLiked
+      ? prevLikesCount + 1
       : Math.max(0, prevLikesCount - 1);
 
     setIsLiked(nextIsLiked);
@@ -300,6 +301,7 @@ export default function Profile() {
         bio: profile.bio || '',
         phoneNumber: profile.phoneNumber || '',
         linkedinUrl: profile.linkedinUrl || '',
+        isPhoneVisible: profile.isPhoneVisible !== undefined ? profile.isPhoneVisible : true,
         mentorSkills: profile.mentorSkills ? profile.mentorSkills.join(', ') : ''
       });
       setPreviewImage(profile.profilePicture);
@@ -343,6 +345,7 @@ export default function Profile() {
       formData.append('bio', editForm.bio);
       formData.append('phone', editForm.phoneNumber);
       formData.append('linkedin', editForm.linkedinUrl);
+      formData.append('isPhoneVisible', editForm.isPhoneVisible);
 
       if (profile.role === 'MENTOR' && editForm.mentorSkills) {
         const skillsArray = editForm.mentorSkills.split(',').map(s => s.trim()).filter(s => s);
@@ -520,6 +523,21 @@ export default function Profile() {
                           className="font-medium text-sm w-full focus:outline-none"
                         />
                       </div>
+                      {profile.role === 'MENTOR' && (
+                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 w-full md:w-auto cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            name="isPhoneVisible"
+                            id="isPhoneVisible"
+                            checked={editForm.isPhoneVisible}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, isPhoneVisible: e.target.checked }))}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <label htmlFor="isPhoneVisible" className="text-sm font-medium text-gray-700 cursor-pointer">
+                            Show Phone Number to Learners
+                          </label>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
@@ -533,6 +551,12 @@ export default function Profile() {
                         <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                           <Phone size={18} className="text-gray-400" />
                           <span className="font-medium text-sm">{profile.phoneNumber}</span>
+                        </div>
+                      )}
+                      {profile.year && (
+                        <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                          <GraduationCap size={18} className="text-gray-400" />
+                          <span className="font-medium text-sm">Year {profile.year}</span>
                         </div>
                       )}
                     </>
@@ -655,11 +679,10 @@ export default function Profile() {
                           key={idx}
                           type="button"
                           onClick={() => handleSelectPredefinedAvatar(avatar)}
-                          className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
-                            previewImage === avatar 
-                              ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100' 
+                          className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${previewImage === avatar
+                              ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100'
                               : 'border-gray-200 hover:border-indigo-400'
-                          }`}
+                            }`}
                         >
                           <img src={avatar} className="w-full h-full object-cover" alt={`Avatar ${idx}`} />
                         </button>

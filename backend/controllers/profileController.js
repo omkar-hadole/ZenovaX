@@ -44,7 +44,7 @@ exports.getMentors = async (req, res, next) => {
 
 exports.getProfileById = async (req, res, next) => {
     try {
-        const user = await profileService.getProfileById(req.prisma, req.cache, req.user.id, req.params.id);
+        const user = await profileService.getProfileById(req.prisma, req.cache, req.user.id, req.user.role, req.params.id);
         return res.json({ user });
     } catch (error) {
         return next(error);

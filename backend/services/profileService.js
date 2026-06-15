@@ -15,6 +15,7 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
         phone,
         linkedin,
         profilePicture,
+        isPhoneVisible,
     } = body;
 
     if (!role || !department || !yearOfStudy) {
@@ -78,12 +79,15 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
         }
     }
 
+    const isPhoneVisibleParsed = isPhoneVisible !== undefined ? (isPhoneVisible === 'true' || isPhoneVisible === true) : true;
+
     const data = {
         department: sanitizeString(trimmedDepartment),
         year: parsedYear,
         bio: trimmedBio ? sanitizeString(trimmedBio) : null,
         role: normalizedRole,
         isProfileComplete: true,
+        isPhoneVisible: isPhoneVisibleParsed,
     };
 
     if (profileImageUrl) {
@@ -130,6 +134,7 @@ exports.getMe = async (prisma, cache, userId) => {
             name: true,
             email: true,
             phoneNumber: true,
+            isPhoneVisible: true,
             department: true,
             year: true,
             bio: true,
@@ -235,6 +240,7 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
         phone,
         linkedin,
         profilePicture,
+        isPhoneVisible,
     } = body;
 
     const updateData = {};
@@ -256,6 +262,10 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
 
     if (bio !== undefined) {
         updateData.bio = bio ? sanitizeString(bio.trim()) : null;
+    }
+
+    if (isPhoneVisible !== undefined) {
+        updateData.isPhoneVisible = isPhoneVisible === 'true' || isPhoneVisible === true;
     }
 
     if (phone !== undefined) {
@@ -316,6 +326,7 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
             name: true,
             email: true,
             phoneNumber: true,
+            isPhoneVisible: true,
             department: true,
             year: true,
             bio: true,
@@ -488,7 +499,18 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
     };
 };
 
-exports.getProfileById = async (prisma, cache, userId, id) => {
+const maskPhoneNumber = (phone) => {
+  if (!phone) return phone;
+  if (phone.length < 6) {
+    return "*".repeat(phone.length);
+  }
+  const first = phone.substring(0, 4);
+  const last = phone.substring(phone.length - 2);
+  const stars = "*".repeat(Math.max(1, phone.length - 6));
+  return `${first}${stars}${last}`;
+};
+
+exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {
     const user = await prisma.user.findUnique({
         where: { id },
         select: {
@@ -496,6 +518,7 @@ exports.getProfileById = async (prisma, cache, userId, id) => {
             name: true,
             email: true,
             phoneNumber: true,
+            isPhoneVisible: true,
             department: true,
             year: true,
             bio: true,
@@ -585,6 +608,14 @@ exports.getProfileById = async (prisma, cache, userId, id) => {
     }
 
     const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
+    const isOwner = userId === user.id;
+    const isAdmin = viewerRole === 'ADMIN';
+    const showFullPhone = isOwner || isAdmin || user.isPhoneVisible;
+
+    if (!showFullPhone && user.phoneNumber) {
+        user.phoneNumber = maskPhoneNumber(user.phoneNumber);
+    }
 
     return {
         ...user,
