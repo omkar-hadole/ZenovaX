@@ -5,6 +5,37 @@ const { calculateBadges } = require("../utils/badges");
 const { getFinishedSessionsCount, getUniqueLearnersCount } = require("../utils/sessionUtils");
 const { BadRequestError, NotFoundError } = require("../utils/errors");
 
+const formatPhoneNumber = (phone, visible) => {
+  if (!phone) return phone;
+  const digits = phone.replace(/\D/g, '');
+  
+  let base = digits;
+  if (digits.length === 12 && digits.startsWith('91')) {
+    base = digits.substring(2);
+  } else if (digits.length === 11 && digits.startsWith('0')) {
+    base = digits.substring(1);
+  } else if (digits.length > 10) {
+    base = digits.substring(digits.length - 10);
+  }
+
+  if (base.length === 10) {
+    const part1 = base.substring(0, 5);
+    if (visible) {
+      const part2 = base.substring(5);
+      return `+91 ${part1} ${part2}`;
+    } else {
+      return `+91 ${part1} *****`;
+    }
+  }
+
+  if (visible) {
+    return phone.startsWith('+') ? phone : `+91 ${phone}`;
+  } else {
+    const displayLength = Math.max(1, phone.length - 5);
+    return `+91 ${phone.substring(0, displayLength)}*****`;
+  }
+};
+
 exports.completeProfile = async (prisma, cache, userId, body, file) => {
     const {
         role,
@@ -164,6 +195,10 @@ exports.getMe = async (prisma, cache, userId) => {
 
     if (!user) {
         throw new NotFoundError("User not found");
+    }
+
+    if (user.phoneNumber) {
+        user.phoneNumber = formatPhoneNumber(user.phoneNumber, true);
     }
 
     if (user.mentorSkills) {
@@ -339,6 +374,10 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
         },
     });
 
+    if (updatedUser.phoneNumber) {
+        updatedUser.phoneNumber = formatPhoneNumber(updatedUser.phoneNumber, true);
+    }
+
     if (updatedUser.mentorSkills) {
         try {
             updatedUser.mentorSkills = JSON.parse(updatedUser.mentorSkills);
@@ -499,17 +538,6 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
     };
 };
 
-const maskPhoneNumber = (phone) => {
-  if (!phone) return phone;
-  if (phone.length < 6) {
-    return "*".repeat(phone.length);
-  }
-  const first = phone.substring(0, 4);
-  const last = phone.substring(phone.length - 2);
-  const stars = "*".repeat(Math.max(1, phone.length - 6));
-  return `${first}${stars}${last}`;
-};
-
 exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {
     const user = await prisma.user.findUnique({
         where: { id },
@@ -613,8 +641,8 @@ exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {
     const isAdmin = viewerRole === 'ADMIN';
     const showFullPhone = isOwner || isAdmin || user.isPhoneVisible;
 
-    if (!showFullPhone && user.phoneNumber) {
-        user.phoneNumber = maskPhoneNumber(user.phoneNumber);
+    if (user.phoneNumber) {
+        user.phoneNumber = formatPhoneNumber(user.phoneNumber, showFullPhone);
     }
 
     return {
