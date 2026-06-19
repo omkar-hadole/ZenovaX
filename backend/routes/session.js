@@ -26,6 +26,8 @@ router.get("/all", protect, sessionController.getAllSessions);
 
 router.post("/verify-attendance", protect, authorize('MENTOR', 'BOTH'), sessionController.verifyAttendance);
 
+router.get("/:id/live-access", protect, sessionController.getLiveAccess);
+
 router.get("/:id", protect, sessionController.getSessionById);
 
 module.exports = router;

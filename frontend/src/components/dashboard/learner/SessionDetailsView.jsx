@@ -350,6 +350,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     isRegistering={isRegistering}
                     onReport={() => setIsReportModalOpen(true)}
                     userRole={user?.role}
+                    userId={user?.id}
                 >
                     {S.isBooked && (
                         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">

@@ -229,7 +229,9 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || 'Request failed');
+    const error = new Error(data.error || 'Request failed');
+    Object.assign(error, data);
+    throw error;
   }
 
   return data;

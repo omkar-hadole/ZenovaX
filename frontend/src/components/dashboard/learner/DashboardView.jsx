@@ -62,7 +62,10 @@ export default function DashboardView({
                     );
 
                     const start = new Date(currentOrNextSession.scheduledAt);
-                    const isLive = start <= now;
+                    const end = new Date(start.getTime() + currentOrNextSession.duration * 60000);
+                    const joinStart = new Date(start.getTime() - 10 * 60000);
+                    const joinEnd = new Date(end.getTime() + 15 * 60000);
+                    const isLive = now >= joinStart && now <= joinEnd;
                     const isRegistered = currentOrNextSession.isBooked;
 
                     return (
@@ -139,8 +142,8 @@ export default function DashboardView({
 
                                 <button
                                     onClick={() => {
-                                        if (isRegistered) {
-                                            setSelectedSession(currentOrNextSession);
+                                        if (isRegistered && isLive) {
+                                            window.open(`/session/${currentOrNextSession.id}/live`, '_blank');
                                         } else {
                                             setSelectedSession(currentOrNextSession);
                                         }

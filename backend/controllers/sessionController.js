@@ -133,3 +133,19 @@ exports.getRecentActivity = async (req, res, next) => {
         return next(error);
     }
 };
+
+exports.getLiveAccess = async (req, res, next) => {
+    try {
+        const result = await sessionService.getLiveAccess(req.prisma, req.user.id, req.params.id);
+        return res.status(200).json(result);
+    } catch (error) {
+        if (error.statusCode === 403 && error.reason) {
+            return res.status(403).json({
+                error: error.message,
+                reason: error.reason,
+                scheduledAt: error.scheduledAt
+            });
+        }
+        return next(error);
+    }
+};

@@ -19,10 +19,11 @@ function parseTopics(topics) {
   return [];
 }
 
-export default function SessionPreviewContent({ session, isPreview, children, onRegister, isRegistering, onReport, userRole }) {
+export default function SessionPreviewContent({ session, isPreview, children, onRegister, isRegistering, onReport, userRole, userId }) {
   const scheduledAt = session.scheduledAt ? new Date(session.scheduledAt) : new Date();
   const topics = parseTopics(session.topics);
   const isSessionTimeOver = new Date(new Date(session.scheduledAt).getTime() + session.duration * 60000) < new Date();
+  const isHost = session.mentorId === userId || session.mentor?.id === userId;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -205,6 +206,26 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class
+                  </button>
+                )}
+              </div>
+            ) : isHost ? (
+              <div className="space-y-4">
+                {session.status === 'COMPLETED' || isSessionTimeOver ? (
+                  <button
+                    disabled
+                    className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    Session Completed
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
+                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
+                  >
+                    <Video className="w-5 h-5" />
+                    Join Live Class (Host)
                   </button>
                 )}
               </div>

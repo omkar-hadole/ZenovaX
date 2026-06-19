@@ -15,4 +15,9 @@ module.exports = {
         apiKey: process.env.CLOUDINARY_API_KEY,
         apiSecret: process.env.CLOUDINARY_API_SECRET,
     },
+    jaas: {
+        appId: process.env.JAAS_APP_ID,
+        apiKeyId: process.env.JAAS_API_KEY_ID,
+        privateKey: process.env.JAAS_PRIVATE_KEY ? process.env.JAAS_PRIVATE_KEY.replace(/\\n/g, '\n') : '',
+    },
 };

@@ -1,6 +1,9 @@
 const { sanitizeString, isValidArray, isHttpsUrl } = require("../utils/validation");
 const logger = require("../utils/logger");
 const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = require("../utils/errors");
+const { SignJWT } = require("jose");
+const crypto = require("crypto");
+const config = require("../config");
 
 const getUniqueLearnersCount = async (tx, mentorId) => {
     const result = await tx.booking.groupBy({
@@ -534,7 +537,8 @@ exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
     const userBookings = await prisma.booking.findMany({
         where: {
             userId,
-            sessionId: { in: sessionIds }
+            sessionId: { in: sessionIds },
+            status: 'CONFIRMED'
         },
         select: { sessionId: true }
     });
@@ -565,7 +569,7 @@ exports.getSessionById = async (prisma, userId, id) => {
                 }
             },
             bookings: {
-                where: { userId },
+                where: { userId, status: 'CONFIRMED' },
                 select: { id: true }
             },
             resources: true,
@@ -784,4 +788,141 @@ exports.getRecentActivity = async (prisma, userId) => {
             };
         }
     });
+};
+
+exports.getLiveAccess = async (prisma, userId, sessionId) => {
+    const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+        include: {
+            mentor: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    profilePicture: true
+                }
+            }
+        }
+    });
+
+    if (!session) {
+        throw new NotFoundError("Session not found");
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            profilePicture: true
+        }
+    });
+
+    if (!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    let isModerator = false;
+
+    if (userId === session.mentorId) {
+        isModerator = true;
+    } else {
+        const booking = await prisma.booking.findUnique({
+            where: {
+                userId_sessionId: {
+                    userId,
+                    sessionId
+                }
+            }
+        });
+
+        if (!booking || booking.status !== 'CONFIRMED') {
+            const err = new ForbiddenError("You must have a confirmed booking to join this session");
+            err.reason = "NOT_REGISTERED";
+            throw err;
+        }
+
+        const now = new Date();
+        const scheduledTime = new Date(session.scheduledAt);
+        const joinStartTime = new Date(scheduledTime.getTime() - 10 * 60 * 1000);
+        const joinEndTime = new Date(scheduledTime.getTime() + (session.duration + 15) * 60 * 1000);
+
+        if (now < joinStartTime) {
+            const err = new ForbiddenError("The room has not opened yet. Please check back 10 minutes before the session starts.");
+            err.reason = "TOO_EARLY";
+            err.scheduledAt = session.scheduledAt;
+            throw err;
+        }
+
+        if (now > joinEndTime) {
+            const err = new ForbiddenError("This session has already ended.");
+            err.reason = "SESSION_ENDED";
+            throw err;
+        }
+
+        if (!booking.joinedAt) {
+            await prisma.booking.update({
+                where: { id: booking.id },
+                data: { joinedAt: new Date() }
+            });
+        }
+    }
+
+    // Verify configuration
+    if (!config.jaas.appId || !config.jaas.apiKeyId || !config.jaas.privateKey) {
+        throw new BadRequestError("8x8 JaaS integration is not configured on the server");
+    }
+
+    // Derive non-guessable room name using a hash of sessionId
+    const roomHash = crypto.createHmac("sha256", config.jwtSecret).update(sessionId).digest("hex");
+    const roomName = `${config.jaas.appId}/${roomHash}`;
+
+    // Set expiry to cover the remaining session window
+    const sessionEndTime = new Date(session.scheduledAt).getTime() + (session.duration + 15) * 60 * 1000;
+    const expSeconds = Math.ceil(sessionEndTime / 1000);
+
+    let privateKey;
+    try {
+        privateKey = crypto.createPrivateKey(config.jaas.privateKey);
+    } catch (errKey) {
+        logger.error("Failed to parse JaaS private key: " + errKey.message);
+        throw new BadRequestError("Invalid JaaS private key format");
+    }
+
+    // Prepare JWT Payload
+    const payload = {
+        aud: "jitsi",
+        iss: "chat",
+        sub: config.jaas.appId,
+        room: roomHash,
+        context: {
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                avatar: user.profilePicture || "",
+                moderator: isModerator
+            },
+            features: {
+                recording: "false",
+                livestreaming: "false",
+                "create-polls": isModerator ? "true" : "false",
+                "file-upload": isModerator ? "true" : "false"
+            }
+        }
+    };
+
+    const token = await new SignJWT(payload)
+        .setProtectedHeader({ alg: "RS256", kid: config.jaas.apiKeyId, typ: "JWT" })
+        .setExpirationTime(expSeconds)
+        .setNotBefore(Math.floor(Date.now() / 1000) - 10)
+        .sign(privateKey);
+
+    return {
+        token,
+        roomName,
+        domain: "8x8.vc",
+        isModerator
+    };
 };
