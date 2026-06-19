@@ -57,6 +57,10 @@ export default function LiveSession() {
   const [unreadPollsCount, setUnreadPollsCount] = useState(0);
   const [myParticipantId, setMyParticipantId] = useState(null);
 
+  // Room Participants & Tab States
+  const [participants, setParticipants] = useState([]);
+  const [activeTab, setActiveTab] = useState('polls'); // polls | participants
+
   // Poll Creator Form States
   const [creatorQuestion, setCreatorQuestion] = useState('');
   const [creatorOptions, setCreatorOptions] = useState(['', '']);
@@ -193,10 +197,42 @@ export default function LiveSession() {
           }
         });
 
-        api.addEventListener('videoConferenceJoined', ({ id }) => {
+        api.addEventListener('videoConferenceJoined', async ({ id }) => {
           setMyParticipantId(id);
+          // Sync participants list initially
+          try {
+            const list = await api.getParticipantsInfo();
+            if (list && Array.isArray(list)) {
+              setParticipants(list.map(p => ({
+                id: p.participantId || p.id,
+                displayName: p.displayName || 'Participant'
+              })));
+            }
+          } catch (e) {
+            console.error("Error fetching participants list:", e);
+          }
           // Request polls state sync from moderator
           broadcastEndpointMessage(JSON.stringify({ type: 'POLL_REQUEST_SYNC' }));
+        });
+
+        api.addEventListener('participantJoined', (p) => {
+          setParticipants((prev) => {
+            if (prev.some((item) => item.id === p.id)) return prev;
+            return [...prev, { id: p.id, displayName: p.displayName || 'Participant' }];
+          });
+        });
+
+        api.addEventListener('participantLeft', (p) => {
+          setParticipants((prev) => prev.filter((item) => item.id !== p.id));
+        });
+
+        api.addEventListener('displayNameChange', ({ id, displayname }) => {
+          setParticipants((prev) => prev.map((item) => {
+            if (item.id === id) {
+              return { ...item, displayName: displayname };
+            }
+            return item;
+          }));
         });
 
         api.addEventListener('endpointTextMessageReceived', (event) => {
@@ -308,7 +344,7 @@ export default function LiveSession() {
 
   const handleToggleSettings = () => {
     if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('toggleSettings');
+      jitsiApiRef.current.executeCommand('openSettings');
     }
   };
 
@@ -324,10 +360,42 @@ export default function LiveSession() {
 
   // Polls Trigger Handler
   const handleTogglePolls = () => {
-    const nextState = !isPollsOpen;
-    setIsPollsOpen(nextState);
-    if (nextState && isNativeChatOpen && jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('toggleChat');
+    if (!isPollsOpen) {
+      setIsPollsOpen(true);
+      setActiveTab('polls');
+      if (isNativeChatOpen && jitsiApiRef.current) {
+        jitsiApiRef.current.executeCommand('toggleChat');
+      }
+    } else {
+      if (activeTab === 'polls') {
+        setIsPollsOpen(false);
+      } else {
+        setActiveTab('polls');
+      }
+    }
+  };
+
+  // Participants Trigger Handler
+  const handleToggleParticipants = () => {
+    if (!isPollsOpen) {
+      setIsPollsOpen(true);
+      setActiveTab('participants');
+      if (isNativeChatOpen && jitsiApiRef.current) {
+        jitsiApiRef.current.executeCommand('toggleChat');
+      }
+    } else {
+      if (activeTab === 'participants') {
+        setIsPollsOpen(false);
+      } else {
+        setActiveTab('participants');
+      }
+    }
+  };
+
+  // Remove/Kick Participant (Mentor Only)
+  const handleRemoveParticipant = (participantId) => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('kickParticipant', participantId);
     }
   };
 
@@ -552,13 +620,14 @@ export default function LiveSession() {
 
 
 
-            {/* Apple Spatial / Liquid Glass Polls Panel */}
+            {/* Apple Spatial / Liquid Glass Custom Sidebar (Polls & Participants) */}
             {isPollsOpen && (
               <div className="absolute right-6 top-6 bottom-28 w-80 bg-slate-950/30 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col text-white z-40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-in fade-in slide-in-from-right-4 duration-300">
+                {/* Header */}
                 <div className="p-4 border-b border-white/10 flex items-center justify-between">
                   <h3 className="font-bold font-outfit text-sm tracking-wide flex items-center gap-2">
-                    <BarChart2 className="w-4 h-4 text-indigo-400" />
-                    Live Polls
+                    {activeTab === 'polls' ? <BarChart2 className="w-4 h-4 text-indigo-400" /> : <Users className="w-4 h-4 text-indigo-400" />}
+                    {activeTab === 'polls' ? 'Live Polls' : 'Room Participants'}
                   </h3>
                   <button 
                     onClick={() => setIsPollsOpen(false)}
@@ -568,149 +637,224 @@ export default function LiveSession() {
                   </button>
                 </div>
 
-                <div className="flex-1 p-4 overflow-y-auto space-y-5">
-                  {/* Poll Creation form for Moderator */}
-                  {liveAccess?.isModerator && (
-                    <div className="border border-white/10 bg-white/5 rounded-xl p-3.5 backdrop-blur-md space-y-3">
-                      {!isCreatingPoll ? (
-                        <button
-                          onClick={() => setIsCreatingPoll(true)}
-                          className="w-full py-2 bg-indigo-600/80 hover:bg-indigo-600 transition-colors rounded-xl text-xs font-bold font-outfit tracking-wide"
-                        >
-                          + Create New Poll
-                        </button>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase font-outfit">Question</label>
-                            <input
-                              type="text"
-                              value={creatorQuestion}
-                              onChange={(e) => setCreatorQuestion(e.target.value)}
-                              placeholder="e.g. Do you understand the scope?"
-                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs placeholder-white/30 text-white focus:outline-none focus:border-indigo-500/50"
-                            />
-                          </div>
+                {/* Tab selectors */}
+                <div className="flex border-b border-white/10 text-[11px] font-semibold font-outfit">
+                  <button
+                    onClick={() => setActiveTab('polls')}
+                    className={`flex-1 py-2.5 text-center transition-all duration-300 border-b-2 flex items-center justify-center gap-1.5 ${
+                      activeTab === 'polls' 
+                        ? 'text-indigo-400 border-indigo-500 bg-white/5 font-bold' 
+                        : 'text-slate-400 border-transparent hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <BarChart2 className="w-3.5 h-3.5" />
+                    Polls
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('participants')}
+                    className={`flex-1 py-2.5 text-center transition-all duration-300 border-b-2 flex items-center justify-center gap-1.5 ${
+                      activeTab === 'participants' 
+                        ? 'text-indigo-400 border-indigo-500 bg-white/5 font-bold' 
+                        : 'text-slate-400 border-transparent hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    People
+                    {participants.length > 0 && (
+                      <span className="bg-slate-800 border border-white/15 px-1.5 py-0.5 rounded-full text-[9px] font-mono text-slate-300 ml-1">
+                        {participants.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
 
-                          <div className="space-y-2">
-                            <label className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase font-outfit">Options</label>
-                            {creatorOptions.map((opt, idx) => (
-                              <div key={idx} className="flex gap-2 items-center">
+                {/* Content Pane */}
+                <div className="flex-1 p-4 overflow-y-auto space-y-5">
+                  {activeTab === 'polls' ? (
+                    <>
+                      {/* Poll Creation form for Moderator */}
+                      {liveAccess?.isModerator && (
+                        <div className="border border-white/10 bg-white/5 rounded-xl p-3.5 backdrop-blur-md space-y-3">
+                          {!isCreatingPoll ? (
+                            <button
+                              onClick={() => setIsCreatingPoll(true)}
+                              className="w-full py-2 bg-indigo-600/80 hover:bg-indigo-600 transition-colors rounded-xl text-xs font-bold font-outfit tracking-wide"
+                            >
+                              + Create New Poll
+                            </button>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase font-outfit">Question</label>
                                 <input
                                   type="text"
-                                  value={opt}
-                                  onChange={(e) => {
-                                    const next = [...creatorOptions];
-                                    next[idx] = e.target.value;
-                                    setCreatorOptions(next);
-                                  }}
-                                  placeholder={`Option ${idx + 1}`}
-                                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                  value={creatorQuestion}
+                                  onChange={(e) => setCreatorQuestion(e.target.value)}
+                                  placeholder="e.g. Do you understand the scope?"
+                                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs placeholder-white/30 text-white focus:outline-none focus:border-indigo-500/50"
                                 />
-                                {creatorOptions.length > 2 && (
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase font-outfit">Options</label>
+                                {creatorOptions.map((opt, idx) => (
+                                  <div key={idx} className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      value={opt}
+                                      onChange={(e) => {
+                                        const next = [...creatorOptions];
+                                        next[idx] = e.target.value;
+                                        setCreatorOptions(next);
+                                      }}
+                                      placeholder={`Option ${idx + 1}`}
+                                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                    />
+                                    {creatorOptions.length > 2 && (
+                                      <button
+                                        onClick={() => setCreatorOptions(prev => prev.filter((_, i) => i !== idx))}
+                                        className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                {creatorOptions.length < 6 && (
                                   <button
-                                    onClick={() => setCreatorOptions(prev => prev.filter((_, i) => i !== idx))}
-                                    className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                                    onClick={() => setCreatorOptions(prev => [...prev, ''])}
+                                    className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold"
                                   >
-                                    Remove
+                                    + Add Option
                                   </button>
                                 )}
                               </div>
-                            ))}
-                            {creatorOptions.length < 6 && (
-                              <button
-                                onClick={() => setCreatorOptions(prev => [...prev, ''])}
-                                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold"
-                              >
-                                + Add Option
-                              </button>
-                            )}
-                          </div>
 
-                          <div className="flex gap-2 pt-2 border-t border-white/5">
-                            <button
-                              onClick={() => {
-                                setIsCreatingPoll(false);
-                                setCreatorQuestion('');
-                                setCreatorOptions(['', '']);
-                              }}
-                              className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold"
+                              <div className="flex gap-2 pt-2 border-t border-white/5">
+                                <button
+                                  onClick={() => {
+                                    setIsCreatingPoll(false);
+                                    setCreatorQuestion('');
+                                    setCreatorOptions(['', '']);
+                                  }}
+                                  className="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={handleLaunchPoll}
+                                  disabled={!creatorQuestion.trim() || creatorOptions.some(o => !o.trim())}
+                                  className="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/30 disabled:text-white/30 rounded-lg text-xs font-bold"
+                                >
+                                  Launch
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Polls Listing */}
+                      {polls.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400/50 text-xs py-8">
+                          <BarChart2 className="w-8 h-8 mb-2 opacity-30 text-indigo-400" />
+                          <p className="font-outfit">No active polls yet.</p>
+                        </div>
+                      ) : (
+                        [...polls].reverse().map((poll) => {
+                          const { totalVotes, results } = getPollResults(poll);
+                          const myVote = poll.votes ? poll.votes[myParticipantId || 'local'] : undefined;
+                          const hasVotedPoll = myVote !== undefined;
+
+                          return (
+                            <div key={poll.id} className="border border-white/10 bg-white/5 p-4 rounded-xl space-y-3.5 backdrop-blur-md shadow-lg">
+                              <div className="flex justify-between items-start">
+                                <h4 className="font-bold text-sm tracking-wide font-outfit text-white leading-snug">
+                                  {poll.question}
+                                </h4>
+                                <span className="text-[9px] text-slate-400 font-mono bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                                  {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
+                                </span>
+                              </div>
+
+                              <div className="space-y-2.5">
+                                {results.map((res, idx) => {
+                                  const isMyOption = myVote === idx;
+                                  return (
+                                    <div key={idx} className="relative">
+                                      {hasVotedPoll ? (
+                                        <div className="flex flex-col gap-1">
+                                          <div className="flex justify-between items-center text-xs px-1 font-outfit relative z-10">
+                                            <span className={`font-medium ${isMyOption ? 'text-indigo-300 font-bold' : 'text-slate-300'}`}>
+                                              {res.option} {isMyOption && '✓'}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 font-mono">
+                                              {res.votes} ({res.percent}%)
+                                            </span>
+                                          </div>
+                                          <div className="h-7 w-full bg-white/5 border border-white/5 rounded-lg overflow-hidden relative">
+                                            <div 
+                                              className={`h-full transition-all duration-500 rounded-l-lg ${isMyOption ? 'bg-indigo-500/20' : 'bg-slate-400/10'}`} 
+                                              style={{ width: `${res.percent}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleVote(poll.id, idx)}
+                                          className="w-full text-left text-xs bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 px-4 py-2.5 rounded-xl font-outfit transition-all duration-200 active:scale-98"
+                                        >
+                                          {res.option}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </>
+                  ) : (
+                    /* Participants Tab content */
+                    <div className="space-y-3.5 font-outfit">
+                      <div className="text-[10px] text-indigo-400 uppercase tracking-widest font-bold mb-2">
+                        Active Participants
+                      </div>
+                      {participants.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400/50 text-xs py-8">
+                          <Users className="w-8 h-8 mb-2 opacity-30 text-indigo-400" />
+                          <p className="font-outfit">Only you are in the room.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {participants.map((p) => (
+                            <div 
+                              key={p.id} 
+                              className="flex items-center justify-between p-3 border border-white/10 bg-white/5 rounded-xl backdrop-blur-md"
                             >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleLaunchPoll}
-                              disabled={!creatorQuestion.trim() || creatorOptions.some(o => !o.trim())}
-                              className="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/30 disabled:text-white/30 rounded-lg text-xs font-bold"
-                            >
-                              Launch
-                            </button>
-                          </div>
+                              <div className="flex flex-col min-w-0 pr-2">
+                                <span className="font-semibold text-xs tracking-wide text-white truncate">
+                                  {p.displayName}
+                                </span>
+                                <span className="text-[8px] font-mono text-slate-400 truncate">
+                                  ID: {p.id}
+                                </span>
+                              </div>
+                              {liveAccess?.isModerator && (
+                                <button
+                                  onClick={() => handleRemoveParticipant(p.id)}
+                                  className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 border border-red-500/25 text-red-400 hover:text-red-300 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-colors"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
-                  )}
-
-                  {/* Polls Listing */}
-                  {polls.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-400/50 text-xs py-8">
-                      <BarChart2 className="w-8 h-8 mb-2 opacity-30 text-indigo-400" />
-                      <p className="font-outfit">No active polls yet.</p>
-                    </div>
-                  ) : (
-                    [...polls].reverse().map((poll) => {
-                      const { totalVotes, results } = getPollResults(poll);
-                      const myVote = poll.votes ? poll.votes[myParticipantId || 'local'] : undefined;
-                      const hasVotedPoll = myVote !== undefined;
-
-                      return (
-                        <div key={poll.id} className="border border-white/10 bg-white/5 p-4 rounded-xl space-y-3.5 backdrop-blur-md shadow-lg">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-bold text-sm tracking-wide font-outfit text-white leading-snug">
-                              {poll.question}
-                            </h4>
-                            <span className="text-[9px] text-slate-400 font-mono bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
-                            </span>
-                          </div>
-
-                          <div className="space-y-2.5">
-                            {results.map((res, idx) => {
-                              const isMyOption = myVote === idx;
-                              return (
-                                <div key={idx} className="relative">
-                                  {hasVotedPoll ? (
-                                    <div className="flex flex-col gap-1">
-                                      <div className="flex justify-between items-center text-xs px-1 font-outfit relative z-10">
-                                        <span className={`font-medium ${isMyOption ? 'text-indigo-300 font-bold' : 'text-slate-300'}`}>
-                                          {res.option} {isMyOption && '✓'}
-                                        </span>
-                                        <span className="text-[10px] text-slate-400 font-mono">
-                                          {res.votes} ({res.percent}%)
-                                        </span>
-                                      </div>
-                                      <div className="h-7 w-full bg-white/5 border border-white/5 rounded-lg overflow-hidden relative">
-                                        <div 
-                                          className={`h-full transition-all duration-500 rounded-l-lg ${isMyOption ? 'bg-indigo-500/20' : 'bg-slate-400/10'}`} 
-                                          style={{ width: `${res.percent}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleVote(poll.id, idx)}
-                                      className="w-full text-left text-xs bg-white/5 border border-white/10 hover:border-indigo-500/40 hover:bg-white/10 px-4 py-2.5 rounded-xl font-outfit transition-all duration-200 active:scale-98"
-                                    >
-                                      {res.option}
-                                    </button>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })
                   )}
                 </div>
               </div>
@@ -786,13 +930,27 @@ export default function LiveSession() {
               {/* Jitsi Native Polls Toggle */}
               <button 
                 onClick={handleTogglePolls}
-                className={`p-3.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 relative ${isPollsOpen ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
+                className={`p-3.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 relative ${isPollsOpen && activeTab === 'polls' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
                 title="Launch/View Polls"
               >
                 <BarChart2 className="w-5.5 h-5.5" />
                 {!isPollsOpen && unreadPollsCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white border border-slate-950 font-bold text-[9px] rounded-full flex items-center justify-center shadow-lg animate-bounce">
                     {unreadPollsCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Participants Toggle button */}
+              <button 
+                onClick={handleToggleParticipants}
+                className={`p-3.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 relative ${isPollsOpen && activeTab === 'participants' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
+                title="View Participants"
+              >
+                <Users className="w-5.5 h-5.5" />
+                {participants.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-indigo-500 text-white border border-slate-950 font-bold text-[9px] rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-lg">
+                    {participants.length}
                   </span>
                 )}
               </button>
