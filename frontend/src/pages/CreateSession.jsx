@@ -126,6 +126,12 @@ export default function CreateSession() {
 
       const topicsArray = formData.topics.split(',').map(t => t.trim()).filter(Boolean);
 
+      if (topicsArray.length > 20) {
+        setError("You can add a maximum of 20 topics.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         ...formData,
         description: cleanDescription(formData.description),
@@ -274,7 +280,12 @@ export default function CreateSession() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Topics</label>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-semibold text-gray-700">Topics</label>
+                        <span className="text-xs text-gray-500">
+                          {formData.topics ? formData.topics.split(',').map(t => t.trim()).filter(Boolean).length : 0}/20 topics
+                        </span>
+                      </div>
                       <input
                         type="text"
                         name="topics"
@@ -283,6 +294,7 @@ export default function CreateSession() {
                         className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5]"
                         placeholder="React, Hooks, State"
                       />
+                      <p className="mt-1 text-xs text-gray-400">Separate topics with commas (maximum 20 topics).</p>
                     </div>
                   </div>
                 </div>

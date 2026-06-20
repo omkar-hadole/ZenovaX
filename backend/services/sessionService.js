@@ -79,6 +79,26 @@ exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
         throw new BadRequestError('duration must be between 15 and 480 minutes');
     }
 
+    if (topics !== undefined) {
+        let topicsArray = [];
+        if (isValidArray(topics)) {
+            topicsArray = topics;
+        } else if (typeof topics === 'string') {
+            try {
+                if (topics.trim().startsWith('[')) {
+                    topicsArray = JSON.parse(topics);
+                } else {
+                    topicsArray = topics.split(',').map(t => t.trim()).filter(Boolean);
+                }
+            } catch (e) {
+                topicsArray = topics.split(',').map(t => t.trim()).filter(Boolean);
+            }
+        }
+        if (topicsArray.length > 20) {
+            throw new BadRequestError("A session can have a maximum of 20 topics");
+        }
+    }
+
     const sessionRequest = await prisma.sessionRequest.create({
         data: {
             mentorId,
@@ -169,6 +189,26 @@ exports.updateSessionRequest = async (prisma, cache, userId, userRole, id, data)
 
     if (meetingLink !== undefined && !isHttpsUrl(meetingLink)) {
         throw new BadRequestError("meetingLink must be a valid https:// URL");
+    }
+
+    if (topics !== undefined) {
+        let topicsArray = [];
+        if (isValidArray(topics)) {
+            topicsArray = topics;
+        } else if (typeof topics === 'string') {
+            try {
+                if (topics.trim().startsWith('[')) {
+                    topicsArray = JSON.parse(topics);
+                } else {
+                    topicsArray = topics.split(',').map(t => t.trim()).filter(Boolean);
+                }
+            } catch (e) {
+                topicsArray = topics.split(',').map(t => t.trim()).filter(Boolean);
+            }
+        }
+        if (topicsArray.length > 20) {
+            throw new BadRequestError("A session can have a maximum of 20 topics");
+        }
     }
 
     const requestUpdateData = {
