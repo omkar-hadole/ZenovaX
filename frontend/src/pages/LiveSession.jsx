@@ -475,7 +475,10 @@ export default function LiveSession() {
                     {emoji}
                   </button>
                 ))}
-              </di            {/* Bespoke Spatial Liquid Glass Control Bar Centering Wrapper */}
+              </div>
+            )}
+
+            {/* Bespoke Spatial Liquid Glass Control Bar Centering Wrapper */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
               {/* Inner control bar (this is what gets translated, blurred, and has GPU transitions) */}
               <div 
@@ -609,7 +612,6 @@ export default function LiveSession() {
                   </button>
                 </div>
               </div>
-            </div>
             </div>
           </div>
         );
