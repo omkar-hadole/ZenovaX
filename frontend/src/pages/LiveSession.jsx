@@ -17,6 +17,8 @@ import {
   Hand
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
+import logo from '../assets/footerlogo.svg';
+import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 // Helper to dynamically load external scripts
 const loadExternalScript = (url) => {
@@ -657,13 +659,18 @@ export default function LiveSession() {
       {/* Top Header bar - Apple glass styling */}
       <div className="h-16 border-b border-white/10 bg-slate-950/20 backdrop-blur-xl flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8.5 h-8.5 bg-gradient-to-tr from-indigo-600 to-indigo-400 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/10 border border-white/15">
-            <Video className="w-4.5 h-4.5 text-white" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-sm tracking-tight font-outfit text-white">Live Classroom</h1>
-            <p className="text-[10px] font-mono text-white/40">Session ID: {id}</p>
-          </div>
+          <img
+            src={getOptimizedImageUrl(logo)}
+            width={120}
+            height={24}
+            fetchpriority="high"
+            alt="ZenovaX"
+            className="h-6 object-contain"
+          />
+          <div className="w-[1px] h-5 bg-white/15 mx-1" />
+          <span className="bg-white/5 border border-white/10 text-slate-300 px-2.5 py-0.5 rounded-md text-[10px] font-mono shadow-sm">
+            ID: {id}
+          </span>
         </div>
         <div className="flex items-center gap-4">
           <span className="bg-red-500/15 border border-red-500/25 text-red-400 px-3 py-1 rounded-full text-[10px] tracking-wider uppercase font-bold flex items-center gap-1.5 shadow-sm shadow-red-500/5">
