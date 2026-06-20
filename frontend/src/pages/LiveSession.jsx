@@ -475,105 +475,141 @@ export default function LiveSession() {
                     {emoji}
                   </button>
                 ))}
+              </di            {/* Bespoke Spatial Liquid Glass Control Bar Centering Wrapper */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+              {/* Inner control bar (this is what gets translated, blurred, and has GPU transitions) */}
+              <div 
+                onMouseEnter={() => {
+                  isHoveringControlBarRef.current = true;
+                  resetInactivityTimeout();
+                }}
+                onMouseLeave={() => {
+                  isHoveringControlBarRef.current = false;
+                  resetInactivityTimeout();
+                }}
+                className={`flex items-center gap-2 bg-slate-900/60 backdrop-blur-3xl p-1.5 rounded-2xl border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)_inset] pointer-events-auto transform ${
+                  showControlBar 
+                    ? 'translate-y-0 opacity-100' 
+                    : 'translate-y-14 opacity-0 pointer-events-none'
+                }`}
+                style={{
+                  transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  willChange: 'transform, opacity',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden'
+                }}
+              >
+                {/* Group 1: Media Toggles */}
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={handleToggleAudio}
+                    className={`p-2.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                      isAudioMuted 
+                        ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30' 
+                        : 'bg-white/5 border border-white/5 text-white/90 hover:bg-white/12 hover:text-white'
+                    }`}
+                    title={isAudioMuted ? "Unmute Mic" : "Mute Mic"}
+                  >
+                    {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </button>
+                  
+                  <button 
+                    onClick={handleToggleVideo}
+                    className={`p-2.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                      isVideoMuted 
+                        ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30' 
+                        : 'bg-white/5 border border-white/5 text-white/90 hover:bg-white/12 hover:text-white'
+                    }`}
+                    title={isVideoMuted ? "Start Video" : "Stop Video"}
+                  >
+                    {isVideoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="w-[1px] h-5 bg-white/10 mx-0.5" />
+
+                {/* Group 2: Interactivity */}
+                <div className="flex items-center gap-1.5">
+                  {/* Share Screen button */}
+                  <button 
+                    onClick={handleToggleScreenShare}
+                    className={`p-2.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                      isScreenSharing 
+                        ? 'bg-indigo-500/25 border border-indigo-500/35 text-indigo-200 hover:bg-indigo-500/35' 
+                        : 'bg-white/5 border border-white/5 text-white/90 hover:bg-white/12 hover:text-white'
+                    }`}
+                    title={isScreenSharing ? "Stop Screen Share" : "Share Screen"}
+                  >
+                    {isScreenSharing ? <ScreenShareOff className="w-5 h-5" /> : <ScreenShare className="w-5 h-5" />}
+                  </button>
+
+                  {/* Reaction toggle */}
+                  <button 
+                    onClick={() => setShowReactions(!showReactions)}
+                    className={`p-2.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                      showReactions 
+                        ? 'bg-indigo-500/25 border border-indigo-500/35 text-indigo-200' 
+                        : 'bg-white/5 border border-white/5 text-white/90 hover:bg-white/12 hover:text-white'
+                    }`}
+                    title="Send Reaction"
+                  >
+                    <Smile className="w-5 h-5" />
+                  </button>
+
+                  {/* Raise Hand button */}
+                  <button 
+                    onClick={handleToggleRaiseHand}
+                    className={`p-2.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                      isHandRaised 
+                        ? 'bg-indigo-500/25 border border-indigo-500/35 text-indigo-200 hover:bg-indigo-500/35' 
+                        : 'bg-white/5 border border-white/5 text-white/90 hover:bg-white/12 hover:text-white'
+                    }`}
+                    title={isHandRaised ? "Lower Hand" : "Raise Hand"}
+                  >
+                    <Hand className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="w-[1px] h-5 bg-white/10 mx-0.5" />
+
+                {/* Group 3: Utility / Chat */}
+                <div className="flex items-center gap-1.5">
+                  {/* Chat Toggle button */}
+                  <button 
+                    onClick={handleToggleNativeChat}
+                    className={`p-2.5 rounded-xl transition-all duration-200 active:scale-95 relative ${
+                      isNativeChatOpen 
+                        ? 'bg-indigo-500/25 border border-indigo-500/35 text-indigo-200' 
+                        : 'bg-white/5 border border-white/5 text-white/90 hover:bg-white/12 hover:text-white'
+                    }`}
+                    title={isNativeChatOpen ? "Hide Chat" : "Show Chat"}
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    {!isNativeChatOpen && unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white border border-slate-950 font-bold text-[9px] rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="w-[1px] h-5 bg-white/10 mx-0.5" />
+
+                {/* Group 4: Call Actions */}
+                <div className="flex items-center">
+                  <button 
+                    onClick={handleHangup}
+                    className="p-2.5 rounded-xl bg-red-500/90 border border-red-400/25 hover:bg-red-500 hover:shadow-lg hover:shadow-red-500/20 text-white transition-all duration-200 active:scale-95"
+                    title="Hang Up"
+                  >
+                    <PhoneOff className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-            )}
-
-            {/* Bespoke Spatial Liquid Glass Control Bar */}
-            <div 
-              onMouseEnter={() => {
-                isHoveringControlBarRef.current = true;
-                resetInactivityTimeout();
-              }}
-              onMouseLeave={() => {
-                isHoveringControlBarRef.current = false;
-                resetInactivityTimeout();
-              }}
-              className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 bg-slate-950/20 backdrop-blur-2xl p-2 rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(99,97,224,0.15)] z-50 transition-all duration-500 transform ${
-                showControlBar 
-                  ? 'translate-y-0 opacity-100 pointer-events-auto' 
-                  : 'translate-y-12 opacity-0 pointer-events-none'
-              }`}
-            >
-              <button 
-                onClick={handleToggleAudio}
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  isAudioMuted 
-                    ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/35' 
-                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
-                }`}
-                title={isAudioMuted ? "Unmute Mic" : "Mute Mic"}
-              >
-                {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
-              
-              <button 
-                onClick={handleToggleVideo}
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  isVideoMuted 
-                    ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/35' 
-                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
-                }`}
-                title={isVideoMuted ? "Start Video" : "Stop Video"}
-              >
-                {isVideoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-              </button>
-
-              {/* Share Screen button */}
-              <button 
-                onClick={handleToggleScreenShare}
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  isScreenSharing 
-                    ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/35' 
-                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
-                }`}
-                title={isScreenSharing ? "Stop Screen Share" : "Share Screen"}
-              >
-                {isScreenSharing ? <ScreenShareOff className="w-5 h-5" /> : <ScreenShare className="w-5 h-5" />}
-              </button>
-
-              {/* Reaction toggle */}
-              <button 
-                onClick={() => setShowReactions(!showReactions)}
-                className={`p-2.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 ${showReactions ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
-                title="Send Reaction"
-              >
-                <Smile className="w-5 h-5" />
-              </button>
-
-              {/* Raise Hand button */}
-              <button 
-                onClick={handleToggleRaiseHand}
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  isHandRaised 
-                    ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/35' 
-                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
-                }`}
-                title={isHandRaised ? "Lower Hand" : "Raise Hand"}
-              >
-                <Hand className="w-5 h-5" />
-              </button>
-
-              {/* Chat Toggle button */}
-              <button 
-                onClick={handleToggleNativeChat}
-                className={`p-2.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 relative ${isNativeChatOpen ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
-                title={isNativeChatOpen ? "Hide Chat" : "Show Chat"}
-              >
-                <MessageSquare className="w-5 h-5" />
-                {!isNativeChatOpen && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white border border-slate-950 font-bold text-[9px] rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              <button 
-                onClick={handleHangup}
-                className="p-2.5 rounded-xl bg-red-600/80 border border-red-500/30 hover:bg-red-600 text-white transition-all duration-300 shadow-lg shadow-red-600/10 hover:shadow-red-600/35"
-                title="Hang Up"
-              >
-                <PhoneOff className="w-5 h-5" />
-              </button>
+            </div>
             </div>
           </div>
         );
