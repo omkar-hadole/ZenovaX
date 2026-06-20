@@ -83,7 +83,7 @@ export default function MentorDashboardView({
                                                         <div className="flex items-center gap-4 text-white/90 text-sm">
                                                             <div className="flex items-center gap-1.5">
                                                                 <Clock size={16} />
-                                                                <span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                <span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                                                             </div>
                                                             <div className="flex items-center gap-1.5">
                                                                 <Users size={16} />
@@ -111,7 +111,7 @@ export default function MentorDashboardView({
                                                         <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                                                             <span className="flex items-center gap-1">
                                                                 <Clock size={14} />
-                                                                {new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                {new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                                                             </span>
                                                             <span className="w-1 h-1 bg-gray-300 rounded-full" />
                                                             <span>{session.duration} min</span>

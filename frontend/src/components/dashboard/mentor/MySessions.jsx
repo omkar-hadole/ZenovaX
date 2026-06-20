@@ -74,7 +74,7 @@ export default function MySessions({ sessions }) {
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-gray-500">
                                     <Clock size={16} className="text-[#A9C1F7]" />
-                                    <span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {session.duration} min</span>
+                                    <span>{new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} • {session.duration} min</span>
                                 </div>
                             </div>
 

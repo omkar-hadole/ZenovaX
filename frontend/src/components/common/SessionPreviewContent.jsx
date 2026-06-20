@@ -66,7 +66,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
               <div className="flex items-center gap-2.5 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                 <Clock className="text-purple-500" size={18} />
                 <span className="font-medium text-sm">
-                  {scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {session.duration || 0} min
+                  {scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} • {session.duration || 0} min
                 </span>
               </div>
             </div>
