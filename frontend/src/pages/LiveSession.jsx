@@ -6,13 +6,16 @@ import {
   MicOff, 
   VideoOff, 
   MessageSquare, 
-  Settings, 
   PhoneOff, 
   AlertCircle, 
   Calendar, 
   Clock, 
   ArrowLeft,
-  Smile
+  Smile,
+  ScreenShare,
+  ScreenShareOff,
+  Hand,
+  MoreVertical
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 
@@ -48,6 +51,16 @@ export default function LiveSession() {
   // Chat Sidebar States
   const [isNativeChatOpen, setIsNativeChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Screen Share & Raise Hand States
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isHandRaised, setIsHandRaised] = useState(false);
+  const [myParticipantId, setMyParticipantId] = useState(null);
+
+  const myParticipantIdRef = useRef(null);
+  useEffect(() => {
+    myParticipantIdRef.current = myParticipantId;
+  }, [myParticipantId]);
 
 
 
@@ -163,6 +176,20 @@ export default function LiveSession() {
           setUnreadCount(unreadCount || 0);
         });
 
+        api.addEventListener('videoConferenceJoined', ({ id }) => {
+          setMyParticipantId(id);
+        });
+
+        api.addEventListener('screenSharingStatusChanged', ({ on }) => {
+          setIsScreenSharing(on);
+        });
+
+        api.addEventListener('raiseHandUpdated', ({ handRaised, participantId }) => {
+          if (!participantId || participantId === myParticipantIdRef.current) {
+            setIsHandRaised(handRaised);
+          }
+        });
+
         // Chat message and reaction listener
         api.addEventListener('incomingMessage', ({ from, nick, message }) => {
           if (message.startsWith('[REACTION]: ')) {
@@ -224,6 +251,20 @@ export default function LiveSession() {
   const handleToggleSettings = () => {
     if (jitsiApiRef.current) {
       jitsiApiRef.current.executeCommand('openSettings');
+    }
+  };
+
+  const handleToggleScreenShare = () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('toggleShareScreen');
+      setIsScreenSharing(prev => !prev);
+    }
+  };
+
+  const handleToggleRaiseHand = () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('toggleRaiseHand');
+      setIsHandRaised(prev => !prev);
     }
   };
 
@@ -424,6 +465,19 @@ export default function LiveSession() {
                 {isVideoMuted ? <VideoOff className="w-5.5 h-5.5" /> : <Video className="w-5.5 h-5.5" />}
               </button>
 
+              {/* Share Screen button */}
+              <button 
+                onClick={handleToggleScreenShare}
+                className={`p-3.5 rounded-xl transition-all duration-300 ${
+                  isScreenSharing 
+                    ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/35' 
+                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
+                }`}
+                title={isScreenSharing ? "Stop Screen Share" : "Share Screen"}
+              >
+                {isScreenSharing ? <ScreenShareOff className="w-5.5 h-5.5" /> : <ScreenShare className="w-5.5 h-5.5" />}
+              </button>
+
               {/* Reaction toggle */}
               <button 
                 onClick={() => setShowReactions(!showReactions)}
@@ -431,6 +485,19 @@ export default function LiveSession() {
                 title="Send Reaction"
               >
                 <Smile className="w-5.5 h-5.5" />
+              </button>
+
+              {/* Raise Hand button */}
+              <button 
+                onClick={handleToggleRaiseHand}
+                className={`p-3.5 rounded-xl transition-all duration-300 ${
+                  isHandRaised 
+                    ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/35' 
+                    : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
+                }`}
+                title={isHandRaised ? "Lower Hand" : "Raise Hand"}
+              >
+                <Hand className="w-5.5 h-5.5" />
               </button>
 
               {/* Chat Toggle button */}
@@ -447,8 +514,6 @@ export default function LiveSession() {
                 )}
               </button>
 
-
-
               <button 
                 onClick={handleHangup}
                 className="p-3.5 rounded-xl bg-red-600/80 border border-red-500/30 hover:bg-red-600 text-white transition-all duration-300 shadow-lg shadow-red-600/10 hover:shadow-red-600/35"
@@ -457,12 +522,13 @@ export default function LiveSession() {
                 <PhoneOff className="w-5.5 h-5.5" />
               </button>
 
+              {/* More Actions (Three Dots) button */}
               <button 
                 onClick={handleToggleSettings}
                 className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/15 transition-all duration-300"
-                title="Settings"
+                title="More Actions"
               >
-                <Settings className="w-5.5 h-5.5" />
+                <MoreVertical className="w-5.5 h-5.5" />
               </button>
             </div>
           </div>
