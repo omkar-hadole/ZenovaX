@@ -14,8 +14,7 @@ import {
   Smile,
   ScreenShare,
   ScreenShareOff,
-  Hand,
-  MoreVertical
+  Hand
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 
@@ -67,6 +66,30 @@ export default function LiveSession() {
   // Reactions States
   const [showReactions, setShowReactions] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState([]);
+
+  // Control Bar Autohide States & Refs
+  const [showControlBar, setShowControlBar] = useState(true);
+  const timeoutRef = useRef(null);
+  const isHoveringControlBarRef = useRef(false);
+  const showReactionsRef = useRef(false);
+
+  useEffect(() => {
+    showReactionsRef.current = showReactions;
+  }, [showReactions]);
+
+  const resetInactivityTimeout = () => {
+    setShowControlBar(true);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      if (!isHoveringControlBarRef.current && !showReactionsRef.current) {
+        setShowControlBar(false);
+      } else {
+        resetInactivityTimeout();
+      }
+    }, 3000);
+  };
 
   const jitsiContainerRef = useRef(null);
   const jitsiApiRef = useRef(null);
@@ -227,6 +250,28 @@ export default function LiveSession() {
     };
   }, [state, liveAccess]);
 
+  // Control Bar Inactivity Tracking
+  useEffect(() => {
+    if (state !== 'ACTIVE') return;
+
+    const handleMovement = () => {
+      resetInactivityTimeout();
+    };
+
+    window.addEventListener('mousemove', handleMovement);
+    window.addEventListener('touchstart', handleMovement);
+    
+    resetInactivityTimeout();
+
+    return () => {
+      window.removeEventListener('mousemove', handleMovement);
+      window.removeEventListener('touchstart', handleMovement);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [state]);
+
   // Wire control bar handlers to Jitsi external API
   const handleToggleAudio = () => {
     if (jitsiApiRef.current) {
@@ -245,12 +290,6 @@ export default function LiveSession() {
       jitsiApiRef.current.executeCommand('hangup');
     } else {
       navigate('/dashboard');
-    }
-  };
-
-  const handleToggleSettings = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('openSettings');
     }
   };
 
@@ -423,7 +462,7 @@ export default function LiveSession() {
 
             {/* Reactions Overlay Panel (above emoji trigger) */}
             {showReactions && (
-              <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-3.5 bg-slate-950/30 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/10 shadow-2xl z-50 animate-in slide-in-from-bottom-2 duration-300">
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-950/30 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/10 shadow-2xl z-50 animate-in slide-in-from-bottom-2 duration-300">
                 {['❤️', '👍', '🎉', '😂', '😮', '👏'].map((emoji) => (
                   <button
                     key={emoji}
@@ -431,7 +470,7 @@ export default function LiveSession() {
                       triggerReaction(emoji);
                       setShowReactions(false);
                     }}
-                    className="text-3xl hover:scale-130 active:scale-90 transition-all duration-150 filter drop-shadow-md cursor-pointer"
+                    className="text-2xl hover:scale-130 active:scale-90 transition-all duration-150 filter drop-shadow-md cursor-pointer"
                   >
                     {emoji}
                   </button>
@@ -440,73 +479,87 @@ export default function LiveSession() {
             )}
 
             {/* Bespoke Spatial Liquid Glass Control Bar */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-slate-950/20 backdrop-blur-2xl p-3.5 rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(99,97,224,0.15)] z-50 transition-all duration-300">
+            <div 
+              onMouseEnter={() => {
+                isHoveringControlBarRef.current = true;
+                resetInactivityTimeout();
+              }}
+              onMouseLeave={() => {
+                isHoveringControlBarRef.current = false;
+                resetInactivityTimeout();
+              }}
+              className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 bg-slate-950/20 backdrop-blur-2xl p-2 rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(99,97,224,0.15)] z-50 transition-all duration-500 transform ${
+                showControlBar 
+                  ? 'translate-y-0 opacity-100 pointer-events-auto' 
+                  : 'translate-y-12 opacity-0 pointer-events-none'
+              }`}
+            >
               <button 
                 onClick={handleToggleAudio}
-                className={`p-3.5 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   isAudioMuted 
                     ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/35' 
                     : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
                 }`}
                 title={isAudioMuted ? "Unmute Mic" : "Mute Mic"}
               >
-                {isAudioMuted ? <MicOff className="w-5.5 h-5.5" /> : <Mic className="w-5.5 h-5.5" />}
+                {isAudioMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
               
               <button 
                 onClick={handleToggleVideo}
-                className={`p-3.5 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   isVideoMuted 
                     ? 'bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/35' 
                     : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
                 }`}
                 title={isVideoMuted ? "Start Video" : "Stop Video"}
               >
-                {isVideoMuted ? <VideoOff className="w-5.5 h-5.5" /> : <Video className="w-5.5 h-5.5" />}
+                {isVideoMuted ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
               </button>
 
               {/* Share Screen button */}
               <button 
                 onClick={handleToggleScreenShare}
-                className={`p-3.5 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   isScreenSharing 
                     ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/35' 
                     : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
                 }`}
                 title={isScreenSharing ? "Stop Screen Share" : "Share Screen"}
               >
-                {isScreenSharing ? <ScreenShareOff className="w-5.5 h-5.5" /> : <ScreenShare className="w-5.5 h-5.5" />}
+                {isScreenSharing ? <ScreenShareOff className="w-5 h-5" /> : <ScreenShare className="w-5 h-5" />}
               </button>
 
               {/* Reaction toggle */}
               <button 
                 onClick={() => setShowReactions(!showReactions)}
-                className={`p-3.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 ${showReactions ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
+                className={`p-2.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 ${showReactions ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
                 title="Send Reaction"
               >
-                <Smile className="w-5.5 h-5.5" />
+                <Smile className="w-5 h-5" />
               </button>
 
               {/* Raise Hand button */}
               <button 
                 onClick={handleToggleRaiseHand}
-                className={`p-3.5 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   isHandRaised 
                     ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/35' 
                     : 'bg-white/5 border border-white/10 text-white hover:bg-white/15'
                 }`}
                 title={isHandRaised ? "Lower Hand" : "Raise Hand"}
               >
-                <Hand className="w-5.5 h-5.5" />
+                <Hand className="w-5 h-5" />
               </button>
 
               {/* Chat Toggle button */}
               <button 
                 onClick={handleToggleNativeChat}
-                className={`p-3.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 relative ${isNativeChatOpen ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
+                className={`p-2.5 rounded-xl transition-all duration-300 bg-white/5 border border-white/10 text-white hover:bg-white/15 relative ${isNativeChatOpen ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : ''}`}
                 title={isNativeChatOpen ? "Hide Chat" : "Show Chat"}
               >
-                <MessageSquare className="w-5.5 h-5.5" />
+                <MessageSquare className="w-5 h-5" />
                 {!isNativeChatOpen && unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 text-white border border-slate-950 font-bold text-[9px] rounded-full flex items-center justify-center shadow-lg animate-bounce">
                     {unreadCount}
@@ -516,19 +569,10 @@ export default function LiveSession() {
 
               <button 
                 onClick={handleHangup}
-                className="p-3.5 rounded-xl bg-red-600/80 border border-red-500/30 hover:bg-red-600 text-white transition-all duration-300 shadow-lg shadow-red-600/10 hover:shadow-red-600/35"
+                className="p-2.5 rounded-xl bg-red-600/80 border border-red-500/30 hover:bg-red-600 text-white transition-all duration-300 shadow-lg shadow-red-600/10 hover:shadow-red-600/35"
                 title="Hang Up"
               >
-                <PhoneOff className="w-5.5 h-5.5" />
-              </button>
-
-              {/* More Actions (Three Dots) button */}
-              <button 
-                onClick={handleToggleSettings}
-                className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/15 transition-all duration-300"
-                title="More Actions"
-              >
-                <MoreVertical className="w-5.5 h-5.5" />
+                <PhoneOff className="w-5 h-5" />
               </button>
             </div>
           </div>
