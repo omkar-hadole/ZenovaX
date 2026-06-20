@@ -458,9 +458,27 @@ export default function LiveSession() {
               ))}
             </div>
 
-
-
-
+            {/* Transparent sensor overlay to catch mouse moves when control bar is hidden */}
+            <div 
+              onMouseMove={() => {
+                if (!showControlBar) {
+                  resetInactivityTimeout();
+                }
+              }}
+              onTouchStart={() => {
+                if (!showControlBar) {
+                  resetInactivityTimeout();
+                }
+              }}
+              onClick={() => {
+                if (!showControlBar) {
+                  resetInactivityTimeout();
+                }
+              }}
+              className={`absolute inset-0 z-40 bg-transparent ${
+                showControlBar ? 'pointer-events-none' : 'pointer-events-auto'
+              }`}
+            />
 
             {/* Reactions Overlay Panel (above emoji trigger) */}
             {showReactions && (
