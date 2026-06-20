@@ -4,6 +4,7 @@ import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 import { cleanDescription } from '../../utils/descriptionFormatter';
+import QRCodeGenerator from './QRCodeGenerator';
 
 function parseTopics(topics) {
   if (!topics) return [];
@@ -24,6 +25,10 @@ export default function SessionPreviewContent({ session, isPreview, children, on
   const topics = parseTopics(session.topics);
   const isSessionTimeOver = new Date(new Date(session.scheduledAt).getTime() + session.duration * 60000) < new Date();
   const isHost = session.mentorId === userId || session.mentor?.id === userId;
+  const now = new Date();
+  const fifteenMinsBeforeStart = new Date(scheduledAt.getTime() - 15 * 60 * 1000);
+  const isLinkActive = now >= fifteenMinsBeforeStart;
+  const bookingId = session.bookingId || (session.bookings && session.bookings.length > 0 ? session.bookings[0].id : null);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -199,13 +204,32 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                     <CheckCircle className="w-5 h-5" />
                     Session Completed
                   </button>
-                ) : (
+                ) : session.mode === 'OFFLINE' ? (
+                  bookingId ? (
+                    <div className="mt-4">
+                      <QRCodeGenerator bookingId={bookingId} sessionId={session.id} />
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-semibold text-gray-600">
+                      In-Person Session
+                    </div>
+                  )
+                ) : isLinkActive ? (
                   <button
                     onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
                     className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                    title="Live class link activates 15 minutes before the session starts"
+                  >
+                    <Video className="w-5 h-5" />
+                    Join Live Class (Activates 15m before)
                   </button>
                 )}
               </div>
@@ -219,13 +243,26 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                     <CheckCircle className="w-5 h-5" />
                     Session Completed
                   </button>
-                ) : (
+                ) : session.mode === 'OFFLINE' ? (
+                  <div className="text-center py-4 bg-gray-50 rounded-2xl border border-gray-100 text-sm font-semibold text-gray-600">
+                    In-Person Session (Host)
+                  </div>
+                ) : isLinkActive ? (
                   <button
                     onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
                     className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class (Host)
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="w-full bg-gray-100 text-gray-400 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center gap-2.5"
+                    title="Live class link activates 15 minutes before the session starts"
+                  >
+                    <Video className="w-5 h-5" />
+                    Join Live Class (Activates 15m before)
                   </button>
                 )}
               </div>
