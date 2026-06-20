@@ -462,7 +462,7 @@ export default function LiveSession() {
 
             {/* Reactions Overlay Panel (above emoji trigger) */}
             {showReactions && (
-              <div className="absolute bottom-20 left-1/2 flex items-center gap-3 bg-slate-900/70 backdrop-blur-3xl px-4 py-2 rounded-full border border-white/15 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)_inset] z-50 origin-bottom transform animate-[apple-pop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
+              <div className="absolute bottom-[85px] left-1/2 flex items-center gap-3 bg-slate-900/70 backdrop-blur-3xl px-4 py-2 rounded-full border border-white/15 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)_inset] z-50 origin-bottom transform animate-[apple-pop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
                 {['❤️', '👍', '🎉', '😂', '😮', '👏'].map((emoji) => (
                   <button
                     key={emoji}
