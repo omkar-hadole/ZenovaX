@@ -462,7 +462,7 @@ export default function LiveSession() {
 
             {/* Reactions Overlay Panel (above emoji trigger) */}
             {showReactions && (
-              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-slate-950/30 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/10 shadow-2xl z-50 animate-in slide-in-from-bottom-2 duration-300">
+              <div className="absolute bottom-20 left-1/2 flex items-center gap-3 bg-slate-900/70 backdrop-blur-3xl px-4 py-2 rounded-full border border-white/15 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.1)_inset] z-50 origin-bottom transform animate-[apple-pop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
                 {['❤️', '👍', '🎉', '😂', '😮', '👏'].map((emoji) => (
                   <button
                     key={emoji}
@@ -470,7 +470,7 @@ export default function LiveSession() {
                       triggerReaction(emoji);
                       setShowReactions(false);
                     }}
-                    className="text-2xl hover:scale-130 active:scale-90 transition-all duration-150 filter drop-shadow-md cursor-pointer"
+                    className="text-2xl hover:scale-125 hover:-translate-y-1 active:scale-90 transition-all duration-200 ease-out filter drop-shadow-md cursor-pointer transform origin-bottom"
                   >
                     {emoji}
                   </button>
@@ -640,6 +640,16 @@ export default function LiveSession() {
           100% {
             transform: translateY(-80vh) scale(0.6) rotate(-12deg);
             opacity: 0;
+          }
+        }
+        @keyframes apple-pop {
+          0% {
+            transform: translate3d(-50%, 15px, 0) scale(0.85);
+            opacity: 0;
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0) scale(1);
+            opacity: 1;
           }
         }
       `}} />
