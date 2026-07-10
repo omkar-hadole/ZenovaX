@@ -1,0 +1,15 @@
+# Custom response headers for Amplify Hosting (mirrors the old vercel.json caching).
+# Hashed Vite assets are immutable and cached for a year; HTML is never cached.
+customHeaders:
+  - pattern: '/assets/**'
+    headers:
+      - key: Cache-Control
+        value: 'public, max-age=31536000, immutable'
+  - pattern: '**/*.html'
+    headers:
+      - key: Cache-Control
+        value: 'public, max-age=0, must-revalidate'
+  - pattern: '/'
+    headers:
+      - key: Cache-Control
+        value: 'public, max-age=0, must-revalidate'

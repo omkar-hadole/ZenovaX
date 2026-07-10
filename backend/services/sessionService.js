@@ -366,18 +366,8 @@ exports.executeBookingTransaction = async (prisma, cache, userId, sessionId) => 
 };
 
 exports.bookSession = async (prisma, cache, userId, sessionId) => {
-    // 1. Fast fail if there is a cached failed status
-    if (cache) {
-        const cachedResult = await cache.get(`booking_result:${userId}:${sessionId}`);
-        if (cachedResult && cachedResult.status === 'FAILED') {
-            throw new BadRequestError(cachedResult.error);
-        }
-        if (cachedResult && cachedResult.status === 'CONFIRMED') {
-            throw new BadRequestError("You have already booked this session");
-        }
-    }
-
-    // 2. Check if a booking already exists in the database
+    // Fast-path check before the transaction (executeBookingTransaction re-checks
+    // this inside the transaction too, which is what actually prevents races).
     const existingBooking = await prisma.booking.findUnique({
         where: {
             userId_sessionId: {
@@ -391,11 +381,7 @@ exports.bookSession = async (prisma, cache, userId, sessionId) => {
         throw new BadRequestError("You have already booked this session");
     }
 
-    // 3. Delegate to booking queue
-    const bookingQueue = require("../utils/bookingQueue");
-    await bookingQueue.addBookingJob(prisma, cache, userId, sessionId);
-
-    return { status: "PROCESSING", message: "Booking is in progress" };
+    return exports.executeBookingTransaction(prisma, cache, userId, sessionId);
 };
 
 exports.getBookingStatus = async (prisma, cache, userId, sessionId) => {

@@ -91,29 +91,35 @@ export default function BrowseSessionsView({
             ) : (
                 <div className="flex flex-col gap-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sessions.map((session) => (
-                            <SessionCard
-                                key={session.id}
-                                session={session}
-                                footer={
-                                    <>
-                                        <div className="text-sm">
-                                            <span className="font-bold text-gray-800">{session.duration}</span>
-                                            <span className="text-gray-500"> min</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setSelectedSession(session)}
-                                            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all transform hover:-translate-y-0.5 ${session.isBooked
-                                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                                : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg'
-                                                }`}
-                                        >
-                                            {session.isBooked ? 'Registered' : 'Register'}
-                                        </button>
-                                    </>
-                                }
-                            />
-                        ))}
+                        {sessions.map((session) => {
+                            const isSessionEnded = new Date(new Date(session.scheduledAt).getTime() + session.duration * 60000) < new Date();
+                            return (
+                                <SessionCard
+                                    key={session.id}
+                                    session={session}
+                                    footer={
+                                        <>
+                                            <div className="text-sm">
+                                                <span className="font-bold text-gray-800">{session.duration}</span>
+                                                <span className="text-gray-500"> min</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setSelectedSession(session)}
+                                                disabled={!session.isBooked && isSessionEnded}
+                                                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all transform hover:-translate-y-0.5 ${session.isBooked
+                                                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                    : isSessionEnded
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed hover:translate-y-0'
+                                                        : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg'
+                                                    }`}
+                                            >
+                                                {session.isBooked ? 'Registered' : isSessionEnded ? 'Registration Closed' : 'Register'}
+                                            </button>
+                                        </>
+                                    }
+                                />
+                            );
+                        })}
                     </div>
 
                     {totalPages > 1 && (

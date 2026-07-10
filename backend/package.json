@@ -36,6 +36,7 @@
     "nodemailer": "^7.0.13",
     "rate-limit-redis": "^5.0.0",
     "semver": "^7.5.4",
+    "serverless-http": "^3.2.0",
     "winston": "^3.19.0",
     "xss": "^1.0.15"
   },

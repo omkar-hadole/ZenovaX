@@ -8,7 +8,7 @@ const { BadRequestError } = require("../utils/errors");
 // doesn't crash the server at startup.
 let model = null;
 
-const HELP_CONTEXT = fs.readFileSync(path.join(__dirname, '../../HELP_CENTER.md'), 'utf8');
+const HELP_CONTEXT = fs.readFileSync(path.join(__dirname, '../HELP_CENTER.md'), 'utf8');
 
 const SYSTEM_PROMPT = `You're ZenovaX support. Context:\n${HELP_CONTEXT}\n\nAnswer ONLY using context. If unrelated, say "I can’t help with this. Please contact WhatsApp support."\n\nQuestion: `;
 
