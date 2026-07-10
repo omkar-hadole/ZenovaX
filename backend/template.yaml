@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ZenovaX backend — Express app running on AWS Lambda behind an HTTP API Gateway.
+  Deploy with:  sam build  &&  sam deploy --guided
+
+# ---------------------------------------------------------------------------
+# Parameters — secrets/config passed in at deploy time.
+# For production, prefer storing these in SSM Parameter Store / Secrets Manager
+# and referencing them, rather than passing raw values on the command line.
+# ---------------------------------------------------------------------------
+Parameters:
+  DatabaseUrl:        { Type: String, NoEcho: true }
+  JwtSecret:          { Type: String, NoEcho: true }
+  CsrfSecret:         { Type: String, NoEcho: true }
+  RedisUrl:           { Type: String, NoEcho: true, Default: "" }
+  AllowedOrigins:     { Type: String, Default: "" }   # comma-separated, e.g. https://main.xxxx.amplifyapp.com
+  CloudinaryCloudName:{ Type: String, Default: "" }
+  CloudinaryApiKey:   { Type: String, NoEcho: true, Default: "" }
+  CloudinaryApiSecret:{ Type: String, NoEcho: true, Default: "" }
+  GeminiApiKey:       { Type: String, NoEcho: true, Default: "" }
+  GmailUser:          { Type: String, Default: "" }
+  GmailAppPassword:   { Type: String, NoEcho: true, Default: "" }
+  SentryDsn:          { Type: String, Default: "" }
+  PistonApiUrl:       { Type: String, Default: "https://emkc.org/api/v2/piston" }
+  JaasAppId:          { Type: String, Default: "" }
+  JaasApiKeyId:       { Type: String, Default: "" }
+  JaasPrivateKey:     { Type: String, NoEcho: true, Default: "" }
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    MemorySize: 1024
+    Timeout: 30            # matches the app's connect-timeout('30s')
+    Architectures: [arm64] # Graviton — cheaper & faster; switch to x86_64 if needed
+    Environment:
+      Variables:
+        NODE_ENV: production
+        DATABASE_URL: !Ref DatabaseUrl
+        JWT_SECRET: !Ref JwtSecret
+        CSRF_SECRET: !Ref CsrfSecret
+        REDIS_URL: !Ref RedisUrl
+        ALLOWED_ORIGINS: !Ref AllowedOrigins
+        CLOUDINARY_CLOUD_NAME: !Ref CloudinaryCloudName
+        CLOUDINARY_API_KEY: !Ref CloudinaryApiKey
+        CLOUDINARY_API_SECRET: !Ref CloudinaryApiSecret
+        GEMINI_API_KEY: !Ref GeminiApiKey
+        GMAIL_USER: !Ref GmailUser
+        GMAIL_APP_PASSWORD: !Ref GmailAppPassword
+        SENTRY_DSN: !Ref SentryDsn
+        PISTON_API_URL: !Ref PistonApiUrl
+        JAAS_APP_ID: !Ref JaasAppId
+        JAAS_API_KEY_ID: !Ref JaasApiKeyId
+        JAAS_PRIVATE_KEY: !Ref JaasPrivateKey
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda.handler
+      CodeUri: ./
+      Description: ZenovaX Express API (all routes via {proxy+})
+      Events:
+        # Catch every path + method and forward to Express (like Vercel's rewrite).
+        ProxyRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # CORS is handled inside Express (cors middleware) because it needs
+      # credentials + dynamic origin checking, so we leave the gateway CORS off.
+      PayloadFormatVersion: "2.0"
+
+Outputs:
+  ApiUrl:
+    Description: Base URL of the deployed API. Set the frontend VITE_API_URL to this value + "/api".
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"

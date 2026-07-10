@@ -56,10 +56,10 @@ exports.getMySessions = async (req, res, next) => {
 exports.bookSession = async (req, res, next) => {
     try {
         const result = await sessionService.bookSession(req.prisma, req.cache, req.user.id, req.params.id);
-        return res.status(202).json({
+        return res.status(201).json({
             success: true,
-            status: result.status,
-            message: result.message
+            message: "Registration confirmed",
+            booking: result.booking
         });
     } catch (error) {
         return next(error);

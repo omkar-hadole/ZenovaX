@@ -45,10 +45,16 @@ app.use(
 app.use(compression());
 app.use(cookieParser());
 
+// Origins allowed by CORS. Extra origins (e.g. the AWS Amplify domain) can be
+// added via the ALLOWED_ORIGINS env var as a comma-separated list, so no code
+// change is needed when the frontend URL changes across environments.
 const allowedOrigins = [
   'http://localhost:5173',
   'https://zenova-x.vercel.app',
-  'https://zenova-x-server.vercel.app'
+  'https://zenova-x-server.vercel.app',
+  ...(process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : []),
 ];
 app.use(cors({
   origin: function (origin, callback) {
