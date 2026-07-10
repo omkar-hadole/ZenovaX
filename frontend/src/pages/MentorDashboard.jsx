@@ -11,6 +11,7 @@ import ReviewsSkeleton from '../components/dashboard/mentor/ReviewsSkeleton';
 import QRScanner from '../components/dashboard/mentor/QRScanner';
 import LaunchCodingQuestion from './LaunchCodingQuestion';
 import ReportsView from '../components/dashboard/mentor/ReportsView';
+import ScanAttendanceView from '../components/dashboard/mentor/ScanAttendanceView';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import ErrorBoundary from '../components/ErrorBoundary';
 import InlineError from '../components/InlineError';
@@ -176,21 +177,7 @@ export default function MentorDashboard() {
                 ) : activeTab === 'Reports' ? (
                   loading ? <div className="p-12 text-center">Loading...</div> : <ReportsView />
                 ) : activeTab === 'Scan Attendance' ? (
-                  <div className="flex flex-col items-center justify-center p-12 bg-white rounded-[2rem] shadow-sm border border-gray-100 h-[600px] animate-in fade-in zoom-in-95 duration-300">
-                    <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                      <QrCode className="w-12 h-12 text-indigo-600" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Ticket Scanner</h2>
-                    <p className="text-gray-500 mb-8 max-w-sm text-center text-lg">
-                      Use your camera to scan student QR codes for instant attendance verification.
-                    </p>
-                    <button
-                      onClick={() => setShowScanner(true)}
-                      className="bg-black text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all hover:shadow-xl hover:-translate-y-1"
-                    >
-                      Open Scanner
-                    </button>
-                  </div>
+                  <ScanAttendanceView onOpenScanner={() => setShowScanner(true)} />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-gray-500">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">

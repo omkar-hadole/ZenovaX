@@ -146,11 +146,17 @@ export default function QRScanner({ onClose, onCameraError }) {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative">
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            onClick={onClose}
+        >
+            <div
+                className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors"
+                    className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all hover:scale-110"
                 >
                     <X size={20} />
                 </button>
@@ -165,9 +171,9 @@ export default function QRScanner({ onClose, onCameraError }) {
                     </p>
                 </div>
 
-                <div className="p-4 bg-gray-50 min-h-[350px] flex flex-col items-center justify-center">
+                <div className="p-4 bg-gray-50 min-h-[350px] flex flex-col items-center justify-center relative">
                     {permissionError ? (
-                        <div className="text-center p-6">
+                        <div className="text-center p-6 animate-in fade-in zoom-in-95 duration-300">
                             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
                                 <AlertCircle size={32} />
                             </div>
@@ -190,11 +196,27 @@ export default function QRScanner({ onClose, onCameraError }) {
                                 className={`w-full relative rounded-xl overflow-hidden bg-black shadow-inner ${scanResult ? 'hidden' : 'block'}`}
                             >
                                 <div id="reader" className="w-full h-full"></div>
+
+                                {/* Scan-frame corner brackets */}
+                                <div className="absolute inset-6 pointer-events-none">
+                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-indigo-400 rounded-tl-lg" />
+                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-indigo-400 rounded-tr-lg" />
+                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-indigo-400 rounded-bl-lg" />
+                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-indigo-400 rounded-br-lg" />
+                                </div>
+
+                                {/* Live scanning indicator */}
+                                {!isVerifying && (
+                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                        <span className="text-white text-xs font-semibold">Scanning</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Verification Result */}
                             {scanResult && (
-                                <div className={`text-center p-6 rounded-2xl w-full ${scanResult.success ? 'bg-green-50' : 'bg-red-50'}`}>
+                                <div className={`text-center p-6 rounded-2xl w-full animate-in fade-in zoom-in-95 duration-300 ${scanResult.success ? 'bg-green-50' : 'bg-red-50'}`}>
                                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${scanResult.success ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                         {scanResult.success ? <CheckCircle size={32} /> : <AlertCircle size={32} />}
                                     </div>
@@ -237,7 +259,7 @@ export default function QRScanner({ onClose, onCameraError }) {
                             )}
 
                             {isVerifying && (
-                                <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center text-indigo-600 z-50">
+                                <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center text-indigo-600 z-50 animate-in fade-in duration-200">
                                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
                                     <span className="font-bold">Verifying Ticket...</span>
                                 </div>
