@@ -30,4 +30,10 @@ export default defineConfig([
       'no-useless-escape': 'off',
     },
   },
+  {
+    files: ['vite.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

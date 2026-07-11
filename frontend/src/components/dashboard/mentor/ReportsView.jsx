@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Search, Filter, Calendar, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AlertTriangle, Search, Calendar, ShieldCheck, Clock, CheckCircle2 } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
+import ReportsSkeleton from './ReportsSkeleton';
 
 import { useNavigate } from 'react-router-dom';
+
+const STATUS_FILTERS = ['ALL', 'PENDING', 'RESOLVED', 'IGNORED'];
 
 export default function ReportsView() {
     const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         fetchReports();
@@ -34,67 +38,119 @@ export default function ReportsView() {
         }
     };
 
+    const filteredReports = useMemo(() => {
+        const query = search.trim().toLowerCase();
+        return reports.filter((report) => {
+            if (filter !== 'ALL' && report.status !== filter) return false;
+            if (!query) return true;
+            return (
+                report.session?.title?.toLowerCase().includes(query) ||
+                report.reason?.toLowerCase().includes(query)
+            );
+        });
+    }, [reports, filter, search]);
+
+    const pendingCount = reports.filter(r => r.status === 'PENDING').length;
+    const resolvedCount = reports.filter(r => r.status === 'RESOLVED').length;
+
     if (loading) {
-        return (
-            <div className="flex items-center justify-center p-12">
-                <div className="w-8 h-8 border-4 border-[#C9C7F5] border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
+        return <ReportsSkeleton />;
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-red-100 relative overflow-hidden">
+                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-red-100 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <p className="text-gray-500 font-medium mb-1">Total Reports</p>
-                        <h3 className="text-3xl font-bold text-gray-800">{reports.length}</h3>
-                    </div>
-                    <div className="absolute right-[-10px] bottom-[-10px] text-red-50 opacity-50 transform rotate-12">
-                        <AlertTriangle size={80} />
+                        <h3 className="text-gray-500 text-sm font-medium mb-2">Total Reports</h3>
+                        <div className="flex items-end gap-3">
+                            <span className="text-4xl font-bold text-gray-800">{reports.length}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-red-100 rounded-lg text-red-500">
+                                <AlertTriangle className="w-4 h-4" />
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-yellow-100">
-                    <p className="text-gray-500 font-medium mb-1">Pending Review</p>
-                    <h3 className="text-3xl font-bold text-yellow-600">
-                        {reports.filter(r => r.status === 'PENDING').length}
-                    </h3>
+
+                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                    <div className="relative z-10">
+                        <h3 className="text-gray-500 text-sm font-medium mb-2">Pending Review</h3>
+                        <div className="flex items-end gap-3">
+                            <span className="text-4xl font-bold text-yellow-600">{pendingCount}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
+                                <Clock className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-green-100">
-                    <p className="text-gray-500 font-medium mb-1">Resolved</p>
-                    <h3 className="text-3xl font-bold text-green-600">
-                        {reports.filter(r => r.status === 'RESOLVED').length}
-                    </h3>
+
+                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-green-100 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                    <div className="relative z-10">
+                        <h3 className="text-gray-500 text-sm font-medium mb-2">Resolved</h3>
+                        <div className="flex items-end gap-3">
+                            <span className="text-4xl font-bold text-green-600">{resolvedCount}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-green-100 rounded-lg text-green-600">
+                                <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Reports List */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100">
-                <div className="p-8 border-b border-gray-100 flex items-center justify-between">
+                <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">Issue Reports</h2>
                         <p className="text-gray-500 text-sm">Feedback and issues reported by learners</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="bg-gray-50 p-1 rounded-xl flex items-center">
+                            {STATUS_FILTERS.map((status) => (
+                                <button
+                                    key={status}
+                                    onClick={() => setFilter(status)}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === status
+                                        ? 'bg-white text-gray-800 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    {status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
+                                </button>
+                            ))}
+                        </div>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search reports..."
-                                className="pl-10 pr-4 py-2 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none"
+                                className="pl-10 pr-4 py-2 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none w-full sm:w-52"
                             />
                         </div>
                     </div>
                 </div>
 
                 {reports.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-500">
                         <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
                             <ShieldCheck className="text-green-500 w-8 h-8" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-800">No Issues Reported</h3>
                         <p className="text-gray-500">Great job! Your sessions are running smoothly.</p>
+                    </div>
+                ) : filteredReports.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-500">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <Search className="text-gray-300 w-8 h-8" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800">No matching reports</h3>
+                        <p className="text-gray-500">Try a different filter or search term.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto md:overflow-visible">
@@ -109,8 +165,12 @@ export default function ReportsView() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {reports.map((report) => (
-                                    <tr key={report.id} className="hover:bg-gray-50/50 transition-colors">
+                                {filteredReports.map((report, index) => (
+                                    <tr
+                                        key={report.id}
+                                        className="hover:bg-gray-50/50 transition-colors animate-in fade-in slide-in-from-bottom-1 duration-300"
+                                        style={{ animationDelay: `${Math.min(index, 8) * 40}ms`, animationFillMode: 'backwards' }}
+                                    >
                                         <td className="px-8 py-4">
                                             <p className="font-bold text-gray-800">{report.session?.title || 'Unknown Session'}</p>
                                         </td>
@@ -151,6 +211,6 @@ export default function ReportsView() {
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 }
