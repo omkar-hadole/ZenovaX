@@ -42,7 +42,7 @@ export default function LoginForm({ onToggle, showToast }) {
       } else if (data.user.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (data.user.role === 'MENTOR' || data.user.role === 'BOTH') {
-        navigate('/mentor-dashboard');
+        navigate('/mentor/dashboard');
       } else {
         navigate('/dashboard');
       }

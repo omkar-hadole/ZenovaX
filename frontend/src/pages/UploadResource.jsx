@@ -45,7 +45,7 @@ export default function UploadResource() {
             });
             setToast({ message: 'Resource uploaded successfully!', type: 'success' });
             setTimeout(() => {
-                navigate('/mentor-dashboard');
+                navigate('/mentor/dashboard');
             }, 1500);
         } catch (error) {
             console.error('Upload failed', error);
@@ -80,7 +80,7 @@ export default function UploadResource() {
 
                     <div className="p-8 max-w-6xl mx-auto">
                         <div className="flex items-center gap-4 mb-8">
-                            <button onClick={() => navigate('/mentor-dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
+                            <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
                                 <ArrowLeft className="text-gray-600" />
                             </button>
                             <div>

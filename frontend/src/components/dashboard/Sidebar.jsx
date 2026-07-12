@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LogOut } from 'lucide-react';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, NavLink, Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain" }) {
@@ -20,7 +20,7 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
         <>
             <aside className="w-64 bg-white/70 backdrop-blur-md border-r border-black/5 flex flex-col h-full shadow-sm transition-all duration-300">
                 <div className="p-8">
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <Link to="/" className="text-2xl font-bold text-gray-900 flex items-center gap-2 w-fit hover:opacity-80 transition-opacity">
                         {logo ? (
                             <img
                                 src={getOptimizedImageUrl(logo)}
@@ -34,7 +34,7 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
                             <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white text-lg">Z</span>
                         )}
                         {title}
-                    </h1>
+                    </Link>
                     {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
                 </div>
 

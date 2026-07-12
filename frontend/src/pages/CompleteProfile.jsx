@@ -168,7 +168,7 @@ export default function CompleteProfile() {
                 if (role === 'ADMIN') {
                     navigate('/admin/dashboard');
                 } else if (role === 'MENTOR' || role === 'BOTH') {
-                    navigate('/mentor-dashboard');
+                    navigate('/mentor/dashboard');
                 } else {
                     navigate('/dashboard');
                 }

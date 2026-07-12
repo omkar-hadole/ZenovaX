@@ -1,7 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextIndex"]
-  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  // Prisma query-engine binaries for the AWS Lambda nodejs20.x runtime (AL2023):
+  //   linux-arm64-openssl-3.0.x -> arm64 / Graviton Lambda (what template.yaml uses)
+  //   rhel-openssl-3.0.x        -> x86_64 Lambda (if you switch off arm64)
+  // "native" keeps local dev working; musl covers Alpine containers.
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {

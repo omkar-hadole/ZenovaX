@@ -171,7 +171,7 @@ export default function LaunchQuiz() {
         setToast({ message: 'Quiz draft created successfully!', type: 'success' });
       }
       setTimeout(() => {
-        navigate('/mentor-dashboard');
+        navigate('/mentor/dashboard');
       }, 1500);
     } catch (error) {
       console.error('Failed to create quiz', error);
@@ -206,7 +206,7 @@ export default function LaunchQuiz() {
           <div className="p-8 max-w-6xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/mentor-dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
+                <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
                   <ArrowLeft className="text-gray-600" />
                 </button>
                 <div>
