@@ -35,7 +35,7 @@ export default function QuickActions() {
                 </button>
 
                 <button
-                    onClick={() => navigate('/mentor-dashboard?tab=Launch Code')}
+                    onClick={() => navigate('/mentor/launch-code')}
                     className="w-full bg-white border border-gray-200 text-gray-700 p-4 rounded-2xl font-semibold hover:bg-[#A9C1F7]/10 hover:border-[#A9C1F7] hover:text-[#4a7ac7] transition-all group flex items-center justify-between"
                 >
                     <span>Launch Code</span>

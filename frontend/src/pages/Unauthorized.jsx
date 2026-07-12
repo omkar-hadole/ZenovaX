@@ -16,7 +16,7 @@ export default function Unauthorized() {
       return;
     }
     if (user.role === 'ADMIN') navigate('/admin/dashboard');
-    else if (user.role === 'MENTOR' || user.role === 'BOTH') navigate('/mentor-dashboard');
+    else if (user.role === 'MENTOR' || user.role === 'BOTH') navigate('/mentor/dashboard');
     else navigate('/dashboard');
   };
 

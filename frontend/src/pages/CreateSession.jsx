@@ -157,7 +157,7 @@ export default function CreateSession() {
       if (isAdmin) {
         navigate('/admin/reports');
       } else {
-        navigate('/mentor-dashboard');
+        navigate('/mentor/dashboard');
       }
     } catch (err) {
       setError(err.message || 'Failed to save session');
@@ -204,7 +204,7 @@ export default function CreateSession() {
 
           <div className="p-8 max-w-6xl mx-auto">
             <div className="flex items-center gap-4 mb-8">
-              <button onClick={() => navigate('/mentor-dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
+              <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
                 <ArrowLeft className="text-gray-600" />
               </button>
               <div>

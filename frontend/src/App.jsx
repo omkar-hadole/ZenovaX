@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 
 import LearnerLayout from './layouts/LearnerLayout';
 import AdminLayout from './layouts/AdminLayout';
+import MentorLayout from './layouts/MentorLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import DesktopOnlyGuard from './components/DesktopOnlyGuard';
 
@@ -23,7 +24,12 @@ const ComingSoonPage = lazy(() => import('./pages/learner/ComingSoonPage'));
 const HelpCenter = lazy(() => import('./pages/learner/HelpCenter'));
 const Zen = lazy(() => import('./pages/learner/Zen'));
 
-const MentorDashboard = lazy(() => import('./pages/MentorDashboard'));
+const MentorDashboardPage = lazy(() => import('./pages/mentor/MentorDashboardPage'));
+const MentorSessionsPage = lazy(() => import('./pages/mentor/MentorSessionsPage'));
+const MentorReportsPage = lazy(() => import('./pages/mentor/MentorReportsPage'));
+const MentorScanAttendancePage = lazy(() => import('./pages/mentor/MentorScanAttendancePage'));
+const MentorReviewsPage = lazy(() => import('./pages/mentor/MentorReviewsPage'));
+const MentorLaunchCodePage = lazy(() => import('./pages/mentor/MentorLaunchCodePage'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
 const Profile = lazy(() => import('./pages/Profile'));
 
@@ -117,15 +123,25 @@ function App() {
                     </Route>
 
                     <Route
-                        path="/mentor-dashboard"
+                        path="/mentor"
                         element={
                             <ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}>
                                 <DesktopOnlyGuard>
-                                    <MentorDashboard />
+                                    <MentorLayout />
                                 </DesktopOnlyGuard>
                             </ProtectedRoute>
                         }
-                    />
+                    >
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<MentorDashboardPage />} />
+                        <Route path="sessions" element={<MentorSessionsPage />} />
+                        <Route path="reports" element={<MentorReportsPage />} />
+                        <Route path="scan-attendance" element={<MentorScanAttendancePage />} />
+                        <Route path="reviews" element={<MentorReviewsPage />} />
+                        <Route path="launch-code" element={<MentorLaunchCodePage />} />
+                        <Route path="help" element={<ComingSoonPage />} />
+                        <Route path="settings" element={<ComingSoonPage />} />
+                    </Route>
 
                     <Route
                         path="/profile"

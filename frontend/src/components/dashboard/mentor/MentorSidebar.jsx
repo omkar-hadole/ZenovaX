@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Calendar,
@@ -7,26 +7,39 @@ import {
     HelpCircle,
     Settings,
     QrCode,
-    Code,
     AlertTriangle
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import logo from '../../../assets/mentorlogo.svg';
 import { useAuth } from '../../../context/AuthContext';
 
-export default function MentorSidebar({ activeTab, onTabChange }) {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { logout } = useAuth();
+const TAB_PATHS = {
+    'Dashboard': '/mentor/dashboard',
+    'My Sessions': '/mentor/sessions',
+    'Reports': '/mentor/reports',
+    'Scan Attendance': '/mentor/scan-attendance',
+    'Reviews Received': '/mentor/reviews',
+    'Help Center': '/mentor/help',
+    'Settings': '/mentor/settings',
+};
 
-    const handleNavigation = (tabName) => {
-        if (onTabChange) {
-            onTabChange(tabName);
-        } else {
-            // Navigate to dashboard with tab query param
-            navigate(`/mentor-dashboard?tab=${encodeURIComponent(tabName)}`);
-        }
-    };
+const BASE_ITEMS = [
+    { icon: LayoutDashboard, label: 'Dashboard' },
+    { icon: Calendar, label: 'My Sessions' },
+    { icon: AlertTriangle, label: 'Reports' },
+    { icon: QrCode, label: 'Scan Attendance' },
+    { icon: Star, label: 'Reviews Received' },
+    { icon: HelpCircle, label: 'Help Center' },
+    { icon: Settings, label: 'Settings' },
+];
+
+// activeTab is only needed on pages rendered *outside* the nested /mentor
+// layout (e.g. session details, create session) where there's no matching
+// route for NavLink to auto-highlight. When omitted (the normal case, inside
+// MentorLayout), items use real paths and NavLink handles active state itself.
+export default function MentorSidebar({ activeTab }) {
+    const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const handleLogout = async () => {
         try {
@@ -37,59 +50,19 @@ export default function MentorSidebar({ activeTab, onTabChange }) {
         navigate('/auth');
     };
 
-    const items = [
-        {
-            icon: LayoutDashboard,
-            label: 'Dashboard',
-            active: activeTab === 'Dashboard',
-            onClick: () => handleNavigation('Dashboard')
-        },
-        {
-            icon: Calendar,
-            label: 'My Sessions',
-            active: activeTab === 'My Sessions',
-            onClick: () => handleNavigation('My Sessions')
-        },
-        {
-            icon: AlertTriangle,
-            label: 'Reports',
-            active: activeTab === 'Reports',
-            onClick: () => handleNavigation('Reports')
-        },
-        {
-            icon: QrCode,
-            label: 'Scan Attendance',
-            active: activeTab === 'Scan Attendance',
-            onClick: () => handleNavigation('Scan Attendance')
-        },
-
-        {
-            icon: Star,
-            label: 'Reviews Received',
-            active: activeTab === 'Reviews Received',
-            onClick: () => handleNavigation('Reviews Received')
-        },
-        {
-            icon: HelpCircle,
-            label: 'Help Center',
-            active: activeTab === 'Help Center',
-            onClick: () => handleNavigation('Help Center') // Or implement help page
-        },
-        {
-            icon: Settings,
-            label: 'Settings',
-            active: activeTab === 'Settings',
-            onClick: () => handleNavigation('Settings') // Or implement settings page
-        },
-    ];
+    const items = activeTab
+        ? BASE_ITEMS.map((item) => ({
+            ...item,
+            active: item.label === activeTab,
+            onClick: () => navigate(TAB_PATHS[item.label]),
+        }))
+        : BASE_ITEMS.map((item) => ({ ...item, path: TAB_PATHS[item.label] }));
 
     return (
         <Sidebar
             logo={logo}
             logoClassName="w-56 h-auto"
             items={items}
-            activeTab={activeTab}
-            setActiveTab={onTabChange}
             onLogout={handleLogout}
         >
             <div className="bg-gradient-to-br from-[#C9C7F5] to-[#A9C1F7] rounded-2xl p-6 text-white relative overflow-hidden shadow-sm">

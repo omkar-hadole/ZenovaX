@@ -37,7 +37,7 @@ export default function Home() {
     if (!user) return '/auth';
     if (!user.isProfileComplete) return '/complete-profile';
     if (user.role === 'ADMIN') return '/admin/dashboard';
-    if (user.role === 'MENTOR' || user.role === 'BOTH') return '/mentor-dashboard';
+    if (user.role === 'MENTOR' || user.role === 'BOTH') return '/mentor/dashboard';
     return '/dashboard';
   };
 
