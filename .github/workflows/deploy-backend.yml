@@ -33,9 +33,24 @@ jobs:
         working-directory: backend
         run: npm prune --omit=dev
 
+      - name: Trim unused Prisma engines (keep arm64 only)
+        working-directory: backend
+        # The Lambda runs on arm64 (see template.yaml), so ship only the
+        # linux-arm64 query engine. Dropping the native/musl/rhel binaries
+        # takes the zip from ~70MB to ~28MB, under Lambda's 50MB direct-upload limit.
+        run: |
+          find node_modules/.prisma node_modules/@prisma -type f \
+            -name 'libquery_engine-*.node' \
+            ! -name '*linux-arm64*' -delete
+          echo "Remaining engines:"
+          find node_modules -name 'libquery_engine-*.node'
+
       - name: Package function
         working-directory: backend
-        run: zip -r ../function.zip . -x "*.git*" "temp/*" ".env" ".env.example"
+        run: zip -rq ../function.zip . -x "*.git*" "temp/*" ".env" ".env.example"
+
+      - name: Report artifact size
+        run: du -h function.zip
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
