@@ -411,30 +411,87 @@ exports.getBookingStatus = async (prisma, cache, userId, sessionId) => {
     return { status: 'PROCESSING', message: 'Booking is in progress' };
 };
 
-exports.getMyBookings = async (prisma, userId) => {
-    const bookings = await prisma.booking.findMany({
-        where: { userId },
-        include: {
-            session: {
-                include: {
-                    mentor: {
-                        select: {
-                            id: true,
-                            name: true,
-                            profilePicture: true,
-                            department: true,
-                            averageRating: true
-                        }
-                    },
-                    resources: true,
-                    quizzes: true
-                }
-            }
-        },
-        orderBy: { session: { scheduledAt: 'asc' } }
-    });
+exports.getMyBookings = async (prisma, userId, queryParams = {}) => {
+    const pageVal = parseInt(queryParams.page, 10);
+    const limitVal = parseInt(queryParams.limit, 10);
 
-    return bookings.map(b => ({
+    if (!isNaN(limitVal) && limitVal > 50) {
+        throw new BadRequestError('Maximum page size is 50');
+    }
+
+    const page = Math.max(1, isNaN(pageVal) ? 1 : pageVal);
+    const limit = Math.max(1, isNaN(limitVal) ? 9 : limitVal);
+    const skip = (page - 1) * limit;
+
+    const status = queryParams.status || 'all';
+    const mode = queryParams.mode;
+    const search = queryParams.search ? sanitizeString(queryParams.search).slice(0, 100) : '';
+    const now = new Date();
+
+    const sessionConditions = [];
+
+    if (mode) {
+        sessionConditions.push({ mode });
+    }
+
+    if (search) {
+        sessionConditions.push({
+            OR: [
+                { title: { contains: search } },
+                { mentor: { name: { contains: search } } }
+            ]
+        });
+    }
+
+    if (status === 'upcoming') {
+        sessionConditions.push({
+            OR: [
+                { status: 'LIVE' },
+                { AND: [{ status: 'UPCOMING' }, { scheduledAt: { gt: now } }] }
+            ]
+        });
+    } else if (status === 'completed') {
+        sessionConditions.push({
+            OR: [
+                { status: 'COMPLETED' },
+                { AND: [{ status: 'UPCOMING' }, { scheduledAt: { lte: now } }] }
+            ]
+        });
+    }
+
+    const whereClause = { userId };
+    if (sessionConditions.length > 0) {
+        whereClause.session = { AND: sessionConditions };
+    }
+
+    const [bookings, total] = await Promise.all([
+        prisma.booking.findMany({
+            where: whereClause,
+            skip,
+            take: limit,
+            include: {
+                session: {
+                    include: {
+                        mentor: {
+                            select: {
+                                id: true,
+                                name: true,
+                                profilePicture: true,
+                                department: true,
+                                averageRating: true
+                            }
+                        },
+                        resources: true,
+                        quizzes: true
+                    }
+                }
+            },
+            orderBy: { session: { scheduledAt: 'desc' } }
+        }),
+        prisma.booking.count({ where: whereClause })
+    ]);
+
+    const sessions = bookings.map(b => ({
         ...b.session,
         bookingId: b.id,
         isBooked: true,
@@ -442,6 +499,16 @@ exports.getMyBookings = async (prisma, userId) => {
         sessionStatus: b.session.status,
         hasReviewed: b.hasReviewed
     }));
+
+    return {
+        sessions,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 };
 
 exports.getAllSessions = async (prisma, cache, userId, queryParams) => {

@@ -7,7 +7,7 @@ export default function SessionCard({ session, footer, extraBadges, onClick }) {
     return (
         <div
             onClick={onClick}
-            className="bg-white rounded-[2rem] p-6 border border-black/5 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group flex flex-col h-full"
+            className="bg-white rounded-[2rem] p-6 border border-black/5 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-transform duration-300 group flex flex-col h-full"
         >
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">

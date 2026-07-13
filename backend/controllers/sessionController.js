@@ -77,8 +77,8 @@ exports.getBookingStatus = async (req, res, next) => {
 
 exports.getMyBookings = async (req, res, next) => {
     try {
-        const sessions = await sessionService.getMyBookings(req.prisma, req.user.id);
-        return res.json({ sessions });
+        const { sessions, pagination } = await sessionService.getMyBookings(req.prisma, req.user.id, req.query);
+        return res.json({ sessions, pagination });
     } catch (error) {
         return next(error);
     }

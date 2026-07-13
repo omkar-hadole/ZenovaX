@@ -1,17 +1,40 @@
 import React, { useState, useRef } from 'react';
-import { Calendar, Clock, Settings, QrCode, X, Download } from 'lucide-react';
+import { Calendar, Clock, Settings, QrCode, X, Download, Search } from 'lucide-react';
 import SessionSkeleton from '../SessionSkeleton';
 import SessionCard from './SessionCard';
 import QRCodeGenerator from '../../common/QRCodeGenerator';
 import domtoimage from 'dom-to-image-more';
 import Toast from '../../Toast';
 
+const STATUS_FILTERS = [
+    { value: 'all', label: 'All' },
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'completed', label: 'Completed' },
+];
+
 export default function MyBookingsView({
     myBookings,
     isLoading,
     setSelectedSession,
-    setActiveTab
+    setActiveTab,
+    currentPage,
+    totalPages,
+    onPageChange,
+    statusFilter,
+    setStatusFilter,
+    modeFilter,
+    setModeFilter,
+    searchInput,
+    setSearchInput
 }) {
+    const hasActiveFilters = statusFilter !== 'all' || !!modeFilter || !!searchInput.trim();
+
+    const clearFilters = () => {
+        setStatusFilter('all');
+        setModeFilter('');
+        setSearchInput('');
+    };
+
     const [showTicket, setShowTicket] = useState(null);
     const [toast, setToast] = useState(null);
     const ticketRef = useRef(null);
@@ -55,14 +78,57 @@ export default function MyBookingsView({
     };
 
     return (
-        <div className="h-full overflow-y-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+        <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
             <div className="mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">My Bookings</h2>
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">My Bookings</h2>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="bg-gray-100 p-1 rounded-xl flex items-center">
+                            {STATUS_FILTERS.map((f) => (
+                                <button
+                                    key={f.value}
+                                    onClick={() => setStatusFilter(f.value)}
+                                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === f.value
+                                        ? 'bg-white text-black shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <select
+                            value={modeFilter}
+                            onChange={(e) => setModeFilter(e.target.value)}
+                            className="bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 transition-colors text-center min-w-[100px]"
+                            style={{ backgroundImage: 'none' }}
+                        >
+                            <option value="">All Modes</option>
+                            <option value="ONLINE">Online</option>
+                            <option value="OFFLINE">Offline</option>
+                        </select>
+
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                placeholder="Search by session or mentor..."
+                                className="pl-10 pr-4 py-2 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none w-full sm:w-64"
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map(i => <SessionSkeleton key={i} />)}
                     </div>
                 ) : myBookings.length > 0 ? (
+                    <div className="flex flex-col gap-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {myBookings.map(session => {
                             const now = new Date();
@@ -124,6 +190,54 @@ export default function MyBookingsView({
                                 />
                             );
                         })}
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex justify-center gap-2">
+                            <button
+                                onClick={() => onPageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                Previous
+                            </button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => onPageChange(pageNum)}
+                                    className={`w-10 h-10 rounded-xl text-sm font-bold flex items-center justify-center transition-all ${currentPage === pageNum
+                                        ? 'bg-black text-white shadow-lg scale-110'
+                                        : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-600'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => onPageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                    </div>
+                ) : hasActiveFilters ? (
+                    <div className="text-center py-20">
+                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Search className="w-10 h-10 text-gray-300" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">No matching bookings</h3>
+                        <p className="text-gray-500 mb-6">Try a different filter or search term.</p>
+                        <button
+                            onClick={clearFilters}
+                            className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                        >
+                            Clear Filters
+                        </button>
                     </div>
                 ) : (
                     <div className="text-center py-20">
