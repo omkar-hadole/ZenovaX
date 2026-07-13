@@ -7,8 +7,8 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
     const navigate = useNavigate();
 
     return (
-        {/* Near-opaque bg instead of backdrop-blur: blurring the content scrolling
-            under a sticky header forces a repaint every frame and causes scroll lag. */}
+        // Near-opaque bg instead of backdrop-blur: blurring the content scrolling
+        // under a sticky header forces a repaint every frame and causes scroll lag.
         <header className="px-8 py-6 flex items-center justify-between sticky top-0 z-50 bg-[#F5F6FA]/95">
             <h2 className="text-3xl font-light text-gray-800 tracking-tight">{title}</h2>
 
