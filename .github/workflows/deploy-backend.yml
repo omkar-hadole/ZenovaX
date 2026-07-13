@@ -33,14 +33,20 @@ jobs:
         working-directory: backend
         run: npm prune --omit=dev
 
-      - name: Trim unused Prisma engines (keep arm64 only)
+      - name: Slim the Prisma footprint for Lambda
         working-directory: backend
-        # The Lambda runs on arm64 (see template.yaml), so ship only the
-        # linux-arm64 query engine. Dropping the native/musl/rhel binaries
-        # takes the zip from ~70MB to ~28MB, under Lambda's 50MB direct-upload limit.
+        # Build-time bloat that npm prune leaves behind (runtime needs only
+        # @prisma/client + the generated .prisma/client):
+        #   1. node_modules/prisma       — the Prisma CLI (~88MB, ships 4 engines)
+        #   2. node_modules/@prisma/engines (~35MB) — @prisma/client has no deps
+        #      and never loads from here; the runtime engine is in .prisma/client.
+        #   3. The generated client keeps one engine per binaryTarget. The Lambda
+        #      runs on arm64 (see template.yaml), so keep only linux-arm64.
+        # Together this takes the zip from ~66MB to ~28MB, well under Lambda's
+        # 50MB direct-upload limit — no S3 staging needed.
         run: |
-          find node_modules/.prisma node_modules/@prisma -type f \
-            -name 'libquery_engine-*.node' \
+          rm -rf node_modules/prisma node_modules/@prisma/engines
+          find node_modules -type f -name 'libquery_engine-*.node' \
             ! -name '*linux-arm64*' -delete
           echo "Remaining engines:"
           find node_modules -name 'libquery_engine-*.node'
