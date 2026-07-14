@@ -37,15 +37,35 @@ jobs:
         working-directory: backend
         # Build-time bloat that npm prune leaves behind (runtime needs only
         # @prisma/client + the generated .prisma/client):
-        #   1. node_modules/prisma       — the Prisma CLI (~88MB, ships 4 engines)
-        #   2. node_modules/@prisma/engines (~35MB) — @prisma/client has no deps
-        #      and never loads from here; the runtime engine is in .prisma/client.
-        #   3. The generated client keeps one engine per binaryTarget. The Lambda
-        #      runs on arm64 (see template.yaml), so keep only linux-arm64.
-        # Together this takes the zip from ~66MB to ~28MB, well under Lambda's
+        #   1. node_modules/prisma — the Prisma CLI (ships 4 engines + its own
+        #      config loader, which since Prisma 6 pulls in the ~33MB `effect`
+        #      package via @prisma/config — none of this is used by @prisma/client).
+        #   2. node_modules/@prisma/engines, @prisma/config, @prisma/fetch-engine,
+        #      @prisma/get-platform, @prisma/debug, @prisma/engines-version — all
+        #      CLI-only helper packages; @prisma/client has zero dependencies and
+        #      never loads from any of these, the runtime engine lives in .prisma/client.
+        #   3. node_modules/effect, c12, deepmerge-ts, empathic — transitive deps
+        #      of @prisma/config only, hoisted to top-level by npm so they escape
+        #      the node_modules/prisma deletion above.
+        #   4. @prisma/client/runtime/*wasm-base64* — since Prisma 6, @prisma/client
+        #      bundles WASM query-engine + query-compiler binaries (base64-inlined,
+        #      ~2.5-3MB each) for every DB provider (cockroachdb, postgresql, mysql,
+        #      sqlserver, sqlite) x2 (.js/.mjs). We use the native binary engine
+        #      (see binaryTargets below), never the WASM path, so these are dead
+        #      weight regardless of which provider we're on.
+        #   5. The generated client keeps one binary engine per binaryTarget. The
+        #      Lambda runs on arm64 (see template.yaml), so keep only linux-arm64.
+        # Together this takes the zip from ~66MB to ~28-31MB, well under Lambda's
         # 50MB direct-upload limit — no S3 staging needed.
         run: |
-          rm -rf node_modules/prisma node_modules/@prisma/engines
+          rm -rf node_modules/prisma node_modules/@prisma/engines \
+            node_modules/@prisma/config node_modules/@prisma/fetch-engine \
+            node_modules/@prisma/get-platform node_modules/@prisma/debug \
+            node_modules/@prisma/engines-version \
+            node_modules/effect node_modules/c12 node_modules/deepmerge-ts \
+            node_modules/empathic
+          find node_modules/@prisma/client/runtime -type f \
+            -name '*wasm-base64*' -delete 2>/dev/null || true
           find node_modules -type f -name 'libquery_engine-*.node' \
             ! -name '*linux-arm64*' -delete
           echo "Remaining engines:"
