@@ -30,6 +30,7 @@ const MentorReportsPage = lazy(() => import('./pages/mentor/MentorReportsPage'))
 const MentorScanAttendancePage = lazy(() => import('./pages/mentor/MentorScanAttendancePage'));
 const MentorReviewsPage = lazy(() => import('./pages/mentor/MentorReviewsPage'));
 const MentorLaunchCodePage = lazy(() => import('./pages/mentor/MentorLaunchCodePage'));
+const MentorEarningsPage = lazy(() => import('./pages/mentor/MentorEarningsPage'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
 const Profile = lazy(() => import('./pages/Profile'));
 
@@ -138,6 +139,7 @@ function App() {
                         <Route path="reports" element={<MentorReportsPage />} />
                         <Route path="scan-attendance" element={<MentorScanAttendancePage />} />
                         <Route path="reviews" element={<MentorReviewsPage />} />
+                        <Route path="earnings" element={<MentorEarningsPage />} />
                         <Route path="launch-code" element={<MentorLaunchCodePage />} />
                         <Route path="help" element={<ComingSoonPage />} />
                         <Route path="settings" element={<ComingSoonPage />} />
