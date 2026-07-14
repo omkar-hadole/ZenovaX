@@ -36,7 +36,7 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                             src={getOptimizedImageUrl(user.profilePicture, { width: 80, height: 80 })}
                             width={40}
                             height={40}
-                            fetchpriority="high"
+                            fetchPriority="high"
                             alt={user.name || "User profile picture"}
                             className="w-full h-full object-cover"
                         />

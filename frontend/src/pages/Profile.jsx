@@ -659,7 +659,7 @@ export default function Profile() {
                         src={getOptimizedImageUrl(profile.profilePicture, { width: 256, height: 256 })}
                         width={128}
                         height={128}
-                        fetchpriority="high"
+                        fetchPriority="high"
                         alt={profile.name || "User profile picture"}
                         className="w-full h-full object-cover"
                       />

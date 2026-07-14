@@ -1,15 +1,16 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/home/Navbar';
 import HeroSection from '../components/home/HeroSection';
+import TopicMarquee from '../components/home/TopicMarquee';
 import FeaturesSection from '../components/home/FeaturesSection';
 import TrackingSection from '../components/home/TrackingSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import FAQSection from '../components/home/FAQSection';
 import CTASection from '../components/home/CTASection';
 import Footer from '../components/home/Footer';
-import { ScrollTrigger } from '../utils/gsapSetup';
+import { gsap, ScrollTrigger } from '../utils/gsapSetup';
 import useSmoothScroll from '../utils/useSmoothScroll';
 
 export default function Home() {
@@ -33,6 +34,19 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
+  // Thin page-progress bar under the top edge; fills as the page scrolls.
+  useLayoutEffect(() => {
+    const tween = gsap.to('[data-scroll-progress]', {
+      scaleX: 1,
+      ease: 'none',
+      scrollTrigger: { start: 0, end: 'max', scrub: true },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.kill();
+    };
+  }, []);
+
   const getDashboardPath = () => {
     if (!user) return '/auth';
     if (!user.isProfileComplete) return '/complete-profile';
@@ -47,10 +61,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-bg text-text antialiased selection:bg-[var(--color-accent-tint-strong)]">
+      {/* Page scroll-progress bar, pinned to the very top edge. */}
+      <div
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 z-[60] h-0.5 origin-left scale-x-0 bg-gradient-accent pointer-events-none"
+        data-scroll-progress
+      />
+
       <Navbar scrolled={scrolled} isLoggedIn={isLoggedIn} handlePrimaryCTA={handlePrimaryCTA} />
 
       <main>
         <HeroSection handlePrimaryCTA={handlePrimaryCTA} />
+        <TopicMarquee />
         <FeaturesSection />
         <TrackingSection />
         <TestimonialsSection />

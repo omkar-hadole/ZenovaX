@@ -1,21 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/logo.svg';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
+const navLinks = [
+  { name: 'Home', href: '#home' },
+  { name: 'Features', href: '#features' },
+  { name: 'How it works', href: '#journey' },
+  { name: 'FAQ', href: '#faq' },
+  { name: 'Contact', href: '#contact' },
+];
+
 export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('#home');
 
-  const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'Features', href: '#features' },
-    { name: 'How it works', href: '#journey' },
-    { name: 'FAQ', href: '#faq' },
-    { name: 'Contact', href: '#contact' },
-  ];
+  // Scrollspy: highlight the nav link whose section is currently centered.
+  // rootMargin biases the "active" band toward the upper-middle of the
+  // viewport so a section lights up as its heading reaches reading height.
+  useEffect(() => {
+    const sections = navLinks
+      .map((link) => document.querySelector(link.href))
+      .filter(Boolean);
+    if (!sections.length) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActiveSection(`#${visible.target.id}`);
+      },
+      { rootMargin: '-45% 0px -50% 0px', threshold: 0 }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <nav
@@ -44,23 +68,33 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
             src={getOptimizedImageUrl(logo)}
             width={120}
             height={24}
-            fetchpriority="high"
+            fetchPriority="high"
             alt="ZenovaX"
             className="h-6 object-contain transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </a>
 
         <div className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="relative px-3 py-1.5 text-sm text-text-muted hover:text-text font-medium transition-colors rounded-lg group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              {link.name}
-              <span className="pointer-events-none absolute left-3 right-3 -bottom-0.5 h-px origin-left scale-x-0 bg-accent transition-transform duration-300 group-hover:scale-x-100" />
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = activeSection === link.href;
+            return (
+              <a
+                key={link.name}
+                href={link.href}
+                aria-current={isActive ? 'true' : undefined}
+                className={`relative px-3 py-1.5 text-sm font-medium transition-colors rounded-lg group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                  isActive ? 'text-text' : 'text-text-muted hover:text-text'
+                }`}
+              >
+                {link.name}
+                <span
+                  className={`pointer-events-none absolute left-3 right-3 -bottom-0.5 h-px origin-left bg-accent transition-transform duration-300 ${
+                    isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                  }`}
+                />
+              </a>
+            );
+          })}
         </div>
 
         <div className="hidden md:flex items-center gap-3">
@@ -114,7 +148,10 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
                 key={link.name}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block w-full text-text font-medium text-lg hover:text-accent transition"
+                aria-current={activeSection === link.href ? 'true' : undefined}
+                className={`block w-full font-medium text-lg transition ${
+                  activeSection === link.href ? 'text-accent' : 'text-text hover:text-accent'
+                }`}
               >
                 {link.name}
               </a>

@@ -70,7 +70,7 @@ export default function Auth() {
                 src={getOptimizedImageUrl(images[currentImage], { width: 1152, height: 1400 })}
                 width={576}
                 height={700}
-                fetchpriority="high"
+                fetchPriority="high"
                 alt="ZenovaX platform feature showcase"
                 className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
               />
