@@ -19,6 +19,7 @@ router.get("/activity", protect, authorize('MENTOR', 'BOTH'), sessionController.
 router.get("/my-sessions", protect, authorize('MENTOR', 'BOTH'), sessionController.getMySessions);
 
 router.post("/book/:id", protect, sessionController.bookSession);
+router.post("/verify-payment", protect, sessionController.verifyPayment);
 router.get("/booking-status/:id", protect, sessionController.getBookingStatus);
 router.get("/my-bookings", protect, sessionController.getMyBookings);
 

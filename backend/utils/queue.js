@@ -3,6 +3,7 @@ const logger = require("./logger");
 const cache = require("./cache");
 const config = require("../config");
 const badgeService = require("../services/badgeService");
+const mentorWalletService = require("../services/mentorWalletService");
 
 // Dedicated Redis connection for BullMQ with maxRetriesPerRequest: null
 let connection;
@@ -139,10 +140,36 @@ function startQueueWorker(prisma) {
                     logger.info(`Session ${session.id} marked as COMPLETED.`);
                     // Queue badge calculation for the mentor via BullMQ
                     await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
+                    // Release held mentor earnings (pending -> available) for this session's paid bookings
+                    try {
+                        const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
+                        if (releasedCount > 0) {
+                            logger.info(`Released earnings for ${releasedCount} booking(s) on session ${session.id}.`);
+                        }
+                    } catch (err) {
+                        logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`, err);
+                    }
                 }
             }
         } catch (err) {
             logger.error(`Session completion worker loop error: ${err.message}`, err);
+        }
+
+        // Release seats held by PENDING (awaiting-payment) bookings that were never
+        // completed within the hold window, so abandoned checkouts don't block seats.
+        try {
+            const sessionService = require("../services/sessionService");
+            const cutoff = new Date(Date.now() - config.bookingHoldMinutes * 60 * 1000);
+            const stale = await prisma.booking.findMany({
+                where: { status: 'PENDING', bookedAt: { lt: cutoff } },
+                select: { id: true }
+            });
+            for (const b of stale) {
+                await sessionService.cancelPendingBooking(prisma, cache, b.id);
+                logger.info(`Released seat for expired pending booking ${b.id}.`);
+            }
+        } catch (err) {
+            logger.error(`Pending-booking sweep error: ${err.message}`, err);
         }
     }, 60000); // Check every 60 seconds
 }

@@ -76,6 +76,17 @@ app.use(cors({
 // Enable pre-flight for all routes
 app.options('/{*splat}', cors());
 
+// Razorpay webhook must be mounted BEFORE express.json + csrf: it needs the raw
+// request body for HMAC signature verification and comes from Razorpay's servers
+// (no CSRF token). It attaches its own prisma/cache since it runs before the shared
+// middleware below.
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: '*/*', limit: '1mb' }),
+  (req, res, next) => { req.prisma = prisma; req.cache = cache; next(); },
+  require('./controllers/paymentController').handleWebhook
+);
+
 app.use(express.json({ limit: '50kb' }));
 app.use("/api", generalLimiter);
 
@@ -102,6 +113,8 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/help", require("./routes/helpRoutes"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/wallet", require("./routes/wallet"));
+app.use("/api/payments", require("./routes/payments"));
 
 app.use((req, res, next) => {
   if (!req.timedout) next();

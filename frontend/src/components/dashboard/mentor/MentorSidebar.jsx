@@ -7,7 +7,8 @@ import {
     HelpCircle,
     Settings,
     QrCode,
-    AlertTriangle
+    AlertTriangle,
+    Wallet
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import logo from '../../../assets/mentorlogo.svg';
@@ -19,6 +20,7 @@ const TAB_PATHS = {
     'Reports': '/mentor/reports',
     'Scan Attendance': '/mentor/scan-attendance',
     'Reviews Received': '/mentor/reviews',
+    'Earnings': '/mentor/earnings',
     'Help Center': '/mentor/help',
     'Settings': '/mentor/settings',
 };
@@ -29,6 +31,7 @@ const BASE_ITEMS = [
     { icon: AlertTriangle, label: 'Reports' },
     { icon: QrCode, label: 'Scan Attendance' },
     { icon: Star, label: 'Reviews Received' },
+    { icon: Wallet, label: 'Earnings' },
     { icon: HelpCircle, label: 'Help Center' },
     { icon: Settings, label: 'Settings' },
 ];
