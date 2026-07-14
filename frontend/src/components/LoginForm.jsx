@@ -115,7 +115,9 @@ export default function LoginForm({ onToggle, showToast }) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
+          <label htmlFor="login-email" className="sr-only">Email</label>
           <input
+            id="login-email"
             type="email"
             placeholder="Email"
             required
@@ -129,7 +131,9 @@ export default function LoginForm({ onToggle, showToast }) {
         </div>
 
         <div className="relative">
+          <label htmlFor="login-password" className="sr-only">Password</label>
           <input
+            id="login-password"
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             required
@@ -141,6 +145,8 @@ export default function LoginForm({ onToggle, showToast }) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

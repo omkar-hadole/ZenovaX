@@ -185,6 +185,34 @@ router.post("/:id/submit", protect, async (req, res, next) => {
             return res.status(404).json({ error: "Quiz not found" });
         }
 
+        if (quiz.status !== 'LIVE') {
+            return res.status(400).json({ error: "Quiz is not live" });
+        }
+
+        const booking = await req.prisma.booking.findUnique({
+            where: {
+                userId_sessionId: {
+                    userId: req.user.id,
+                    sessionId: quiz.sessionId
+                }
+            }
+        });
+
+        if (!booking) {
+            return res.status(403).json({ error: "You must be registered for the session to take this quiz" });
+        }
+
+        const existingAttempt = await req.prisma.quizAttempt.findFirst({
+            where: {
+                quizId: id,
+                userId: req.user.id
+            }
+        });
+
+        if (existingAttempt) {
+            return res.status(400).json({ error: "You have already attempted this quiz", attempt: existingAttempt });
+        }
+
         let score = 0;
         const totalMarks = quiz.totalMarks;
         const attemptAnswers = [];

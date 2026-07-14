@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+/* Outfit font is loaded via the <link> + preconnect hints in index.html
+   (weights 300-700, the only weights this app actually uses) — do not
+   also @import it here, that duplicated the request and added extra
+   render-blocking latency. */
 @import "tailwindcss";
 
 /* ============================================================
@@ -23,12 +26,12 @@
   /* Text */
   --color-text: #14141f;         /* primary headings */
   --color-text-muted: #4b4b5c;   /* body copy */
-  --color-text-subtle: #6e6e80;  /* captions, meta */
+  --color-text-subtle: #656578;  /* captions, meta (WCAG AA on --color-bg-subtle) */
   --color-text-on-accent: #ffffff;
   --color-text-on-invert: #f4f4fa;
 
   /* Brand accent (kept the product's purple identity) */
-  --color-accent: #6361e0;
+  --color-accent: #5654cf;  /* darkened slightly from #6361e0 for WCAG AA text contrast on --color-bg-subtle */
   --color-accent-strong: #4f4dd4;
   --color-accent-soft: #9190f8;
   --color-accent-tint: rgba(99, 97, 224, 0.10);
@@ -213,4 +216,34 @@ body {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(0, 122, 255, 0.5);
   outline: none;
+}
+
+/* LiveSession reaction overlay animations */
+@keyframes float-up {
+  0% {
+    transform: translateY(100px) scale(0.3) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0px) scale(1.1) rotate(6deg);
+  }
+  85% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-80vh) scale(0.6) rotate(-12deg);
+    opacity: 0;
+  }
+}
+
+@keyframes apple-pop {
+  0% {
+    transform: translate3d(-50%, 15px, 0) scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0) scale(1);
+    opacity: 1;
+  }
 }

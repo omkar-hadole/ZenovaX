@@ -152,7 +152,7 @@ export default function FeaturesSection() {
                 style={{ background: 'var(--color-accent-tint)' }}
               />
               <div className="relative">
-                <span className="text-7xl font-semibold text-border-strong/60 leading-none select-none">
+                <span aria-hidden="true" className="text-7xl font-semibold text-border-strong/60 leading-none select-none">
                   0{i + 1}
                 </span>
                 <div className="mt-4 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent-tint border border-border-accent">

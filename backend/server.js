@@ -74,7 +74,7 @@ app.use(cors({
 }));
 
 // Enable pre-flight for all routes
-app.options('*', cors());
+app.options('/{*splat}', cors());
 
 app.use(express.json({ limit: '50kb' }));
 app.use("/api", generalLimiter);

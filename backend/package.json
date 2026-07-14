@@ -15,10 +15,10 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@prisma/client": "^5.20.0",
+    "@prisma/client": "^6.19.3",
     "@sentry/node": "^10.57.0",
     "axios": "^1.13.3",
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.3",
     "bullmq": "^5.78.0",
     "cloudinary": "^2.8.0",
     "compression": "^1.8.1",
@@ -26,23 +26,23 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
-    "express": "^4.19.2",
+    "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
     "ioredis": "^5.11.1",
-    "jose": "^4.15.9",
-    "multer": "^2.0.2",
+    "jose": "^5.10.0",
+    "multer": "^2.2.0",
     "node-cache": "^5.1.2",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^9.0.3",
     "rate-limit-redis": "^5.0.0",
     "semver": "^7.5.4",
-    "serverless-http": "^3.2.0",
+    "serverless-http": "^4.0.0",
     "winston": "^3.19.0",
     "xss": "^1.0.15"
   },
   "devDependencies": {
     "eslint": "^8.0.0",
     "nodemon": "^3.1.7",
-    "prisma": "^5.20.0"
+    "prisma": "^6.19.3"
   }
 }

@@ -109,7 +109,9 @@ export default function SignupForm({ onToggle, showToast }) {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-2 gap-3">
+          <label htmlFor="signup-firstname" className="sr-only">First name</label>
           <input
+            id="signup-firstname"
             type="text"
             placeholder="First name"
             required
@@ -118,7 +120,9 @@ export default function SignupForm({ onToggle, showToast }) {
             onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
             className="input-glass w-full px-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
+          <label htmlFor="signup-lastname" className="sr-only">Last name</label>
           <input
+            id="signup-lastname"
             type="text"
             placeholder="Last name"
             required
@@ -130,7 +134,9 @@ export default function SignupForm({ onToggle, showToast }) {
         </div>
 
         <div>
+          <label htmlFor="signup-email" className="sr-only">Email</label>
           <input
+            id="signup-email"
             type="email"
             placeholder="yourname@nst.rishihood.edu.in"
             required
@@ -144,7 +150,9 @@ export default function SignupForm({ onToggle, showToast }) {
         </div>
 
         <div className="relative">
+          <label htmlFor="signup-password" className="sr-only">Password</label>
           <input
+            id="signup-password"
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             required
@@ -156,6 +164,8 @@ export default function SignupForm({ onToggle, showToast }) {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -166,7 +176,9 @@ export default function SignupForm({ onToggle, showToast }) {
         </p>
 
         <div className="relative">
+          <label htmlFor="signup-confirm-password" className="sr-only">Confirm password</label>
           <input
+            id="signup-confirm-password"
             type={showConfirmPassword ? 'text' : 'password'}
             placeholder="Confirm password"
             required
@@ -178,6 +190,8 @@ export default function SignupForm({ onToggle, showToast }) {
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showConfirmPassword}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

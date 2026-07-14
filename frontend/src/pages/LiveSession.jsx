@@ -643,37 +643,6 @@ export default function LiveSession() {
 
   return (
     <div className="h-screen bg-[#070913] text-white flex flex-col overflow-hidden relative">
-      {/* Dynamic Keyframes injected locally */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes float-up {
-          0% {
-            transform: translateY(100px) scale(0.3) rotate(0deg);
-            opacity: 0;
-          }
-          12% {
-            opacity: 1;
-            transform: translateY(0px) scale(1.1) rotate(6deg);
-          }
-          85% {
-            opacity: 0.95;
-          }
-          100% {
-            transform: translateY(-80vh) scale(0.6) rotate(-12deg);
-            opacity: 0;
-          }
-        }
-        @keyframes apple-pop {
-          0% {
-            transform: translate3d(-50%, 15px, 0) scale(0.85);
-            opacity: 0;
-          }
-          100% {
-            transform: translate3d(-50%, 0, 0) scale(1);
-            opacity: 1;
-          }
-        }
-      `}} />
-
       {/* Top Header bar - Apple glass styling */}
       <div className="h-16 border-b border-white/10 bg-slate-950/20 backdrop-blur-xl flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-3">

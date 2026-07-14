@@ -2,13 +2,22 @@ const express = require("express");
 const multer = require("multer");
 const { protect } = require("../middleware/auth");
 const profileController = require("../controllers/profileController");
+const { BadRequestError } = require("../utils/errors");
 
 const router = express.Router();
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
         fileSize: 5 * 1024 * 1024,
+    },
+    fileFilter: (req, file, cb) => {
+        if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
+            return cb(new BadRequestError("Only JPEG, PNG, WEBP, or GIF images are allowed"));
+        }
+        cb(null, true);
     },
 });
 
