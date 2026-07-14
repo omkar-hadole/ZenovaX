@@ -650,7 +650,7 @@ export default function LiveSession() {
             src={getOptimizedImageUrl(logo)}
             width={120}
             height={24}
-            fetchpriority="high"
+            fetchPriority="high"
             alt="ZenovaX"
             className="h-6 object-contain"
           />

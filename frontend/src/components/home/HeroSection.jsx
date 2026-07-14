@@ -13,8 +13,26 @@ const proofChips = [
   { icon: QrCode, label: 'QR ticket entry for meetups' },
 ];
 
+// Headline words, split so each can rise out of its own overflow-hidden mask.
+const HEADLINE_WORDS = ['Learn', 'from', 'peers', 'who'];
+const ACCENT_WORDS = ['just', 'cracked', 'it'];
+
+function MaskedWord({ children, accent = false }) {
+  return (
+    <span className="inline-block overflow-hidden align-bottom pb-2 -mb-2">
+      <span
+        data-hero-word
+        className={`inline-block will-change-transform ${accent ? 'text-gradient text-shimmer' : ''}`}
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
 export default function HeroSection({ handlePrimaryCTA }) {
   const scope = useRef(null);
+  const tiltRef = useRef(null);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -22,12 +40,22 @@ export default function HeroSection({ handlePrimaryCTA }) {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap
           .timeline({ defaults: { ease: 'power3.out' } })
-          .from('[data-hero-stagger]', {
-            y: 40,
-            opacity: 0,
+          .from('[data-hero-word]', {
+            yPercent: 115,
             duration: 0.9,
-            stagger: 0.12,
+            ease: 'power4.out',
+            stagger: 0.07,
           })
+          .from(
+            '[data-hero-stagger]',
+            {
+              y: 40,
+              opacity: 0,
+              duration: 0.9,
+              stagger: 0.12,
+            },
+            '-=0.55'
+          )
           .from(
             '[data-hero-mockup]',
             { y: 90, opacity: 0, scale: 0.96, duration: 1.1 },
@@ -65,6 +93,38 @@ export default function HeroSection({ handlePrimaryCTA }) {
           }
         );
       });
+
+      // Gentle pointer-driven 3D tilt on the mockup — mouse users only, and
+      // applied to an inner wrapper so it never fights the scroll-scrub
+      // scale/translate on [data-hero-mockup] above.
+      mm.add(
+        '(prefers-reduced-motion: no-preference) and (pointer: fine)',
+        () => {
+          const el = tiltRef.current;
+          if (!el) return;
+          const zone = el.parentElement;
+          const rotX = gsap.quickTo(el, 'rotationX', { duration: 0.6, ease: 'power3.out' });
+          const rotY = gsap.quickTo(el, 'rotationY', { duration: 0.6, ease: 'power3.out' });
+
+          const onMove = (e) => {
+            const r = el.getBoundingClientRect();
+            const px = (e.clientX - r.left) / r.width - 0.5;
+            const py = (e.clientY - r.top) / r.height - 0.5;
+            rotY(px * 6);
+            rotX(-py * 5);
+          };
+          const onLeave = () => {
+            rotX(0);
+            rotY(0);
+          };
+          zone.addEventListener('pointermove', onMove, { passive: true });
+          zone.addEventListener('pointerleave', onLeave);
+          return () => {
+            zone.removeEventListener('pointermove', onMove);
+            zone.removeEventListener('pointerleave', onLeave);
+          };
+        }
+      );
     }, scope);
     return () => ctx.revert();
   }, []);
@@ -102,12 +162,23 @@ export default function HeroSection({ handlePrimaryCTA }) {
           </span>
 
           <h1
-            data-hero-stagger
             className="mt-8 text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05] text-text"
+            aria-label="Learn from peers who just cracked it"
           >
-            Learn from peers who
-            <br className="hidden md:block" />{' '}
-            <span className="text-gradient">just cracked it</span>
+            <span aria-hidden="true">
+              {HEADLINE_WORDS.map((word) => (
+                <span key={word}>
+                  <MaskedWord>{word}</MaskedWord>{' '}
+                </span>
+              ))}
+              <br className="hidden md:block" />
+              {ACCENT_WORDS.map((word, i) => (
+                <span key={word}>
+                  <MaskedWord accent>{word}</MaskedWord>
+                  {i < ACCENT_WORDS.length - 1 ? ' ' : ''}
+                </span>
+              ))}
+            </span>
           </h1>
 
           <p
@@ -146,22 +217,28 @@ export default function HeroSection({ handlePrimaryCTA }) {
           </ul>
         </div>
 
-        <div data-hero-mockup className="relative mt-20 will-change-transform">
+        <div
+          data-hero-mockup
+          className="relative mt-20 will-change-transform"
+          style={{ perspective: '1200px' }}
+        >
           <div
             aria-hidden="true"
             className="absolute -inset-x-8 -top-8 h-40 blur-2xl pointer-events-none"
             style={{ background: 'linear-gradient(to bottom, var(--color-glow-soft), transparent)' }}
           />
-          <img
-            src={dashboard}
-            srcSet={`${dashboardMobile} 800w, ${dashboard} 2389w`}
-            sizes="(max-width: 768px) 100vw, 1152px"
-            width={1200}
-            height={875}
-            fetchpriority="high"
-            alt="ZenovaX learner dashboard showing upcoming peer sessions and recommended mentors"
-            className="relative w-full rounded-[28px] border border-border bg-surface shadow-[var(--shadow-lg)]"
-          />
+          <div ref={tiltRef} className="will-change-transform [transform-style:preserve-3d]">
+            <img
+              src={dashboard}
+              srcSet={`${dashboardMobile} 800w, ${dashboard} 2389w`}
+              sizes="(max-width: 768px) 100vw, 1152px"
+              width={1200}
+              height={875}
+              fetchPriority="high"
+              alt="ZenovaX learner dashboard showing upcoming peer sessions and recommended mentors"
+              className="relative w-full rounded-[28px] border border-border bg-surface shadow-[var(--shadow-lg)]"
+            />
+          </div>
         </div>
       </div>
     </section>

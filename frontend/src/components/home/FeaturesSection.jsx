@@ -85,19 +85,27 @@ export default function FeaturesSection() {
           });
 
           // Subtle progressive reveal of each panel as it enters view.
+          // Scrubbed (not one-shot) so cards already inside the viewport at
+          // pin start resolve to their correct visible state immediately —
+          // `once: true` triggers here left every card stuck at opacity 0
+          // until the container tween happened to re-evaluate them.
           gsap.utils.toArray('[data-feat-card]').forEach((card) => {
-            gsap.from(card, {
-              opacity: 0,
-              y: 40,
-              duration: 0.6,
-              ease: 'power2.out',
-              scrollTrigger: {
-                trigger: card,
-                containerAnimation: tween,
-                start: 'left 85%',
-                once: true,
-              },
-            });
+            gsap.fromTo(
+              card,
+              { opacity: 0, y: 40 },
+              {
+                opacity: 1,
+                y: 0,
+                ease: 'power2.out',
+                scrollTrigger: {
+                  trigger: card,
+                  containerAnimation: tween,
+                  start: 'left 95%',
+                  end: 'left 65%',
+                  scrub: true,
+                },
+              }
+            );
           });
         }
       );

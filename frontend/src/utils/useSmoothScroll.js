@@ -19,6 +19,16 @@ export default function useSmoothScroll() {
     ).matches;
     if (prefersReduced) return undefined;
 
+    // CSS `scroll-behavior: smooth` (set on <html> for the non-Lenis path)
+    // must be off while Lenis drives the scroll: Lenis writes scrollTop every
+    // frame, and CSS smoothing turns each write into its own eased animation,
+    // so the two fight — anchors snap back and wheel scrolling stutters. The
+    // `.lenis.lenis-smooth` override in index.css never matches because Lenis
+    // only puts `lenis` on <html>, so force it inline for Lenis's lifetime.
+    const html = document.documentElement;
+    const prevScrollBehavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+
     const lenis = new Lenis({
       duration: 1.1,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -53,6 +63,7 @@ export default function useSmoothScroll() {
       document.removeEventListener('click', onAnchorClick);
       gsap.ticker.remove(raf);
       lenis.destroy();
+      html.style.scrollBehavior = prevScrollBehavior;
     };
   }, []);
 }
