@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextIndex"]
   // Prisma query-engine binaries for the AWS Lambda nodejs20.x runtime (AL2023):
   //   linux-arm64-openssl-3.0.x -> arm64 / Graviton Lambda (what template.yaml uses)
   //   rhel-openssl-3.0.x        -> x86_64 Lambda (if you switch off arm64)

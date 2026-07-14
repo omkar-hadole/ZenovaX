@@ -89,7 +89,9 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="relative">
+              <label htmlFor="reset-password" className="sr-only">New password</label>
               <input
+                id="reset-password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="New Password"
                 required
@@ -101,6 +103,8 @@ export default function ResetPassword() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -108,7 +112,9 @@ export default function ResetPassword() {
             </div>
 
             <div className="relative">
+              <label htmlFor="reset-confirm-password" className="sr-only">Confirm new password</label>
               <input
+                id="reset-confirm-password"
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm New Password"
                 required
@@ -120,6 +126,8 @@ export default function ResetPassword() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showConfirmPassword}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

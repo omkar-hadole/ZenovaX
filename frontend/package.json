@@ -16,7 +16,7 @@
     "axios": "^1.13.4",
     "date-fns": "^4.1.0",
     "dom-to-image-more": "^3.7.2",
-    "dompurify": "^3.4.8",
+    "dompurify": "^3.4.12",
     "framer-motion": "^11.18.2",
     "gsap": "^3.13.0",
     "html5-qrcode": "^2.3.8",
@@ -34,6 +34,9 @@
     "remark-breaks": "^4.0.0",
     "tailwindcss": "^4.1.16",
     "three": "^0.180.0"
+  },
+  "overrides": {
+    "dompurify": "^3.4.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

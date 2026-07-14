@@ -21,7 +21,7 @@ exactly like Vercel's catch-all rewrite did.
 brew install aws-sam-cli        # SAM CLI is not yet installed
 sam --version                   # confirm it works
 ```
-AWS CLI is already installed and authenticated as IAM user `claude` (account 137601369306).
+AWS CLI is already installed and authenticated with an IAM user that has Lambda deploy permissions.
 
 ### Deploy
 From the `backend/` folder:

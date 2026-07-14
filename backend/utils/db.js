@@ -16,26 +16,34 @@ if (process.env.NODE_ENV === 'production') {
   basePrisma = global.basePrisma;
 }
 
-const prisma = basePrisma;
+// $use middleware was removed in Prisma 6; soft-delete filtering is now done
+// via a query extension (add any other soft-deleted models to all four hooks below).
+// `prisma` is referenced inside the hooks before assignment, which is fine because
+// the hooks only run later, after the const below has been initialized (closure).
+const softDeleteModel = (modelAccessor) => ({
+  async findUnique({ args }) {
+    // findUnique can't filter on non-unique fields, so redirect to findFirst.
+    return prisma[modelAccessor].findFirst({ ...args, where: { ...args.where, isDeleted: false } });
+  },
+  async findFirst({ args, query }) {
+    args.where = { ...args.where, isDeleted: false };
+    return query(args);
+  },
+  async findMany({ args, query }) {
+    args.where = { ...args.where, isDeleted: false };
+    return query(args);
+  },
+  async count({ args, query }) {
+    args.where = { ...args.where, isDeleted: false };
+    return query(args);
+  },
+});
 
-prisma.$use(async (params, next) => {
-  const softDeleteModels = ['User', 'Session']; // add any other soft-deleted models
-  
-  if (softDeleteModels.includes(params.model)) {
-    params.args = params.args || {};
-    if (params.action === 'findUnique' || params.action === 'findFirst') {
-      params.action = 'findFirst';
-      params.args.where = { ...params.args.where, isDeleted: false };
-    }
-    if (params.action === 'findMany') {
-      params.args.where = { ...params.args.where, isDeleted: false };
-    }
-    if (params.action === 'count') {
-      params.args.where = { ...params.args.where, isDeleted: false };
-    }
-  }
-  
-  return next(params);
+const prisma = basePrisma.$extends({
+  query: {
+    user: softDeleteModel('user'),
+    session: softDeleteModel('session'),
+  },
 });
 
 module.exports = prisma;

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useLayoutEffect, useRef } from 'react';
 import { Sparkles, PlayCircle, ArrowRight, ShieldCheck, Code2, QrCode } from 'lucide-react';
-import dashboard from '../../assets/dashboard-mockup.png';
+import dashboard from '../../assets/dashboard-mockup.webp';
+import dashboardMobile from '../../assets/dashboard-mockup-800w.webp';
 import { gsap } from '../../utils/gsapSetup';
 
 // Three.js scene is code-split so it never blocks first paint.
@@ -153,6 +154,8 @@ export default function HeroSection({ handlePrimaryCTA }) {
           />
           <img
             src={dashboard}
+            srcSet={`${dashboardMobile} 800w, ${dashboard} 2389w`}
+            sizes="(max-width: 768px) 100vw, 1152px"
             width={1200}
             height={875}
             fetchpriority="high"

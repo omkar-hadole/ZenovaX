@@ -39,11 +39,20 @@ export default function HeroCanvas() {
     );
     camera.position.z = 14;
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance',
-    });
+    // WebGL can be unavailable (disabled GPU, locked-down browsers, headless
+    // environments) and throws synchronously here. This is a purely decorative
+    // background, so on failure we bail out quietly instead of taking the
+    // whole page down with an uncaught render-time error.
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
+    } catch {
+      return undefined;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     mount.appendChild(renderer.domElement);
