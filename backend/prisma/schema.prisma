@@ -84,6 +84,9 @@ model User {
   transactions      Transaction[]
   notifications     Notification[]
   codingSubmissions CodingSubmission[]
+  mentorWallet      MentorWallet?
+  mentorPayouts     MentorPayout[]
+  mentorPayoutAccount MentorPayoutAccount?
   
   @@index([email])
   @@index([phoneNumber])
@@ -296,7 +299,8 @@ model Booking {
   platformFee     Float         @default(0)
   totalAmount     Float         @default(0)
   paymentId       String?       @unique
-  
+  earningsReleased Boolean      @default(false) // True once the mentor's share has moved from pending to available balance
+
   // Attendance
   attended        Boolean       @default(false)
   joinedAt        DateTime?     // When learner joined the live session
@@ -628,6 +632,129 @@ model Transaction {
   @@index([status])
   @@index([createdAt])
   @@map("transactions")
+}
+
+// MENTOR EARNINGS & PAYOUTS
+//
+// Money flow: a paid booking credits the mentor's pending balance (see
+// Booking/Transaction above for the student-facing charge). When the session
+// completes, that amount moves from pending -> available. A mentor can then
+// request a payout against the available balance. No real bank/UPI transfer
+// happens here yet — MentorPayout just reserves the funds and records intent;
+// wiring it to a live payout API (Razorpay Route / RazorpayX Payouts) is a
+// separate step (see PAYMENT_FLOW.md).
+
+enum KycStatus {
+  NOT_SUBMITTED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum LedgerEntryType {
+  BOOKING_CREDIT // Learner payment credited to mentor's pending balance
+  RELEASE        // Pending balance released to available balance after session completion
+  PAYOUT         // Available balance debited for a payout request
+  REVERSAL       // Refund or failed-payout clawback
+}
+
+model MentorWallet {
+  id               String   @id @default(uuid())
+  mentorId         String   @unique
+  mentor           User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  balancePending   Float    @default(0) // Earned but session not yet completed (hold period)
+  balanceAvailable Float    @default(0) // Completed sessions, ready to withdraw
+  totalEarned      Float    @default(0) // Lifetime gross earnings (mentor share, before payout)
+  totalPaidOut     Float    @default(0) // Lifetime amount actually paid out
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  ledgerEntries    MentorLedgerEntry[]
+  payouts          MentorPayout[]
+
+  @@map("mentor_wallets")
+}
+
+model MentorLedgerEntry {
+  id          String          @id @default(uuid())
+
+  walletId    String
+  wallet      MentorWallet    @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  type        LedgerEntryType
+  amount      Float           // Always positive; `type` determines credit/debit direction
+  description String?
+
+  bookingId   String?
+  payoutId    String?
+  payout      MentorPayout?   @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime        @default(now())
+
+  @@index([walletId])
+  @@index([bookingId])
+  @@index([type])
+  @@map("mentor_ledger_entries")
+}
+
+model MentorPayout {
+  id              String       @id @default(uuid())
+
+  walletId        String
+  wallet          MentorWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  mentorId        String
+  mentor          User         @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  amount          Float
+  status          PayoutStatus @default(PENDING)
+  currency        String       @default("INR")
+
+  // Populated once a real gateway payout (Razorpay Route / RazorpayX Payouts) is wired up
+  gatewayPayoutId String?      @unique
+  failureReason   String?      @db.Text
+
+  requestedAt     DateTime     @default(now())
+  processedAt     DateTime?
+
+  ledgerEntries   MentorLedgerEntry[]
+
+  @@index([mentorId])
+  @@index([status])
+  @@map("mentor_payouts")
+}
+
+model MentorPayoutAccount {
+  id                     String    @id @default(uuid())
+  mentorId               String    @unique
+  mentor                 User      @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  accountHolderName      String?
+  // NOTE: raw bank/UPI details here are a placeholder for local development only.
+  // In production, replace with a tokenized reference from the payment gateway's
+  // linked-account API (e.g. Razorpay Route contact_id / fund_account_id) rather
+  // than storing account numbers directly.
+  bankAccountNumber      String?
+  ifscCode               String?
+  upiId                  String?
+
+  kycStatus              KycStatus @default(NOT_SUBMITTED)
+  gatewayLinkedAccountId String?   @unique
+  submittedAt            DateTime?
+  verifiedAt             DateTime?
+  rejectionReason        String?   @db.Text
+
+  updatedAt              DateTime  @updatedAt
+
+  @@map("mentor_payout_accounts")
 }
 
 // NOTIFICATIONS

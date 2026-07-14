@@ -3,6 +3,7 @@ const logger = require("./logger");
 const cache = require("./cache");
 const config = require("../config");
 const badgeService = require("../services/badgeService");
+const mentorWalletService = require("../services/mentorWalletService");
 
 // Dedicated Redis connection for BullMQ with maxRetriesPerRequest: null
 let connection;
@@ -139,6 +140,15 @@ function startQueueWorker(prisma) {
                     logger.info(`Session ${session.id} marked as COMPLETED.`);
                     // Queue badge calculation for the mentor via BullMQ
                     await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
+                    // Release held mentor earnings (pending -> available) for this session's paid bookings
+                    try {
+                        const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
+                        if (releasedCount > 0) {
+                            logger.info(`Released earnings for ${releasedCount} booking(s) on session ${session.id}.`);
+                        }
+                    } catch (err) {
+                        logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`, err);
+                    }
                 }
             }
         } catch (err) {

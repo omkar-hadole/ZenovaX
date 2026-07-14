@@ -102,6 +102,7 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/help", require("./routes/helpRoutes"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/wallet", require("./routes/wallet"));
 
 app.use((req, res, next) => {
   if (!req.timedout) next();

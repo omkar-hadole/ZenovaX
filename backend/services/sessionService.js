@@ -4,6 +4,7 @@ const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = requir
 const { SignJWT } = require("jose");
 const crypto = require("crypto");
 const config = require("../config");
+const mentorWalletService = require("./mentorWalletService");
 
 const getUniqueLearnersCount = async (tx, mentorId) => {
     const result = await tx.booking.groupBy({
@@ -334,14 +335,42 @@ exports.executeBookingTransaction = async (prisma, cache, userId, sessionId) => 
             throw err;
         }
 
+        const isPaid = currentSession.priceType === 'PAID' && currentSession.price > 0;
+
         const booking = await tx.booking.create({
             data: {
                 userId,
                 sessionId: sessionId,
                 status: 'CONFIRMED',
-                amountPaid: 0
+                amountPaid: isPaid ? currentSession.price : 0,
+                platformFee: isPaid ? currentSession.platformFee : 0,
+                totalAmount: isPaid ? currentSession.price : 0,
+                // Simulated payment reference — replace with the real gateway's payment id
+                // once a live checkout is wired up (see PAYMENT_FLOW.md).
+                paymentId: isPaid ? `sim_pay_${crypto.randomUUID()}` : null
             }
         });
+
+        if (isPaid) {
+            // No live payment gateway is integrated yet, so the charge is simulated as
+            // an immediate success. Swap this block for real order creation + webhook
+            // verification when a gateway is wired up.
+            await tx.transaction.create({
+                data: {
+                    userId,
+                    bookingId: booking.id,
+                    amount: currentSession.price,
+                    platformFee: currentSession.platformFee,
+                    totalAmount: currentSession.price,
+                    status: 'SUCCESS',
+                    gatewayOrderId: `sim_order_${crypto.randomUUID()}`,
+                    gatewayPaymentId: booking.paymentId,
+                    completedAt: new Date()
+                }
+            });
+
+            await mentorWalletService.recordBookingEarning(tx, currentSession.mentorId, booking);
+        }
 
         // Recalculate unique learners for the mentor and update the denormalized database field
         const uniqueLearners = await getUniqueLearnersCount(tx, currentSession.mentorId);
