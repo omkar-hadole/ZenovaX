@@ -243,3 +243,78 @@ exports.markPayoutPaid = async (prisma, payoutId, gatewayPayoutId) => {
         });
     });
 };
+
+// ---- Admin-facing operations ----
+
+// Approve a mentor's payout account after reviewing their KYC/bank details.
+exports.verifyPayoutAccount = async (prisma, accountId) => {
+    const account = await prisma.mentorPayoutAccount.findUnique({ where: { id: accountId } });
+    if (!account) throw new NotFoundError("Payout account not found");
+    return prisma.mentorPayoutAccount.update({
+        where: { id: accountId },
+        data: { kycStatus: 'VERIFIED', verifiedAt: new Date(), rejectionReason: null }
+    });
+};
+
+// Reject a mentor's payout account with a reason.
+exports.rejectPayoutAccount = async (prisma, accountId, reason) => {
+    const account = await prisma.mentorPayoutAccount.findUnique({ where: { id: accountId } });
+    if (!account) throw new NotFoundError("Payout account not found");
+    return prisma.mentorPayoutAccount.update({
+        where: { id: accountId },
+        data: { kycStatus: 'REJECTED', rejectionReason: reason || 'Details could not be verified', verifiedAt: null }
+    });
+};
+
+// List payout accounts for the admin KYC queue. Optionally filter by kycStatus.
+exports.listPayoutAccounts = async (prisma, status) => {
+    return prisma.mentorPayoutAccount.findMany({
+        where: status ? { kycStatus: status } : undefined,
+        orderBy: [{ kycStatus: 'asc' }, { submittedAt: 'desc' }],
+        include: { mentor: { select: { id: true, name: true, email: true } } }
+    });
+};
+
+// List payout requests for the admin payouts queue. Optionally filter by status.
+exports.listAllPayouts = async (prisma, status) => {
+    return prisma.mentorPayout.findMany({
+        where: status ? { status } : undefined,
+        orderBy: [{ status: 'asc' }, { requestedAt: 'desc' }],
+        include: {
+            mentor: { select: { id: true, name: true, email: true } }
+        }
+    });
+};
+
+// Headline numbers for the admin Payments dashboard.
+exports.getPaymentsOverview = async (prisma) => {
+    const [revenueAgg, walletAgg, pendingKyc, pendingPayoutsAgg, txnCount] = await Promise.all([
+        prisma.transaction.aggregate({
+            where: { status: 'SUCCESS' },
+            _sum: { platformFee: true, totalAmount: true }
+        }),
+        prisma.mentorWallet.aggregate({
+            _sum: { balancePending: true, balanceAvailable: true, totalEarned: true, totalPaidOut: true }
+        }),
+        prisma.mentorPayoutAccount.count({ where: { kycStatus: 'PENDING' } }),
+        prisma.mentorPayout.aggregate({
+            where: { status: { in: ['PENDING', 'PROCESSING'] } },
+            _sum: { amount: true },
+            _count: true
+        }),
+        prisma.transaction.count({ where: { status: 'SUCCESS' } })
+    ]);
+
+    return {
+        platformRevenue: revenueAgg._sum.platformFee || 0,
+        grossProcessed: revenueAgg._sum.totalAmount || 0,
+        successfulTransactions: txnCount,
+        mentorPendingBalance: walletAgg._sum.balancePending || 0,
+        mentorAvailableBalance: walletAgg._sum.balanceAvailable || 0,
+        mentorTotalEarned: walletAgg._sum.totalEarned || 0,
+        mentorTotalPaidOut: walletAgg._sum.totalPaidOut || 0,
+        pendingKycCount: pendingKyc,
+        pendingPayoutsCount: pendingPayoutsAgg._count || 0,
+        pendingPayoutsAmount: pendingPayoutsAgg._sum.amount || 0
+    };
+};

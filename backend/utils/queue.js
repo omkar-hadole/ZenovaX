@@ -154,6 +154,23 @@ function startQueueWorker(prisma) {
         } catch (err) {
             logger.error(`Session completion worker loop error: ${err.message}`, err);
         }
+
+        // Release seats held by PENDING (awaiting-payment) bookings that were never
+        // completed within the hold window, so abandoned checkouts don't block seats.
+        try {
+            const sessionService = require("../services/sessionService");
+            const cutoff = new Date(Date.now() - config.bookingHoldMinutes * 60 * 1000);
+            const stale = await prisma.booking.findMany({
+                where: { status: 'PENDING', bookedAt: { lt: cutoff } },
+                select: { id: true }
+            });
+            for (const b of stale) {
+                await sessionService.cancelPendingBooking(prisma, cache, b.id);
+                logger.info(`Released seat for expired pending booking ${b.id}.`);
+            }
+        } catch (err) {
+            logger.error(`Pending-booking sweep error: ${err.message}`, err);
+        }
     }, 60000); // Check every 60 seconds
 }
 

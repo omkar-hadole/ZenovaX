@@ -12,7 +12,6 @@ router.put("/payout-account", protect, authorize('MENTOR', 'BOTH'), walletContro
 router.post("/payouts", protect, authorize('MENTOR', 'BOTH'), walletController.requestPayout);
 router.get("/payouts", protect, authorize('MENTOR', 'BOTH'), walletController.getPayoutHistory);
 
-router.put("/payouts/:id/paid", protect, authorize('ADMIN'), walletController.markPayoutPaid);
-router.put("/payouts/:id/failed", protect, authorize('ADMIN'), walletController.markPayoutFailed);
+// Admin payout finalization lives under /api/admin (see adminRoutes.js).
 
 module.exports = router;

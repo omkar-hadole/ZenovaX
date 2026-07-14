@@ -6,6 +6,7 @@ import SessionDetailsSkeleton from '../../components/dashboard/learner/SessionDe
 import InlineError from '../../components/InlineError';
 import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/Toast';
+import { openRazorpayCheckout } from '../../utils/razorpay';
 
 export default function SessionDetailsPage() {
     const { id } = useParams();
@@ -37,19 +38,45 @@ export default function SessionDetailsPage() {
         }
     }, [id]);
 
+    const markBooked = () => {
+        setSession(prev => ({
+            ...prev,
+            isBooked: true,
+            availableSeats: prev.availableSeats - 1
+        }));
+        setToast({ message: 'Registration confirmed!', type: 'success' });
+    };
+
     const handleRegister = async () => {
         if (!session) return;
         setIsRegistering(true);
         try {
-            await apiCall(`/sessions/book/${session.id}`, { method: 'POST' });
+            const res = await apiCall(`/sessions/book/${session.id}`, { method: 'POST' });
 
-            setSession(prev => ({
-                ...prev,
-                isBooked: true,
-                availableSeats: prev.availableSeats - 1
-            }));
+            // Paid session with a live gateway: complete checkout, then verify.
+            if (res?.requiresPayment) {
+                const payment = await openRazorpayCheckout({
+                    keyId: res.keyId,
+                    order: res.order,
+                    name: 'ZenovaX',
+                    description: session.title,
+                    prefill: { name: user?.name, email: user?.email },
+                });
+                await apiCall('/sessions/verify-payment', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        bookingId: res.bookingId,
+                        razorpayPaymentId: payment.razorpay_payment_id,
+                        razorpayOrderId: payment.razorpay_order_id,
+                        razorpaySignature: payment.razorpay_signature,
+                    }),
+                });
+                markBooked();
+                return;
+            }
 
-            setToast({ message: 'Registration confirmed!', type: 'success' });
+            // Free session or simulated flow — booking already confirmed server-side.
+            markBooked();
         } catch (error) {
             setToast({ message: error.message || 'Registration failed', type: 'error' });
         } finally {

@@ -1,4 +1,5 @@
 const adminService = require("../services/adminService");
+const mentorWalletService = require("../services/mentorWalletService");
 
 exports.getDashboardStats = async (req, res, next) => {
     try {
@@ -85,6 +86,71 @@ exports.handleReportAction = async (req, res, next) => {
     try {
         const result = await adminService.handleReportAction(req.prisma, req.cache, req.body);
         return res.json(result);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+// ---- Payments & payouts admin ----
+
+exports.getPaymentsOverview = async (req, res, next) => {
+    try {
+        const overview = await mentorWalletService.getPaymentsOverview(req.prisma);
+        return res.json({ overview });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getPayoutAccounts = async (req, res, next) => {
+    try {
+        const accounts = await mentorWalletService.listPayoutAccounts(req.prisma, req.query.status);
+        return res.json({ accounts });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.verifyPayoutAccount = async (req, res, next) => {
+    try {
+        const account = await mentorWalletService.verifyPayoutAccount(req.prisma, req.params.id);
+        return res.json({ success: true, message: "Payout account verified", account });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.rejectPayoutAccount = async (req, res, next) => {
+    try {
+        const account = await mentorWalletService.rejectPayoutAccount(req.prisma, req.params.id, req.body.reason);
+        return res.json({ success: true, message: "Payout account rejected", account });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getPayouts = async (req, res, next) => {
+    try {
+        const payouts = await mentorWalletService.listAllPayouts(req.prisma, req.query.status);
+        return res.json({ payouts });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.markPayoutPaid = async (req, res, next) => {
+    try {
+        const payout = await mentorWalletService.markPayoutPaid(req.prisma, req.params.id, req.body.gatewayPayoutId);
+        return res.json({ success: true, message: "Payout marked as paid", payout });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.markPayoutFailed = async (req, res, next) => {
+    try {
+        const payout = await mentorWalletService.markPayoutFailed(req.prisma, req.params.id, req.body.reason);
+        return res.json({ success: true, message: "Payout marked as failed", payout });
     } catch (error) {
         return next(error);
     }

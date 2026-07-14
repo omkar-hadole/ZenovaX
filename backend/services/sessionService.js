@@ -5,6 +5,7 @@ const { SignJWT } = require("jose");
 const crypto = require("crypto");
 const config = require("../config");
 const mentorWalletService = require("./mentorWalletService");
+const paymentService = require("./paymentService");
 
 const getUniqueLearnersCount = async (tx, mentorId) => {
     const result = await tx.booking.groupBy({
@@ -289,6 +290,8 @@ exports.getMySessions = async (prisma, userId) => {
 };
 
 exports.executeBookingTransaction = async (prisma, cache, userId, sessionId) => {
+    const gatewayEnabled = paymentService.isEnabled();
+
     const result = await prisma.$transaction(async (tx) => {
         const currentSession = await tx.session.findUnique({
             where: { id: sessionId }
@@ -336,51 +339,64 @@ exports.executeBookingTransaction = async (prisma, cache, userId, sessionId) => 
         }
 
         const isPaid = currentSession.priceType === 'PAID' && currentSession.price > 0;
+        const { platformFee } = paymentService.computeFeeSplit(currentSession.price);
+        // A real gateway defers confirmation until payment is verified; without one
+        // configured, the charge is simulated as an immediate success so paid bookings
+        // still work in development.
+        const usesGateway = isPaid && gatewayEnabled;
 
         const booking = await tx.booking.create({
             data: {
                 userId,
                 sessionId: sessionId,
-                status: 'CONFIRMED',
-                amountPaid: isPaid ? currentSession.price : 0,
-                platformFee: isPaid ? currentSession.platformFee : 0,
+                status: usesGateway ? 'PENDING' : 'CONFIRMED',
+                amountPaid: (isPaid && !usesGateway) ? currentSession.price : 0,
+                platformFee: isPaid ? platformFee : 0,
                 totalAmount: isPaid ? currentSession.price : 0,
-                // Simulated payment reference — replace with the real gateway's payment id
-                // once a live checkout is wired up (see PAYMENT_FLOW.md).
-                paymentId: isPaid ? `sim_pay_${crypto.randomUUID()}` : null
+                paymentId: (isPaid && !usesGateway) ? `sim_pay_${crypto.randomUUID()}` : null
             }
         });
 
         if (isPaid) {
-            // No live payment gateway is integrated yet, so the charge is simulated as
-            // an immediate success. Swap this block for real order creation + webhook
-            // verification when a gateway is wired up.
             await tx.transaction.create({
                 data: {
                     userId,
                     bookingId: booking.id,
                     amount: currentSession.price,
-                    platformFee: currentSession.platformFee,
+                    platformFee,
                     totalAmount: currentSession.price,
-                    status: 'SUCCESS',
-                    gatewayOrderId: `sim_order_${crypto.randomUUID()}`,
-                    gatewayPaymentId: booking.paymentId,
-                    completedAt: new Date()
+                    status: usesGateway ? 'PENDING' : 'SUCCESS',
+                    paymentMethod: usesGateway ? 'RAZORPAY' : null,
+                    // Gateway order id is attached after the order is created (outside this tx).
+                    gatewayOrderId: usesGateway ? null : `sim_order_${crypto.randomUUID()}`,
+                    gatewayPaymentId: usesGateway ? null : booking.paymentId,
+                    completedAt: usesGateway ? null : new Date()
                 }
             });
 
-            await mentorWalletService.recordBookingEarning(tx, currentSession.mentorId, booking);
+            if (!usesGateway) {
+                // Simulated immediate success — credit the mentor's pending balance now.
+                await mentorWalletService.recordBookingEarning(tx, currentSession.mentorId, booking);
+            }
         }
 
-        // Recalculate unique learners for the mentor and update the denormalized database field
-        const uniqueLearners = await getUniqueLearnersCount(tx, currentSession.mentorId);
+        // Denormalized unique-learner count only reflects confirmed bookings. A
+        // gateway booking is still PENDING here; it's updated on payment confirmation.
+        if (!usesGateway) {
+            const uniqueLearners = await getUniqueLearnersCount(tx, currentSession.mentorId);
+            await tx.user.update({
+                where: { id: currentSession.mentorId },
+                data: { uniqueLearners }
+            });
+        }
 
-        await tx.user.update({
-            where: { id: currentSession.mentorId },
-            data: { uniqueLearners }
-        });
-
-        return { booking, sessionId, mentorId: currentSession.mentorId };
+        return {
+            booking,
+            sessionId,
+            mentorId: currentSession.mentorId,
+            price: currentSession.price,
+            usesGateway
+        };
     }, {
         timeout: 15000
     });
@@ -407,10 +423,166 @@ exports.bookSession = async (prisma, cache, userId, sessionId) => {
     });
 
     if (existingBooking) {
+        // Allow resuming an unpaid gateway booking instead of hard-blocking it.
+        if (existingBooking.status === 'PENDING' && paymentService.isEnabled()) {
+            const txn = await prisma.transaction.findUnique({ where: { bookingId: existingBooking.id } });
+            if (txn && txn.gatewayOrderId) {
+                return {
+                    requiresPayment: true,
+                    keyId: paymentService.keyId(),
+                    order: {
+                        id: txn.gatewayOrderId,
+                        amount: Math.round(txn.totalAmount * 100),
+                        currency: txn.currency
+                    },
+                    bookingId: existingBooking.id
+                };
+            }
+        }
         throw new BadRequestError("You have already booked this session");
     }
 
-    return exports.executeBookingTransaction(prisma, cache, userId, sessionId);
+    const result = await exports.executeBookingTransaction(prisma, cache, userId, sessionId);
+
+    if (result.usesGateway) {
+        // Create the Razorpay order OUTSIDE the DB transaction (external API call),
+        // then attach its id. If order creation fails, release the reserved seat.
+        try {
+            const order = await paymentService.createOrder({
+                amount: result.price,
+                receipt: `bk_${result.booking.id}`.slice(0, 40),
+                notes: { bookingId: result.booking.id, sessionId, userId }
+            });
+            await prisma.transaction.update({
+                where: { bookingId: result.booking.id },
+                data: { gatewayOrderId: order.id }
+            });
+            return {
+                requiresPayment: true,
+                keyId: paymentService.keyId(),
+                order,
+                bookingId: result.booking.id
+            };
+        } catch (err) {
+            await exports.cancelPendingBooking(prisma, cache, result.booking.id).catch((e) =>
+                logger.error(`Failed to roll back booking after order error: ${e.message}`)
+            );
+            logger.error(`Failed to create Razorpay order: ${err.message}`);
+            throw new BadRequestError("Could not initiate payment. Please try again.");
+        }
+    }
+
+    return { booking: result.booking };
+};
+
+// Confirms a gateway booking once its payment is verified (via client callback or
+// webhook). Idempotent: a booking already CONFIRMED is a no-op, so the webhook and
+// the client callback racing each other is safe.
+exports.confirmBookingPaid = async (prisma, cache, { bookingId, gatewayPaymentId, gatewaySignature }) => {
+    const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { session: { select: { mentorId: true } } }
+    });
+    if (!booking) throw new NotFoundError("Booking not found");
+    if (booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') {
+        return booking; // already processed
+    }
+
+    const mentorId = booking.session.mentorId;
+
+    await prisma.$transaction(async (tx) => {
+        const confirmed = await tx.booking.update({
+            where: { id: bookingId },
+            data: {
+                status: 'CONFIRMED',
+                amountPaid: booking.totalAmount,
+                paymentId: gatewayPaymentId || booking.paymentId
+            }
+        });
+
+        await tx.transaction.update({
+            where: { bookingId },
+            data: {
+                status: 'SUCCESS',
+                gatewayPaymentId: gatewayPaymentId || undefined,
+                gatewaySignature: gatewaySignature || undefined,
+                completedAt: new Date()
+            }
+        });
+
+        await mentorWalletService.recordBookingEarning(tx, mentorId, confirmed);
+
+        const uniqueLearners = await getUniqueLearnersCount(tx, mentorId);
+        await tx.user.update({ where: { id: mentorId }, data: { uniqueLearners } });
+    }, { timeout: 15000 });
+
+    if (cache) {
+        await cache.del(`profile_stats_${booking.userId}`);
+        await cache.del(`profile_stats_${mentorId}`);
+    }
+
+    return prisma.booking.findUnique({ where: { id: bookingId } });
+};
+
+// Verify a Razorpay checkout callback from the learner, then confirm the booking.
+exports.verifyPayment = async (prisma, cache, userId, payload) => {
+    const { bookingId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = payload || {};
+    if (!bookingId || !razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
+        throw new BadRequestError("Missing payment verification fields");
+    }
+
+    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    if (!booking) throw new NotFoundError("Booking not found");
+    if (booking.userId !== userId) throw new ForbiddenError("Not your booking");
+
+    const valid = paymentService.verifyPaymentSignature({
+        orderId: razorpayOrderId,
+        paymentId: razorpayPaymentId,
+        signature: razorpaySignature
+    });
+
+    if (!valid) {
+        await prisma.transaction.update({
+            where: { bookingId },
+            data: { status: 'FAILED' }
+        }).catch(() => {});
+        throw new BadRequestError("Payment verification failed");
+    }
+
+    const confirmed = await exports.confirmBookingPaid(prisma, cache, {
+        bookingId,
+        gatewayPaymentId: razorpayPaymentId,
+        gatewaySignature: razorpaySignature
+    });
+
+    return { booking: confirmed };
+};
+
+// Cancel an unpaid PENDING booking and release its seat. Used to roll back a failed
+// order creation and by the seat-expiry sweep in queue.js.
+exports.cancelPendingBooking = async (prisma, cache, bookingId) => {
+    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    if (!booking || booking.status !== 'PENDING') return null;
+
+    await prisma.$transaction(async (tx) => {
+        await tx.booking.update({
+            where: { id: bookingId },
+            data: { status: 'CANCELLED' }
+        });
+        await tx.transaction.updateMany({
+            where: { bookingId, status: 'PENDING' },
+            data: { status: 'FAILED' }
+        });
+        await tx.session.update({
+            where: { id: booking.sessionId },
+            data: { availableSeats: { increment: 1 } }
+        });
+    });
+
+    if (cache) {
+        await cache.del(`profile_stats_${booking.userId}`);
+    }
+    return booking;
 };
 
 exports.getBookingStatus = async (prisma, cache, userId, sessionId) => {
@@ -425,6 +597,11 @@ exports.getBookingStatus = async (prisma, cache, userId, sessionId) => {
     });
 
     if (booking) {
+        // A PENDING booking is awaiting gateway payment — report it as such so the
+        // learner UI can resume checkout rather than showing "already registered".
+        if (booking.status === 'PENDING') {
+            return { status: 'PENDING_PAYMENT', booking };
+        }
         return { status: 'CONFIRMED', booking };
     }
 

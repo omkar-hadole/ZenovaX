@@ -56,9 +56,35 @@ exports.getMySessions = async (req, res, next) => {
 exports.bookSession = async (req, res, next) => {
     try {
         const result = await sessionService.bookSession(req.prisma, req.cache, req.user.id, req.params.id);
+
+        // Paid session with a live gateway: client must complete checkout, then
+        // call /verify-payment. Booking is PENDING until then.
+        if (result.requiresPayment) {
+            return res.status(200).json({
+                success: true,
+                requiresPayment: true,
+                order: result.order,
+                keyId: result.keyId,
+                bookingId: result.bookingId
+            });
+        }
+
         return res.status(201).json({
             success: true,
             message: "Registration confirmed",
+            booking: result.booking
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.verifyPayment = async (req, res, next) => {
+    try {
+        const result = await sessionService.verifyPayment(req.prisma, req.cache, req.user.id, req.body);
+        return res.status(200).json({
+            success: true,
+            message: "Payment verified. Registration confirmed",
             booking: result.booking
         });
     } catch (error) {
