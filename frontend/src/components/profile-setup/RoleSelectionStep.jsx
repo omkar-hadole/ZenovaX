@@ -4,7 +4,7 @@ import { RoleOption } from './FormComponents';
 export default function RoleSelectionStep({ role, handleRoleChange }) {
     return (
         <div className="space-y-6">
-            <p className="text-slate-500">
+            <p className="text-slate-500 dark:text-slate-400">
                 Tell us how you plan to participate on ZenovaX. You can always update this later.
             </p>
             <div className="grid md:grid-cols-2 gap-4">

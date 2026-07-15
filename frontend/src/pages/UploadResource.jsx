@@ -66,10 +66,10 @@ export default function UploadResource() {
     ];
 
     return (
-        <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
+        <div className="flex h-screen bg-[#F4F4F9] dark:bg-gray-950 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
             </div>
 
             <div className="relative z-10 flex h-full w-full">
@@ -80,21 +80,21 @@ export default function UploadResource() {
 
                     <div className="p-8 max-w-6xl mx-auto">
                         <div className="flex items-center gap-4 mb-8">
-                            <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
-                                <ArrowLeft className="text-gray-600" />
+                            <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors">
+                                <ArrowLeft className="text-gray-600 dark:text-gray-300" />
                             </button>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800">Share Knowledge</h1>
-                                <p className="text-gray-500">Upload study materials for your learners</p>
+                                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Share Knowledge</h1>
+                                <p className="text-gray-500 dark:text-gray-400">Upload study materials for your learners</p>
                             </div>
                         </div>
 
                         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
-                                <div className="bg-white rounded-[1.5rem] p-8 shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group">
+                                <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-8 shadow-sm border border-[#C9C7F5]/20 dark:border-gray-800 relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9C7F5]/10 rounded-bl-full -mr-8 -mt-8" />
-                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                        <div className="p-2 bg-[#C9C7F5]/20 rounded-lg text-[#5a59b5]">
+                                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+                                        <div className="p-2 bg-[#C9C7F5]/20 dark:bg-[#C9C7F5]/10 rounded-lg text-[#5a59b5] dark:text-[#b3b1f0]">
                                             <FileText size={20} />
                                         </div>
                                         Resource Details
@@ -102,40 +102,40 @@ export default function UploadResource() {
 
                                     <div className="space-y-6 relative z-10">
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Resource Title</label>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Resource Title</label>
                                             <input
                                                 type="text"
                                                 required
                                                 value={formData.title}
                                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                                 placeholder="e.g., React Fundamentals Cheatsheet"
-                                                className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all text-lg font-medium placeholder:text-gray-400"
+                                                className="w-full px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all text-lg font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Description (Optional)</label>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description (Optional)</label>
                                             <textarea
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                                 placeholder="Brief description of the resource..."
                                                 rows="4"
-                                                className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all resize-none placeholder:text-gray-400"
+                                                className="w-full px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Resource URL</label>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Resource URL</label>
                                             <div className="relative">
-                                                <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                                                 <input
                                                     type="url"
                                                     required
                                                     value={formData.fileUrl}
                                                     onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
                                                     placeholder="https://drive.google.com/..."
-                                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
+                                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
                                                 />
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-2 ml-1">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1">
                                                 Paste the direct link to your file (Google Drive, Dropbox, etc.)
                                             </p>
                                         </div>
@@ -144,10 +144,10 @@ export default function UploadResource() {
                             </div>
 
                             <div className="space-y-6">
-                                <div className="bg-white rounded-[1.5rem] p-8 shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden">
+                                <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-8 shadow-sm border border-[#A9C1F7]/20 dark:border-gray-800 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#A9C1F7]/10 rounded-bl-full -mr-8 -mt-8" />
-                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                                        <div className="p-2 bg-[#A9C1F7]/20 rounded-lg text-[#4a7ac7]">
+                                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+                                        <div className="p-2 bg-[#A9C1F7]/20 dark:bg-[#A9C1F7]/10 rounded-lg text-[#4a7ac7] dark:text-[#8fb2f2]">
                                             <Layers size={20} />
                                         </div>
                                         Configuration
@@ -155,12 +155,12 @@ export default function UploadResource() {
 
                                     <div className="space-y-6 relative z-10">
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Select Session</label>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select Session</label>
                                             <select
                                                 required
                                                 value={formData.sessionId}
                                                 onChange={(e) => setFormData({ ...formData, sessionId: e.target.value })}
-                                                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#A9C1F7]"
+                                                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#A9C1F7]"
                                             >
                                                 <option value="">Select a session...</option>
                                                 {sessions.map((session) => (
@@ -172,7 +172,7 @@ export default function UploadResource() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Resource Type</label>
+                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Resource Type</label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {resourceTypes.map((type) => (
                                                     <button
@@ -180,8 +180,8 @@ export default function UploadResource() {
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, fileType: type.value })}
                                                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-all ${formData.fileType === type.value
-                                                            ? 'bg-[#A9C1F7]/20 border-[#A9C1F7] text-[#4a7ac7]'
-                                                            : 'bg-gray-50 border-transparent text-gray-600 hover:bg-gray-100'
+                                                            ? 'bg-[#A9C1F7]/20 dark:bg-[#A9C1F7]/10 border-[#A9C1F7] text-[#4a7ac7] dark:text-[#8fb2f2]'
+                                                            : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                                             }`}
                                                     >
                                                         <type.icon className="w-4 h-4" />

@@ -81,17 +81,17 @@ export default function MyBookingsView({
         <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
             <div className="mx-auto">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800 whitespace-nowrap">My Bookings</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">My Bookings</h2>
 
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="bg-gray-100 p-1 rounded-xl flex items-center">
+                        <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl flex items-center">
                             {STATUS_FILTERS.map((f) => (
                                 <button
                                     key={f.value}
                                     onClick={() => setStatusFilter(f.value)}
                                     className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === f.value
-                                        ? 'bg-white text-black shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                        ? 'bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                         }`}
                                 >
                                     {f.label}
@@ -102,7 +102,7 @@ export default function MyBookingsView({
                         <select
                             value={modeFilter}
                             onChange={(e) => setModeFilter(e.target.value)}
-                            className="bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 transition-colors text-center min-w-[100px]"
+                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center min-w-[100px]"
                             style={{ backgroundImage: 'none' }}
                         >
                             <option value="">All Modes</option>
@@ -111,13 +111,13 @@ export default function MyBookingsView({
                         </select>
 
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                             <input
                                 type="text"
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                                 placeholder="Search by session or mentor..."
-                                className="pl-10 pr-4 py-2 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none w-full sm:w-64"
+                                className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none w-full sm:w-64"
                             />
                         </div>
                     </div>
@@ -156,7 +156,7 @@ export default function MyBookingsView({
                                     session={session}
                                     extraBadges={
                                         status === 'COMPLETED' && !session.hasReviewed && (
-                                            <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">
+                                            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 px-2 py-0.5 rounded-full animate-pulse">
                                                 Review Pending
                                             </span>
                                         )
@@ -173,7 +173,7 @@ export default function MyBookingsView({
                                                 </button>
                                             ) : (
                                                 <div className="text-sm">
-                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs ${status === 'COMPLETED' ? 'bg-gray-100 text-gray-500' : status === 'LIVE NOW' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                    <span className={`font-bold px-3 py-1 rounded-full text-xs ${status === 'COMPLETED' ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400' : status === 'LIVE NOW' ? 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400'}`}>
                                                         {status}
                                                     </span>
                                                 </div>
@@ -181,7 +181,7 @@ export default function MyBookingsView({
 
                                             <button
                                                 onClick={() => setSelectedSession(session)}
-                                                className={`${showTicketButton ? 'bg-gray-100 text-gray-900' : 'bg-black text-white'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
+                                                className={`${showTicketButton ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100' : 'bg-black text-white'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
                                             >
                                                 Details
                                             </button>
@@ -197,7 +197,7 @@ export default function MyBookingsView({
                             <button
                                 onClick={() => onPageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                                 Previous
                             </button>
@@ -208,7 +208,7 @@ export default function MyBookingsView({
                                     onClick={() => onPageChange(pageNum)}
                                     className={`w-10 h-10 rounded-xl text-sm font-bold flex items-center justify-center transition-all ${currentPage === pageNum
                                         ? 'bg-black text-white shadow-lg scale-110'
-                                        : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-600'
+                                        : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
                                         }`}
                                 >
                                     {pageNum}
@@ -218,7 +218,7 @@ export default function MyBookingsView({
                             <button
                                 onClick={() => onPageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                                 Next
                             </button>
@@ -227,25 +227,25 @@ export default function MyBookingsView({
                     </div>
                 ) : hasActiveFilters ? (
                     <div className="text-center py-20">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="w-10 h-10 text-gray-300" />
+                        <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Search className="w-10 h-10 text-gray-300 dark:text-gray-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">No matching bookings</h3>
-                        <p className="text-gray-500 mb-6">Try a different filter or search term.</p>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">No matching bookings</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">Try a different filter or search term.</p>
                         <button
                             onClick={clearFilters}
-                            className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                            className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         >
                             Clear Filters
                         </button>
                     </div>
                 ) : (
                     <div className="text-center py-20">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Calendar className="w-10 h-10 text-gray-300" />
+                        <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Calendar className="w-10 h-10 text-gray-300 dark:text-gray-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">No bookings yet</h3>
-                        <p className="text-gray-500 mb-6">You haven't registered for any sessions yet.</p>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">No bookings yet</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">You haven't registered for any sessions yet.</p>
                         <button
                             onClick={() => setActiveTab('Browse Sessions')}
                             className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors"

@@ -82,73 +82,73 @@ export default function PendingSessions() {
     return (
         <div className="p-8">
             <header className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Pending Approvals</h1>
-                <p className="text-gray-500 mt-1">Review and manage session requests from mentors</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Pending Approvals</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Review and manage session requests from mentors</p>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                 {requests.map((request) => (
-                    <div key={request.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full group">
+                    <div key={request.id} className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-300 flex flex-col h-full group">
 
                         <div className="flex items-start justify-between mb-4">
-                            <span className="bg-orange-50 text-orange-600 text-xs font-bold px-3 py-1 rounded-full border border-orange-100 uppercase tracking-wide flex items-center gap-1.5">
+                            <span className="bg-orange-50 text-orange-600 text-xs font-bold px-3 py-1 rounded-full border border-orange-100 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20 uppercase tracking-wide flex items-center gap-1.5">
                                 <Clock className="w-3.5 h-3.5" /> Pending
                             </span>
-                            <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
+                            <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/60 px-2 py-1 rounded-lg">
                                 {new Date(request.requestedAt).toLocaleDateString()}
                             </span>
                         </div>
 
                         <div className="mb-6 flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-indigo-600 transition-colors">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                 {request.title}
                             </h3>
-                            <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                            <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 leading-relaxed">
                                 {stripMarkdown(request.description)}
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg">
+                        <div className="flex items-center gap-3 mb-6 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-800">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-700 dark:text-indigo-400 font-bold text-lg">
                                 {request.mentor?.name?.[0] || 'M'}
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-gray-900">{request.mentor?.name}</p>
-                                <p className="text-xs text-gray-500 font-medium">{request.mentor?.email}</p>
+                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{request.mentor?.name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{request.mentor?.email}</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 mb-6">
-                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Date</p>
-                                <p className="text-sm font-semibold text-gray-900 truncate">
+                            <div className="bg-gray-50 dark:bg-gray-800/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase mb-1">Date</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                     {new Date(request.proposedDate).toLocaleDateString()}
                                 </p>
                             </div>
-                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Duration</p>
-                                <p className="text-sm font-semibold text-gray-900">{request.duration} min</p>
+                            <div className="bg-gray-50 dark:bg-gray-800/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase mb-1">Duration</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{request.duration} min</p>
                             </div>
-                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Seats</p>
-                                <p className="text-sm font-semibold text-gray-900">{request.maxSeats}</p>
+                            <div className="bg-gray-50 dark:bg-gray-800/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase mb-1">Seats</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{request.maxSeats}</p>
                             </div>
-                            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Price</p>
-                                <p className="text-sm font-semibold text-gray-900">{request.price > 0 ? `₹${request.price}` : 'Free'}</p>
+                            <div className="bg-gray-50 dark:bg-gray-800/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase mb-1">Price</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{request.price > 0 ? `₹${request.price}` : 'Free'}</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
                             <button
                                 onClick={() => handleApprove(request.id)}
-                                className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-200"
+                                className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none"
                             >
                                 <Check className="w-4 h-4" /> Approve
                             </button>
                             <button
                                 onClick={() => handleReject(request.id)}
-                                className="flex-1 bg-white text-red-500 border border-red-100 py-3 rounded-xl text-sm font-bold hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:border-red-200"
+                                className="flex-1 bg-white dark:bg-gray-900 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-500/20 py-3 rounded-xl text-sm font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 hover:border-red-200 dark:hover:border-red-500/30"
                             >
                                 <X className="w-4 h-4" /> Reject
                             </button>
@@ -157,12 +157,12 @@ export default function PendingSessions() {
                 ))}
 
                 {requests.length === 0 && (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-dashed border-gray-200 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <Check className="w-8 h-8 text-gray-300" />
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-900 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-gray-700 text-center">
+                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mb-4">
+                            <Check className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">All Caught Up!</h3>
-                        <p className="text-gray-500">No pending session requests at the moment.</p>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">All Caught Up!</h3>
+                        <p className="text-gray-500 dark:text-gray-400">No pending session requests at the moment.</p>
                     </div>
                 )}
             </div>

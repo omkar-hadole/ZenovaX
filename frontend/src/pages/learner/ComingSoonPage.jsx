@@ -16,13 +16,13 @@ export default function ComingSoonPage() {
     const { title, icon: Icon } = getPageInfo();
 
     return (
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] text-gray-500">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
-                <Icon className="w-10 h-10 text-gray-400" />
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] text-gray-500 dark:text-gray-400">
+            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                <Icon className="w-10 h-10 text-gray-400 dark:text-gray-500" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">{title}</h3>
-            <p className="text-gray-500">This feature is currently under development.</p>
-            <p className="text-sm text-gray-400 mt-2">Check back soon!</p>
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
+            <p className="text-gray-500 dark:text-gray-400">This feature is currently under development.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Check back soon!</p>
         </div>
     );
 }

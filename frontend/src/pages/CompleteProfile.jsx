@@ -230,25 +230,25 @@ export default function CompleteProfile() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F4F4F9] relative overflow-hidden flex items-center justify-center py-6">
+        <div className="min-h-screen bg-[#F4F4F9] dark:bg-gray-950 relative overflow-hidden flex items-center justify-center py-6">
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
             </div>
 
             <main className="w-full max-w-5xl px-4 relative z-10">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-800 mb-6 transition-colors">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-6 transition-colors">
                     <ArrowLeft className="w-4 h-4" />
                     Back
                 </button>
 
-                <div className="rounded-[2rem] bg-white shadow-xl shadow-purple-100/50 border border-[#C9C7F5]/30 p-6 md:p-10 space-y-6 relative overflow-hidden">
+                <div className="rounded-[2rem] bg-white dark:bg-gray-900 shadow-xl shadow-purple-100/50 dark:shadow-none border border-[#C9C7F5]/30 dark:border-gray-800 p-6 md:p-10 space-y-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-[#C9C7F5]/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
 
                     <div className="space-y-2 relative z-10">
-                        <p className="text-xs uppercase tracking-wide text-[#5a59b5] font-bold bg-[#C9C7F5]/20 w-fit px-3 py-1 rounded-full">Complete your profile</p>
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Help us personalize ZenovaX for you</h1>
-                        <p className="text-gray-500 max-w-2xl text-base">
+                        <p className="text-xs uppercase tracking-wide text-[#5a59b5] dark:text-[#b3b1f0] font-bold bg-[#C9C7F5]/20 dark:bg-[#C9C7F5]/10 w-fit px-3 py-1 rounded-full">Complete your profile</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">Help us personalize ZenovaX for you</h1>
+                        <p className="text-gray-500 dark:text-gray-400 max-w-2xl text-base">
                             Finish these quick steps so mentors, peers, and coordinators know how best to collaborate with you.
                         </p>
                     </div>
@@ -259,7 +259,7 @@ export default function CompleteProfile() {
 
                     {status && (
                         <div
-                            className={`rounded-2xl px-4 py-3 text-sm font-medium flex items-center gap-2 ${status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'
+                            className={`rounded-2xl px-4 py-3 text-sm font-medium flex items-center gap-2 ${status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20' : 'bg-red-50 text-red-600 border border-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
                                 }`}
                         >
                             {status.type === 'success' && <CheckCircle className="w-4 h-4" />}
@@ -267,12 +267,12 @@ export default function CompleteProfile() {
                         </div>
                     )}
 
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-6 border-t border-gray-100 relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-6 border-t border-gray-100 dark:border-gray-800 relative z-10">
                         <button
                             type="button"
                             onClick={goPrev}
                             disabled={effectiveStep === 1}
-                            className="flex items-center gap-2 text-gray-500 font-bold hover:text-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            className="flex items-center gap-2 text-gray-500 dark:text-gray-400 font-bold hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4" />
                             Previous
@@ -284,7 +284,7 @@ export default function CompleteProfile() {
                                 type="button"
                                 onClick={primaryAction}
                                 disabled={!canProceed || submitting}
-                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[#5a59b5] font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${!canProceed || submitting ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#C9C7F5] hover:bg-[#b8b6e5]'
+                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[#5a59b5] font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 ${!canProceed || submitting ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed shadow-none' : 'bg-[#C9C7F5] hover:bg-[#b8b6e5]'
                                     }`}
                             >
                                 {primaryCtaLabel}

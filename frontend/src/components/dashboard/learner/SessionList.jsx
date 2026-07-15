@@ -5,7 +5,7 @@ export default function SessionList({ title, sessions, type = 'course', onViewAl
     return (
         <section>
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-light text-gray-800 tracking-tight">{title}</h3>
+                <h3 className="text-xl font-light text-gray-800 dark:text-gray-100 tracking-tight">{title}</h3>
                 <button
                     onClick={onViewAll}
                     className="text-xs font-bold text-white bg-[#A9C1F7] px-4 py-2 rounded-full hover:bg-[#8FB0F5] transition-all shadow-sm hover:shadow-md"
@@ -20,22 +20,22 @@ export default function SessionList({ title, sessions, type = 'course', onViewAl
                         <div
                             key={session.id}
                             onClick={() => onSessionClick && onSessionClick(session.id)}
-                            className="bg-white rounded-[1.5rem] p-5 flex items-center gap-5 shadow-sm border border-black/5 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
+                            className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-5 flex items-center gap-5 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
                         >
                             <div className={`w-14 h-14 ${session.color.replace('bg-blue-100', 'bg-[#C9C7F5]/20').replace('bg-yellow-100', 'bg-[#F6D483]/20').replace('bg-orange-100', 'bg-[#F6D483]/20')} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                                 <BookOpen className={`w-6 h-6 ${session.color.includes('blue') ? 'text-[#5B8DEF]' : 'text-[#D4A017]'}`} strokeWidth={1.5} />
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-gray-900 text-base mb-1 group-hover:text-blue-600 transition-colors">{session.title}</h4>
-                                <p className="text-xs text-gray-500 font-medium">
+                                <h4 className="font-bold text-gray-900 dark:text-gray-100 text-base mb-1 group-hover:text-blue-600 transition-colors">{session.title}</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                                     {type === 'course' ? `By ${session.mentor}` : session.instructor}
                                 </p>
                             </div>
                             {type === 'course' ? (
                                 <>
                                     <div className="text-right">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Duration</p>
-                                        <p className="text-sm font-bold text-gray-900">{session.date}</p>
+                                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Duration</p>
+                                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{session.date}</p>
                                     </div>
                                     <button
                                         onClick={(e) => {
@@ -55,9 +55,9 @@ export default function SessionList({ title, sessions, type = 'course', onViewAl
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-10 bg-white rounded-[2rem] border border-dashed border-gray-200">
-                        <p className="text-sm text-gray-500 font-medium">No {title.toLowerCase()} found</p>
-                        <p className="text-xs text-gray-400 mt-1">Check back later!</p>
+                    <div className="text-center py-10 bg-white dark:bg-gray-900 rounded-[2rem] border border-dashed border-gray-200 dark:border-gray-700">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No {title.toLowerCase()} found</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Check back later!</p>
                     </div>
                 )}
             </div>

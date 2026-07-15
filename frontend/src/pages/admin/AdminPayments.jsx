@@ -8,17 +8,17 @@ import Toast from '../../components/Toast';
 import ConfirmModal from '../../components/common/ConfirmModal';
 
 const KYC_BADGE = {
-    NOT_SUBMITTED: 'bg-gray-100 text-gray-600 border-gray-200',
-    PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    VERIFIED: 'bg-green-50 text-green-700 border-green-200',
-    REJECTED: 'bg-red-50 text-red-600 border-red-200',
+    NOT_SUBMITTED: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
+    PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20',
+    VERIFIED: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
+    REJECTED: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
 };
 
 const PAYOUT_BADGE = {
-    PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    PROCESSING: 'bg-blue-50 text-blue-700 border-blue-200',
-    PAID: 'bg-green-50 text-green-700 border-green-200',
-    FAILED: 'bg-red-50 text-red-600 border-red-200',
+    PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20',
+    PROCESSING: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+    PAID: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
+    FAILED: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
 };
 
 // Small modal that collects a free-text reason (for KYC reject / payout fail / mark paid ref).
@@ -29,21 +29,21 @@ function ReasonModal({ isOpen, title, label, placeholder, confirmText, onConfirm
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-            <div className="relative bg-white rounded-3xl p-6 w-full max-w-md shadow-xl">
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{title}</h3>
-                <label className="text-sm font-medium text-gray-600">{label}</label>
+            <div className="relative bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-xl">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">{title}</h3>
+                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</label>
                 <textarea
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     placeholder={placeholder}
                     rows={3}
-                    className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#7A79E6] outline-none resize-none"
+                    className="w-full mt-2 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 border-none focus:ring-2 focus:ring-[#7A79E6] outline-none resize-none"
                 />
                 <div className="flex gap-3 mt-4">
                     <button onClick={() => onConfirm(value)} className="flex-1 bg-[#7A79E6] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#6c6bd6] transition-colors">
                         {confirmText}
                     </button>
-                    <button onClick={onCancel} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">
+                    <button onClick={onCancel} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                         Cancel
                     </button>
                 </div>
@@ -155,49 +155,49 @@ export default function AdminPayments() {
     const pendingPayouts = payouts.filter(p => p.status === 'PENDING' || p.status === 'PROCESSING');
 
     const stats = [
-        { label: 'Platform Revenue', value: formatCurrency(overview?.platformRevenue), icon: TrendingUp, tint: 'bg-indigo-50 text-indigo-600' },
-        { label: 'Owed to Mentors', value: formatCurrency((overview?.mentorPendingBalance || 0) + (overview?.mentorAvailableBalance || 0)), icon: Wallet, tint: 'bg-green-50 text-green-600' },
-        { label: 'Pending KYC', value: overview?.pendingKycCount ?? 0, icon: ShieldCheck, tint: 'bg-yellow-50 text-yellow-600' },
-        { label: 'Pending Payouts', value: `${overview?.pendingPayoutsCount ?? 0} · ${formatCurrency(overview?.pendingPayoutsAmount)}`, icon: Banknote, tint: 'bg-orange-50 text-orange-600' },
+        { label: 'Platform Revenue', value: formatCurrency(overview?.platformRevenue), icon: TrendingUp, tint: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' },
+        { label: 'Owed to Mentors', value: formatCurrency((overview?.mentorPendingBalance || 0) + (overview?.mentorAvailableBalance || 0)), icon: Wallet, tint: 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400' },
+        { label: 'Pending KYC', value: overview?.pendingKycCount ?? 0, icon: ShieldCheck, tint: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' },
+        { label: 'Pending Payouts', value: `${overview?.pendingPayoutsCount ?? 0} · ${formatCurrency(overview?.pendingPayoutsAmount)}`, icon: Banknote, tint: 'bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400' },
     ];
 
     return (
         <div className="p-8">
             <header className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Payments & Payouts</h1>
-                <p className="text-gray-500 mt-1">Verify mentor payout accounts and release withdrawals</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Payments & Payouts</h1>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Verify mentor payout accounts and release withdrawals</p>
             </header>
 
             {/* Overview stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {stats.map((s) => (
-                    <div key={s.label} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                    <div key={s.label} className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${s.tint}`}>
                             <s.icon className="w-5 h-5" />
                         </div>
-                        <p className="text-gray-500 text-sm font-medium">{s.label}</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{s.value}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{s.label}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{s.value}</p>
                     </div>
                 ))}
             </div>
 
             {/* Tabs */}
-            <div className="bg-gray-100 p-1 rounded-xl inline-flex mb-6">
+            <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl inline-flex mb-6">
                 <button
                     onClick={() => setTab('kyc')}
-                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'kyc' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'kyc' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
                 >
                     KYC Requests {pendingAccounts.length > 0 && <span className="ml-1 text-xs bg-yellow-400 text-white px-1.5 py-0.5 rounded-full">{pendingAccounts.length}</span>}
                 </button>
                 <button
                     onClick={() => setTab('payouts')}
-                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'payouts' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'payouts' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
                 >
                     Payout Requests {pendingPayouts.length > 0 && <span className="ml-1 text-xs bg-orange-400 text-white px-1.5 py-0.5 rounded-full">{pendingPayouts.length}</span>}
                 </button>
                 <button
                     onClick={() => setTab('leaderboard')}
-                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
                 >
                     Top Mentors
                 </button>
@@ -232,34 +232,34 @@ function KycList({ accounts, onVerify, onReject }) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {accounts.map((acc) => (
-                <div key={acc.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                <div key={acc.id} className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
                     <div className="flex items-start justify-between mb-4">
                         <div>
-                            <p className="font-bold text-gray-900">{acc.mentor?.name}</p>
-                            <p className="text-xs text-gray-500">{acc.mentor?.email}</p>
+                            <p className="font-bold text-gray-900 dark:text-gray-100">{acc.mentor?.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{acc.mentor?.email}</p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${KYC_BADGE[acc.kycStatus]}`}>{acc.kycStatus}</span>
                     </div>
-                    <div className="space-y-2 text-sm bg-gray-50 rounded-2xl p-4 mb-4">
+                    <div className="space-y-2 text-sm bg-gray-50 dark:bg-gray-800/60 rounded-2xl p-4 mb-4">
                         <Row label="Holder" value={acc.accountHolderName || '—'} />
                         {acc.bankAccountNumber && <Row label="Bank A/C" value={acc.bankAccountNumber} />}
                         {acc.ifscCode && <Row label="IFSC" value={acc.ifscCode} />}
                         {acc.upiId && <Row label="UPI" value={acc.upiId} />}
                     </div>
                     {acc.kycStatus === 'REJECTED' && acc.rejectionReason && (
-                        <p className="text-xs text-red-500 mb-4 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{acc.rejectionReason}</p>
+                        <p className="text-xs text-red-500 dark:text-red-400 mb-4 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{acc.rejectionReason}</p>
                     )}
                     {acc.kycStatus === 'PENDING' ? (
                         <div className="flex gap-3">
                             <button onClick={() => onVerify(acc)} className="flex-1 bg-gray-900 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 flex items-center justify-center gap-2">
                                 <Check className="w-4 h-4" /> Verify
                             </button>
-                            <button onClick={() => onReject(acc)} className="flex-1 bg-white text-red-500 border border-red-100 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2">
+                            <button onClick={() => onReject(acc)} className="flex-1 bg-white dark:bg-gray-900 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-500/20 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center gap-2">
                                 <X className="w-4 h-4" /> Reject
                             </button>
                         </div>
                     ) : (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
                             {acc.kycStatus === 'VERIFIED' ? 'Verified' : 'Rejected'}
                             {acc.verifiedAt ? ` · ${new Date(acc.verifiedAt).toLocaleDateString()}` : ''}
                         </p>
@@ -275,10 +275,10 @@ function PayoutList({ payouts, onMarkPaid, onMarkFailed }) {
         return <EmptyState icon={Landmark} title="No payout requests" subtitle="Mentors haven't requested any withdrawals yet." />;
     }
     return (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
                         <tr>
                             <th className="px-6 py-4">Mentor</th>
                             <th className="px-6 py-4">Amount</th>
@@ -287,27 +287,27 @@ function PayoutList({ payouts, onMarkPaid, onMarkFailed }) {
                             <th className="px-6 py-4 text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                         {payouts.map((p) => (
-                            <tr key={p.id} className="hover:bg-gray-50/50">
+                            <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/60">
                                 <td className="px-6 py-4">
-                                    <p className="font-bold text-gray-900">{p.mentor?.name}</p>
-                                    <p className="text-xs text-gray-500">{p.mentor?.email}</p>
+                                    <p className="font-bold text-gray-900 dark:text-gray-100">{p.mentor?.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{p.mentor?.email}</p>
                                 </td>
-                                <td className="px-6 py-4 font-bold text-gray-900">{formatCurrency(p.amount)}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{new Date(p.requestedAt).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 font-bold text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(p.requestedAt).toLocaleDateString()}</td>
                                 <td className="px-6 py-4">
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold border ${PAYOUT_BADGE[p.status]}`}>{p.status}</span>
-                                    {p.status === 'FAILED' && p.failureReason && <p className="text-xs text-red-500 mt-1">{p.failureReason}</p>}
+                                    {p.status === 'FAILED' && p.failureReason && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{p.failureReason}</p>}
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     {(p.status === 'PENDING' || p.status === 'PROCESSING') ? (
                                         <div className="flex gap-2 justify-end">
                                             <button onClick={() => onMarkPaid(p)} className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-800">Mark Paid</button>
-                                            <button onClick={() => onMarkFailed(p)} className="bg-white text-red-500 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50">Fail</button>
+                                            <button onClick={() => onMarkFailed(p)} className="bg-white dark:bg-gray-900 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50 dark:hover:bg-red-500/10">Fail</button>
                                         </div>
                                     ) : (
-                                        <span className="text-xs text-gray-400">{p.processedAt ? new Date(p.processedAt).toLocaleDateString() : '—'}</span>
+                                        <span className="text-xs text-gray-400 dark:text-gray-500">{p.processedAt ? new Date(p.processedAt).toLocaleDateString() : '—'}</span>
                                     )}
                                 </td>
                             </tr>
@@ -320,9 +320,9 @@ function PayoutList({ payouts, onMarkPaid, onMarkFailed }) {
 }
 
 const RANK_ACCENT = [
-    'bg-yellow-100 text-yellow-700', // 1st — gold
-    'bg-gray-200 text-gray-700',     // 2nd — silver
-    'bg-orange-100 text-orange-700', // 3rd — bronze
+    'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400', // 1st — gold
+    'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',     // 2nd — silver
+    'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400', // 3rd — bronze
 ];
 
 function Leaderboard({ rows }) {
@@ -330,10 +330,10 @@ function Leaderboard({ rows }) {
         return <EmptyState icon={Trophy} title="No earnings yet" subtitle="Mentors will rank here once paid sessions start earning." />;
     }
     return (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
                         <tr>
                             <th className="px-6 py-4">Rank</th>
                             <th className="px-6 py-4">Mentor</th>
@@ -343,22 +343,22 @@ function Leaderboard({ rows }) {
                             <th className="px-6 py-4">Sessions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                         {rows.map((row, i) => (
-                            <tr key={row.mentor.id} className="hover:bg-gray-50/50">
+                            <tr key={row.mentor.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/60">
                                 <td className="px-6 py-4">
-                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${RANK_ACCENT[i] || 'bg-gray-100 text-gray-500'}`}>
+                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${RANK_ACCENT[i] || 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>
                                         {i + 1}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <p className="font-bold text-gray-900">{row.mentor.name}</p>
-                                    <p className="text-xs text-gray-500">{row.mentor.email}</p>
+                                    <p className="font-bold text-gray-900 dark:text-gray-100">{row.mentor.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{row.mentor.email}</p>
                                 </td>
-                                <td className="px-6 py-4 font-bold text-gray-900">{formatCurrency(row.totalEarned)}</td>
-                                <td className="px-6 py-4 text-sm text-gray-600">{formatCurrency(row.balanceAvailable)}</td>
-                                <td className="px-6 py-4 text-sm text-gray-600">{formatCurrency(row.totalPaidOut)}</td>
-                                <td className="px-6 py-4 text-sm text-gray-600">{row.mentor.totalSessions}</td>
+                                <td className="px-6 py-4 font-bold text-gray-900 dark:text-gray-100">{formatCurrency(row.totalEarned)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{formatCurrency(row.balanceAvailable)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{formatCurrency(row.totalPaidOut)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{row.mentor.totalSessions}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -370,17 +370,17 @@ function Leaderboard({ rows }) {
 
 const Row = ({ label, value }) => (
     <div className="flex justify-between">
-        <span className="text-gray-500">{label}</span>
-        <span className="font-semibold text-gray-800">{value}</span>
+        <span className="text-gray-500 dark:text-gray-400">{label}</span>
+        <span className="font-semibold text-gray-800 dark:text-gray-200">{value}</span>
     </div>
 );
 
 const EmptyState = ({ icon: Icon, title, subtitle }) => (
-    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 text-center">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-            <Icon className="w-8 h-8 text-gray-300" />
+    <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700 text-center">
+        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mb-4">
+            <Icon className="w-8 h-8 text-gray-300 dark:text-gray-600" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1">{title}</h3>
-        <p className="text-gray-500">{subtitle}</p>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">{title}</h3>
+        <p className="text-gray-500 dark:text-gray-400">{subtitle}</p>
     </div>
 );

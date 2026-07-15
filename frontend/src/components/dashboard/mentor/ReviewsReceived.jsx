@@ -74,38 +74,38 @@ export default function ReviewsReceived() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
-                <h2 className="text-2xl font-bold text-gray-800">Reviews & Feedback</h2>
-                <p className="text-gray-500 text-sm mt-1">See what your learners are saying about your sessions</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Reviews & Feedback</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">See what your learners are saying about your sessions</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-                    <h3 className="text-gray-500 text-sm font-medium mb-2 relative z-10">Average Rating</h3>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 relative z-10">Average Rating</h3>
                     <div className="flex items-end gap-3 relative z-10">
-                        <span className="text-4xl font-bold text-gray-800">{stats.averageRating.toFixed(1)}</span>
+                        <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{stats.averageRating.toFixed(1)}</span>
                         <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg">
                             <Star className="w-4 h-4 text-[#b59a5a] fill-current" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#A9C1F7]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-                    <h3 className="text-gray-500 text-sm font-medium mb-2 relative z-10">Total Reviews</h3>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 relative z-10">Total Reviews</h3>
                     <div className="flex items-end gap-3 relative z-10">
-                        <span className="text-4xl font-bold text-gray-800">{reviews.length}</span>
+                        <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{reviews.length}</span>
                         <div className="flex items-center mb-2 px-2 py-1 bg-[#A9C1F7]/20 rounded-lg text-[#4a7ac7]">
                             <MessageSquare className="w-4 h-4" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/20 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-                    <h3 className="text-gray-500 text-sm font-medium mb-2 relative z-10">Positive Feedback</h3>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 relative z-10">Positive Feedback</h3>
                     <div className="flex items-end gap-3 relative z-10">
-                        <span className="text-4xl font-bold text-gray-800">
+                        <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">
                             {reviews.length > 0 ? Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100) : 0}%
                         </span>
                         <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
@@ -115,13 +115,13 @@ export default function ReviewsReceived() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800 text-lg">Recent Reviews</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">Recent Reviews</h3>
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="bg-gray-50 border-none text-sm text-gray-500 font-medium rounded-lg px-3 py-1.5 focus:ring-0 cursor-pointer hover:bg-gray-100 transition-colors"
+                        className="bg-gray-50 dark:bg-gray-800/60 border-none text-sm text-gray-500 dark:text-gray-400 font-medium rounded-lg px-3 py-1.5 focus:ring-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         <option>Newest First</option>
                         <option>Highest Rated</option>
@@ -129,18 +129,18 @@ export default function ReviewsReceived() {
                     </select>
                 </div>
 
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-gray-50 dark:divide-gray-800">
                     {sortedReviews.length === 0 ? (
                         <div className="p-12 text-center">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+                            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300 dark:text-gray-600">
                                 <MessageSquare size={24} />
                             </div>
-                            <h3 className="text-gray-900 font-medium mb-1">No reviews yet</h3>
-                            <p className="text-gray-500 text-sm">Reviews will appear here once learners rate your sessions.</p>
+                            <h3 className="text-gray-900 dark:text-gray-100 font-medium mb-1">No reviews yet</h3>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Reviews will appear here once learners rate your sessions.</p>
                         </div>
                     ) : (
                         sortedReviews.map((review) => (
-                            <div key={review.id} className="p-6 hover:bg-[#F4F4F9]/50 transition-colors group">
+                            <div key={review.id} className="p-6 hover:bg-[#F4F4F9]/50 dark:hover:bg-gray-800/40 transition-colors group">
                                 <div className="flex items-start gap-4">
                                     {review.author.profilePicture ? (
                                         <img
@@ -149,18 +149,18 @@ export default function ReviewsReceived() {
                                             height={48}
                                             loading="lazy"
                                             alt={review.author.name || "Review author avatar"}
-                                            className="w-12 h-12 rounded-xl object-cover ring-2 ring-white shadow-sm"
+                                            className="w-12 h-12 rounded-xl object-cover ring-2 ring-white dark:ring-gray-900 shadow-sm"
                                         />
                                     ) : (
-                                        <div className="w-12 h-12 rounded-xl bg-[#C9C7F5]/20 flex items-center justify-center text-[#5a59b5] ring-2 ring-white shadow-sm">
+                                        <div className="w-12 h-12 rounded-xl bg-[#C9C7F5]/20 flex items-center justify-center text-[#5a59b5] ring-2 ring-white dark:ring-gray-900 shadow-sm">
                                             <span className="font-bold text-lg">{review.author.name.charAt(0)}</span>
                                         </div>
                                     )}
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
-                                            <h4 className="font-bold text-gray-800 truncate">{review.author.name}</h4>
-                                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                                            <h4 className="font-bold text-gray-800 dark:text-gray-100 truncate">{review.author.name}</h4>
+                                            <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
                                                 <Calendar size={12} />
                                                 {new Date(review.createdAt).toLocaleDateString()}
                                             </span>
@@ -172,16 +172,16 @@ export default function ReviewsReceived() {
                                                     <Star
                                                         key={i}
                                                         size={14}
-                                                        className={`${i < review.rating ? 'text-[#F7D483] fill-[#F7D483]' : 'text-gray-200 fill-gray-200'}`}
+                                                        className={`${i < review.rating ? 'text-[#F7D483] fill-[#F7D483]' : 'text-gray-200 dark:text-gray-700 fill-gray-200 dark:fill-gray-700'}`}
                                                     />
                                                 ))}
                                             </div>
-                                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                                                 {review.session.title}
                                             </span>
                                         </div>
 
-                                        <p className="text-gray-600 text-sm leading-relaxed bg-gray-50 p-4 rounded-xl rounded-tl-none">
+                                        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl rounded-tl-none">
                                             "{review.comment}"
                                         </p>
                                     </div>

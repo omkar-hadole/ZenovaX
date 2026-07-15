@@ -31,10 +31,10 @@ export default function ReportsView() {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'PENDING': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-            case 'RESOLVED': return 'bg-green-100 text-green-700 border-green-200';
-            case 'IGNORED': return 'bg-gray-100 text-gray-600 border-gray-200';
-            default: return 'bg-gray-100 text-gray-600';
+            case 'PENDING': return 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20';
+            case 'RESOLVED': return 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20';
+            case 'IGNORED': return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+            default: return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300';
         }
     };
 
@@ -61,25 +61,25 @@ export default function ReportsView() {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-red-100 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-red-100 dark:border-red-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 dark:bg-red-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Total Reports</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Total Reports</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-4xl font-bold text-gray-800">{reports.length}</span>
-                            <div className="flex items-center mb-2 px-2 py-1 bg-red-100 rounded-lg text-red-500">
+                            <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{reports.length}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-red-100 dark:bg-red-500/10 rounded-lg text-red-500 dark:text-red-400">
                                 <AlertTriangle className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Pending Review</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Pending Review</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-4xl font-bold text-yellow-600">{pendingCount}</span>
+                            <span className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">{pendingCount}</span>
                             <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
                                 <Clock className="w-4 h-4" />
                             </div>
@@ -87,13 +87,13 @@ export default function ReportsView() {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-green-100 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-green-100 dark:border-green-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 dark:bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Resolved</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Resolved</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-4xl font-bold text-green-600">{resolvedCount}</span>
-                            <div className="flex items-center mb-2 px-2 py-1 bg-green-100 rounded-lg text-green-600">
+                            <span className="text-4xl font-bold text-green-600 dark:text-green-400">{resolvedCount}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-green-100 dark:bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
                         </div>
@@ -102,21 +102,21 @@ export default function ReportsView() {
             </div>
 
             {/* Reports List */}
-            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100">
-                <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
+                <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800">Issue Reports</h2>
-                        <p className="text-gray-500 text-sm">Feedback and issues reported by learners</p>
+                        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Issue Reports</h2>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Feedback and issues reported by learners</p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="bg-gray-50 p-1 rounded-xl flex items-center">
+                        <div className="bg-gray-50 dark:bg-gray-800/60 p-1 rounded-xl flex items-center">
                             {STATUS_FILTERS.map((status) => (
                                 <button
                                     key={status}
                                     onClick={() => setFilter(status)}
                                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === status
-                                        ? 'bg-white text-gray-800 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                        ? 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 shadow-sm'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                         }`}
                                 >
                                     {status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
@@ -124,13 +124,13 @@ export default function ReportsView() {
                             ))}
                         </div>
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search reports..."
-                                className="pl-10 pr-4 py-2 bg-gray-50 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none w-full sm:w-52"
+                                className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-[#C9C7F5] outline-none border-none w-full sm:w-52"
                             />
                         </div>
                     </div>
@@ -138,24 +138,24 @@ export default function ReportsView() {
 
                 {reports.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-500">
-                        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                            <ShieldCheck className="text-green-500 w-8 h-8" />
+                        <div className="w-16 h-16 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-4">
+                            <ShieldCheck className="text-green-500 dark:text-green-400 w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800">No Issues Reported</h3>
-                        <p className="text-gray-500">Great job! Your sessions are running smoothly.</p>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">No Issues Reported</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Great job! Your sessions are running smoothly.</p>
                     </div>
                 ) : filteredReports.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-500">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <Search className="text-gray-300 w-8 h-8" />
+                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mb-4">
+                            <Search className="text-gray-300 dark:text-gray-600 w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800">No matching reports</h3>
-                        <p className="text-gray-500">Try a different filter or search term.</p>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">No matching reports</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Try a different filter or search term.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto md:overflow-visible">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider font-bold">
+                            <thead className="bg-gray-50/50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
                                 <tr>
                                     <th className="px-8 py-4">Session</th>
                                     <th className="px-6 py-4">Reason</th>
@@ -164,19 +164,19 @@ export default function ReportsView() {
                                     <th className="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                                 {filteredReports.map((report, index) => (
                                     <tr
                                         key={report.id}
-                                        className="hover:bg-gray-50/50 transition-colors animate-in fade-in slide-in-from-bottom-1 duration-300"
+                                        className="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors animate-in fade-in slide-in-from-bottom-1 duration-300"
                                         style={{ animationDelay: `${Math.min(index, 8) * 40}ms`, animationFillMode: 'backwards' }}
                                     >
                                         <td className="px-8 py-4">
-                                            <p className="font-bold text-gray-800">{report.session?.title || 'Unknown Session'}</p>
+                                            <p className="font-bold text-gray-800 dark:text-gray-100">{report.session?.title || 'Unknown Session'}</p>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="relative group cursor-help">
-                                                <div className="text-sm text-gray-900 truncate max-w-xs" title={report.reason}>{report.reason}</div>
+                                                <div className="text-sm text-gray-900 dark:text-gray-100 truncate max-w-xs" title={report.reason}>{report.reason}</div>
                                                 {/* Custom Tooltip */}
                                                 <div className="absolute left-0 bottom-full mb-2 w-80 p-4 bg-gray-900 text-white text-xs rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl z-[100] whitespace-normal break-words leading-relaxed">
                                                     {report.reason}
@@ -185,7 +185,7 @@ export default function ReportsView() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
                                                 <Calendar className="w-4 h-4" />
                                                 {new Date(report.createdAt).toLocaleDateString()}
                                             </div>
