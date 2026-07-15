@@ -14,6 +14,7 @@ import {
     Wallet,
     Ticket,
     FileQuestion,
+    Code2,
     FileText,
     Loader2,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ const TYPE_ICON = {
     PAYMENT_SUCCESS: Wallet,
     SEAT_AVAILABLE: Ticket,
     QUIZ_LAUNCHED: FileQuestion,
+    CODING_QUESTION_LAUNCHED: Code2,
     RESOURCE_UPLOADED: FileText,
     SESSION_REQUEST_APPROVED: CheckCircle2,
     SESSION_REQUEST_REJECTED: XCircle,
