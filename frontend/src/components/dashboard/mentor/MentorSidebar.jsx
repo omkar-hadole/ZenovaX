@@ -7,21 +7,21 @@ import {
     HelpCircle,
     Settings,
     QrCode,
-    AlertTriangle,
-    Wallet
+    AlertTriangle
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import EarningsTeaserCard from './EarningsTeaserCard';
 import logo from '../../../assets/mentorlogo.svg';
 import { useAuth } from '../../../context/AuthContext';
 
+// Earnings intentionally has no sidebar nav entry — it's reached only via
+// the EarningsTeaserCard below, which gates access on completing a session.
 const TAB_PATHS = {
     'Dashboard': '/mentor/dashboard',
     'My Sessions': '/mentor/sessions',
     'Reports': '/mentor/reports',
     'Scan Attendance': '/mentor/scan-attendance',
     'Reviews Received': '/mentor/reviews',
-    'Earnings': '/mentor/earnings',
     'Help Center': '/mentor/help',
     'Settings': '/mentor/settings',
 };
@@ -32,7 +32,6 @@ const BASE_ITEMS = [
     { icon: AlertTriangle, label: 'Reports' },
     { icon: QrCode, label: 'Scan Attendance' },
     { icon: Star, label: 'Reviews Received' },
-    { icon: Wallet, label: 'Earnings' },
     { icon: HelpCircle, label: 'Help Center' },
     { icon: Settings, label: 'Settings' },
 ];
