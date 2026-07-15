@@ -40,7 +40,7 @@ export default function SessionCard({ session, footer, extraBadges, onClick }) {
                 </div>
             </div>
 
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-blue-600 transition-colors">{session.title}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{session.title}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed flex-1">{stripMarkdown(session.description) || 'Join this session to learn more.'}</p>
 
             <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4 bg-[#F5F6FA] dark:bg-gray-800/60 p-3 rounded-xl">
