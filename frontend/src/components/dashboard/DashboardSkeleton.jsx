@@ -1,7 +1,7 @@
 import React from 'react';
 
 const SkeletonBase = ({ className }) => (
-    <div className={`bg-gray-200 animate-pulse rounded-xl ${className}`} />
+    <div className={`bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl ${className}`} />
 );
 
 export default function DashboardSkeleton() {
@@ -9,7 +9,7 @@ export default function DashboardSkeleton() {
         <div className="animate-in fade-in duration-500 space-y-8 p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
+                    <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center gap-4">
                         <SkeletonBase className="w-12 h-12 rounded-xl" />
                         <div className="space-y-2">
                             <SkeletonBase className="w-24 h-4" />
@@ -21,7 +21,7 @@ export default function DashboardSkeleton() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm h-64 relative overflow-hidden">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm h-64 relative overflow-hidden">
                         <div className="flex justify-between items-start mb-6">
                             <div className="space-y-3">
                                 <SkeletonBase className="w-32 h-6 rounded-full" />
@@ -37,7 +37,7 @@ export default function DashboardSkeleton() {
 
                     <div className="space-y-4">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+                            <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <SkeletonBase className="w-14 h-14 rounded-xl" />
                                     <div className="space-y-2">
@@ -55,7 +55,7 @@ export default function DashboardSkeleton() {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
                         <SkeletonBase className="w-32 h-6 mb-4" />
                         <div className="grid grid-cols-2 gap-3">
                             {[1, 2, 3, 4].map((i) => (
@@ -64,7 +64,7 @@ export default function DashboardSkeleton() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
                         <SkeletonBase className="w-40 h-6 mb-2" />
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="flex gap-3 items-center">
