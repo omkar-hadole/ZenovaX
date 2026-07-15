@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { apiCall } from '../../utils/api';
 import { formatCurrency } from '../../utils/formatCurrency';
 import {
-    Wallet, Clock, Banknote, ShieldCheck, Check, X, Landmark, TrendingUp, AlertCircle
+    Wallet, Clock, Banknote, ShieldCheck, Check, X, Landmark, TrendingUp, AlertCircle, Trophy
 } from 'lucide-react';
 import Toast from '../../components/Toast';
 import ConfirmModal from '../../components/common/ConfirmModal';
@@ -57,6 +57,7 @@ export default function AdminPayments() {
     const [overview, setOverview] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [payouts, setPayouts] = useState([]);
+    const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -64,14 +65,16 @@ export default function AdminPayments() {
 
     const fetchAll = useCallback(async () => {
         try {
-            const [ov, acc, po] = await Promise.all([
+            const [ov, acc, po, lb] = await Promise.all([
                 apiCall('/admin/payments/overview'),
                 apiCall('/admin/payout-accounts'),
                 apiCall('/admin/payouts'),
+                apiCall('/admin/payments/leaderboard'),
             ]);
             setOverview(ov.overview);
             setAccounts(acc.accounts || []);
             setPayouts(po.payouts || []);
+            setLeaderboard(lb.leaderboard || []);
         } catch (error) {
             console.error('Failed to load payments admin data', error);
             setToast({ message: error.message || 'Failed to load data', type: 'error' });
@@ -192,13 +195,17 @@ export default function AdminPayments() {
                 >
                     Payout Requests {pendingPayouts.length > 0 && <span className="ml-1 text-xs bg-orange-400 text-white px-1.5 py-0.5 rounded-full">{pendingPayouts.length}</span>}
                 </button>
+                <button
+                    onClick={() => setTab('leaderboard')}
+                    className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Top Mentors
+                </button>
             </div>
 
-            {tab === 'kyc' ? (
-                <KycList accounts={accounts} onVerify={verifyAccount} onReject={rejectAccount} />
-            ) : (
-                <PayoutList payouts={payouts} onMarkPaid={markPaid} onMarkFailed={markFailed} />
-            )}
+            {tab === 'kyc' && <KycList accounts={accounts} onVerify={verifyAccount} onReject={rejectAccount} />}
+            {tab === 'payouts' && <PayoutList payouts={payouts} onMarkPaid={markPaid} onMarkFailed={markFailed} />}
+            {tab === 'leaderboard' && <Leaderboard rows={leaderboard} />}
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             <ConfirmModal
@@ -303,6 +310,55 @@ function PayoutList({ payouts, onMarkPaid, onMarkFailed }) {
                                         <span className="text-xs text-gray-400">{p.processedAt ? new Date(p.processedAt).toLocaleDateString() : '—'}</span>
                                     )}
                                 </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+const RANK_ACCENT = [
+    'bg-yellow-100 text-yellow-700', // 1st — gold
+    'bg-gray-200 text-gray-700',     // 2nd — silver
+    'bg-orange-100 text-orange-700', // 3rd — bronze
+];
+
+function Leaderboard({ rows }) {
+    if (rows.length === 0) {
+        return <EmptyState icon={Trophy} title="No earnings yet" subtitle="Mentors will rank here once paid sessions start earning." />;
+    }
+    return (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-bold">
+                        <tr>
+                            <th className="px-6 py-4">Rank</th>
+                            <th className="px-6 py-4">Mentor</th>
+                            <th className="px-6 py-4">Total Earned</th>
+                            <th className="px-6 py-4">Available</th>
+                            <th className="px-6 py-4">Paid Out</th>
+                            <th className="px-6 py-4">Sessions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {rows.map((row, i) => (
+                            <tr key={row.mentor.id} className="hover:bg-gray-50/50">
+                                <td className="px-6 py-4">
+                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${RANK_ACCENT[i] || 'bg-gray-100 text-gray-500'}`}>
+                                        {i + 1}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <p className="font-bold text-gray-900">{row.mentor.name}</p>
+                                    <p className="text-xs text-gray-500">{row.mentor.email}</p>
+                                </td>
+                                <td className="px-6 py-4 font-bold text-gray-900">{formatCurrency(row.totalEarned)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600">{formatCurrency(row.balanceAvailable)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600">{formatCurrency(row.totalPaidOut)}</td>
+                                <td className="px-6 py-4 text-sm text-gray-600">{row.mentor.totalSessions}</td>
                             </tr>
                         ))}
                     </tbody>

@@ -23,6 +23,7 @@ router.post('/reports/action', adminController.handleReportAction);
 
 // Payments & payouts
 router.get('/payments/overview', adminController.getPaymentsOverview);
+router.get('/payments/leaderboard', adminController.getMentorLeaderboard);
 router.get('/payout-accounts', adminController.getPayoutAccounts);
 router.post('/payout-accounts/:id/verify', adminController.verifyPayoutAccount);
 router.post('/payout-accounts/:id/reject', adminController.rejectPayoutAccount);
