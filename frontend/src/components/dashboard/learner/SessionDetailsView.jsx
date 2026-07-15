@@ -362,14 +362,24 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                             <div className="flex gap-4 mb-6 p-1 bg-gray-100 rounded-xl w-fit">
                                 <button
                                     onClick={() => { setShowResources(true); setShowQuizzes(false); setShowCoding(false); }}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${showResources ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${showResources ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
+                                    {S.resources && S.resources.length > 0 && (
+                                        <span className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold ${showResources ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-600'}`}>
+                                            {S.resources.length}
+                                        </span>
+                                    )}
                                     Resources
                                 </button>
                                 <button
                                     onClick={() => { setShowResources(false); setShowQuizzes(true); setShowCoding(false); }}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${showQuizzes ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${showQuizzes ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
+                                    {S.quizzes && S.quizzes.length > 0 && (
+                                        <span className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold ${showQuizzes ? 'bg-purple-100 text-purple-600' : 'bg-gray-200 text-gray-600'}`}>
+                                            {S.quizzes.length}
+                                        </span>
+                                    )}
                                     Quizzes
                                 </button>
                                 <button
