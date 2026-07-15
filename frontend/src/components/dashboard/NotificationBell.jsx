@@ -138,25 +138,25 @@ export default function NotificationBell() {
                 onClick={handleToggle}
                 aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
                 aria-expanded={open}
-                className="relative p-2 hover:bg-white hover:shadow-sm rounded-full transition-all duration-300 group"
+                className="relative p-2 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm rounded-full transition-all duration-300 group"
             >
-                <Bell className="w-6 h-6 text-gray-600 group-hover:text-gray-900" strokeWidth={1.5} />
+                <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white" strokeWidth={1.5} />
                 {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-orange-500 text-white text-[10px] font-bold rounded-full ring-2 ring-[#F5F6FA]">
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-orange-500 text-white text-[10px] font-bold rounded-full ring-2 ring-[#F5F6FA] dark:ring-gray-950">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
             </button>
 
             {open && (
-                <div className="absolute right-0 mt-3 w-96 max-w-[90vw] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                        <h3 className="font-bold text-gray-800">Notifications</h3>
+                <div className="absolute right-0 mt-3 w-96 max-w-[90vw] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+                        <h3 className="font-bold text-gray-800 dark:text-gray-100">Notifications</h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={handleMarkAllRead}
                                 disabled={markingAll}
-                                className="text-xs font-semibold text-[#5a59b5] hover:underline disabled:opacity-50"
+                                className="text-xs font-semibold text-[#5a59b5] dark:text-[#9190f8] hover:underline disabled:opacity-50"
                             >
                                 Mark all as read
                             </button>
@@ -166,39 +166,39 @@ export default function NotificationBell() {
                     <div className="max-h-96 overflow-y-auto">
                         {loading && notifications.length === 0 ? (
                             <div className="flex items-center justify-center py-12">
-                                <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
+                                <Loader2 className="w-5 h-5 text-gray-300 dark:text-gray-600 animate-spin" />
                             </div>
                         ) : notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-                                    <Bell className="w-5 h-5 text-gray-300" />
+                                <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
+                                    <Bell className="w-5 h-5 text-gray-300 dark:text-gray-600" />
                                 </div>
-                                <p className="text-sm font-medium text-gray-700">You're all caught up</p>
-                                <p className="text-xs text-gray-400 mt-1">New notifications will show up here.</p>
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">You're all caught up</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">New notifications will show up here.</p>
                             </div>
                         ) : (
-                            <ul className="divide-y divide-gray-50">
+                            <ul className="divide-y divide-gray-50 dark:divide-gray-800">
                                 {notifications.map((notification) => {
                                     const Icon = TYPE_ICON[notification.type] || Bell;
                                     return (
                                         <li key={notification.id}>
                                             <button
                                                 onClick={() => handleNotificationClick(notification)}
-                                                className={`w-full text-left flex items-start gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors ${
-                                                    !notification.isRead ? 'bg-[#5a59b5]/[0.04]' : ''
+                                                className={`w-full text-left flex items-start gap-3 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors ${
+                                                    !notification.isRead ? 'bg-[#5a59b5]/[0.04] dark:bg-[#9190f8]/[0.06]' : ''
                                                 }`}
                                             >
-                                                <div className="w-9 h-9 rounded-xl bg-[#C9C7F5]/20 flex items-center justify-center shrink-0 mt-0.5">
-                                                    <Icon className="w-4 h-4 text-[#5a59b5]" aria-hidden="true" />
+                                                <div className="w-9 h-9 rounded-xl bg-[#C9C7F5]/20 dark:bg-[#9190f8]/15 flex items-center justify-center shrink-0 mt-0.5">
+                                                    <Icon className="w-4 h-4 text-[#5a59b5] dark:text-[#9190f8]" aria-hidden="true" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-800 truncate">
+                                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
                                                         {notification.title}
                                                     </p>
-                                                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
                                                         {notification.message}
                                                     </p>
-                                                    <p className="text-[11px] text-gray-400 mt-1">
+                                                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                                                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                                                     </p>
                                                 </div>

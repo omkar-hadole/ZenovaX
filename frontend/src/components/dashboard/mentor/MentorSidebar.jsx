@@ -11,8 +11,10 @@ import {
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import EarningsTeaserCard from './EarningsTeaserCard';
-import logo from '../../../assets/mentorlogo.svg';
+import logoLight from '../../../assets/mentorlogo.svg';
+import logoDark from '../../../assets/mentorlogo-dark.svg';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
 
 // Earnings intentionally has no sidebar nav entry — it's reached only via
 // the EarningsTeaserCard below.
@@ -43,6 +45,7 @@ const BASE_ITEMS = [
 export default function MentorSidebar({ activeTab }) {
     const navigate = useNavigate();
     const { logout } = useAuth();
+    const { theme } = useTheme();
 
     const handleLogout = async () => {
         try {
@@ -63,7 +66,7 @@ export default function MentorSidebar({ activeTab }) {
 
     return (
         <Sidebar
-            logo={logo}
+            logo={theme === 'dark' ? logoDark : logoLight}
             logoClassName="w-56 h-auto"
             items={items}
             onLogout={handleLogout}

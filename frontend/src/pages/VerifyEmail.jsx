@@ -36,21 +36,21 @@ export default function VerifyEmail() {
     }, [token]);
 
     return (
-        <div className="min-h-screen bg-[#F4F4F9] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="min-h-screen bg-[#F4F4F9] dark:bg-gray-950 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-8 max-w-md w-full text-center">
                 <div className="flex justify-center mb-6">
                     {status === 'verifying' && <Loader2 className="w-16 h-16 text-[#7A79E6] animate-spin" />}
-                    {status === 'success' && <CheckCircle className="w-16 h-16 text-green-500" />}
-                    {status === 'error' && <XCircle className="w-16 h-16 text-red-500" />}
+                    {status === 'success' && <CheckCircle className="w-16 h-16 text-green-500 dark:text-green-400" />}
+                    {status === 'error' && <XCircle className="w-16 h-16 text-red-500 dark:text-red-400" />}
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                     {status === 'verifying' && 'Verifying Email'}
                     {status === 'success' && 'Verified!'}
                     {status === 'error' && 'Verification Failed'}
                 </h2>
 
-                <p className="text-gray-500 mb-8">{message}</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-8">{message}</p>
 
                 {status !== 'verifying' && (
                     <button

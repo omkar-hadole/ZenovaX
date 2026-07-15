@@ -11,13 +11,16 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
-import logo from '../assets/logo.svg';
+import logoLight from '../assets/logo.svg';
+import logoDark from '../assets/footerlogo.svg';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function LearnerLayout() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState('Dashboard');
 
     const handleLogout = async () => {
@@ -40,9 +43,9 @@ export default function LearnerLayout() {
 
     return (
         <ErrorBoundary>
-            <div className="flex h-screen bg-[#F5F6FA] font-outfit">
+            <div className="flex h-screen bg-[#F5F6FA] dark:bg-gray-950 font-outfit">
                 <Sidebar
-                    logo={logo}
+                    logo={theme === 'dark' ? logoDark : logoLight}
                     items={sidebarItems}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}

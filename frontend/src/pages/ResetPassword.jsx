@@ -65,14 +65,14 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-4">
+    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 min-h-screen flex items-center justify-center p-4">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="w-full max-w-md bg-white/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 md:p-10">
-        <h2 className="text-3xl font-semibold text-gray-900 mb-2">
+      <div className="w-full max-w-md bg-white/50 dark:bg-gray-900/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-white/10 p-8 md:p-10">
+        <h2 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
           Reset Password
         </h2>
-        <p className="text-gray-600 mb-8 font-light leading-relaxed">
+        <p className="text-gray-600 dark:text-gray-400 mb-8 font-light leading-relaxed">
           {success
             ? 'Your password has been updated. Redirecting you to login page...'
             : 'Enter and confirm your new password below. Must be at least 8 characters long.'}
@@ -80,9 +80,9 @@ export default function ResetPassword() {
 
         {success ? (
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <CheckCircle2 className="w-16 h-16 text-green-500 mb-4 animate-bounce" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">Password Reset Successful</h3>
-            <p className="text-sm text-gray-500 font-light">
+            <CheckCircle2 className="w-16 h-16 text-green-500 dark:text-green-400 mb-4 animate-bounce" />
+            <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Password Reset Successful</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-light">
               You can now sign in with your new credentials.
             </p>
           </div>
@@ -98,14 +98,14 @@ export default function ResetPassword() {
                 minLength="8"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+                className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -121,14 +121,14 @@ export default function ResetPassword() {
                 minLength="8"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+                className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showConfirmPassword}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -152,10 +152,10 @@ export default function ResetPassword() {
         )}
 
         {!success && (
-          <div className="mt-8 pt-6 border-t border-gray-200/50 text-center">
+          <div className="mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50 text-center">
             <Link
               to="/auth?mode=login"
-              className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to login

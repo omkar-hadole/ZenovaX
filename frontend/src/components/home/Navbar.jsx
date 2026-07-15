@@ -2,8 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../../assets/logo.svg';
+import logoLight from '../../assets/logo.svg';
+// Same wordmark artwork as logo.svg, just white-filled (originally drawn for
+// the dark footer band) — reused here as the dark-mode navbar logo instead
+// of duplicating the asset.
+import logoDark from '../../assets/footerlogo.svg';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
+import ThemeToggle from '../ThemeToggle';
+import { useTheme } from '../../context/ThemeContext';
 
 const navLinks = [
   { name: 'Home', href: '#home' },
@@ -15,6 +21,7 @@ const navLinks = [
 
 export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('#home');
 
@@ -65,7 +72,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
       >
         <a href="#home" className="flex items-center gap-3 group" aria-label="ZenovaX home">
           <img
-            src={getOptimizedImageUrl(logo)}
+            src={getOptimizedImageUrl(theme === 'dark' ? logoDark : logoLight)}
             width={120}
             height={24}
             fetchPriority="high"
@@ -98,6 +105,7 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle variant="marketing" />
           {!isLoggedIn ? (
             <>
               <button
@@ -124,14 +132,17 @@ export default function Navbar({ scrolled, isLoggedIn, handlePrimaryCTA }) {
           )}
         </div>
 
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          className="md:hidden p-2 rounded-lg text-text hover:bg-accent-tint transition focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle variant="marketing" />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            className="p-2 rounded-lg text-text hover:bg-accent-tint transition focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
+          </button>
+        </div>
       </motion.div>
 
       <AnimatePresence>

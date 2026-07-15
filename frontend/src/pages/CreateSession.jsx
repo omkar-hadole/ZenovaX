@@ -6,9 +6,11 @@ import {
 } from 'lucide-react';
 import { apiCall, logout as apiLogout } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
-import logo from '../assets/mentorlogo.svg'
+import logoLight from '../assets/mentorlogo.svg'
+import logoDark from '../assets/mentorlogo-dark.svg'
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import DescriptionEditor from '../components/dashboard/mentor/DescriptionEditor';
 import SessionPreviewModal from '../components/dashboard/mentor/SessionPreviewModal';
@@ -20,6 +22,7 @@ export default function CreateSession() {
   const isEditing = !!id;
 
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -167,16 +170,16 @@ export default function CreateSession() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
+    <div className="flex h-screen bg-[#F4F4F9] dark:bg-gray-950 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
       </div>
 
       <div className="relative z-10 flex h-full w-full">
         {isAdmin ? (
           <Sidebar
-            logo={logo}
+            logo={theme === 'dark' ? logoDark : logoLight}
             logoClassName="w-56 h-auto"
             items={[
               { icon: LayoutDashboard, label: 'Dashboard', onClick: () => navigate('/admin/dashboard') },
