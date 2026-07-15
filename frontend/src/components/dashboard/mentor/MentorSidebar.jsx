@@ -11,6 +11,7 @@ import {
     Wallet
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
+import EarningsTeaserCard from './EarningsTeaserCard';
 import logo from '../../../assets/mentorlogo.svg';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -42,7 +43,7 @@ const BASE_ITEMS = [
 // MentorLayout), items use real paths and NavLink handles active state itself.
 export default function MentorSidebar({ activeTab }) {
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
 
     const handleLogout = async () => {
         try {
@@ -68,14 +69,7 @@ export default function MentorSidebar({ activeTab }) {
             items={items}
             onLogout={handleLogout}
         >
-            <div className="bg-gradient-to-br from-[#C9C7F5] to-[#A9C1F7] rounded-2xl p-6 text-white relative overflow-hidden shadow-sm">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-bl-full" />
-                <h3 className="font-bold text-lg mb-2 text-gray-800">Upgrade to Gold</h3>
-                <p className="text-sm text-gray-700 mb-4">Get access to premium features and analytics.</p>
-                <button className="bg-white text-[#5a59b5] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors w-full shadow-sm">
-                    Upgrade Now
-                </button>
-            </div>
+            <EarningsTeaserCard totalSessions={user?.totalSessions} />
         </Sidebar>
     );
 }
