@@ -1,5 +1,6 @@
 import React from 'react';
-import { Calendar, Clock, Video, MapPin, CheckCircle, FileText, Users, Star, ExternalLink, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, Video, MapPin, CheckCircle, FileText, Users, Star, AlertTriangle } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
@@ -21,6 +22,7 @@ function parseTopics(topics) {
 }
 
 export default function SessionPreviewContent({ session, isPreview, children, onRegister, isRegistering, onReport, userRole, userId }) {
+  const navigate = useNavigate();
   const scheduledAt = session.scheduledAt ? new Date(session.scheduledAt) : new Date();
   const topics = parseTopics(session.topics);
   const isSessionTimeOver = new Date(new Date(session.scheduledAt).getTime() + session.duration * 60000) < new Date();
@@ -144,10 +146,10 @@ export default function SessionPreviewContent({ session, isPreview, children, on
 
             {session.mentor?.id && (
               <button
-                onClick={() => window.open(`/profile/${session.mentor.id}`, '_blank')}
+                onClick={() => navigate(`/profile/${session.mentor.id}`)}
                 className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all flex items-center justify-center gap-2"
               >
-                View Profile <ExternalLink size={14} />
+                View Profile
               </button>
             )}
           </div>

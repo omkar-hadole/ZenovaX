@@ -381,7 +381,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FC] dark:bg-gray-950">
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-20 [transform:translateZ(0)] [will-change:transform]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4 flex items-center justify-between">
             <button
