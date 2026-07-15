@@ -95,7 +95,24 @@ exports.getWalletSummary = async (prisma, mentorId) => {
         orderBy: { createdAt: 'desc' },
         take: 50
     });
-    return { wallet, ledgerEntries };
+
+    // bookingId is a plain reference (not a Prisma relation on MentorLedgerEntry), so
+    // resolve booking -> session in one batched query rather than per-entry lookups.
+    const bookingIds = [...new Set(ledgerEntries.map(e => e.bookingId).filter(Boolean))];
+    const bookings = bookingIds.length
+        ? await prisma.booking.findMany({
+            where: { id: { in: bookingIds } },
+            select: { id: true, session: { select: { id: true, title: true, subject: true, scheduledAt: true } } }
+        })
+        : [];
+    const sessionByBooking = new Map(bookings.map(b => [b.id, b.session]));
+
+    const enrichedEntries = ledgerEntries.map(entry => ({
+        ...entry,
+        session: entry.bookingId ? (sessionByBooking.get(entry.bookingId) || null) : null
+    }));
+
+    return { wallet, ledgerEntries: enrichedEntries };
 };
 
 exports.getPayoutAccount = async (prisma, mentorId) => {
@@ -317,4 +334,27 @@ exports.getPaymentsOverview = async (prisma) => {
         pendingPayoutsCount: pendingPayoutsAgg._count || 0,
         pendingPayoutsAmount: pendingPayoutsAgg._sum.amount || 0
     };
+};
+
+// Top-earning mentors, ranked by lifetime earnings (before payout). Used by the
+// admin Payments dashboard leaderboard.
+exports.getMentorEarningsLeaderboard = async (prisma, limit = 10) => {
+    const wallets = await prisma.mentorWallet.findMany({
+        where: { totalEarned: { gt: 0 } },
+        orderBy: { totalEarned: 'desc' },
+        take: limit,
+        include: {
+            mentor: {
+                select: { id: true, name: true, email: true, profilePicture: true, totalSessions: true, averageRating: true }
+            }
+        }
+    });
+
+    return wallets.map(w => ({
+        mentor: w.mentor,
+        totalEarned: w.totalEarned,
+        balanceAvailable: w.balanceAvailable,
+        balancePending: w.balancePending,
+        totalPaidOut: w.totalPaidOut
+    }));
 };

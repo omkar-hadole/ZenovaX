@@ -411,14 +411,18 @@ export default function EarningsView() {
                     <div className="divide-y divide-gray-50">
                         {ledgerEntries.map((entry) => {
                             const meta = LEDGER_META[entry.type] || LEDGER_META.REVERSAL;
+                            const title = entry.session ? entry.session.title : (entry.description || meta.label);
+                            const subtitle = entry.session
+                                ? `${meta.label} · ${new Date(entry.createdAt).toLocaleString()}`
+                                : new Date(entry.createdAt).toLocaleString();
                             return (
                                 <div key={entry.id} className="px-8 py-4 flex items-center gap-4">
                                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${meta.className}`}>
                                         <meta.Icon className="w-4 h-4" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-gray-800 text-sm">{entry.description || meta.label}</p>
-                                        <p className="text-xs text-gray-500">{new Date(entry.createdAt).toLocaleString()}</p>
+                                        <p className="font-bold text-gray-800 text-sm truncate">{title}</p>
+                                        <p className="text-xs text-gray-500">{subtitle}</p>
                                     </div>
                                     <span className="font-bold text-gray-800 text-sm shrink-0">
                                         {meta.sign}{formatCurrency(entry.amount)}

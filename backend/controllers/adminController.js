@@ -102,6 +102,16 @@ exports.getPaymentsOverview = async (req, res, next) => {
     }
 };
 
+exports.getMentorLeaderboard = async (req, res, next) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+        const leaderboard = await mentorWalletService.getMentorEarningsLeaderboard(req.prisma, limit);
+        return res.json({ leaderboard });
+    } catch (error) {
+        return next(error);
+    }
+};
+
 exports.getPayoutAccounts = async (req, res, next) => {
     try {
         const accounts = await mentorWalletService.listPayoutAccounts(req.prisma, req.query.status);
