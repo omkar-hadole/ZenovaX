@@ -70,6 +70,16 @@ router.post('/create', protect, async (req, res, next) => {
                     totalReviews: stats._count
                 }
             });
+
+            await prisma.notification.create({
+                data: {
+                    userId: session.mentorId,
+                    type: 'NEW_REVIEW',
+                    title: 'New review received',
+                    message: `You received a ${parseInt(rating)}-star review for "${session.title}".`,
+                    link: '/mentor/reviews'
+                }
+            });
         }, {
             timeout: 20000
         });

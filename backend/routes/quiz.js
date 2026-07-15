@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/auth");
+const logger = require("../utils/logger");
 
 router.post("/create", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
@@ -76,6 +77,27 @@ router.post("/:id/launch", protect, authorize('MENTOR', 'BOTH'), async (req, res
             }
         });
 
+        // Best-effort: notify registered learners the quiz is live. A failure here
+        // shouldn't fail the launch itself, since the quiz is already updated.
+        try {
+            const bookings = await req.prisma.booking.findMany({
+                where: { sessionId: quiz.sessionId, status: 'CONFIRMED' },
+                select: { userId: true }
+            });
+            if (bookings.length > 0) {
+                await req.prisma.notification.createMany({
+                    data: bookings.map(({ userId }) => ({
+                        userId,
+                        type: 'QUIZ_LAUNCHED',
+                        title: 'Quiz is live',
+                        message: `"${quiz.title}" is now live for "${quiz.session.title}".`,
+                        link: `/quiz/${quiz.id}/attempt`
+                    }))
+                });
+            }
+        } catch (notifyError) {
+            logger.error('Failed to notify learners of quiz launch:', notifyError);
+        }
 
         res.json({ success: true, quiz: updatedQuiz });
     } catch (error) {

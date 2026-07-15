@@ -1,7 +1,8 @@
 import React from 'react';
-import { Search, Bell } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
+import NotificationBell from './NotificationBell';
 
 export default function Header({ user, title, searchPlaceholder = "Search..." }) {
     const navigate = useNavigate();
@@ -22,10 +23,7 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                     />
                 </div>
 
-                <button className="relative p-2 hover:bg-white hover:shadow-sm rounded-full transition-all duration-300 group">
-                    <Bell className="w-6 h-6 text-gray-600 group-hover:text-gray-900" strokeWidth={1.5} />
-                    <span className="absolute top-1.5 right-2 w-2 h-2 bg-orange-400 rounded-full ring-2 ring-[#F5F6FA]" />
-                </button>
+                <NotificationBell />
 
                 <button
                     onClick={() => navigate('/profile')}
