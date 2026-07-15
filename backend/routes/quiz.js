@@ -91,7 +91,7 @@ router.post("/:id/launch", protect, authorize('MENTOR', 'BOTH'), async (req, res
                         type: 'QUIZ_LAUNCHED',
                         title: 'Quiz is live',
                         message: `"${quiz.title}" is now live for "${quiz.session.title}".`,
-                        link: `/quiz/${quiz.id}/attempt`
+                        link: `/sessions/${quiz.sessionId}`
                     }))
                 });
             }

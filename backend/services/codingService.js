@@ -155,7 +155,7 @@ exports.launchCodingQuestion = async (prisma, userId, id) => {
                     type: 'CODING_QUESTION_LAUNCHED',
                     title: 'Coding challenge is live',
                     message: `"${question.title}" is now live for "${question.session.title}".`,
-                    link: `/coding/${question.id}/attempt`
+                    link: `/sessions/${question.sessionId}`
                 }))
             });
         }
