@@ -15,7 +15,7 @@ import logo from '../../../assets/mentorlogo.svg';
 import { useAuth } from '../../../context/AuthContext';
 
 // Earnings intentionally has no sidebar nav entry — it's reached only via
-// the EarningsTeaserCard below, which gates access on completing a session.
+// the EarningsTeaserCard below.
 const TAB_PATHS = {
     'Dashboard': '/mentor/dashboard',
     'My Sessions': '/mentor/sessions',
@@ -42,7 +42,7 @@ const BASE_ITEMS = [
 // MentorLayout), items use real paths and NavLink handles active state itself.
 export default function MentorSidebar({ activeTab }) {
     const navigate = useNavigate();
-    const { logout, user } = useAuth();
+    const { logout } = useAuth();
 
     const handleLogout = async () => {
         try {
@@ -68,7 +68,7 @@ export default function MentorSidebar({ activeTab }) {
             items={items}
             onLogout={handleLogout}
         >
-            <EarningsTeaserCard totalSessions={user?.totalSessions} />
+            <EarningsTeaserCard />
         </Sidebar>
     );
 }
