@@ -45,7 +45,7 @@ export default function Auth() {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 min-h-screen">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -90,7 +90,7 @@ export default function Auth() {
           </div>
 
           {/* ok - r  */}
-          <div className="w-full md:w-1/2 bg-white/50 backdrop-blur-xl p-6 md:p-12 flex items-center justify-center">
+          <div className="w-full md:w-1/2 bg-white/50 dark:bg-gray-900/60 backdrop-blur-xl p-6 md:p-12 flex items-center justify-center">
             <div className="w-full max-w-md">
               {isLogin ? (
                 <LoginForm

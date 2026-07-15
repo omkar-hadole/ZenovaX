@@ -19,24 +19,24 @@ import Toast from '../../Toast';
 import EarningsSkeleton from './EarningsSkeleton';
 
 const KYC_BADGES = {
-    NOT_SUBMITTED: { label: 'Not submitted', className: 'bg-gray-100 text-gray-600 border-gray-200', Icon: ShieldQuestion },
-    PENDING: { label: 'Pending verification', className: 'bg-yellow-100 text-yellow-700 border-yellow-200', Icon: Clock },
-    VERIFIED: { label: 'Verified', className: 'bg-green-100 text-green-700 border-green-200', Icon: ShieldCheck },
-    REJECTED: { label: 'Rejected', className: 'bg-red-100 text-red-700 border-red-200', Icon: ShieldAlert },
+    NOT_SUBMITTED: { label: 'Not submitted', className: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700', Icon: ShieldQuestion },
+    PENDING: { label: 'Pending verification', className: 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20', Icon: Clock },
+    VERIFIED: { label: 'Verified', className: 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20', Icon: ShieldCheck },
+    REJECTED: { label: 'Rejected', className: 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20', Icon: ShieldAlert },
 };
 
 const PAYOUT_STATUS_BADGES = {
-    PENDING: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    PROCESSING: 'bg-blue-100 text-blue-700 border-blue-200',
-    PAID: 'bg-green-100 text-green-700 border-green-200',
-    FAILED: 'bg-red-100 text-red-700 border-red-200',
+    PENDING: 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20',
+    PROCESSING: 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20',
+    PAID: 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20',
+    FAILED: 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20',
 };
 
 const LEDGER_META = {
-    BOOKING_CREDIT: { label: 'Booking earning', className: 'text-green-600 bg-green-100', Icon: ArrowDownCircle, sign: '+' },
-    RELEASE: { label: 'Earnings released', className: 'text-blue-600 bg-blue-100', Icon: Unlock, sign: '' },
-    PAYOUT: { label: 'Payout requested', className: 'text-orange-600 bg-orange-100', Icon: ArrowUpCircle, sign: '-' },
-    REVERSAL: { label: 'Reversal', className: 'text-gray-600 bg-gray-100', Icon: Undo2, sign: '' },
+    BOOKING_CREDIT: { label: 'Booking earning', className: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-500/10', Icon: ArrowDownCircle, sign: '+' },
+    RELEASE: { label: 'Earnings released', className: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/10', Icon: Unlock, sign: '' },
+    PAYOUT: { label: 'Payout requested', className: 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-500/10', Icon: ArrowUpCircle, sign: '-' },
+    REVERSAL: { label: 'Reversal', className: 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800', Icon: Undo2, sign: '' },
 };
 
 const EMPTY_ACCOUNT_FORM = { accountHolderName: '', bankAccountNumber: '', ifscCode: '', upiId: '' };
@@ -144,25 +144,25 @@ export default function EarningsView() {
 
             {/* Balance Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-green-100 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-green-100 dark:border-green-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 dark:bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Available Balance</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Available Balance</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800">{formatCurrency(wallet?.balanceAvailable)}</span>
-                            <div className="flex items-center mb-1 px-2 py-1 bg-green-100 rounded-lg text-green-600">
+                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.balanceAvailable)}</span>
+                            <div className="flex items-center mb-1 px-2 py-1 bg-green-100 dark:bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
                                 <Wallet className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Pending (held)</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Pending (held)</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800">{formatCurrency(wallet?.balancePending)}</span>
+                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.balancePending)}</span>
                             <div className="flex items-center mb-1 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
                                 <Clock className="w-4 h-4" />
                             </div>
@@ -170,12 +170,12 @@ export default function EarningsView() {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/40 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/40 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Total Earned</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Total Earned</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800">{formatCurrency(wallet?.totalEarned)}</span>
+                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.totalEarned)}</span>
                             <div className="flex items-center mb-1 px-2 py-1 bg-[#C9C7F5]/20 rounded-lg text-[#5a59b5]">
                                 <TrendingUp className="w-4 h-4" />
                             </div>
@@ -183,13 +183,13 @@ export default function EarningsView() {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[1.5rem] shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 dark:bg-gray-800/60 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 text-sm font-medium mb-2">Total Paid Out</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Total Paid Out</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800">{formatCurrency(wallet?.totalPaidOut)}</span>
-                            <div className="flex items-center mb-1 px-2 py-1 bg-gray-100 rounded-lg text-gray-500">
+                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.totalPaidOut)}</span>
+                            <div className="flex items-center mb-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
                                 <Landmark className="w-4 h-4" />
                             </div>
                         </div>
@@ -199,11 +199,11 @@ export default function EarningsView() {
 
             {/* Payout account + request payout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+                <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-800">Payout Account</h2>
-                            <p className="text-gray-500 text-sm">Where your withdrawals are sent</p>
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Payout Account</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Where your withdrawals are sent</p>
                         </div>
                         <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${kyc.className}`}>
                             <kyc.Icon className="w-3.5 h-3.5" />
@@ -212,7 +212,7 @@ export default function EarningsView() {
                     </div>
 
                     {payoutAccount?.kycStatus === 'REJECTED' && payoutAccount?.rejectionReason && (
-                        <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm">
+                        <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-sm">
                             {payoutAccount.rejectionReason}
                         </div>
                     )}
@@ -226,7 +226,7 @@ export default function EarningsView() {
                                     value={accountForm.accountHolderName}
                                     onChange={handleAccountFieldChange}
                                     required
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
                                 />
                             </FieldGroup>
                             <div className="grid grid-cols-2 gap-4">
@@ -236,7 +236,7 @@ export default function EarningsView() {
                                         name="bankAccountNumber"
                                         value={accountForm.bankAccountNumber}
                                         onChange={handleAccountFieldChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
                                     />
                                 </FieldGroup>
                                 <FieldGroup label="IFSC code">
@@ -245,7 +245,7 @@ export default function EarningsView() {
                                         name="ifscCode"
                                         value={accountForm.ifscCode}
                                         onChange={handleAccountFieldChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
                                     />
                                 </FieldGroup>
                             </div>
@@ -256,7 +256,7 @@ export default function EarningsView() {
                                     value={accountForm.upiId}
                                     onChange={handleAccountFieldChange}
                                     placeholder="you@upi"
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
                                 />
                             </FieldGroup>
                             <div className="flex items-center gap-3">
@@ -272,7 +272,7 @@ export default function EarningsView() {
                                     <button
                                         type="button"
                                         onClick={() => setIsEditingAccount(false)}
-                                        className="text-gray-500 text-sm font-bold hover:text-gray-700"
+                                        className="text-gray-500 dark:text-gray-400 text-sm font-bold hover:text-gray-700 dark:hover:text-gray-200"
                                     >
                                         Cancel
                                     </button>
@@ -282,19 +282,19 @@ export default function EarningsView() {
                     ) : (
                         <div className="space-y-3">
                             <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Holder name</span>
-                                <span className="font-bold text-gray-800">{payoutAccount.accountHolderName}</span>
+                                <span className="text-gray-500 dark:text-gray-400">Holder name</span>
+                                <span className="font-bold text-gray-800 dark:text-gray-100">{payoutAccount.accountHolderName}</span>
                             </div>
                             {payoutAccount.bankAccountNumber && (
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Bank account</span>
-                                    <span className="font-bold text-gray-800">••••{payoutAccount.bankAccountNumber.slice(-4)}</span>
+                                    <span className="text-gray-500 dark:text-gray-400">Bank account</span>
+                                    <span className="font-bold text-gray-800 dark:text-gray-100">••••{payoutAccount.bankAccountNumber.slice(-4)}</span>
                                 </div>
                             )}
                             {payoutAccount.upiId && (
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">UPI ID</span>
-                                    <span className="font-bold text-gray-800">{payoutAccount.upiId}</span>
+                                    <span className="text-gray-500 dark:text-gray-400">UPI ID</span>
+                                    <span className="font-bold text-gray-800 dark:text-gray-100">{payoutAccount.upiId}</span>
                                 </div>
                             )}
                             <button
@@ -308,14 +308,14 @@ export default function EarningsView() {
                     )}
                 </div>
 
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
-                    <h2 className="text-xl font-bold text-gray-800 mb-1">Request a Payout</h2>
-                    <p className="text-gray-500 text-sm mb-6">
+                <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-1">Request a Payout</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
                         {formatCurrency(wallet?.balanceAvailable)} available to withdraw
                     </p>
 
                     {payoutAccount?.kycStatus !== 'VERIFIED' && (
-                        <div className="mb-4 p-3 rounded-xl bg-yellow-50 text-yellow-700 text-sm">
+                        <div className="mb-4 p-3 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 text-sm">
                             Your payout account needs to be verified before you can request a withdrawal.
                         </div>
                     )}
@@ -331,7 +331,7 @@ export default function EarningsView() {
                                 onChange={(e) => setPayoutAmount(e.target.value)}
                                 disabled={!canRequestPayout}
                                 placeholder="0.00"
-                                className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none disabled:opacity-50"
+                                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none disabled:opacity-50"
                             />
                         </FieldGroup>
                         <button
@@ -347,23 +347,23 @@ export default function EarningsView() {
             </div>
 
             {/* Payout History */}
-            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100">
-                <div className="p-8 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-800">Payout History</h2>
-                    <p className="text-gray-500 text-sm">Withdrawals you've requested</p>
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
+                <div className="p-8 border-b border-gray-100 dark:border-gray-800">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Payout History</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Withdrawals you've requested</p>
                 </div>
                 {payouts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <Landmark className="text-gray-300 w-8 h-8" />
+                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mb-4">
+                            <Landmark className="text-gray-300 dark:text-gray-600 w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800">No payouts yet</h3>
-                        <p className="text-gray-500">Requested payouts will show up here.</p>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">No payouts yet</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Requested payouts will show up here.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto md:overflow-visible">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider font-bold">
+                            <thead className="bg-gray-50/50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
                                 <tr>
                                     <th className="px-8 py-4">Amount</th>
                                     <th className="px-6 py-4">Requested</th>
@@ -371,18 +371,18 @@ export default function EarningsView() {
                                     <th className="px-6 py-4">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                                 {payouts.map((payout) => (
-                                    <tr key={payout.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-8 py-4 font-bold text-gray-800">{formatCurrency(payout.amount)}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{new Date(payout.requestedAt).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{payout.processedAt ? new Date(payout.processedAt).toLocaleDateString() : '—'}</td>
+                                    <tr key={payout.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors">
+                                        <td className="px-8 py-4 font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payout.amount)}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(payout.requestedAt).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{payout.processedAt ? new Date(payout.processedAt).toLocaleDateString() : '—'}</td>
                                         <td className="px-6 py-4">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold border ${PAYOUT_STATUS_BADGES[payout.status]}`}>
                                                 {payout.status}
                                             </span>
                                             {payout.status === 'FAILED' && payout.failureReason && (
-                                                <p className="text-xs text-red-500 mt-1">{payout.failureReason}</p>
+                                                <p className="text-xs text-red-500 dark:text-red-400 mt-1">{payout.failureReason}</p>
                                             )}
                                         </td>
                                     </tr>
@@ -394,21 +394,21 @@ export default function EarningsView() {
             </div>
 
             {/* Ledger / recent activity */}
-            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100">
-                <div className="p-8 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-800">Recent Activity</h2>
-                    <p className="text-gray-500 text-sm">Every credit and debit on your wallet</p>
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
+                <div className="p-8 border-b border-gray-100 dark:border-gray-800">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Recent Activity</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Every credit and debit on your wallet</p>
                 </div>
                 {ledgerEntries.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                            <Wallet className="text-gray-300 w-8 h-8" />
+                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mb-4">
+                            <Wallet className="text-gray-300 dark:text-gray-600 w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800">No activity yet</h3>
-                        <p className="text-gray-500">Earnings from paid sessions will appear here.</p>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">No activity yet</h3>
+                        <p className="text-gray-500 dark:text-gray-400">Earnings from paid sessions will appear here.</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-gray-50 dark:divide-gray-800">
                         {ledgerEntries.map((entry) => {
                             const meta = LEDGER_META[entry.type] || LEDGER_META.REVERSAL;
                             const title = entry.session ? entry.session.title : (entry.description || meta.label);
@@ -421,10 +421,10 @@ export default function EarningsView() {
                                         <meta.Icon className="w-4 h-4" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-gray-800 text-sm truncate">{title}</p>
-                                        <p className="text-xs text-gray-500">{subtitle}</p>
+                                        <p className="font-bold text-gray-800 dark:text-gray-100 text-sm truncate">{title}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
                                     </div>
-                                    <span className="font-bold text-gray-800 text-sm shrink-0">
+                                    <span className="font-bold text-gray-800 dark:text-gray-100 text-sm shrink-0">
                                         {meta.sign}{formatCurrency(entry.amount)}
                                     </span>
                                 </div>

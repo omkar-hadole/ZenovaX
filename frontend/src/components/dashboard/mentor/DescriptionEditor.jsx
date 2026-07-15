@@ -89,12 +89,12 @@ export default function DescriptionEditor({ id, value, onChange, placeholder }) 
   }, [value, onChange, isAtLimit]);
 
   return (
-    <div className="rounded-xl bg-gray-50 border-none focus-within:ring-2 focus-within:ring-[#C9C7F5] transition-all overflow-hidden">
-      <div role="toolbar" aria-label="Text formatting" className="flex items-center gap-1 px-3 py-2 border-b border-gray-100">
+    <div className="rounded-xl bg-gray-50 dark:bg-gray-800/60 border-none focus-within:ring-2 focus-within:ring-[#C9C7F5] transition-all overflow-hidden">
+      <div role="toolbar" aria-label="Text formatting" className="flex items-center gap-1 px-3 py-2 border-b border-gray-100 dark:border-gray-800">
         <button
           type="button"
           onClick={() => handleFormat('bold')}
-          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
+          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
           title="Bold (Ctrl+B)"
           aria-label="Bold"
         >
@@ -103,7 +103,7 @@ export default function DescriptionEditor({ id, value, onChange, placeholder }) 
         <button
           type="button"
           onClick={() => handleFormat('bullet')}
-          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
+          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
           title="Bullet list"
           aria-label="Bullet list"
         >
@@ -112,7 +112,7 @@ export default function DescriptionEditor({ id, value, onChange, placeholder }) 
         <button
           type="button"
           onClick={() => handleFormat('numbered')}
-          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-600 hover:text-gray-900"
+          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
           title="Numbered list"
           aria-label="Numbered list"
         >
@@ -129,11 +129,11 @@ export default function DescriptionEditor({ id, value, onChange, placeholder }) 
         rows={4}
         required
         placeholder={placeholder || 'Describe the key takeaways and learning outcomes...'}
-        className="w-full px-4 py-3.5 bg-transparent border-none focus:outline-none resize-none placeholder:text-gray-400 min-h-[120px]"
+        className="w-full px-4 py-3.5 bg-transparent border-none focus:outline-none resize-none placeholder:text-gray-400 dark:placeholder:text-gray-500 dark:text-gray-100 min-h-[120px]"
         aria-label={placeholder || 'Describe the key takeaways and learning outcomes...'}
       />
-      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100">
-        <span className={`text-xs font-medium ${isAtLimit ? 'text-amber-600' : 'text-gray-400'}`}>
+      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+        <span className={`text-xs font-medium ${isAtLimit ? 'text-amber-600' : 'text-gray-400 dark:text-gray-500'}`}>
           {isAtLimit && (
             <span className="mr-1">Max lines reached</span>
           )}
@@ -141,7 +141,7 @@ export default function DescriptionEditor({ id, value, onChange, placeholder }) 
         <span
           aria-live="polite"
           aria-atomic="true"
-          className={`text-xs font-medium ${isAtLimit ? 'text-amber-600' : 'text-gray-400'}`}
+          className={`text-xs font-medium ${isAtLimit ? 'text-amber-600' : 'text-gray-400 dark:text-gray-500'}`}
         >
           {lineCount}/{MAX_LINES} lines
         </span>

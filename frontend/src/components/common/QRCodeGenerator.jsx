@@ -12,7 +12,9 @@ export default function QRCodeGenerator({ bookingId, sessionId, userEmail }) {
     });
 
     return (
-        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+            {/* Stays white regardless of theme — QR scanners rely on this
+                specific light-modules-on-dark background contrast to read reliably. */}
             <div className="bg-white p-4 rounded-xl border-2 border-dashed border-gray-200 mb-4">
                 <QRCode
                     value={qrData}
@@ -23,12 +25,12 @@ export default function QRCodeGenerator({ bookingId, sessionId, userEmail }) {
             </div>
 
             <div className="text-center space-y-1">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ticket ID</p>
-                <p className="text-sm font-mono text-gray-700 break-all px-4">{bookingId}</p>
+                <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Ticket ID</p>
+                <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all px-4">{bookingId}</p>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-100 w-full text-center">
-                <p className="text-xs text-gray-400">Show this code at the venue entrance</p>
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 w-full text-center">
+                <p className="text-xs text-gray-400 dark:text-gray-500">Show this code at the venue entrance</p>
             </div>
         </div>
     );

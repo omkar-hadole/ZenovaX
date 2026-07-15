@@ -43,13 +43,13 @@ export default function AdminDashboard() {
     }
 
     const StatCard = ({ title, value, icon: Icon, color }) => (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
                 <Icon className="w-6 h-6 text-white" />
             </div>
             <div>
-                <p className="text-gray-500 text-sm font-medium">{title}</p>
-                <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{title}</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</h3>
             </div>
         </div>
     );
@@ -83,30 +83,30 @@ export default function AdminDashboard() {
                 />
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Recently Added Sessions</h2>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Recently Added Sessions</h2>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="border-b border-gray-100">
-                                <th className="pb-3 text-sm font-medium text-gray-500">Title</th>
-                                <th className="pb-3 text-sm font-medium text-gray-500">Mentor</th>
-                                <th className="pb-3 text-sm font-medium text-gray-500">Date</th>
-                                <th className="pb-3 text-sm font-medium text-gray-500">Status</th>
+                            <tr className="border-b border-gray-100 dark:border-gray-800">
+                                <th className="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Title</th>
+                                <th className="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Mentor</th>
+                                <th className="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Date</th>
+                                <th className="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                             {stats.recentSessions.map((session) => (
-                                <tr key={session.id} className="group hover:bg-gray-50 transition-colors">
-                                    <td className="py-4 text-sm font-medium text-gray-900">{session.title}</td>
-                                    <td className="py-4 text-sm text-gray-500">{session.mentor?.name}</td>
-                                    <td className="py-4 text-sm text-gray-500">
+                                <tr key={session.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+                                    <td className="py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{session.title}</td>
+                                    <td className="py-4 text-sm text-gray-500 dark:text-gray-400">{session.mentor?.name}</td>
+                                    <td className="py-4 text-sm text-gray-500 dark:text-gray-400">
                                         {new Date(session.scheduledAt).toLocaleDateString()}
                                     </td>
                                     <td className="py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${session.status === 'UPCOMING' ? 'bg-blue-100 text-blue-700' :
-                                                session.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                                    'bg-gray-100 text-gray-700'
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${session.status === 'UPCOMING' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
+                                                session.status === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
+                                                    'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                                             }`}>
                                             {session.status}
                                         </span>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                             ))}
                             {stats.recentSessions.length === 0 && (
                                 <tr>
-                                    <td colSpan="4" className="py-8 text-center text-gray-500">
+                                    <td colSpan="4" className="py-8 text-center text-gray-500 dark:text-gray-400">
                                         No recent sessions found.
                                     </td>
                                 </tr>

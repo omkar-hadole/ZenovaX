@@ -8,8 +8,8 @@ const HelpCenter = () => {
         <div className="p-8 max-w-7xl mx-auto font-outfit animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div className="mb-10 text-left">
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">Help Center</h1>
-                <p className="text-slate-600">Connect with our support team for assistance</p>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-100 mb-2">Help Center</h1>
+                <p className="text-slate-600 dark:text-gray-400">Connect with our support team for assistance</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -68,34 +68,34 @@ const HelpCenter = () => {
                 </div>
 
                 {/* Other Contact Methods */}
-                <div className="md:col-span-3 bg-white rounded-[2rem] shadow-sm border border-[#e2e0ff] overflow-hidden">
+                <div className="md:col-span-3 bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-[#e2e0ff] dark:border-gray-800 overflow-hidden">
                     <div className="p-8 grid md:grid-cols-2 gap-8">
                         {/* Email */}
                         <div className="flex items-start gap-5 group">
-                            <div className="w-14 h-14 bg-[#F5F6FA] rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#e2e0ff]/50 transition-colors duration-300">
+                            <div className="w-14 h-14 bg-[#F5F6FA] dark:bg-gray-800/60 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#e2e0ff]/50 dark:group-hover:bg-gray-800 transition-colors duration-300">
                                 <Mail className="w-6 h-6 text-[#7a79e6]" />
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-slate-900 text-lg mb-1">Email Support</h4>
+                                <h4 className="font-bold text-slate-900 dark:text-gray-100 text-lg mb-1">Email Support</h4>
                                 <a href="mailto:support@zenovax.com" className="text-base text-[#7a79e6] font-medium hover:underline block mb-1">
                                     support@zenovax.com
                                 </a>
-                                <p className="text-sm text-slate-500">Detailed responses within 24-48 hours</p>
+                                <p className="text-sm text-slate-500 dark:text-gray-400">Detailed responses within 24-48 hours</p>
                             </div>
                         </div>
 
                         {/* Phone */}
-                        <div className="flex items-start gap-5 group border-t md:border-t-0 md:border-l border-[#e2e0ff] pt-8 md:pt-0 md:pl-8">
-                            <div className="w-14 h-14 bg-[#F5F6FA] rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#e2e0ff]/50 transition-colors duration-300">
+                        <div className="flex items-start gap-5 group border-t md:border-t-0 md:border-l border-[#e2e0ff] dark:border-gray-800 pt-8 md:pt-0 md:pl-8">
+                            <div className="w-14 h-14 bg-[#F5F6FA] dark:bg-gray-800/60 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#e2e0ff]/50 dark:group-hover:bg-gray-800 transition-colors duration-300">
                                 <Phone className="w-6 h-6 text-[#7a79e6]" />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-bold text-slate-900 text-lg">Call Support</h4>
-                                    <span className="bg-red-50 text-red-600 border border-red-100 text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wide">Urgent</span>
+                                    <h4 className="font-bold text-slate-900 dark:text-gray-100 text-lg">Call Support</h4>
+                                    <span className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wide">Urgent</span>
                                 </div>
-                                <p className="text-base text-slate-700 font-medium mb-1">+91 987 654 3210</p>
-                                <p className="text-sm text-slate-500">10 AM - 6 PM IST only</p>
+                                <p className="text-base text-slate-700 dark:text-gray-300 font-medium mb-1">+91 987 654 3210</p>
+                                <p className="text-sm text-slate-500 dark:text-gray-400">10 AM - 6 PM IST only</p>
                             </div>
                         </div>
                     </div>

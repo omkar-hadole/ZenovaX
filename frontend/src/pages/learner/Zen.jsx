@@ -130,10 +130,10 @@ const Zen = () => {
 
     return (
 
-        <div className="h-[calc(100vh-6rem)] bg-white flex flex-col relative font-outfit overflow-hidden">
+        <div className="h-[calc(100vh-6rem)] bg-white dark:bg-gray-950 flex flex-col relative font-outfit overflow-hidden">
             {/* Soft Ambient Background Glows */}
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2"></div>
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-100/40 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-100/40 dark:bg-blue-500/10 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2"></div>
 
             {/* Main Scrollable Area */}
             <div className="flex-1 w-full overflow-y-auto relative z-10 flex flex-col items-center custom-scrollbar">
@@ -149,10 +149,10 @@ const Zen = () => {
                         {/* Greeting */}
                         {chat.length === 0 && (
                             <div className="space-y-2">
-                                <h1 className="text-[2.5rem] font-semibold text-[#1F1F1F] tracking-[-0.02em]">
+                                <h1 className="text-[2.5rem] font-semibold text-[#1F1F1F] dark:text-gray-100 tracking-[-0.02em]">
                                     {getGreeting()}, {user?.name || 'Judha'}
                                 </h1>
-                                <h2 className="text-[2.5rem] font-semibold text-[#1F1F1F] tracking-[-0.02em]">
+                                <h2 className="text-[2.5rem] font-semibold text-[#1F1F1F] dark:text-gray-100 tracking-[-0.02em]">
                                     How Can I <span style={{ color: BRAND_COLOR }} className="">Assist You Today?</span>
                                 </h2>
                             </div>
@@ -166,7 +166,7 @@ const Zen = () => {
                                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed ${m.role === 'user'
                                         ? 'text-white rounded-tr-sm shadow-md shadow-indigo-500/10'
-                                        : 'bg-white/80 border border-slate-100 text-slate-700 rounded-tl-sm shadow-sm'
+                                        : 'bg-white/80 dark:bg-gray-800/80 border border-slate-100 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-tl-sm shadow-sm'
                                         }`}
                                         style={{ backgroundColor: m.role === 'user' ? BRAND_COLOR : undefined }}
                                     >
@@ -182,7 +182,7 @@ const Zen = () => {
                             ))}
                             {loading && (
                                 <div className="px-4">
-                                    <div className="text-sm text-slate-400 font-medium flex items-center gap-2">
+                                    <div className="text-sm text-slate-400 dark:text-gray-500 font-medium flex items-center gap-2">
                                         Zen is thinking...
                                     </div>
                                 </div>
@@ -195,7 +195,7 @@ const Zen = () => {
             {/* Input Footer - Stays at bottom */}
             <div className="w-full flex justify-center p-6 pt-2 z-50 bg-white/0">
                 <div className="w-full max-w-[850px]">
-                    <div className="w-full bg-white border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[26px] p-3 relative flex items-end gap-3 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
+                    <div className="w-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-700 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[26px] p-3 relative flex items-end gap-3 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
 
                         {/* Sparkles Icon */}
                         <div className="pb-3 pl-2">
@@ -208,7 +208,7 @@ const Zen = () => {
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
                             placeholder="Initiate a query or send a command to the AI..."
-                            className="w-full bg-transparent text-[16px] text-slate-700 placeholder:text-slate-400 focus:outline-none resize-none py-3 max-h-[120px] overflow-y-auto leading-relaxed"
+                            className="w-full bg-transparent text-[16px] text-slate-700 dark:text-gray-300 placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none resize-none py-3 max-h-[120px] overflow-y-auto leading-relaxed"
                             style={{ height: '52px' }}
                             spellCheck={false}
                         />

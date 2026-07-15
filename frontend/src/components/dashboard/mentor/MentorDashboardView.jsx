@@ -39,8 +39,8 @@ export default function MentorDashboardView({
                                 <stat.icon size={24} />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
-                                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">{stat.label}</p>
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</h3>
                             </div>
                         </div>
                     ))}
@@ -51,7 +51,7 @@ export default function MentorDashboardView({
                 <div className="lg:col-span-2 space-y-6">
                     <section>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">Upcoming Sessions</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Upcoming Sessions</h3>
                             <button
                                 onClick={() => setActiveTab('My Sessions')}
                                 className="text-sm text-[#5a59b5] bg-[#C9C7F5]/20 px-4 py-2 rounded-lg hover:bg-[#C9C7F5]/40 transition-colors font-medium"
@@ -61,7 +61,7 @@ export default function MentorDashboardView({
                         </div>
 
                         {errors.sessions ? (
-                            <InlineError message={errors.sessions} onRetry={onRetrySessions} className="py-8 bg-white border border-gray-100 shadow-sm" />
+                            <InlineError message={errors.sessions} onRetry={onRetrySessions} className="py-8 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm" />
                         ) : (
                             <div className="space-y-4">
                                 {mySessions.filter(s => new Date(s.scheduledAt) > new Date()).length > 0 ? (
@@ -100,37 +100,37 @@ export default function MentorDashboardView({
                                         ))}
 
                                         {mySessions.filter(s => new Date(s.scheduledAt) > new Date()).slice(1, 3).map((session) => (
-                                            <div key={session.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all duration-300">
+                                            <div key={session.id} className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-between hover:shadow-md transition-all duration-300">
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-14 h-14 bg-[#7A79E6]/5 rounded-xl flex flex-col items-center justify-center text-[#7A79E6] border border-[#7A79E6]/10">
                                                         <span className="text-xs font-bold uppercase">{new Date(session.scheduledAt).toLocaleDateString(undefined, { month: 'short' })}</span>
                                                         <span className="text-xl font-bold leading-none">{new Date(session.scheduledAt).getDate()}</span>
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-bold text-gray-800 text-base">{session.title}</h4>
-                                                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 text-base">{session.title}</h4>
+                                                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
                                                             <span className="flex items-center gap-1">
                                                                 <Clock size={14} />
                                                                 {new Date(session.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                                                             </span>
-                                                            <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                                                            <span className="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
                                                             <span>{session.duration} min</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button className="text-gray-400 hover:text-[#7A79E6] p-2 rounded-full hover:bg-[#7A79E6]/5 transition-colors">
+                                                <button className="text-gray-400 dark:text-gray-500 hover:text-[#7A79E6] p-2 rounded-full hover:bg-[#7A79E6]/5 transition-colors">
                                                     <PlayCircle size={24} />
                                                 </button>
                                             </div>
                                         ))}
                                     </>
                                 ) : (
-                                    <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 border-dashed">
-                                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                    <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 border-dashed">
+                                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 dark:text-gray-500">
                                             <Calendar size={24} />
                                         </div>
-                                        <h3 className="text-gray-900 font-medium mb-1">No upcoming sessions</h3>
-                                        <p className="text-gray-500 text-sm">Schedule a new session to get started.</p>
+                                        <h3 className="text-gray-900 dark:text-gray-100 font-medium mb-1">No upcoming sessions</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm">Schedule a new session to get started.</p>
                                     </div>
                                 )}
                             </div>
@@ -140,9 +140,9 @@ export default function MentorDashboardView({
                     {errors.requests ? (
                         <section>
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-800">Session Request Status</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Session Request Status</h3>
                             </div>
-                            <InlineError message={errors.requests} onRetry={onRetryRequests} className="py-8 bg-white border border-gray-100 shadow-sm" />
+                            <InlineError message={errors.requests} onRetry={onRetryRequests} className="py-8 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm" />
                         </section>
                     ) : (
                         <SessionRequests requests={sessionRequests} />

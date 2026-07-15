@@ -1,7 +1,7 @@
 import React from 'react';
 
 const SkeletonBase = ({ className }) => (
-    <div className={`bg-gray-200 animate-pulse rounded-xl ${className}`} />
+    <div className={`bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl ${className}`} />
 );
 
 export default function EarningsSkeleton() {
@@ -9,7 +9,7 @@ export default function EarningsSkeleton() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-white p-6 rounded-[1.5rem] border border-gray-100 space-y-3">
+                    <div key={i} className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 space-y-3">
                         <SkeletonBase className="w-28 h-4" />
                         <SkeletonBase className="w-20 h-8" />
                     </div>
@@ -17,24 +17,24 @@ export default function EarningsSkeleton() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-[2rem] border border-gray-100 p-8 space-y-4">
+                <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 p-8 space-y-4">
                     <SkeletonBase className="w-40 h-5" />
                     <SkeletonBase className="w-full h-11 rounded-xl" />
                     <SkeletonBase className="w-full h-11 rounded-xl" />
                     <SkeletonBase className="w-32 h-9 rounded-xl" />
                 </div>
-                <div className="bg-white rounded-[2rem] border border-gray-100 p-8 space-y-4">
+                <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 p-8 space-y-4">
                     <SkeletonBase className="w-40 h-5" />
                     <SkeletonBase className="w-full h-11 rounded-xl" />
                     <SkeletonBase className="w-32 h-9 rounded-xl" />
                 </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] border border-gray-100">
-                <div className="p-8 border-b border-gray-100">
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800">
+                <div className="p-8 border-b border-gray-100 dark:border-gray-800">
                     <SkeletonBase className="w-40 h-5" />
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-gray-50 dark:divide-gray-800">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="px-8 py-5 flex items-center gap-6">
                             <SkeletonBase className="w-1/4 h-4" />

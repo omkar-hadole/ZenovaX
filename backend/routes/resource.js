@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const logger = require('../utils/logger');
 
 router.post('/create', protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
@@ -33,6 +34,28 @@ router.post('/create', protect, authorize('MENTOR', 'BOTH'), async (req, res, ne
                 uploaderId,
             },
         });
+
+        // Best-effort: notify registered learners a resource was added. A failure
+        // here shouldn't fail the upload itself, since the resource already saved.
+        try {
+            const bookings = await req.prisma.booking.findMany({
+                where: { sessionId, status: 'CONFIRMED' },
+                select: { userId: true }
+            });
+            if (bookings.length > 0) {
+                await req.prisma.notification.createMany({
+                    data: bookings.map(({ userId: learnerId }) => ({
+                        userId: learnerId,
+                        type: 'RESOURCE_UPLOADED',
+                        title: 'New resource available',
+                        message: `"${title}" was added to "${session.title}".`,
+                        link: `/sessions/${sessionId}`
+                    }))
+                });
+            }
+        } catch (notifyError) {
+            logger.error('Failed to notify learners of resource upload:', notifyError);
+        }
 
         res.status(201).json({ message: 'Resource uploaded successfully', resource });
     } catch (error) {

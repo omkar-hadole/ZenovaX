@@ -1,4 +1,9 @@
-import footerLogo from '../../assets/footerlogo.svg';
+// footerlogo.svg (white-filled) only reads on a dark surface. bg-bg-subtle is
+// light in light mode, dark in dark mode, so the logo must swap with it —
+// reusing logo.svg (dark-filled) for light mode rather than duplicating art.
+import logoLight from '../../assets/logo.svg';
+import logoDark from '../../assets/footerlogo.svg';
+import { useTheme } from '../../context/ThemeContext';
 
 const columns = [
   {
@@ -19,13 +24,15 @@ const columns = [
 ];
 
 export default function Footer() {
+  const { theme } = useTheme();
+
   return (
     <footer id="contact" className="relative bg-bg-subtle border-t border-border">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2">
             <img
-              src={footerLogo}
+              src={theme === 'dark' ? logoDark : logoLight}
               alt="ZenovaX"
               width={140}
               height={28}

@@ -92,7 +92,7 @@ export default function SessionDetailsPage() {
                 <div className="mb-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="text-sm text-gray-500 hover:text-gray-900 font-medium"
+                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
                     >
                         &larr; Back
                     </button>

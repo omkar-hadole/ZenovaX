@@ -7,20 +7,23 @@ import {
     HelpCircle,
     Settings,
     QrCode,
-    AlertTriangle,
-    Wallet
+    AlertTriangle
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
-import logo from '../../../assets/mentorlogo.svg';
+import EarningsTeaserCard from './EarningsTeaserCard';
+import logoLight from '../../../assets/mentorlogo.svg';
+import logoDark from '../../../assets/mentorlogo-dark.svg';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
 
+// Earnings intentionally has no sidebar nav entry — it's reached only via
+// the EarningsTeaserCard below.
 const TAB_PATHS = {
     'Dashboard': '/mentor/dashboard',
     'My Sessions': '/mentor/sessions',
     'Reports': '/mentor/reports',
     'Scan Attendance': '/mentor/scan-attendance',
     'Reviews Received': '/mentor/reviews',
-    'Earnings': '/mentor/earnings',
     'Help Center': '/mentor/help',
     'Settings': '/mentor/settings',
 };
@@ -31,7 +34,6 @@ const BASE_ITEMS = [
     { icon: AlertTriangle, label: 'Reports' },
     { icon: QrCode, label: 'Scan Attendance' },
     { icon: Star, label: 'Reviews Received' },
-    { icon: Wallet, label: 'Earnings' },
     { icon: HelpCircle, label: 'Help Center' },
     { icon: Settings, label: 'Settings' },
 ];
@@ -43,6 +45,7 @@ const BASE_ITEMS = [
 export default function MentorSidebar({ activeTab }) {
     const navigate = useNavigate();
     const { logout } = useAuth();
+    const { theme } = useTheme();
 
     const handleLogout = async () => {
         try {
@@ -63,19 +66,12 @@ export default function MentorSidebar({ activeTab }) {
 
     return (
         <Sidebar
-            logo={logo}
+            logo={theme === 'dark' ? logoDark : logoLight}
             logoClassName="w-56 h-auto"
             items={items}
             onLogout={handleLogout}
         >
-            <div className="bg-gradient-to-br from-[#C9C7F5] to-[#A9C1F7] rounded-2xl p-6 text-white relative overflow-hidden shadow-sm">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-bl-full" />
-                <h3 className="font-bold text-lg mb-2 text-gray-800">Upgrade to Gold</h3>
-                <p className="text-sm text-gray-700 mb-4">Get access to premium features and analytics.</p>
-                <button className="bg-white text-[#5a59b5] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors w-full shadow-sm">
-                    Upgrade Now
-                </button>
-            </div>
+            <EarningsTeaserCard />
         </Sidebar>
     );
 }

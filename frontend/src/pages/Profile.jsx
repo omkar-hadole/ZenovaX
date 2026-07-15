@@ -95,32 +95,32 @@ const ReviewsSection = ({ userId }) => {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h4 className="text-xl font-bold text-gray-900">Student Reviews</h4>
+        <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">Student Reviews</h4>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-1/3 bg-gray-50 p-6 rounded-2xl h-fit">
+        <div className="w-full md:w-1/3 bg-gray-50 dark:bg-gray-800/60 p-6 rounded-2xl h-fit">
           <div className="flex flex-col items-center justify-center mb-6">
-            <span className="text-5xl font-bold text-gray-900">{stats.averageRating ? stats.averageRating.toFixed(1) : '0.0'}</span>
+            <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">{stats.averageRating ? stats.averageRating.toFixed(1) : '0.0'}</span>
             <div className="flex gap-1 my-2">
               {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className={`w-5 h-5 ${i <= Math.round(stats.averageRating || 0) ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"}`} />
+                <Star key={i} className={`w-5 h-5 ${i <= Math.round(stats.averageRating || 0) ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"}`} />
               ))}
             </div>
-            <span className="text-sm text-gray-500 font-medium">{stats.totalReviews} ratings</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{stats.totalReviews} ratings</span>
           </div>
 
           <div className="space-y-2">
             {stats.distribution && stats.distribution.map((item) => (
               <div key={item.stars || item.star} className="flex items-center gap-2 text-xs">
-                <span className="font-medium text-gray-600 w-3">{item.stars || item.star}</span>
-                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <span className="font-medium text-gray-600 dark:text-gray-300 w-3">{item.stars || item.star}</span>
+                <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-yellow-400 rounded-full"
                     style={{ width: `${item.percentage}%` }}
                   />
                 </div>
-                <span className="text-gray-400 w-6 text-right">{item.percentage.toFixed(0)}%</span>
+                <span className="text-gray-400 dark:text-gray-500 w-6 text-right">{item.percentage.toFixed(0)}%</span>
               </div>
             ))}
           </div>
@@ -128,13 +128,13 @@ const ReviewsSection = ({ userId }) => {
 
         <div className="w-full md:w-2/3 space-y-6">
           {isLoading ? (
-            <p className="text-gray-500">Loading reviews...</p>
+            <p className="text-gray-500 dark:text-gray-400">Loading reviews...</p>
           ) : reviews.length > 0 ? (
             reviews.slice(0, 3).map((review) => (
-              <div key={review.id} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+              <div key={review.id} className="border-b border-gray-100 dark:border-gray-800 pb-6 last:border-0 last:pb-0">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                       {review.author.profilePicture ? (
                         <img
                           src={getOptimizedImageUrl(review.author.profilePicture, { width: 80, height: 80 })}
@@ -145,31 +145,31 @@ const ReviewsSection = ({ userId }) => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-600 font-bold text-lg">
+                        <div className="w-full h-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-lg">
                           {review.author.name.charAt(0)}
                         </div>
                       )}
                     </div>
                     <div>
-                      <h5 className="font-bold text-gray-900 text-sm">{review.author.name}</h5>
-                      <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
+                      <h5 className="font-bold text-gray-900 dark:text-gray-100 text-sm">{review.author.name}</h5>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} size={14} className={`${i <= review.rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"}`} />
+                      <Star key={i} size={14} className={`${i <= review.rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"}`} />
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Session:</span>
-                  <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{review.session?.title || 'General Session'}</span>
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Session:</span>
+                  <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md">{review.session?.title || 'General Session'}</span>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{review.comment}</p>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-2xl">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
               <p>No reviews yet.</p>
             </div>
           )}
@@ -375,27 +375,27 @@ export default function Profile() {
   };
 
   if (loading) return <ProfileSkeleton />;
-  if (!profile) return <div className="p-8 text-center text-red-500">Profile not found</div>;
+  if (!profile) return <div className="p-8 text-center text-red-500 dark:text-red-400">Profile not found</div>;
 
   const isOwnProfile = !id || id === 'me';
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC]">
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+    <div className="min-h-screen bg-[#F8F9FC] dark:bg-gray-950">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4 flex items-center justify-between">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors group"
+              className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
             >
-              <div className="p-2 rounded-full bg-gray-50 group-hover:bg-gray-100 transition-colors">
+              <div className="p-2 rounded-full bg-gray-50 dark:bg-gray-800 group-hover:bg-gray-100 dark:group-hover:bg-gray-700 transition-colors">
                 <ArrowLeft size={20} />
               </div>
               <span className="font-medium">Back</span>
             </button>
 
             <div className="flex items-center gap-3">
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all">
+              <button className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all">
                 <Share2 size={20} />
               </button>
               {isOwnProfile && (
@@ -405,7 +405,7 @@ export default function Profile() {
                       <button
                         onClick={handleEditToggle}
                         disabled={isSaving}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-bold hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <X size={16} /> Cancel
                       </button>
@@ -437,12 +437,12 @@ export default function Profile() {
 
           <div className="lg:col-span-8 space-y-8">
 
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
 
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-6">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${profile.role === "MENTOR" ? "bg-indigo-50 text-indigo-600 border border-indigo-100" : "bg-green-50 text-green-600 border border-green-100"}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${profile.role === "MENTOR" ? "bg-indigo-50 text-indigo-600 border border-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20" : "bg-green-50 text-green-600 border border-green-100 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20"}`}>
                     {profile.role}
                   </span>
                   {isEditing ? (
@@ -452,11 +452,11 @@ export default function Profile() {
                       value={editForm.department}
                       onChange={handleInputChange}
                       placeholder="Department"
-                      className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-bold uppercase text-gray-600 focus:outline-none focus:border-indigo-500"
+                      className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-xs font-bold uppercase text-gray-600 dark:text-gray-300 focus:outline-none focus:border-indigo-500"
                     />
                   ) : (
                     profile.department && (
-                      <span className="px-3 py-1 bg-gray-50 text-gray-600 border border-gray-100 rounded-full text-xs font-bold uppercase flex items-center gap-1.5">
+                      <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-800 rounded-full text-xs font-bold uppercase flex items-center gap-1.5">
                         <Briefcase size={12} /> {profile.department}
                       </span>
                     )
@@ -470,15 +470,15 @@ export default function Profile() {
                     value={editForm.name}
                     onChange={handleInputChange}
                     placeholder="Your Name"
-                    className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight w-full bg-transparent border-b-2 border-gray-200 focus:border-indigo-500 focus:outline-none"
+                    className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight w-full bg-transparent border-b-2 border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:outline-none"
                   />
                 ) : (
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
                     {profile.name}
                   </h1>
                 )}
 
-                <div className="flex items-center gap-2 text-gray-500 mb-6">
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-6">
                   {isEditing ? (
                     <div className="flex items-center gap-2">
                       <span>Year</span>
@@ -487,7 +487,7 @@ export default function Profile() {
                         name="yearOfStudy"
                         value={editForm.yearOfStudy}
                         onChange={handleInputChange}
-                        className="w-16 px-2 py-1 bg-white border border-gray-200 rounded-md text-sm font-medium focus:outline-none focus:border-indigo-500"
+                        className="w-16 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-medium focus:outline-none focus:border-indigo-500"
                       />
                       <span>Student</span>
                     </div>
@@ -498,42 +498,42 @@ export default function Profile() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-gray-600">
+                <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-300">
                   {isEditing ? (
                     <>
-                      <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 w-full md:w-auto">
-                        <Linkedin size={18} className="text-blue-700" />
+                      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 w-full md:w-auto">
+                        <Linkedin size={18} className="text-blue-700 dark:text-blue-400" />
                         <input
                           type="text"
                           name="linkedinUrl"
                           value={editForm.linkedinUrl}
                           onChange={handleInputChange}
                           placeholder="LinkedIn URL"
-                          className="font-medium text-sm w-full focus:outline-none"
+                          className="font-medium text-sm w-full focus:outline-none dark:bg-transparent dark:text-gray-100"
                         />
                       </div>
-                      <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 w-full md:w-auto">
-                        <Phone size={18} className="text-gray-400" />
+                      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 w-full md:w-auto">
+                        <Phone size={18} className="text-gray-400 dark:text-gray-500" />
                         <input
                           type="text"
                           name="phoneNumber"
                           value={editForm.phoneNumber}
                           onChange={handleInputChange}
                           placeholder="Phone Number"
-                          className="font-medium text-sm w-full focus:outline-none"
+                          className="font-medium text-sm w-full focus:outline-none dark:bg-transparent dark:text-gray-100"
                         />
                       </div>
                       {profile.role === 'MENTOR' && (
-                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 w-full md:w-auto cursor-pointer select-none">
+                        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 w-full md:w-auto cursor-pointer select-none">
                           <input
                             type="checkbox"
                             name="isPhoneVisible"
                             id="isPhoneVisible"
                             checked={editForm.isPhoneVisible}
                             onChange={(e) => setEditForm(prev => ({ ...prev, isPhoneVisible: e.target.checked }))}
-                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                            className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 cursor-pointer"
                           />
-                          <label htmlFor="isPhoneVisible" className="text-sm font-medium text-gray-700 cursor-pointer">
+                          <label htmlFor="isPhoneVisible" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                             Show Phone Number to Learners
                           </label>
                         </div>
@@ -542,20 +542,20 @@ export default function Profile() {
                   ) : (
                     <>
                       {profile.linkedinUrl && (
-                        <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors">
+                        <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20 transition-colors">
                           <Linkedin size={18} />
                           <span className="font-medium text-sm">LinkedIn</span>
                         </a>
                       )}
                       {profile.phoneNumber && (
-                        <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                          <Phone size={18} className="text-gray-400" />
+                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/60 px-4 py-2 rounded-xl border border-gray-100 dark:border-gray-800">
+                          <Phone size={18} className="text-gray-400 dark:text-gray-500" />
                           <span className="font-medium text-sm">{profile.phoneNumber}</span>
                         </div>
                       )}
                       {profile.year && (
-                        <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                          <GraduationCap size={18} className="text-gray-400" />
+                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/60 px-4 py-2 rounded-xl border border-gray-100 dark:border-gray-800">
+                          <GraduationCap size={18} className="text-gray-400 dark:text-gray-500" />
                           <span className="font-medium text-sm">Year {profile.year}</span>
                         </div>
                       )}
@@ -565,9 +565,9 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-gray-400" />
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                 About
               </h3>
               {isEditing ? (
@@ -576,20 +576,20 @@ export default function Profile() {
                   value={editForm.bio}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 leading-relaxed text-lg focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-300 leading-relaxed text-lg focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-colors"
                   placeholder="Tell us about yourself..."
                 />
               ) : (
-                <p className="text-gray-600 leading-relaxed text-lg">
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
                   {profile.bio || "No bio available."}
                 </p>
               )}
             </div>
 
             {(profile.role === 'MENTOR' || isEditing) && (
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-gray-400" />
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                   Skills & Expertise
                 </h3>
                 {isEditing ? (
@@ -600,16 +600,16 @@ export default function Profile() {
                       value={editForm.mentorSkills}
                       onChange={handleInputChange}
                       placeholder="Enter skills separated by commas (e.g. React, Node.js, Design)"
-                      className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                      className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-300 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 transition-colors"
                     />
-                    <p className="text-xs text-gray-400 mt-2 ml-1">Separate skills with commas</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 ml-1">Separate skills with commas</p>
                   </div>
                 ) : (
                   profile.mentorSkills && profile.mentorSkills.length > 0 && (
                     <div className="flex flex-wrap gap-3">
                       {profile.mentorSkills.map((skill, i) => (
-                        <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-gray-700 font-medium hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-100 transition-colors">
-                          <CheckCircle size={14} className="text-green-500" />
+                        <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-100 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 dark:hover:border-indigo-500/20 transition-colors">
+                          <CheckCircle size={14} className="text-green-500 dark:text-green-400" />
                           {skill}
                         </div>
                       ))}
@@ -620,7 +620,7 @@ export default function Profile() {
             )}
 
             {profile.role === 'MENTOR' && (
-              <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                 <ReviewsSection userId={profile.id} />
               </div>
             )}
@@ -630,8 +630,8 @@ export default function Profile() {
           <div className="lg:col-span-4 space-y-6">
             <div className="sticky top-24 space-y-6">
 
-              <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-center">
-                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 shadow-lg ring-4 ring-gray-50 relative group">
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-center">
+                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 shadow-lg ring-4 ring-gray-50 dark:ring-gray-800 relative group">
                   {isEditing ? (
                     <>
                       {previewImage ? (
@@ -644,7 +644,7 @@ export default function Profile() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-500 text-4xl font-bold">
+                        <div className="w-full h-full bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-4xl font-bold">
                           {profile.name?.charAt(0)}
                         </div>
                       )}
@@ -664,7 +664,7 @@ export default function Profile() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-500 text-4xl font-bold">
+                      <div className="w-full h-full bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-4xl font-bold">
                         {profile.name?.charAt(0)}
                       </div>
                     )
@@ -672,7 +672,7 @@ export default function Profile() {
                 </div>
                 {isEditing && profile.role === 'LEARNER' && (
                   <div className="mb-6">
-                    <p className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-2 uppercase tracking-wider">Or Choose Predefined Avatar</p>
                     <div className="flex justify-center gap-2 flex-wrap">
                       {PREDEFINED_AVATARS.map((avatar, idx) => (
                         <button
@@ -680,8 +680,8 @@ export default function Profile() {
                           type="button"
                           onClick={() => handleSelectPredefinedAvatar(avatar)}
                           className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${previewImage === avatar
-                              ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100'
-                              : 'border-gray-200 hover:border-indigo-400'
+                              ? 'border-indigo-600 scale-105 ring-2 ring-indigo-100 dark:ring-indigo-500/20'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-indigo-400'
                             }`}
                         >
                           <img src={avatar} className="w-full h-full object-cover" alt={`Avatar ${idx}`} />
@@ -690,17 +690,17 @@ export default function Profile() {
                     </div>
                   </div>
                 )}
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">{profile.name}</h2>
-                <p className="text-gray-500 font-medium mb-6">{profile.role === 'MENTOR' ? 'Mentor' : 'Learner'}</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{profile.name}</h2>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-6">{profile.role === 'MENTOR' ? 'Mentor' : 'Learner'}</p>
 
-                <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-6 mb-6">
+                <div className="grid grid-cols-2 gap-4 border-t border-gray-100 dark:border-gray-800 pt-6 mb-6">
                   <div className="text-center">
-                    <span className="block text-2xl font-bold text-gray-900">{followersCount}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Followers</span>
+                    <span className="block text-2xl font-bold text-gray-900 dark:text-gray-100">{followersCount}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold">Followers</span>
                   </div>
-                  <div className="text-center border-l border-gray-100">
-                    <span className="block text-2xl font-bold text-gray-900">{likesCount}</span>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Likes</span>
+                  <div className="text-center border-l border-gray-100 dark:border-gray-800">
+                    <span className="block text-2xl font-bold text-gray-900 dark:text-gray-100">{likesCount}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-bold">Likes</span>
                   </div>
                 </div>
 
@@ -710,8 +710,8 @@ export default function Profile() {
                       onClick={handleFollow}
                       className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all transform hover:-translate-y-1
                                             ${isFollowing
-                          ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                          : 'bg-black text-white hover:bg-gray-800 shadow-gray-400/20'}`}
+                          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700'
+                          : 'bg-black text-white hover:bg-gray-800 shadow-gray-400/20 dark:shadow-none'}`}
                     >
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
@@ -719,8 +719,8 @@ export default function Profile() {
                       onClick={handleLike}
                       className={`w-full py-3 rounded-xl font-bold text-base border-2 transition-all flex items-center justify-center gap-2
                                             ${isLiked
-                          ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100'
-                          : 'bg-white border-gray-100 text-gray-900 hover:border-gray-200 hover:bg-gray-50'}`}
+                          ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20'
+                          : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                     >
                       <Heart size={20} className={isLiked ? "fill-red-600" : ""} />
                       {isLiked ? 'Liked' : 'Like Profile'}
@@ -730,9 +730,9 @@ export default function Profile() {
               </div>
 
               {profile.role === 'MENTOR' && (
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <Award className="w-5 h-5 text-gray-400" />
+                <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                    <Award className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                     Achievements
                   </h3>
 
@@ -752,7 +752,7 @@ export default function Profile() {
                                 className="w-full h-full object-contain drop-shadow-sm"
                               />
                             ) : (
-                              <div className="w-full h-full bg-gray-100 rounded-full animate-pulse" />
+                              <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-full animate-pulse" />
                             )}
                           </div>
 
@@ -770,7 +770,7 @@ export default function Profile() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-gray-400 text-sm">
+                      <div className="text-gray-400 dark:text-gray-500 text-sm">
                         No badges unlocked yet.
                       </div>
                     )}

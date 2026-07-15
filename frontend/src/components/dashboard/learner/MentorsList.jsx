@@ -8,7 +8,7 @@ export default function MentorsList({ mentors, onFollow }) {
     return (
         <section>
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-light text-gray-800 tracking-tight">Mentors</h3>
+                <h3 className="text-xl font-light text-gray-800 dark:text-gray-100 tracking-tight">Mentors</h3>
                 <button
                     onClick={() => navigate('/mentors')}
                     className="text-xs font-bold text-white bg-[#A9C1F7] px-4 py-2 rounded-full hover:bg-[#8FB0F5] transition-all shadow-sm hover:shadow-md"
@@ -17,14 +17,14 @@ export default function MentorsList({ mentors, onFollow }) {
                 </button>
             </div>
 
-            <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-black/5 space-y-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-5 shadow-sm border border-black/5 dark:border-white/5 space-y-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
                 {mentors.map((mentor) => (
                     <div
                         key={mentor.id}
                         onClick={() => navigate(`/profile/${mentor.id}`)}
-                        className="flex items-center gap-4 cursor-pointer hover:bg-[#F5F6FA] p-3 rounded-2xl transition-all group"
+                        className="flex items-center gap-4 cursor-pointer hover:bg-[#F5F6FA] dark:hover:bg-gray-800 p-3 rounded-2xl transition-all group"
                     >
-                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-black/5 shadow-sm group-hover:scale-105 transition-transform">
+                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-black/5 dark:border-white/5 shadow-sm group-hover:scale-105 transition-transform">
                             {mentor.profilePicture ? (
                                 <img
                                     src={getOptimizedImageUrl(mentor.profilePicture, { width: 96, height: 96 })}
@@ -41,8 +41,8 @@ export default function MentorsList({ mentors, onFollow }) {
                             )}
                         </div>
                         <div className="flex-1">
-                            <h4 className="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{mentor.name}</h4>
-                            <p className="text-xs text-gray-400 font-medium">{mentor.department || 'UI/UX Design'}</p>
+                            <h4 className="font-bold text-gray-900 dark:text-gray-100 text-sm group-hover:text-blue-600 transition-colors">{mentor.name}</h4>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">{mentor.department || 'UI/UX Design'}</p>
                         </div>
                         <button
                             onClick={(e) => {
@@ -50,8 +50,8 @@ export default function MentorsList({ mentors, onFollow }) {
                                 onFollow && onFollow(mentor.id);
                             }}
                             className={`text-xs px-4 py-2 rounded-xl font-bold transition-all ${mentor.isFollowing
-                                ? 'bg-transparent text-gray-400 hover:text-gray-600'
-                                : 'text-blue-500 hover:text-blue-600 hover:bg-blue-50'
+                                ? 'bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
+                                : 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10'
                                 }`}
                         >
                             {mentor.isFollowing ? 'Followed' : '+ Follow'}

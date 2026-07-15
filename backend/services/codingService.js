@@ -124,7 +124,8 @@ exports.createCodingQuestion = async (prisma, userId, { title, description, test
 
 exports.launchCodingQuestion = async (prisma, userId, id) => {
     const question = await prisma.codingQuestion.findUnique({
-        where: { id }
+        where: { id },
+        include: { session: { select: { id: true, title: true } } }
     });
 
     if (!question) {
@@ -135,10 +136,34 @@ exports.launchCodingQuestion = async (prisma, userId, id) => {
         throw new ForbiddenError('Unauthorized');
     }
 
-    return await prisma.codingQuestion.update({
+    const launched = await prisma.codingQuestion.update({
         where: { id },
         data: { status: 'LIVE' }
     });
+
+    // Best-effort: notify registered learners the coding question is live. A
+    // failure here shouldn't fail the launch itself, since it's already live.
+    try {
+        const bookings = await prisma.booking.findMany({
+            where: { sessionId: question.sessionId, status: 'CONFIRMED' },
+            select: { userId: true }
+        });
+        if (bookings.length > 0) {
+            await prisma.notification.createMany({
+                data: bookings.map(({ userId: learnerId }) => ({
+                    userId: learnerId,
+                    type: 'CODING_QUESTION_LAUNCHED',
+                    title: 'Coding challenge is live',
+                    message: `"${question.title}" is now live for "${question.session.title}".`,
+                    link: `/sessions/${question.sessionId}`
+                }))
+            });
+        }
+    } catch (notifyError) {
+        logger.error('Failed to notify learners of coding question launch:', notifyError);
+    }
+
+    return launched;
 };
 
 exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {

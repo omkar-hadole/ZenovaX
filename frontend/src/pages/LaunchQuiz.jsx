@@ -183,18 +183,18 @@ export default function LaunchQuiz() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#F4F4F9]">
+      <div className="flex items-center justify-center h-screen bg-[#F4F4F9] dark:bg-gray-950">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9C7F5]"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#F4F4F9] relative overflow-hidden">
+    <div className="flex h-screen bg-[#F4F4F9] dark:bg-gray-950 relative overflow-hidden">
       {/* Background Blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 blur-[100px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
       </div>
 
       <div className="relative z-10 flex h-full w-full">
@@ -206,19 +206,19 @@ export default function LaunchQuiz() {
           <div className="p-8 max-w-6xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white rounded-full transition-colors">
-                  <ArrowLeft className="text-gray-600" />
+                <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors">
+                  <ArrowLeft className="text-gray-600 dark:text-gray-300" />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">Create & Launch Quiz</h1>
-                  <p className="text-gray-500">Assess your learners' knowledge</p>
+                  <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Create & Launch Quiz</h1>
+                  <p className="text-gray-500 dark:text-gray-400">Assess your learners' knowledge</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleSaveDraft}
                   disabled={submitting}
-                  className="px-6 py-3 text-gray-700 font-bold hover:bg-white rounded-[1rem] transition-all flex items-center gap-2 border border-transparent hover:border-gray-200 hover:shadow-sm"
+                  className="px-6 py-3 text-gray-700 dark:text-gray-300 font-bold hover:bg-white dark:hover:bg-gray-800 rounded-[1rem] transition-all flex items-center gap-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm"
                 >
                   <Save className="w-5 h-5" />
                   Save Draft
@@ -236,10 +236,10 @@ export default function LaunchQuiz() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1 space-y-6">
-                <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-6 shadow-sm border border-[#C9C7F5]/20 dark:border-gray-800 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-6 -mt-6" />
-                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <div className="p-2 bg-[#C9C7F5]/20 rounded-lg text-[#5a59b5]">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+                    <div className="p-2 bg-[#C9C7F5]/20 dark:bg-[#C9C7F5]/10 rounded-lg text-[#5a59b5] dark:text-[#b3b1f0]">
                       <BookOpen size={20} />
                     </div>
                     Quiz Basics
@@ -247,11 +247,11 @@ export default function LaunchQuiz() {
 
                   <div className="space-y-4 relative z-10">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Session</label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Select Session</label>
                       <select
                         value={selectedSessionId}
                         onChange={(e) => setSelectedSessionId(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
                       >
                         <option value="">-- Choose a session --</option>
                         {sessions.map(session => (
@@ -262,32 +262,32 @@ export default function LaunchQuiz() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Quiz Title</label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Quiz Title</label>
                       <input
                         type="text"
                         value={quizData.title}
                         onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
                         placeholder="e.g., Figma Basics Assessment"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
                       <textarea
                         value={quizData.description}
                         onChange={(e) => setQuizData({ ...quizData, description: e.target.value })}
                         placeholder="Brief description..."
                         rows={3}
-                        className="w-full px-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all resize-none"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-6 shadow-sm border border-[#A9C1F7]/20 dark:border-gray-800 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#A9C1F7]/10 rounded-bl-full -mr-6 -mt-6" />
-                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <div className="p-2 bg-[#A9C1F7]/20 rounded-lg text-[#4a7ac7]">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+                    <div className="p-2 bg-[#A9C1F7]/20 dark:bg-[#A9C1F7]/10 rounded-lg text-[#4a7ac7] dark:text-[#8fb2f2]">
                       <Settings size={20} />
                     </div>
                     Settings
@@ -295,26 +295,26 @@ export default function LaunchQuiz() {
 
                   <div className="space-y-4 relative z-10">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Duration (min)</label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Duration (min)</label>
                       <div className="relative">
-                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <input
                           type="number"
                           value={quizData.duration}
                           onChange={(e) => setQuizData({ ...quizData, duration: e.target.value })}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-[#A9C1F7] transition-all"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#A9C1F7] transition-all"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Total Marks</label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Total Marks</label>
                       <div className="relative">
-                        <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <input
                           type="number"
                           value={calculateTotalMarks()}
                           disabled
-                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 border-none text-gray-500 font-bold"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border-none text-gray-500 dark:text-gray-400 font-bold"
                         />
                       </div>
                     </div>
@@ -324,15 +324,15 @@ export default function LaunchQuiz() {
 
               <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-[#F7D483]/20 text-[#b59a5a] flex items-center justify-center text-sm font-bold">
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-[#F7D483]/20 dark:bg-[#F7D483]/10 text-[#b59a5a] dark:text-[#e0c076] flex items-center justify-center text-sm font-bold">
                       {quizData.questions.length}
                     </span>
                     Questions
                   </h2>
                   <button
                     onClick={addQuestion}
-                    className="text-[#b59a5a] text-sm font-bold hover:bg-[#F7D483]/10 px-4 py-2 rounded-xl transition-colors flex items-center gap-2"
+                    className="text-[#b59a5a] dark:text-[#e0c076] text-sm font-bold hover:bg-[#F7D483]/10 px-4 py-2 rounded-xl transition-colors flex items-center gap-2"
                   >
                     <Plus className="w-5 h-5" />
                     Add Question
@@ -341,17 +341,17 @@ export default function LaunchQuiz() {
 
                 <div className="space-y-6">
                   {quizData.questions.map((question, qIndex) => (
-                    <div key={qIndex} className="bg-white rounded-[1.5rem] p-8 shadow-sm border border-[#F7D483]/20 relative group hover:shadow-md transition-all">
+                    <div key={qIndex} className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-8 shadow-sm border border-[#F7D483]/20 dark:border-gray-800 relative group hover:shadow-md transition-all">
                       <button
                         onClick={() => removeQuestion(qIndex)}
-                        className="absolute top-6 right-6 text-gray-300 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute top-6 right-6 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
 
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
-                          <span className="flex-shrink-0 w-8 h-8 bg-[#F7D483]/20 text-[#b59a5a] rounded-lg flex items-center justify-center font-bold text-sm mt-1">
+                          <span className="flex-shrink-0 w-8 h-8 bg-[#F7D483]/20 dark:bg-[#F7D483]/10 text-[#b59a5a] dark:text-[#e0c076] rounded-lg flex items-center justify-center font-bold text-sm mt-1">
                             Q{qIndex + 1}
                           </span>
                           <div className="flex-1">
@@ -360,9 +360,9 @@ export default function LaunchQuiz() {
                               value={question.questionText}
                               onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
                               placeholder="Enter your question here..."
-                              className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#F7D483] font-medium text-lg placeholder:text-gray-400 transition-all required"
+                              className="w-full p-4 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none rounded-xl focus:ring-2 focus:ring-[#F7D483] font-medium text-lg placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all required"
                             />
-                            {!question.questionText && <p className="text-red-400 text-xs mt-1 ml-1 hidden group-focus-within/q:block">* Question text required</p>}
+                            {!question.questionText && <p className="text-red-400 dark:text-red-400 text-xs mt-1 ml-1 hidden group-focus-within/q:block">* Question text required</p>}
                           </div>
                         </div>
 
@@ -372,8 +372,8 @@ export default function LaunchQuiz() {
                               <button
                                 onClick={() => handleQuestionChange(qIndex, 'correctAnswer', option)}
                                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${question.correctAnswer === option && option !== ''
-                                  ? 'border-green-500 bg-green-50'
-                                  : 'border-gray-200 group-hover/option:border-gray-300'
+                                  ? 'border-green-500 bg-green-50 dark:bg-green-500/10'
+                                  : 'border-gray-200 dark:border-gray-700 group-hover/option:border-gray-300 dark:group-hover/option:border-gray-600'
                                   }`}
                               >
                                 {question.correctAnswer === option && option !== '' && (
@@ -385,22 +385,22 @@ export default function LaunchQuiz() {
                                 value={option}
                                 onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
                                 placeholder={`Option ${oIndex + 1}`}
-                                className={`flex-1 p-3 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#F7D483] transition-all ${question.correctAnswer === option && option !== '' ? 'bg-green-50/50 text-green-800 font-medium' : 'bg-white hover:bg-gray-50'
+                                className={`flex-1 p-3 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#F7D483] transition-all ${question.correctAnswer === option && option !== '' ? 'bg-green-50/50 dark:bg-green-500/10 text-green-800 dark:text-green-400 font-medium' : 'bg-white dark:bg-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
                                   }`}
                               />
                             </div>
                           ))}
-                          <p className="text-xs text-gray-400 italic">Enter at least 2 options</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 italic">Enter at least 2 options</p>
                         </div>
 
-                        <div className="pl-12 pt-2 flex items-center gap-4 border-t border-gray-50 mt-4">
-                          <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-lg">
-                            <label className="text-sm font-semibold text-gray-500">Marks</label>
+                        <div className="pl-12 pt-2 flex items-center gap-4 border-t border-gray-50 dark:border-gray-800 mt-4">
+                          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 px-4 py-2 rounded-lg">
+                            <label className="text-sm font-semibold text-gray-500 dark:text-gray-400">Marks</label>
                             <input
                               type="number"
                               value={question.marks}
                               onChange={(e) => handleQuestionChange(qIndex, 'marks', e.target.value)}
-                              className="w-16 bg-transparent border-none text-center font-bold text-gray-800 focus:ring-0 p-0"
+                              className="w-16 bg-transparent border-none text-center font-bold text-gray-800 dark:text-gray-100 focus:ring-0 p-0"
                             />
                           </div>
                         </div>
@@ -415,18 +415,18 @@ export default function LaunchQuiz() {
           {/* Confirmation Modal */}
           {showConfirmModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95">
-                <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full mx-auto mb-4">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95">
+                <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-full mx-auto mb-4">
                   <Rocket size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-center text-gray-900 mb-2">Launch Quiz?</h3>
-                <p className="text-gray-500 text-center mb-6">
+                <h3 className="text-xl font-bold text-center text-gray-900 dark:text-gray-100 mb-2">Launch Quiz?</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
                   Are you sure you want to launch this quiz? It will maintain draft status but be available for managing by you.
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowConfirmModal(false)}
-                    className="flex-1 py-3 text-gray-700 font-bold hover:bg-gray-50 rounded-xl transition-colors"
+                    className="flex-1 py-3 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>

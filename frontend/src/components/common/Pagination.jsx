@@ -29,10 +29,10 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous page"
             >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
+                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
 
             {getPageNumbers().map((page, index) => (
@@ -41,10 +41,10 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
                     onClick={() => typeof page === 'number' && onPageChange(page)}
                     disabled={typeof page !== 'number'}
                     className={`min-w-[40px] h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${page === currentPage
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-indigo-950'
                         : typeof page === 'number'
-                            ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                            : 'text-gray-400 cursor-default'
+                            ? 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            : 'text-gray-400 dark:text-gray-500 cursor-default'
                         }`}
                 >
                     {page}
@@ -54,10 +54,10 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next page"
             >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
         </div>
     );

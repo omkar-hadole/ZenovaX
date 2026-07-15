@@ -77,8 +77,8 @@ export default function LoginForm({ onToggle, showToast }) {
   if (needsVerification) {
     return (
       <div className="text-center py-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Email not verified</h2>
-        <p className="text-gray-600 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Email not verified</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
           Your account is not verified yet. Please check your inbox for the verification link.
         </p>
         <button
@@ -90,7 +90,7 @@ export default function LoginForm({ onToggle, showToast }) {
         </button>
         <button
           onClick={() => setNeedsVerification(false)}
-          className="text-gray-500 hover:text-gray-700 text-sm"
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm"
         >
           Back to Login
         </button>
@@ -100,14 +100,14 @@ export default function LoginForm({ onToggle, showToast }) {
 
   return (
     <div>
-      <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">
+      <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
         Welcome back
       </h2>
-      <p className="text-gray-600 mb-8 font-light">
+      <p className="text-gray-600 dark:text-gray-400 mb-8 font-light">
         Don't have an account?{' '}
         <button
           onClick={onToggle}
-          className="text-blue-600 hover:text-blue-700 font-normal"
+          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-normal"
         >
           Sign up
         </button>
@@ -123,9 +123,9 @@ export default function LoginForm({ onToggle, showToast }) {
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
-          <p className="text-xs text-gray-500 mt-2 font-light">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-light">
             Must end with @nst.rishihood.edu.in
           </p>
         </div>
@@ -140,28 +140,28 @@ export default function LoginForm({ onToggle, showToast }) {
             minLength="6"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
 
         <div className="flex items-center justify-between text-sm pt-1">
-          <label className="flex items-center text-gray-600 font-light">
+          <label className="flex items-center text-gray-600 dark:text-gray-400 font-light">
             <input
               type="checkbox"
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500/30"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500/30"
             />
             <span className="ml-2">Remember me</span>
           </label>
-          <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-light">
+          <Link to="/forgot-password" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-light">
             Forgot password?
           </Link>
         </div>

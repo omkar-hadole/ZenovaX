@@ -73,13 +73,13 @@ export default function SignupForm({ onToggle, showToast }) {
   if (success) {
     return (
       <div className="text-center py-10">
-        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mb-6">
+          <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h2>
-        <p className="text-gray-600 mb-8 max-w-sm mx-auto">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Verify your email</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-sm mx-auto">
           We've sent a verification link to <strong>{formData.email}</strong>. Please check your inbox and click the link to activate your account.
         </p>
         <button
@@ -94,14 +94,14 @@ export default function SignupForm({ onToggle, showToast }) {
 
   return (
     <div>
-      <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">
+      <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
         Create account
       </h2>
-      <p className="text-gray-600 mb-8 font-light">
+      <p className="text-gray-600 dark:text-gray-400 mb-8 font-light">
         Already have an account?{' '}
         <button
           onClick={onToggle}
-          className="text-blue-600 hover:text-blue-700 font-normal"
+          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-normal"
         >
           Log in
         </button>
@@ -118,7 +118,7 @@ export default function SignupForm({ onToggle, showToast }) {
             minLength="2"
             value={formData.firstname}
             onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
           <label htmlFor="signup-lastname" className="sr-only">Last name</label>
           <input
@@ -129,7 +129,7 @@ export default function SignupForm({ onToggle, showToast }) {
             minLength="2"
             value={formData.lastname}
             onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
         </div>
 
@@ -142,9 +142,9 @@ export default function SignupForm({ onToggle, showToast }) {
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
-          <p className="text-xs text-gray-500 mt-2 font-light">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-light">
             Must end with @nst.rishihood.edu.in
           </p>
         </div>
@@ -159,19 +159,19 @@ export default function SignupForm({ onToggle, showToast }) {
             minLength="8"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2 font-light">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-light">
           Must be at least 8 characters and contain at least one number or special character
         </p>
 
@@ -185,30 +185,30 @@ export default function SignupForm({ onToggle, showToast }) {
             minLength="6"
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
+            className="input-glass w-full px-4 py-3.5 pr-12 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showConfirmPassword}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
 
-        <label className="flex items-start text-gray-600 font-light">
+        <label className="flex items-start text-gray-600 dark:text-gray-400 font-light">
           <input
             type="checkbox"
             required
             checked={formData.terms}
             onChange={(e) => setFormData({ ...formData, terms: e.target.checked })}
-            className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500/30"
+            className="mt-1 w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500/30"
           />
           <span className="ml-2 text-sm">
             I agree to the{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-normal">
+            <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-normal">
               Terms & Conditions
             </a>
           </span>

@@ -388,6 +388,16 @@ exports.executeBookingTransaction = async (prisma, cache, userId, sessionId) => 
                 where: { id: currentSession.mentorId },
                 data: { uniqueLearners }
             });
+
+            await tx.notification.create({
+                data: {
+                    userId,
+                    type: 'BOOKING_CONFIRMED',
+                    title: 'Booking confirmed',
+                    message: `You're booked for "${currentSession.title}".`,
+                    link: `/sessions/${sessionId}`
+                }
+            });
         }
 
         return {
@@ -481,7 +491,7 @@ exports.bookSession = async (prisma, cache, userId, sessionId) => {
 exports.confirmBookingPaid = async (prisma, cache, { bookingId, gatewayPaymentId, gatewaySignature }) => {
     const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
-        include: { session: { select: { mentorId: true } } }
+        include: { session: { select: { mentorId: true, title: true } } }
     });
     if (!booking) throw new NotFoundError("Booking not found");
     if (booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') {
@@ -514,6 +524,16 @@ exports.confirmBookingPaid = async (prisma, cache, { bookingId, gatewayPaymentId
 
         const uniqueLearners = await getUniqueLearnersCount(tx, mentorId);
         await tx.user.update({ where: { id: mentorId }, data: { uniqueLearners } });
+
+        await tx.notification.create({
+            data: {
+                userId: booking.userId,
+                type: 'BOOKING_CONFIRMED',
+                title: 'Booking confirmed',
+                message: `You're booked for "${booking.session.title}".`,
+                link: `/sessions/${booking.sessionId}`
+            }
+        });
     }, { timeout: 15000 });
 
     if (cache) {

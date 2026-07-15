@@ -4,6 +4,15 @@
    render-blocking latency. */
 @import "tailwindcss";
 
+/* Make Tailwind's `dark:` variant follow our data-theme attribute (set by
+   ThemeContext) instead of the OS-only `prefers-color-scheme` media query.
+   This is the ONE mechanism for dark mode across the whole app: the home
+   page's CSS-variable tokens above already re-theme via [data-theme="dark"]
+   on their own, and everywhere else (the dashboards, which are built with
+   plain Tailwind utilities, not tokens) uses `dark:` classes keyed off this
+   same attribute — one toggle, one selector, no drift between the two. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ============================================================
    DESIGN TOKENS
    ------------------------------------------------------------
@@ -174,6 +183,8 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* Theme-aware: same class works on both themes rather than callers having
+   to pick .glass vs .glass-dark per surface. */
 .glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px) saturate(180%);
@@ -181,6 +192,13 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+[data-theme="dark"] .glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Kept as an explicit opt-in for surfaces that should always look "dark
+   glass" regardless of site theme (e.g. a dark card on a light page). */
 .glass-dark {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px) saturate(180%);
@@ -205,10 +223,20 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+[data-theme="dark"] .input-glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .input-glass:focus {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(0, 122, 255, 0.5);
   outline: none;
+}
+
+[data-theme="dark"] .input-glass:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(122, 121, 230, 0.6);
 }
 
 /* Slow gradient pan across the hero's accent phrase. Rides on top of

@@ -44,22 +44,22 @@ export default function RecentActivity() {
 
     return (
         <section>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Recent Activity</h3>
 
-            <div className="bg-white rounded-[1.5rem] p-6 shadow-sm border border-gray-100 space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-6">
                 {activities.length > 0 ? (
                     activities.map((activity, i) => (
                         <div key={i} className="flex gap-4 group">
                             <div className="relative mt-1">
-                                <div className={`w-3 h-3 rounded-full ring-4 ring-white group-hover:scale-110 transition-transform duration-300 ${activity.isNegative ? 'bg-red-400' : 'bg-[#C9C7F5]'}`} />
+                                <div className={`w-3 h-3 rounded-full ring-4 ring-white dark:ring-gray-900 group-hover:scale-110 transition-transform duration-300 ${activity.isNegative ? 'bg-red-400' : 'bg-[#C9C7F5]'}`} />
                                 {i !== activities.length - 1 && (
-                                    <div className="absolute top-3 left-1.5 w-0.5 h-full bg-gray-100 -ml-px group-hover:bg-[#C9C7F5]/30 transition-colors" />
+                                    <div className="absolute top-3 left-1.5 w-0.5 h-full bg-gray-100 dark:bg-gray-800 -ml-px group-hover:bg-[#C9C7F5]/30 transition-colors" />
                                 )}
                             </div>
                             <div className="flex-1 pb-2">
-                                <p className={`text-sm font-bold ${activity.isNegative ? 'text-red-500' : 'text-gray-800'}`}>{activity.action}</p>
-                                <p className="text-sm text-gray-500 mt-0.5 leading-relaxed">{activity.detail}</p>
-                                <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-400 font-medium">
+                                <p className={`text-sm font-bold ${activity.isNegative ? 'text-red-500 dark:text-red-400' : 'text-gray-800 dark:text-gray-100'}`}>{activity.action}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">{activity.detail}</p>
+                                <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-400 dark:text-gray-500 font-medium">
                                     <Clock size={12} />
                                     <span>{activity.createdAt ? formatTime(activity.createdAt) : activity.time}</span>
                                 </div>
@@ -67,7 +67,7 @@ export default function RecentActivity() {
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-8 text-gray-400">
+                    <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                         <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
                         <p className="text-sm">No recent activity</p>
                     </div>

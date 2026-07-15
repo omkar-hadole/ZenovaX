@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -14,10 +15,10 @@ Sentry.init({
 });
 
 const RootErrorFallback = () => (
-  <div className="flex justify-center items-center h-screen bg-[#F5F6FA]">
+  <div className="flex justify-center items-center h-screen bg-[#F5F6FA] dark:bg-gray-950">
     <div className="text-center max-w-md p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-3">Something went wrong</h1>
-      <p className="text-gray-500 mb-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">Something went wrong</h1>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">
         An unexpected error occurred. Please try refreshing the page.
       </p>
       <button
@@ -32,10 +33,14 @@ const RootErrorFallback = () => (
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </Sentry.ErrorBoundary>
+    {/* Outside the error boundary so the theme attribute is set on <html>
+        even if something inside crashes — RootErrorFallback stays themed. */}
+    <ThemeProvider>
+      <Sentry.ErrorBoundary fallback={<RootErrorFallback />}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </Sentry.ErrorBoundary>
+    </ThemeProvider>
   </StrictMode>,
 )

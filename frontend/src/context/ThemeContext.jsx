@@ -1,24 +1,53 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 /**
- * Lightweight theme scaffold for a FUTURE Light/Dark toggle.
+ * Light/Dark theme provider. Sets `data-theme` on <html>, which selects the
+ * matching token block in index.css (:root/[data-theme="light"] vs
+ * [data-theme="dark"]) and the Tailwind `dark:` variant (see the
+ * `@custom-variant dark` rule in index.css, which keys off this same
+ * attribute instead of the OS-only media query).
  *
- * Only the Light theme is designed/built today. This provider sets
- * `data-theme` on <html>, which selects the matching token block in
- * index.css (:root/[data-theme="light"] vs the [data-theme="dark"]
- * placeholder). Because every component consumes CSS-variable tokens,
- * enabling Dark later requires no JSX changes — only filling in the
- * dark token values and exposing a UI control that calls `setTheme`.
+ * Falls back to the OS `prefers-color-scheme` when the user hasn't picked
+ * a theme yet; once they toggle, that explicit choice is persisted and
+ * wins over the OS setting from then on.
  */
 const ThemeContext = createContext(null);
 
 const STORAGE_KEY = 'zenovax-theme';
 
-export function ThemeProvider({ children, defaultTheme = 'light' }) {
+const getSystemTheme = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+
+export function ThemeProvider({ children, defaultTheme }) {
   const [theme, setThemeState] = useState(() => {
-    if (typeof window === 'undefined') return defaultTheme;
-    return localStorage.getItem(STORAGE_KEY) || defaultTheme;
+    if (typeof window === 'undefined') return defaultTheme || 'light';
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) return stored;
+    } catch {
+      /* ignore storage failures */
+    }
+    return defaultTheme || getSystemTheme();
   });
+
+  // Follow the OS preference live, but only until the user makes an explicit
+  // choice — once they do, localStorage takes over and this stops applying.
+  useEffect(() => {
+    let hasStoredChoice = false;
+    try {
+      hasStoredChoice = !!localStorage.getItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (hasStoredChoice) return undefined;
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = (e) => setThemeState(e.matches ? 'dark' : 'light');
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

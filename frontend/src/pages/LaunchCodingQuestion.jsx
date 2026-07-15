@@ -91,26 +91,26 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
             <div className="flex items-center gap-4 mb-8">
                 <button
                     onClick={() => setActiveTab('Dashboard')}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
-                    <ArrowLeft className="w-6 h-6 text-gray-600" />
+                    <ArrowLeft className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Launch Coding Question</h1>
-                    <p className="text-gray-500">Create a new coding challenge for your students</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Launch Coding Question</h1>
+                    <p className="text-gray-500 dark:text-gray-400">Create a new coding challenge for your students</p>
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                 {/* Form Content */}
                 <div className="p-8 space-y-8">
                     {/* Session Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Session</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Session</label>
                         <select
                             value={selectedSessionId}
                             onChange={(e) => setSelectedSessionId(e.target.value)}
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transaction-all"
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transaction-all"
                         >
                             <option value="">Choose a session...</option>
                             {mySessions.map(session => (
@@ -122,21 +122,21 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                     {/* Title & Difficulty */}
                     <div className="grid grid-cols-3 gap-6">
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Question Title</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Question Title</label>
                             <input
                                 type="text"
                                 value={questionData.title}
                                 onChange={(e) => setQuestionData({ ...questionData, title: e.target.value })}
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5"
+                                className="w-full p-3 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5"
                                 placeholder="e.g. Reverse a Linked List"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Difficulty</label>
                             <select
                                 value={questionData.difficulty}
                                 onChange={(e) => setQuestionData({ ...questionData, difficulty: e.target.value })}
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5"
+                                className="w-full p-3 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5"
                             >
                                 <option value="EASY">Easy</option>
                                 <option value="MEDIUM">Medium</option>
@@ -147,12 +147,12 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
 
                     {/* Description */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Problem Statement</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Problem Statement</label>
                         <textarea
                             value={questionData.description}
                             onChange={(e) => setQuestionData({ ...questionData, description: e.target.value })}
                             rows={6}
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5"
+                            className="w-full p-3 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5"
                             placeholder="Describe the problem, input format, constraints, etc..."
                         />
                     </div>
@@ -160,10 +160,10 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                     {/* Test Cases */}
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <label className="text-sm font-medium text-gray-700">Test Cases</label>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Test Cases</label>
                             <button
                                 onClick={handleAddTestCase}
-                                className="flex items-center gap-2 text-sm text-indigo-600 font-medium hover:text-indigo-700"
+                                className="flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300"
                             >
                                 <Plus className="w-4 h-4" /> Add Case
                             </button>
@@ -171,30 +171,30 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
 
                         <div className="space-y-4">
                             {questionData.testCases.map((tc, index) => (
-                                <div key={index} className="flex gap-4 items-start p-4 bg-gray-50 rounded-xl border border-gray-100 group">
+                                <div key={index} className="flex gap-4 items-start p-4 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-800 group">
                                     <div className="flex-1">
-                                        <label className="text-xs text-gray-500 mb-1 block">Input</label>
+                                        <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Input</label>
                                         <textarea
                                             value={tc.input}
                                             onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
                                             rows={2}
-                                            className="w-full p-2 bg-white border border-gray-200 rounded-lg text-sm font-mono"
+                                            className="w-full p-2 bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono"
                                             placeholder="Input data..."
                                         />
                                     </div>
                                     <div className="flex-1">
-                                        <label className="text-xs text-gray-500 mb-1 block">Expected Output</label>
+                                        <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Expected Output</label>
                                         <textarea
                                             value={tc.output}
                                             onChange={(e) => handleTestCaseChange(index, 'output', e.target.value)}
                                             rows={2}
-                                            className="w-full p-2 bg-white border border-gray-200 rounded-lg text-sm font-mono"
+                                            className="w-full p-2 bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono"
                                             placeholder="Expected output..."
                                         />
                                     </div>
                                     <button
                                         onClick={() => handleRemoveTestCase(index)}
-                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg mt-6 opacity-0 group-hover:opacity-100 transition-all"
+                                        className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg mt-6 opacity-0 group-hover:opacity-100 transition-all"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -205,11 +205,11 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <div className="px-8 py-6 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
                     <button
                         onClick={() => handleSubmit(false)}
                         disabled={loading}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         <Save className="w-4 h-4" /> Save Draft
                     </button>
