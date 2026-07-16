@@ -209,10 +209,10 @@ const Zen = () => {
             {/* Input Footer - Stays at bottom */}
             <div className="w-full flex justify-center p-6 pt-2 z-50 bg-white/0">
                 <div className="w-full max-w-[850px]">
-                    <div className="w-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-700 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[26px] p-3 relative flex items-end gap-3 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
+                    <div className="w-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-700 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[22px] p-2 relative flex items-end gap-2 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
 
                         {/* Sparkles Icon */}
-                        <div className="pb-3 pl-2">
+                        <div className="pb-2 pl-1.5">
                             <Sparkles className="w-5 h-5 opacity-60" style={{ color: BRAND_COLOR }} />
                         </div>
 
@@ -222,8 +222,8 @@ const Zen = () => {
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
                             placeholder="Initiate a query or send a command to the AI..."
-                            className="w-full bg-transparent text-[16px] text-slate-700 dark:text-gray-300 placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none resize-none py-3 max-h-[120px] overflow-y-auto leading-relaxed"
-                            style={{ height: '52px' }}
+                            className="w-full bg-transparent text-[15px] text-slate-700 dark:text-gray-300 placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none resize-none py-2 max-h-[100px] overflow-y-auto leading-relaxed"
+                            style={{ height: '40px' }}
                             spellCheck={false}
                         />
 
@@ -231,13 +231,13 @@ const Zen = () => {
                         <button
                             onClick={send}
                             disabled={!input.trim() || loading}
-                            className={`w-11 h-11 flex items-center justify-center rounded-xl text-white shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed mb-0.5 flex-shrink-0`}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed mb-0.5 flex-shrink-0`}
                             style={{
                                 background: `linear-gradient(135deg, ${BRAND_COLOR} 0%, #908FE8 100%)`,
                                 boxShadow: 'none'
                             }}
                         >
-                            <Send size={18} strokeWidth={2.5} />
+                            <Send size={17} strokeWidth={2.5} />
                         </button>
                     </div>
                 </div>
