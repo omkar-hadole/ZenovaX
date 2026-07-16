@@ -219,7 +219,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                 ) : isLinkActive ? (
                   <button
                     onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
-                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
+                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 dark:shadow-none dark:hover:shadow-none flex items-center justify-center gap-2.5 animate-pulse"
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class
@@ -252,7 +252,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                 ) : isLinkActive ? (
                   <button
                     onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
-                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
+                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 dark:shadow-none dark:hover:shadow-none flex items-center justify-center gap-2.5 animate-pulse"
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class (Host)

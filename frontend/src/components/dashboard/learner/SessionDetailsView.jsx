@@ -527,7 +527,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200 dark:shadow-none"
                                 >
                                     Submit Report
                                 </button>
