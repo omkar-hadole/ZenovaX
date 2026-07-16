@@ -110,7 +110,7 @@ export default function BrowseSessionsView({
                                                     ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-500/20'
                                                     : isSessionEnded
                                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed hover:translate-y-0'
-                                                        : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg'
+                                                        : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 hover:shadow-lg'
                                                     }`}
                                             >
                                                 {session.isBooked ? 'Registered' : isSessionEnded ? 'Registration Closed' : 'Register'}
@@ -137,7 +137,7 @@ export default function BrowseSessionsView({
                                     key={pageNum}
                                     onClick={() => onPageChange(pageNum)}
                                     className={`w-10 h-10 rounded-xl text-sm font-bold flex items-center justify-center transition-all ${currentPage === pageNum
-                                        ? 'bg-black text-white shadow-lg scale-110'
+                                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg dark:shadow-none scale-110'
                                         : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
                                         }`}
                                 >

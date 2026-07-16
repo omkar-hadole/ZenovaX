@@ -181,7 +181,7 @@ export default function MyBookingsView({
 
                                             <button
                                                 onClick={() => setSelectedSession(session)}
-                                                className={`${showTicketButton ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100' : 'bg-black text-white'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
+                                                className={`${showTicketButton ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100' : 'bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
                                             >
                                                 Details
                                             </button>
@@ -207,7 +207,7 @@ export default function MyBookingsView({
                                     key={pageNum}
                                     onClick={() => onPageChange(pageNum)}
                                     className={`w-10 h-10 rounded-xl text-sm font-bold flex items-center justify-center transition-all ${currentPage === pageNum
-                                        ? 'bg-black text-white shadow-lg scale-110'
+                                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg dark:shadow-none scale-110'
                                         : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400'
                                         }`}
                                 >

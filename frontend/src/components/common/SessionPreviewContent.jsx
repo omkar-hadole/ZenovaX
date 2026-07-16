@@ -219,7 +219,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                 ) : isLinkActive ? (
                   <button
                     onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
-                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
+                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 dark:shadow-none dark:hover:shadow-none flex items-center justify-center gap-2.5 animate-pulse"
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class
@@ -252,7 +252,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                 ) : isLinkActive ? (
                   <button
                     onClick={() => window.open(`/session/${session.id}/live`, '_blank')}
-                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 flex items-center justify-center gap-2.5 animate-pulse"
+                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 dark:shadow-none dark:hover:shadow-none flex items-center justify-center gap-2.5 animate-pulse"
                   >
                     <Video className="w-5 h-5" />
                     Join Live Class (Host)
@@ -288,8 +288,8 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                 disabled={session.availableSeats === 0 || isRegistering}
                 className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl transition-all transform hover:-translate-y-1
                     ${session.availableSeats === 0
-                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                    : 'bg-black text-white hover:bg-gray-800 hover:shadow-2xl shadow-gray-400/20'}`}
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 hover:shadow-2xl shadow-gray-400/20 dark:shadow-none'}`}
               >
                 {session.availableSeats === 0 ? 'Full' : isRegistering ? 'Registering...' : 'Register Now'}
               </button>

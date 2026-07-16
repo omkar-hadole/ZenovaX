@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
-  Share2,
   Heart,
   CheckCircle,
   FileText,
@@ -21,6 +20,7 @@ import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import Toast from '../components/Toast';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
+import ThemeToggle from '../components/ThemeToggle';
 
 const PREDEFINED_AVATARS = [
   '/avatars/Boy_1.png',
@@ -395,9 +395,7 @@ export default function Profile() {
             </button>
 
             <div className="flex items-center gap-3">
-              <button className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all">
-                <Share2 size={20} />
-              </button>
+              <ThemeToggle />
               {isOwnProfile && (
                 <div className="flex items-center gap-2">
                   {isEditing ? (
@@ -711,7 +709,7 @@ export default function Profile() {
                       className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all transform hover:-translate-y-1
                                             ${isFollowing
                           ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700'
-                          : 'bg-black text-white hover:bg-gray-800 shadow-gray-400/20 dark:shadow-none'}`}
+                          : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 shadow-gray-400/20 dark:shadow-none'}`}
                     >
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
@@ -758,13 +756,13 @@ export default function Profile() {
 
                           {/* Tooltip */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-                            <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl relative text-center">
-                              <div className="font-bold mb-1 border-b border-gray-700 pb-1">{badgeName}</div>
-                              <div className="text-gray-300 leading-snug">
+                            <div className="bg-gray-900 dark:bg-neutral-100 text-white dark:text-gray-950 text-xs rounded-lg py-2.5 px-3 shadow-xl relative text-center border border-black/5 dark:border-white/10">
+                              <div className="font-bold mb-1 border-b border-white/10 dark:border-black/10 pb-1">{badgeName}</div>
+                              <div className="text-gray-300 dark:text-gray-600 leading-snug font-medium">
                                 {BADGE_INFO[badgeName]?.description || "Achievement unlocked!"}
                               </div>
                               {/* Tooltip Arrow */}
-                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
                             </div>
                           </div>
                         </div>

@@ -499,8 +499,14 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
             </div>
 
             {isReportModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95">
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in"
+                    onClick={() => setIsReportModalOpen(false)}
+                >
+                    <div 
+                        className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                             <AlertTriangle className="text-red-500 w-6 h-6" />
                             Report Session
@@ -527,7 +533,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                                    className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200 dark:shadow-none"
                                 >
                                     Submit Report
                                 </button>
