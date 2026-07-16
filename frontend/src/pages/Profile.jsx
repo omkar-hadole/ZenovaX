@@ -711,7 +711,7 @@ export default function Profile() {
                       className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all transform hover:-translate-y-1
                                             ${isFollowing
                           ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700'
-                          : 'bg-black text-white hover:bg-gray-800 shadow-gray-400/20 dark:shadow-none'}`}
+                          : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 shadow-gray-400/20 dark:shadow-none'}`}
                     >
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
