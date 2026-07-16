@@ -756,13 +756,13 @@ export default function Profile() {
 
                           {/* Tooltip */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-                            <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl relative text-center">
-                              <div className="font-bold mb-1 border-b border-gray-700 pb-1">{badgeName}</div>
-                              <div className="text-gray-300 leading-snug">
+                            <div className="bg-gray-900 dark:bg-neutral-100 text-white dark:text-gray-950 text-xs rounded-lg py-2.5 px-3 shadow-xl relative text-center border border-black/5 dark:border-white/10">
+                              <div className="font-bold mb-1 border-b border-white/10 dark:border-black/10 pb-1">{badgeName}</div>
+                              <div className="text-gray-300 dark:text-gray-600 leading-snug font-medium">
                                 {BADGE_INFO[badgeName]?.description || "Achievement unlocked!"}
                               </div>
                               {/* Tooltip Arrow */}
-                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
                             </div>
                           </div>
                         </div>
