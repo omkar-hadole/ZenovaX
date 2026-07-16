@@ -3,12 +3,13 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { Send, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, "").replace(/\/api$/, "");
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
 const BRAND_COLOR = '#7A79E6'; // ZenovaX Brand Color
 
-const AnimatedOrb = ({ isTyping, isThinking }) => {
+const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
     const canvasRef = useRef(null);
     const particlesRef = useRef([]);
     const animationRef = useRef(null);
@@ -39,11 +40,20 @@ const AnimatedOrb = ({ isTyping, isThinking }) => {
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Exact orb gradient from image (blue -> purple -> pink white soft)
+            // Orb gradient — adapts to theme
             const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius + 40);
-            gradient.addColorStop(0, 'rgba(180, 190, 255, 0.9)');
-            gradient.addColorStop(0.4, 'rgba(122, 121, 230, 0.5)');
-            gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
+            if (isDark) {
+                // Dark mode: richer, more saturated colors fading to transparent black
+                gradient.addColorStop(0, 'rgba(140, 130, 255, 0.95)');
+                gradient.addColorStop(0.35, 'rgba(100, 80, 230, 0.55)');
+                gradient.addColorStop(0.7, 'rgba(80, 60, 200, 0.15)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            } else {
+                // Light mode: original soft pastel gradient
+                gradient.addColorStop(0, 'rgba(180, 190, 255, 0.9)');
+                gradient.addColorStop(0.4, 'rgba(122, 121, 230, 0.5)');
+                gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
+            }
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -62,7 +72,9 @@ const AnimatedOrb = ({ isTyping, isThinking }) => {
 
                 ctx.beginPath();
                 ctx.arc(x, y, particle.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(122, 121, 230, ${particle.opacity})`;
+                ctx.fillStyle = isDark
+                    ? `rgba(160, 150, 255, ${particle.opacity})`
+                    : `rgba(122, 121, 230, ${particle.opacity})`;
                 ctx.fill();
             });
 
@@ -76,7 +88,7 @@ const AnimatedOrb = ({ isTyping, isThinking }) => {
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [isTyping, isThinking]);
+    }, [isTyping, isThinking, isDark]);
 
     return <canvas ref={canvasRef} width={200} height={200} className="mx-auto" />;
 };
@@ -87,6 +99,8 @@ const Zen = () => {
     const [loading, setLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const { user } = useAuth();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
 
     const getGreeting = () => {
@@ -143,7 +157,7 @@ const Zen = () => {
                     <div className="text-center w-full mb-8">
                         {/* Orb */}
                         <div className="flex justify-center mb-6 scale-125">
-                            <AnimatedOrb isTyping={isTyping} isThinking={loading} />
+                            <AnimatedOrb isTyping={isTyping} isThinking={loading} isDark={isDark} />
                         </div>
 
                         {/* Greeting */}
