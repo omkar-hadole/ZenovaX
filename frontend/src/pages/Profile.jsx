@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
-  Share2,
   Heart,
   CheckCircle,
   FileText,
@@ -21,6 +20,7 @@ import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import Toast from '../components/Toast';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
+import ThemeToggle from '../components/ThemeToggle';
 
 const PREDEFINED_AVATARS = [
   '/avatars/Boy_1.png',
@@ -395,9 +395,7 @@ export default function Profile() {
             </button>
 
             <div className="flex items-center gap-3">
-              <button className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all">
-                <Share2 size={20} />
-              </button>
+              <ThemeToggle />
               {isOwnProfile && (
                 <div className="flex items-center gap-2">
                   {isEditing ? (
