@@ -6,6 +6,7 @@ import remarkBreaks from 'remark-breaks';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 import { cleanDescription } from '../../utils/descriptionFormatter';
 import QRCodeGenerator from './QRCodeGenerator';
+import AddToCalendarButton from './AddToCalendarButton';
 
 function parseTopics(topics) {
   if (!topics) return [];
@@ -231,8 +232,12 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                     title="Live class link activates 15 minutes before the session starts"
                   >
                     <Video className="w-5 h-5" />
-                    Join Live Class (Activates 15m before)
+                    Starts Soon
                   </button>
+                )}
+
+                {!(session.status === 'COMPLETED' || isSessionTimeOver) && (
+                  <AddToCalendarButton session={session} />
                 )}
               </div>
             ) : isHost ? (
@@ -264,8 +269,12 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                     title="Live class link activates 15 minutes before the session starts"
                   >
                     <Video className="w-5 h-5" />
-                    Join Live Class (Activates 15m before)
+                    Starts Soon
                   </button>
+                )}
+
+                {!(session.status === 'COMPLETED' || isSessionTimeOver) && (
+                  <AddToCalendarButton session={session} />
                 )}
               </div>
             ) : userRole === 'MENTOR' ? (

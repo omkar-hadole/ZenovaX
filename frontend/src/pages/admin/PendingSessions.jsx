@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
-import { Check, X, Clock } from 'lucide-react';
+import { Check, X, Clock, Pencil } from 'lucide-react';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import Toast from '../../components/Toast';
 import { stripMarkdown } from '../../utils/descriptionFormatter';
 
 export default function PendingSessions() {
+    const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
@@ -140,6 +142,14 @@ export default function PendingSessions() {
                         </div>
 
                         <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                            <button
+                                onClick={() => navigate(`/mentor/edit-session/${request.id}`)}
+                                title="Edit request"
+                                aria-label="Edit request"
+                                className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors flex-shrink-0"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
                             <button
                                 onClick={() => handleApprove(request.id)}
                                 className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none"
