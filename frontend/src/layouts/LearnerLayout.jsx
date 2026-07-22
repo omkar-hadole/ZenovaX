@@ -68,7 +68,7 @@ export default function LearnerLayout() {
                 </Sidebar>
 
                 <main className="flex-1 overflow-y-auto">
-                    <Header user={user || {}} title={`Welcome back ${user?.name || 'Learner'}`} searchPlaceholder="Search courses" />
+                    <Header user={user || {}} title={`Welcome back ${user?.name || 'Learner'}`} searchPlaceholder="Search mentors" />
                     <ErrorBoundary>
                         <Outlet />
                     </ErrorBoundary>

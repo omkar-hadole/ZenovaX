@@ -751,10 +751,11 @@ exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
     const type = queryParams.type || 'upcoming';
     const mode = queryParams.mode;
     const priceType = queryParams.priceType;
+    const search = queryParams.search ? sanitizeString(queryParams.search).slice(0, 100) : '';
     const now = new Date();
-    
+
     // Shared cache key without user specific parameters
-    const cacheKey = `all_sessions_${page}_${limit}_${type}_${mode || 'all'}_${priceType || 'all'}`;
+    const cacheKey = `all_sessions_${page}_${limit}_${type}_${mode || 'all'}_${priceType || 'all'}_${search || 'none'}`;
 
     let cachedData;
 
@@ -763,32 +764,37 @@ exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
     } else {
         let whereClause = {};
 
-        if (type === 'past') {
-            whereClause = {
-                OR: [
-                    { status: 'COMPLETED' },
-                    { status: 'CANCELLED' },
-                    {
-                        AND: [
-                            { status: 'UPCOMING' },
-                            { scheduledAt: { lt: now } }
-                        ]
-                    }
-                ]
-            };
-        } else {
-            // Default: UPCOMING (and LIVE)
-            whereClause = {
-                OR: [
-                    { status: 'LIVE' },
-                    {
-                        AND: [
-                            { status: 'UPCOMING' },
-                            { scheduledAt: { gt: now } }
-                        ]
-                    }
-                ]
-            };
+        // A search query looks for a specific session by name, so it should
+        // match regardless of upcoming/past status — only plain browsing
+        // (no search term) is curated down to the upcoming/past tabs.
+        if (!search) {
+            if (type === 'past') {
+                whereClause = {
+                    OR: [
+                        { status: 'COMPLETED' },
+                        { status: 'CANCELLED' },
+                        {
+                            AND: [
+                                { status: 'UPCOMING' },
+                                { scheduledAt: { lt: now } }
+                            ]
+                        }
+                    ]
+                };
+            } else {
+                // Default: UPCOMING (and LIVE)
+                whereClause = {
+                    OR: [
+                        { status: 'LIVE' },
+                        {
+                            AND: [
+                                { status: 'UPCOMING' },
+                                { scheduledAt: { gt: now } }
+                            ]
+                        }
+                    ]
+                };
+            }
         }
 
         if (mode) {
@@ -797,6 +803,18 @@ exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
 
         if (priceType) {
             whereClause.priceType = priceType;
+        }
+
+        if (search) {
+            whereClause.AND = [
+                ...(whereClause.AND || []),
+                {
+                    OR: [
+                        { title: { contains: search } },
+                        { mentor: { name: { contains: search } } }
+                    ]
+                }
+            ];
         }
 
         const [sessions, total] = await Promise.all([
