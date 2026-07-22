@@ -1,4 +1,5 @@
 const profileService = require("../services/profileService");
+const config = require("../config");
 
 exports.completeProfile = async (req, res, next) => {
     try {
@@ -46,6 +47,21 @@ exports.getProfileById = async (req, res, next) => {
     try {
         const user = await profileService.getProfileById(req.prisma, req.cache, req.user.id, req.user.role, req.params.id);
         return res.json({ user });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.deactivateAccount = async (req, res, next) => {
+    try {
+        await profileService.deactivateAccount(req.prisma, req.user.id, req.body.password);
+
+        const isProd = config.nodeEnv === 'production';
+        res.clearCookie("token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+        res.clearCookie("refreshToken", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+        res.clearCookie("csrfToken", { httpOnly: false, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+
+        return res.status(200).json({ message: "Account deactivated successfully." });
     } catch (error) {
         return next(error);
     }

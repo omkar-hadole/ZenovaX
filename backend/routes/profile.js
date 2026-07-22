@@ -37,6 +37,8 @@ router.put(
     profileController.updateProfile
 );
 
+router.delete("/me", protect, profileController.deactivateAccount);
+
 router.get("/mentors", protect, profileController.getMentors);
 
 router.get("/:id", protect, profileController.getProfileById);

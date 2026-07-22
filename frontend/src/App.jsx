@@ -21,6 +21,7 @@ const SessionsPage = lazy(() => import('./pages/learner/SessionsPage'));
 const SessionDetailsPage = lazy(() => import('./pages/learner/SessionDetailsPage'));
 const BookingsPage = lazy(() => import('./pages/learner/BookingsPage'));
 const ComingSoonPage = lazy(() => import('./pages/learner/ComingSoonPage'));
+const Settings = lazy(() => import('./pages/Settings'));
 const HelpCenter = lazy(() => import('./pages/learner/HelpCenter'));
 const Zen = lazy(() => import('./pages/learner/Zen'));
 
@@ -121,7 +122,7 @@ function App() {
                         <Route path="mentors" element={<MentorsList />} />
                         <Route path="help" element={<HelpCenter />} />
                         <Route path="zen" element={<Zen />} />
-                        <Route path="settings" element={<ComingSoonPage />} />
+                        <Route path="settings" element={<Settings />} />
                     </Route>
 
                     <Route
@@ -143,7 +144,7 @@ function App() {
                         <Route path="earnings" element={<MentorEarningsPage />} />
                         <Route path="launch-code" element={<MentorLaunchCodePage />} />
                         <Route path="help" element={<ComingSoonPage />} />
-                        <Route path="settings" element={<ComingSoonPage />} />
+                        <Route path="settings" element={<Settings />} />
                     </Route>
 
                     <Route
@@ -204,7 +205,7 @@ function App() {
                         <Route path="users" element={<UsersList />} />
                         <Route path="reports" element={<Reports />} />
                         <Route path="payments" element={<AdminPayments />} />
-                        <Route path="settings" element={<ComingSoonPage />} />
+                        <Route path="settings" element={<Settings />} />
                     </Route>
 
                     {/* 404 catch-all */}

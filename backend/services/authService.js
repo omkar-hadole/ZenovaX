@@ -233,3 +233,34 @@ exports.resetPassword = async (prisma, token, newPassword) => {
 
     return { success: true };
 };
+
+exports.changePassword = async (prisma, userId, currentPassword, newPassword) => {
+    if (!isValidPassword(newPassword)) {
+        throw new BadRequestError("New password must be at least 8 characters and contain at least one number or special character.");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    const isValid = await bcrypt.compare(currentPassword || "", user.password);
+    if (!isValid) {
+        throw new UnauthorizedError("Current password is incorrect");
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { password: hash }
+    });
+
+    // Revoke ALL existing refresh tokens for this user (security: prevent stale token usage)
+    await prisma.refreshToken.updateMany({
+        where: { userId },
+        data: { revoked: true }
+    });
+
+    return { success: true };
+};
