@@ -97,7 +97,7 @@ export default function MentorLayout() {
                     <MentorSidebar />
 
                     <main className="flex-1 overflow-y-auto">
-                        <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search sessions, learners..." />
+                        <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search mentors" />
 
                         <div className="p-8">
                             <ErrorBoundary>
