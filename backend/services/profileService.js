@@ -1,9 +1,10 @@
+const bcrypt = require("bcryptjs");
 const { sanitizeString, isValidUrl } = require("../utils/validation");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const logger = require("../utils/logger");
 const { calculateBadges } = require("../utils/badges");
 const { getFinishedSessionsCount, getUniqueLearnersCount } = require("../utils/sessionUtils");
-const { BadRequestError, NotFoundError } = require("../utils/errors");
+const { BadRequestError, NotFoundError, UnauthorizedError } = require("../utils/errors");
 
 const formatPhoneNumber = (phone, visible) => {
   if (!phone) return phone;
@@ -658,4 +659,30 @@ exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {
         likesReceived: undefined,
         _count: undefined
     };
+};
+
+exports.deactivateAccount = async (prisma, userId, password) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    if (user.isDeleted) {
+        throw new BadRequestError("Account is already deactivated");
+    }
+
+    const isValid = await bcrypt.compare(password || "", user.password);
+    if (!isValid) {
+        throw new UnauthorizedError("Password is incorrect");
+    }
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { isDeleted: true, deletedAt: new Date() }
+    });
+
+    await prisma.refreshToken.updateMany({
+        where: { userId },
+        data: { revoked: true }
+    });
 };
