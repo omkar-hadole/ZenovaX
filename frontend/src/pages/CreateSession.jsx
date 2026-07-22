@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, Video, MapPin,
-  DollarSign, Users, BookOpen, Layers, Tag, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code, Eye
+  DollarSign, Users, BookOpen, Layers, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code, Eye
 } from 'lucide-react';
 import { apiCall, logout as apiLogout } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -158,7 +158,7 @@ export default function CreateSession() {
       }
 
       if (isAdmin) {
-        navigate('/admin/reports');
+        navigate('/admin/pending-sessions');
       } else {
         navigate('/mentor/dashboard');
       }
@@ -183,9 +183,9 @@ export default function CreateSession() {
             logoClassName="w-56 h-auto"
             items={[
               { icon: LayoutDashboard, label: 'Dashboard', onClick: () => navigate('/admin/dashboard') },
-              { icon: Tag, label: 'Reports', onClick: () => navigate('/admin/reports') },
+              { icon: Clock, label: 'Pending Sessions', onClick: () => navigate('/admin/pending-sessions') },
             ]}
-            activeTab="Reports"
+            activeTab="Pending Sessions"
             setActiveTab={() => { }}
             onLogout={async () => {
               try {

@@ -3,6 +3,7 @@ import { Calendar, Clock, Settings, QrCode, X, Download, Search } from 'lucide-r
 import SessionSkeleton from '../SessionSkeleton';
 import SessionCard from './SessionCard';
 import QRCodeGenerator from '../../common/QRCodeGenerator';
+import AddToCalendarButton from '../../common/AddToCalendarButton';
 import domtoimage from 'dom-to-image-more';
 import Toast from '../../Toast';
 
@@ -179,12 +180,18 @@ export default function MyBookingsView({
                                                 </div>
                                             )}
 
-                                            <button
-                                                onClick={() => setSelectedSession(session)}
-                                                className={`${showTicketButton ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100' : 'bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
-                                            >
-                                                Details
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                {status !== 'COMPLETED' && (
+                                                    <AddToCalendarButton session={session} variant="icon" />
+                                                )}
+
+                                                <button
+                                                    onClick={() => setSelectedSession(session)}
+                                                    className={`${showTicketButton ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100' : 'bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'} px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all transform hover:-translate-y-0.5`}
+                                                >
+                                                    Details
+                                                </button>
+                                            </div>
                                         </>
                                     }
                                 />
