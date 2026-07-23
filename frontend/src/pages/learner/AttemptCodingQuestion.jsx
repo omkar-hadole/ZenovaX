@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle } from 'lucide-react';
+import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle, History } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 import Toast from '../../components/Toast';
 
-export default function AttemptCodingQuestion() {
+export default function AttemptCodingQuestion({ previewMode = false, backPath }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const [question, setQuestion] = useState(null);
@@ -16,17 +16,26 @@ export default function AttemptCodingQuestion() {
     const [language, setLanguage] = useState('javascript');
     const [code, setCode] = useState('');
 
-    const [activeTab, setActiveTab] = useState('tests'); // 'tests' | 'console'
+    const [activeTab, setActiveTab] = useState('tests'); // 'tests' | 'console' | 'submissions'
     const [output, setOutput] = useState([]);
     const [results, setResults] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
     const [indentError, setIndentError] = useState(null);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [toast, setToast] = useState(null);
+    const [submissions, setSubmissions] = useState([]);
+    const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
 
-    // Language Change Modal State
-    const [showLanguagePopup, setShowLanguagePopup] = useState(false);
-    const [pendingLanguage, setPendingLanguage] = useState(null);
+    const fetchSubmissions = async () => {
+        try {
+            const data = await apiCall(`/coding-questions/${id}/submissions/mine`);
+            setSubmissions(data.submissions || []);
+        } catch (error) {
+            console.error('Failed to fetch submission history', error);
+        } finally {
+            setSubmissionsLoaded(true);
+        }
+    };
 
     // --- Resizable Layout Logic ---
     const [leftWidth, setLeftWidth] = useState(30); // Percentage
@@ -91,6 +100,18 @@ export default function AttemptCodingQuestion() {
         window.removeEventListener('mouseup', stopDrag);
     };
 
+    const LANGUAGE_LABELS = { javascript: 'JavaScript', python: 'Python', java: 'Java' };
+    const allowedLanguageOptions = (() => {
+        let langs = ['javascript', 'python', 'java'];
+        if (question?.allowedLanguages) {
+            try {
+                const parsed = typeof question.allowedLanguages === 'string' ? JSON.parse(question.allowedLanguages) : question.allowedLanguages;
+                if (Array.isArray(parsed) && parsed.length > 0) langs = parsed;
+            } catch (e) { console.error('Failed to parse allowedLanguages', e); }
+        }
+        return langs.map(l => ({ value: l, label: LANGUAGE_LABELS[l] || l }));
+    })();
+
     const BOILERPLATES = {
         javascript: `// Write your solution here
 function solve(input) {
@@ -112,29 +133,26 @@ class Solution {
 `
     };
 
-    useEffect(() => {
-        // Set initial code based on default language
-        setCode(BOILERPLATES['javascript']);
-    }, []);
+    const draftKey = (lang) => `coding-draft-${id}-${lang}`;
+
+    // Starter code precedence: student's own cached draft > mentor-authored
+    // starter code for this question/language > the generic boilerplate.
+    const getInitialCode = (lang, q) => {
+        const cached = localStorage.getItem(draftKey(lang));
+        if (cached !== null) return cached;
+        if (q?.starterCode) {
+            try {
+                const map = typeof q.starterCode === 'string' ? JSON.parse(q.starterCode) : q.starterCode;
+                if (map?.[lang]) return map[lang];
+            } catch (e) { console.error('Failed to parse starter code', e); }
+        }
+        return BOILERPLATES[lang];
+    };
 
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
-        setPendingLanguage(newLang);
-        setShowLanguagePopup(true);
-    };
-
-    const confirmLanguageChange = () => {
-        if (pendingLanguage) {
-            setLanguage(pendingLanguage);
-            setCode(BOILERPLATES[pendingLanguage]);
-        }
-        setShowLanguagePopup(false);
-        setPendingLanguage(null);
-    };
-
-    const cancelLanguageChange = () => {
-        setShowLanguagePopup(false);
-        setPendingLanguage(null);
+        setLanguage(newLang);
+        setCode(getInitialCode(newLang, question));
     };
 
     useEffect(() => {
@@ -142,7 +160,8 @@ class Solution {
             try {
                 const data = await apiCall(`/coding-questions/${id}`);
                 setQuestion(data.question);
-                if (data.question && data.question.status !== 'LIVE') {
+                setCode(getInitialCode(language, data.question));
+                if (!previewMode && data.question && data.question.status !== 'LIVE') {
                     setToast({ message: 'This question is not live yet.', type: 'error' });
                     setTimeout(() => {
                         navigate(-1);
@@ -156,6 +175,16 @@ class Solution {
         };
         fetchQuestion();
     }, [id, navigate]);
+
+    // Debounced auto-save of the current draft, per question + language, so a
+    // refresh or a language switch never loses in-progress work.
+    useEffect(() => {
+        if (!code) return;
+        const timeout = setTimeout(() => {
+            localStorage.setItem(draftKey(language), code);
+        }, 500);
+        return () => clearTimeout(timeout);
+    }, [code, language, id]);
 
     // Validation Logic
     const validateIndentation = (sourceCode, lang) => {
@@ -229,6 +258,41 @@ class Solution {
         setOutput([]);
         setActiveTab('tests');
 
+        // Submit never pre-verifies locally: the server independently re-runs
+        // every test case against the real (never-redacted) data and decides
+        // pass/fail — running the student's code against the client's
+        // redacted "Hidden" placeholders here would give a wrong answer (or
+        // throw, e.g. `JSON.parse("Hidden")`) for every hidden test case.
+        if (mode === 'submit' && !previewMode) {
+            try {
+                const { submission, results: submitResults, error: submitError } = await apiCall(`/coding-questions/${id}/submit`, {
+                    method: 'POST',
+                    body: JSON.stringify({ code, language })
+                });
+
+                if (submitError) {
+                    setOutput(prev => [...prev, { type: 'error', text: `Execution Error: ${submitError}` }]);
+                    setActiveTab('console');
+                } else {
+                    setResults(submitResults);
+                    setActiveTab('tests');
+                    if (submission.status === 'PASSED') {
+                        setQuestion(prev => ({ ...prev, isSolved: true }));
+                        setShowSuccessPopup(true);
+                    } else {
+                        setToast({ message: 'Some test cases failed — check Test Results.', type: 'error' });
+                    }
+                }
+                fetchSubmissions();
+            } catch (err) {
+                setOutput(prev => [...prev, { type: 'error', text: `Network Error: ${err.message}` }]);
+                setActiveTab('console');
+            } finally {
+                setIsRunning(false);
+            }
+            return;
+        }
+
         let allTestCases = [];
         try {
             allTestCases = typeof question.testCases === 'string' ? JSON.parse(question.testCases) : question.testCases;
@@ -240,7 +304,7 @@ class Solution {
             return;
         }
 
-        const testCasesToRun = mode === 'run' ? allTestCases.slice(0, 2) : allTestCases;
+        const testCasesToRun = previewMode ? allTestCases : allTestCases.slice(0, 2);
 
         const processResults = async (rawResults, error) => {
             if (error) {
@@ -249,40 +313,15 @@ class Solution {
                 return;
             }
 
-            const formattedResults = rawResults.map((res, index) => {
-                const isHidden = mode === 'submit';
-                return {
-                    ...res,
-                    input: isHidden ? 'Hidden' : res.input,
-                    expected: isHidden ? 'Hidden' : res.expected,
-                    actual: isHidden ? (res.passed ? 'Hidden' : 'Wrong Answer') : res.actual,
-                    isHidden
-                };
-            });
-
-            setResults(formattedResults);
+            setResults(rawResults);
             setActiveTab('tests');
-
-            if (mode === 'submit' && formattedResults.every(r => r.passed)) {
-                try {
-                    await apiCall(`/coding-questions/${id}/submit`, {
-                        method: 'POST',
-                        body: JSON.stringify({ code, language, status: 'PASSED' })
-                    });
-                    setQuestion(prev => ({ ...prev, isSolved: true }));
-                    setShowSuccessPopup(true);
-                } catch (submitErr) {
-                    console.error("Submission failed", submitErr);
-                    setToast({ message: "All tests passed, but failed to save submission.", type: 'error' });
-                }
-            }
         };
 
         if (language === 'python' || language === 'java') {
             try {
                 const { results, logs, error } = await apiCall('/coding-questions/execute', {
                     method: 'POST',
-                    body: JSON.stringify({ language, code, testCases: testCasesToRun })
+                    body: JSON.stringify({ language, code, testCases: testCasesToRun, codingQuestionId: id })
                 });
                 await processResults(results, error);
                 if (logs) {
@@ -298,84 +337,46 @@ class Solution {
             return;
         }
 
-        // Javascript Client Exec
-        const newResults = [];
-        const logs = [];
-        const originalLog = console.log;
-        const originalError = console.error;
+        // Javascript Exec — runs in a Web Worker so a `solve` that infinite-loops
+        // can't freeze the tab; the worker is terminated if it doesn't respond
+        // within the timeout, and a fresh one is spun up on every run.
+        const JS_TIMEOUT_MS = 5000;
+        const worker = new Worker(new URL('../../workers/codeRunner.worker.js', import.meta.url), { type: 'module' });
 
-        console.log = (...args) => {
-            const text = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
-            logs.push({ type: 'log', text });
-            originalLog(...args);
-        };
-        console.error = (...args) => {
-            const text = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
-            logs.push({ type: 'error', text });
-            originalError(...args);
-        };
+        const workerResult = await new Promise((resolve) => {
+            const timeoutId = setTimeout(() => {
+                worker.terminate();
+                resolve({ error: `Execution timed out after ${JS_TIMEOUT_MS / 1000}s — check for an infinite loop.` });
+            }, JS_TIMEOUT_MS);
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+            worker.onmessage = (e) => {
+                clearTimeout(timeoutId);
+                worker.terminate();
+                resolve(e.data);
+            };
+            worker.onerror = (e) => {
+                clearTimeout(timeoutId);
+                worker.terminate();
+                resolve({ error: e.message || 'Worker error' });
+            };
 
-        let hasAnyError = false;
-        try {
-            for (let i = 0; i < testCasesToRun.length; i++) {
-                const tc = testCasesToRun[i];
-                const inputVal = tc.input;
-                const expectedVal = tc.output ? tc.output.trim() : '';
+            worker.postMessage({ code, testCases: testCasesToRun });
+        });
 
-                let userOutput = null;
-                let error = null;
-
-                try {
-                    // Try to parse the code first to capture syntax errors
-                    let userFunc;
-                    try {
-                        userFunc = new Function('input', code + `\nreturn solve(input);`);
-                    } catch (syntaxErr) {
-                        throw new SyntaxError(syntaxErr.message);
-                    }
-
-                    const result = userFunc(inputVal);
-                    if (typeof result === 'object') {
-                        userOutput = JSON.stringify(result);
-                    } else if (result !== undefined && result !== null) {
-                        userOutput = String(result);
-                    } else {
-                        userOutput = "undefined";
-                    }
-                } catch (err) {
-                    error = err.message;
-                    hasAnyError = true;
-                    // If it is a SyntaxError, throw it so it gets processed globally
-                    if (err instanceof SyntaxError) {
-                        throw err;
-                    }
-                    logs.push({ type: 'error', text: `Test Case ${i + 1} Error: ${err.message}` });
-                }
-
-                const passed = !error && userOutput && userOutput.trim() === expectedVal;
-                newResults.push({
-                    input: inputVal,
-                    expected: expectedVal,
-                    actual: error ? `Error: ${error}` : userOutput,
-                    passed
-                });
-            }
-            await processResults(newResults, null);
-            if (logs.length > 0) {
-                setOutput(prev => [...prev, ...logs]);
-            }
-            if (hasAnyError) {
-                setActiveTab('console');
-            }
-        } catch (globalError) {
-            await processResults(null, globalError.message);
-        } finally {
-            console.log = originalLog;
-            console.error = originalError;
-            setIsRunning(false);
+        if (workerResult.logs?.length > 0) {
+            setOutput(prev => [...prev, ...workerResult.logs]);
         }
+
+        if (workerResult.error) {
+            await processResults(null, workerResult.error);
+            setActiveTab('console');
+        } else {
+            await processResults(workerResult.results, null);
+            if (workerResult.results.some(r => !r.passed)) {
+                setActiveTab('tests');
+            }
+        }
+        setIsRunning(false);
     };
 
     // Refs to hold latest functions to avoid stale closures in event listeners
@@ -435,8 +436,14 @@ class Solution {
             {/* Header */}
             <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#1e1e1e] z-10 shadow-sm">
                 <div className="flex items-center gap-6">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
+                    <button
+                        onClick={() => navigate(backPath || (question.sessionId ? `/sessions/${question.sessionId}` : -1))}
+                        className="flex items-center gap-2 p-2 pr-3 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                    >
                         <ArrowLeft className="w-5 h-5" />
+                        <span className="text-sm font-medium hidden sm:inline">
+                            {previewMode ? 'Back to Questions' : 'Back to Session'}
+                        </span>
                     </button>
 
                     <div className="flex items-center gap-4">
@@ -448,6 +455,11 @@ class Solution {
                                 }`}>
                                 {question.difficulty}
                             </span>
+                            {previewMode && (
+                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md tracking-wider uppercase bg-indigo-500/20 text-indigo-400 border border-indigo-500/20">
+                                    Preview Mode
+                                </span>
+                            )}
                             {question.isSolved && (
                                 <span className="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/20 text-green-500 border border-green-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
                                     <CheckCircle className="w-3 h-3" /> Solved
@@ -478,13 +490,13 @@ class Solution {
                     <div className="h-6 w-px bg-white/5 mx-1"></div>
 
                     <select
-                        value={showLanguagePopup ? pendingLanguage : language}
+                        value={language}
                         onChange={handleLanguageChange}
                         className="bg-white/5 text-gray-400 text-xs font-medium px-3 py-2 rounded-lg border border-white/5 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer hover:bg-white/10"
                     >
-                        <option value="javascript">JavaScript</option>
-                        <option value="python">Python</option>
-                        <option value="java">Java</option>
+                        {allowedLanguageOptions.map(lang => (
+                            <option key={lang.value} value={lang.value}>{lang.label}</option>
+                        ))}
                     </select>
 
                     <div className="relative group">
@@ -504,21 +516,23 @@ class Solution {
                         </div>
                     </div>
 
-                    <div className="relative group">
-                        <button
-                            onClick={() => runCode('submit')}
-                            disabled={isRunning}
-                            className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
-                        >
-                            Submit
-                        </button>
-                        {/* Custom Tooltip */}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-[#262626] border border-white/10 rounded-lg shadow-xl text-[11px] text-gray-200 whitespace-nowrap z-50 pointer-events-none">
-                            <span>Submit</span>
-                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">{modifierName}</kbd>
-                            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">↵</kbd>
+                    {!previewMode && (
+                        <div className="relative group">
+                            <button
+                                onClick={() => runCode('submit')}
+                                disabled={isRunning}
+                                className="flex items-center gap-2 px-5 py-2 font-medium text-xs rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                            >
+                                Submit
+                            </button>
+                            {/* Custom Tooltip */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 bg-[#262626] border border-white/10 rounded-lg shadow-xl text-[11px] text-gray-200 whitespace-nowrap z-50 pointer-events-none">
+                                <span>Submit</span>
+                                <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">{modifierName}</kbd>
+                                <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/15 rounded text-[10px] font-mono leading-none">↵</kbd>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </header>
 
@@ -673,6 +687,14 @@ class Solution {
                                     <Terminal className="w-4 h-4" /> Console / Output
                                 </div>
                             </button>
+                            <button
+                                onClick={() => { setActiveTab('submissions'); if (!submissionsLoaded) fetchSubmissions(); }}
+                                className={`px-6 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${activeTab === 'submissions' ? 'text-white border-indigo-500 bg-white/5' : 'text-gray-500 border-transparent hover:text-gray-300 hover:bg-white/5'}`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <History className="w-4 h-4" /> Submissions
+                                </div>
+                            </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent bg-[#151515]">
@@ -760,6 +782,45 @@ class Solution {
                                     )}
                                 </div>
                             )}
+
+                            {activeTab === 'submissions' && (
+                                <div className="p-6">
+                                    {submissions.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center text-gray-500 gap-3 py-10 opacity-50">
+                                            <History className="w-8 h-8" />
+                                            <p className="font-medium">No submissions yet</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {submissions.map((sub) => (
+                                                <div key={sub.id} className={`flex items-center justify-between p-4 rounded-lg border ${sub.status === 'PASSED' ? 'border-emerald-500/10 bg-emerald-500/5' : 'border-rose-500/10 bg-rose-500/5'}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        {sub.status === 'PASSED' ? (
+                                                            <CheckCircle className="w-5 h-5 text-emerald-500" />
+                                                        ) : (
+                                                            <XCircle className="w-5 h-5 text-rose-500" />
+                                                        )}
+                                                        <div>
+                                                            <span className={`font-medium text-sm ${sub.status === 'PASSED' ? 'text-emerald-300/90' : 'text-rose-300/90'}`}>
+                                                                {sub.status === 'PASSED' ? 'Passed' : 'Failed'}
+                                                            </span>
+                                                            <div className="text-xs text-gray-500">
+                                                                {LANGUAGE_LABELS[sub.language] || sub.language} • {new Date(sub.createdAt).toLocaleString()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => { setLanguage(sub.language); setCode(sub.code); setActiveTab('tests'); }}
+                                                        className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+                                                    >
+                                                        Load into Editor
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -783,38 +844,10 @@ class Solution {
                                 Keep Coding
                             </button>
                             <button
-                                onClick={() => navigate('/dashboard')}
+                                onClick={() => navigate(question.sessionId ? `/sessions/${question.sessionId}` : '/dashboard')}
                                 className="flex-1 px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/20 rounded-xl font-medium transition-colors"
                             >
                                 Done
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Language Change Modal */}
-            {showLanguagePopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-[#18181b] border border-white/10 rounded-2xl p-8 max-w-sm w-full shadow-2xl transform scale-100 animate-in zoom-in-95 duration-200 flex flex-col items-center text-center">
-                        <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mb-6">
-                            <AlertTriangle className="w-8 h-8 text-yellow-500" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Change Language?</h3>
-                        <p className="text-gray-400 mb-8 text-sm">
-                            Switching to <span className="font-bold text-white">{pendingLanguage}</span> will <span className="text-red-400">reset your current code</span>. This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3 w-full">
-                            <button
-                                onClick={cancelLanguageChange}
-                                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmLanguageChange}
-                                className="flex-1 px-4 py-3 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/20 rounded-xl font-medium transition-colors"
-                            >
-                                Confirm
                             </button>
                         </div>
                     </div>

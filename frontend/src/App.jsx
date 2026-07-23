@@ -31,6 +31,8 @@ const MentorReportsPage = lazy(() => import('./pages/mentor/MentorReportsPage'))
 const MentorScanAttendancePage = lazy(() => import('./pages/mentor/MentorScanAttendancePage'));
 const MentorReviewsPage = lazy(() => import('./pages/mentor/MentorReviewsPage'));
 const MentorLaunchCodePage = lazy(() => import('./pages/mentor/MentorLaunchCodePage'));
+const MentorCodingQuestionsPage = lazy(() => import('./pages/mentor/MentorCodingQuestionsPage'));
+const MentorCodingPreviewPage = lazy(() => import('./pages/mentor/MentorCodingPreviewPage'));
 const MentorEarningsPage = lazy(() => import('./pages/mentor/MentorEarningsPage'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
 const Profile = lazy(() => import('./pages/Profile'));
@@ -143,6 +145,8 @@ function App() {
                         <Route path="reviews" element={<MentorReviewsPage />} />
                         <Route path="earnings" element={<MentorEarningsPage />} />
                         <Route path="launch-code" element={<MentorLaunchCodePage />} />
+                        <Route path="launch-code/:id" element={<MentorLaunchCodePage />} />
+                        <Route path="coding-questions" element={<MentorCodingQuestionsPage />} />
                         <Route path="help" element={<ComingSoonPage />} />
                         <Route path="settings" element={<Settings />} />
                     </Route>
@@ -177,6 +181,7 @@ function App() {
                     <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><LaunchQuiz /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/quiz/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><QuizAttempt /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/coding/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><AttemptCodingQuestion /></DesktopOnlyGuard></ProtectedRoute>} />
+                    <Route path="/mentor/coding-questions/:id/preview" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><MentorCodingPreviewPage /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route
                         path="/session/:id/live"
                         element={
