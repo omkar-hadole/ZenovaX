@@ -79,7 +79,10 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept', 'X-CSRF-Token']
+  // chatgpt-account-id and X-OpenAI-Fedramp are sent by @openai-oauth/react's
+  // openaiAuthHeaders() alongside the Authorization header for the Zen
+  // ChatGPT fallback (see helpService.js#askAIWithChatGPT).
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept', 'X-CSRF-Token', 'chatgpt-account-id', 'X-OpenAI-Fedramp']
 }));
 
 // Enable pre-flight for all routes
