@@ -103,6 +103,7 @@ const Zen = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [provider, setProviderState] = useState(() => localStorage.getItem(PROVIDER_STORAGE_KEY) || 'gemini');
     const [showQuotaSuggestion, setShowQuotaSuggestion] = useState(false);
+    const [thinkingSeconds, setThinkingSeconds] = useState(0);
     const { user } = useAuth();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -138,6 +139,26 @@ const Zen = () => {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, [chat, loading]);
+
+    // Elapsed-time ticker for the "thinking" indicator, matching ChatGPT/Claude's
+    // "still working on it" style feedback instead of a static, unchanging label.
+    useEffect(() => {
+        if (!loading) {
+            setThinkingSeconds(0);
+            return;
+        }
+        const intervalId = setInterval(() => {
+            setThinkingSeconds(s => s + 1);
+        }, 1000);
+        return () => clearInterval(intervalId);
+    }, [loading]);
+
+    const getThinkingMessage = (seconds) => {
+        if (seconds < 4) return 'Zen is thinking';
+        if (seconds < 10) return 'Still working on it';
+        if (seconds < 18) return 'Almost done';
+        return 'Just a little longer';
+    };
 
 
     const getGreeting = () => {
@@ -246,7 +267,13 @@ const Zen = () => {
                             {loading && (
                                 <div className="px-4">
                                     <div className="text-sm text-slate-400 dark:text-gray-500 font-medium flex items-center gap-2">
-                                        Zen is thinking...
+                                        <span className="flex gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" />
+                                        </span>
+                                        {getThinkingMessage(thinkingSeconds)}
+                                        {thinkingSeconds > 0 && ` · ${thinkingSeconds}s`}
                                     </div>
                                 </div>
                             )}

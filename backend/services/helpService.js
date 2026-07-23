@@ -147,8 +147,15 @@ exports.askAIWithChatGPT = async (user, { question, username } = {}, requestHead
         throw new BadRequestError("ChatGPT sign-in required — connect your ChatGPT account first.");
     }
 
+    // Unlike Gemini's 8s (a shared, rate-limited resource), this runs on the
+    // user's own ChatGPT account, and longer answers (stories, thoughtful
+    // responses) can genuinely take 10-20s+ with gpt-5.4-mini. 25s leaves
+    // headroom under the app's own 30s request timeout (server.js) and the
+    // Lambda's 30s function timeout in production, so this code gets to
+    // return a friendly message before the infra layer just kills the
+    // connection.
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     try {
         const provider = createOpenAIOAuth(auth);
         const result = await generateText({
