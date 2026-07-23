@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { Send, Sparkles, Link2, CheckCircle2, LogOut } from 'lucide-react';
+import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check } from 'lucide-react';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -104,6 +104,7 @@ const Zen = () => {
     const [provider, setProviderState] = useState(() => localStorage.getItem(PROVIDER_STORAGE_KEY) || 'gemini');
     const [showQuotaSuggestion, setShowQuotaSuggestion] = useState(false);
     const [thinkingSeconds, setThinkingSeconds] = useState(0);
+    const [copiedIndex, setCopiedIndex] = useState(null);
     const { user } = useAuth();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -212,6 +213,17 @@ const Zen = () => {
         }
     };
 
+    const handleCopy = async (text, index) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedIndex(index);
+            setTimeout(() => setCopiedIndex(prev => (prev === index ? null : prev)), 2000);
+        } catch {
+            // Clipboard access can be denied by the browser — fail silently,
+            // nothing else meaningful to do here.
+        }
+    };
+
     return (
 
         <div className="h-[calc(100vh-6rem)] bg-white dark:bg-gray-950 flex flex-col relative font-outfit overflow-hidden">
@@ -247,7 +259,7 @@ const Zen = () => {
                     {chat.length > 0 && (
                         <div className="w-full max-w-[850px] space-y-4 mb-4 px-4">
                             {chat.map((m, i) => (
-                                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div key={i} className={`group flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
                                     <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed ${m.role === 'user'
                                         ? 'text-white rounded-tr-sm shadow-md shadow-indigo-500/10'
                                         : 'bg-white/80 dark:bg-gray-800/80 border border-slate-100 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-tl-sm shadow-sm'
@@ -262,6 +274,19 @@ const Zen = () => {
                                             <ReactMarkdown>{m.text}</ReactMarkdown>
                                         </div>
                                     </div>
+                                    {m.role === 'assistant' && (
+                                        <button
+                                            onClick={() => handleCopy(m.text, i)}
+                                            className={`mt-1.5 ml-1 flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 transition-all ${copiedIndex === i ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                }`}
+                                        >
+                                            {copiedIndex === i ? (
+                                                <><Check className="w-3.5 h-3.5 text-emerald-500" /> Copied</>
+                                            ) : (
+                                                <><Copy className="w-3.5 h-3.5" /> Copy</>
+                                            )}
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                             {loading && (
