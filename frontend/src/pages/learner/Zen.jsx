@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check } from 'lucide-react';
+import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check, MessageSquarePlus } from 'lucide-react';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -11,6 +11,20 @@ const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
 const CHATGPT_ENDPOINT = `${BASE_URL}/api/help/ask-ai-chatgpt`;
 const BRAND_COLOR = '#7A79E6'; // ZenovaX Brand Color
 const PROVIDER_STORAGE_KEY = 'zen-ai-provider';
+// sessionStorage (not localStorage): survives an accidental refresh or
+// coming back to the tab later, but is cleared automatically once the
+// browser/tab is actually closed — matching what was asked for.
+const CHAT_STORAGE_KEY = 'zen-chat-history';
+
+const loadStoredChat = () => {
+    try {
+        const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+};
 
 const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
     const canvasRef = useRef(null);
@@ -97,7 +111,7 @@ const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
 };
 
 const Zen = () => {
-    const [chat, setChat] = useState([]);
+    const [chat, setChat] = useState(loadStoredChat);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
@@ -140,6 +154,20 @@ const Zen = () => {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, [chat, loading]);
+
+    // Persist chat to sessionStorage so an accidental refresh (or coming back
+    // to the tab later) doesn't lose the conversation — sessionStorage itself
+    // is cleared automatically once the tab/browser is closed.
+    useEffect(() => {
+        sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chat));
+    }, [chat]);
+
+    const handleNewChat = () => {
+        setChat([]);
+        sessionStorage.removeItem(CHAT_STORAGE_KEY);
+        setShowQuotaSuggestion(false);
+        setInput('');
+    };
 
     // Elapsed-time ticker for the "thinking" indicator, matching ChatGPT/Claude's
     // "still working on it" style feedback instead of a static, unchanging label.
@@ -230,6 +258,17 @@ const Zen = () => {
             {/* Soft Ambient Background Glows */}
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-100/40 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-100/40 dark:bg-blue-500/10 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2"></div>
+
+            {/* New Chat — clears the conversation from screen and sessionStorage */}
+            {chat.length > 0 && (
+                <button
+                    onClick={handleNewChat}
+                    title="New chat"
+                    className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-gray-400 bg-white/80 dark:bg-gray-900/80 border border-slate-100 dark:border-gray-700 shadow-sm hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md transition-all backdrop-blur-sm"
+                >
+                    <MessageSquarePlus className="w-4 h-4" /> New Chat
+                </button>
+            )}
 
             {/* Main Scrollable Area */}
             <div className="flex-1 w-full overflow-y-auto relative z-10 flex flex-col items-center custom-scrollbar">
