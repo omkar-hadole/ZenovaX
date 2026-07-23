@@ -1,91 +1,112 @@
-const axios = require('axios');
 const logger = require('../utils/logger');
-const { AppError, BadRequestError, NotFoundError, ForbiddenError } = require("../utils/errors");
+const codeRunner = require('./codeRunner');
+const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = require('../utils/errors');
 
+// A test case is "hidden" (its input/output shouldn't be shipped to a
+// non-creator before they submit) if it's explicitly flagged `isHidden`, or
+// — for older rows created before that flag existed — if it falls outside
+// the first 2 cases, matching the app's existing "first 2 are the visible
+// examples" convention.
+const isTestCaseHidden = (tc, index) =>
+    tc && typeof tc.isHidden === 'boolean' ? tc.isHidden : index >= 2;
 
-const getDriverCode = (language, userCode, testCases) => {
-    if (language === 'python') {
-        const inputs = testCases.map(tc => tc.input);
-        return `
-import sys
-import io
-
-${userCode}
-
-def driver():
-    user_stdout = io.StringIO()
-    old_stdout = sys.stdout
-    
-    inputs = ${JSON.stringify(inputs)}
-    results = []
-    for i in inputs:
-        sys.stdout = user_stdout
-        try:
-            if 'solve' not in globals():
-                sys.stdout = old_stdout
-                results.append("Error: Function 'solve' not found")
-                continue
-                
-            res = solve(i)
-            sys.stdout = old_stdout
-            results.append(str(res))
-        except Exception as e:
-            sys.stdout = old_stdout
-            results.append(f"Error: {str(e)}")
-            
-    sys.stdout = old_stdout
-    print(user_stdout.getvalue(), end="")
-    print("===LOGS_DONE===")
-    print("|||".join(results))
-
-if __name__ == "__main__":
-    driver()
-`;
-    }
-
-    if (language === 'java') {
-        const inputs = testCases.map(tc => tc.input);
-        return `
-import java.util.*;
-import java.io.*;
-
-public class Main {
-    public static void main(String[] args) {
-        String[] inputs = {${inputs.map(i => JSON.stringify(i)).join(',')}};
-        List<String> results = new ArrayList<>();
-        
-        PrintStream oldOut = System.out;
-        ByteArrayOutputStream userOut = new ByteArrayOutputStream();
-        PrintStream newOut = new PrintStream(userOut);
-        
-        Solution s = new Solution();
-        
-        for (String input : inputs) {
-            System.setOut(newOut);
-            try {
-                String res = s.solve(input);
-                System.setOut(oldOut);
-                results.add(res);
-            } catch (Exception e) {
-                System.setOut(oldOut);
-                results.add("Error: " + e.getMessage());
-            }
+const redactHiddenTestCases = (testCasesArray) =>
+    testCasesArray.map((tc, index) => {
+        if (!isTestCaseHidden(tc, index)) {
+            return { ...tc, isHidden: false };
         }
-        
-        System.out.print(userOut.toString());
-        System.out.println("===LOGS_DONE===");
-        System.out.print(String.join("|||", results));
-    }
-}
+        return { input: 'Hidden', output: 'Hidden', isHidden: true };
+    });
 
-${userCode}
-`;
-    }
-
-    return userCode;
+// Same idea, applied to *execution results* (run/submit) rather than the raw
+// test cases: a non-privileged viewer never sees the real input/expected/actual
+// for a hidden case, only whether it passed.
+const redactHiddenResults = (results, testCases, isPrivileged) => {
+    if (!results || isPrivileged) return results;
+    return results.map((r, index) => (
+        isTestCaseHidden(testCases[index], index)
+            ? { input: 'Hidden', output: 'Hidden', expected: 'Hidden', actual: r.passed ? 'Hidden' : 'Wrong Answer', passed: r.passed, isHidden: true }
+            : { ...r, isHidden: false }
+    ));
 };
 
-exports.createCodingQuestion = async (prisma, userId, { title, description, testCases, difficulty, sessionId }) => {
+const parseTestCases = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+};
+
+// Confirms the requesting user may view/run/submit this coding question, and
+// (when `requireLive` is set) that the question is currently LIVE. The
+// creator and ADMINs bypass both the booking and the LIVE-status check —
+// everyone else must be CONFIRMED/COMPLETED on the owning session.
+const assertCanAccessCodingQuestion = async (prisma, userId, userRole, id, { requireLive = false } = {}) => {
+    const question = await prisma.codingQuestion.findUnique({
+        where: { id },
+        include: { session: { select: { id: true, title: true, mentorId: true } } }
+    });
+
+    if (!question) {
+        throw new NotFoundError('Question not found');
+    }
+
+    const isCreator = question.creatorId === userId;
+    const isPrivileged = isCreator || userRole === 'ADMIN';
+
+    if (!isPrivileged) {
+        const booking = await prisma.booking.findFirst({
+            where: {
+                userId,
+                sessionId: question.sessionId,
+                status: { in: ['CONFIRMED', 'COMPLETED'] }
+            },
+            select: { id: true }
+        });
+        if (!booking) {
+            throw new ForbiddenError('You are not booked into this session');
+        }
+
+        if (requireLive && question.status !== 'LIVE') {
+            throw new ForbiddenError('This question is not currently live');
+        }
+    }
+
+    return { question, isCreator, isPrivileged };
+};
+
+const ALLOWED_LANGUAGES = ['javascript', 'python', 'java'];
+
+// Both `allowedLanguages` (array) and `starterCode`/`referenceSolution` (map
+// keyed by language) travel as JSON @db.Text columns, same convention as
+// `testCases`. `undefined` (field omitted) is left alone so partial updates
+// don't clobber existing values; `null`/`[]` explicitly clears it.
+const stringifyOrNull = (value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    return typeof value === 'string' ? value : JSON.stringify(value);
+};
+
+const buildAuthoringFields = ({ allowedLanguages, starterCode, referenceSolution, timeLimitMinutes, points }) => {
+    if (Array.isArray(allowedLanguages)) {
+        if (allowedLanguages.length === 0 || !allowedLanguages.every(l => ALLOWED_LANGUAGES.includes(l))) {
+            throw new BadRequestError(`allowedLanguages must be a non-empty subset of ${ALLOWED_LANGUAGES.join(', ')}`);
+        }
+    }
+    return {
+        allowedLanguages: stringifyOrNull(allowedLanguages),
+        starterCode: stringifyOrNull(starterCode),
+        referenceSolution: stringifyOrNull(referenceSolution),
+        timeLimitMinutes: timeLimitMinutes === undefined ? undefined : (timeLimitMinutes === null || timeLimitMinutes === '' ? null : Number(timeLimitMinutes)),
+        points: points === undefined ? undefined : (points === null || points === '' ? 100 : Number(points))
+    };
+};
+
+exports.createCodingQuestion = async (prisma, userId, payload) => {
+    const { title, description, testCases, difficulty, sessionId } = payload;
     if (!sessionId || !title || !description) {
         throw new BadRequestError('Missing required fields');
     }
@@ -117,8 +138,71 @@ exports.createCodingQuestion = async (prisma, userId, { title, description, test
             difficulty: difficulty || 'MEDIUM',
             sessionId,
             creatorId: userId,
-            status: 'DRAFT'
+            status: 'DRAFT',
+            ...buildAuthoringFields(payload)
         }
+    });
+};
+
+exports.getCodingQuestionsByCreator = async (prisma, userId) => {
+    const questions = await prisma.codingQuestion.findMany({
+        where: { creatorId: userId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            session: { select: { id: true, title: true } },
+            _count: { select: { submissions: true } }
+        }
+    });
+
+    return questions.map(({ _count, ...q }) => ({ ...q, submissionCount: _count.submissions }));
+};
+
+exports.updateCodingQuestion = async (prisma, userId, id, payload) => {
+    const existing = await prisma.codingQuestion.findUnique({ where: { id } });
+    if (!existing) {
+        throw new NotFoundError('Question not found');
+    }
+    if (existing.creatorId !== userId) {
+        throw new ForbiddenError('Unauthorized');
+    }
+    if (existing.status === 'CLOSED') {
+        throw new ConflictError('A closed question can no longer be edited — create a new one instead');
+    }
+
+    const { title, description, testCases, difficulty, sessionId } = payload;
+    let testCasesString;
+    if (testCases !== undefined) {
+        testCasesString = typeof testCases === 'object' ? JSON.stringify(testCases) : testCases;
+    }
+
+    return await prisma.codingQuestion.update({
+        where: { id },
+        data: {
+            ...(title !== undefined && { title }),
+            ...(description !== undefined && { description }),
+            ...(testCasesString !== undefined && { testCases: testCasesString }),
+            ...(difficulty !== undefined && { difficulty }),
+            ...(sessionId !== undefined && { sessionId }),
+            ...buildAuthoringFields(payload)
+        }
+    });
+};
+
+exports.closeCodingQuestion = async (prisma, userId, id) => {
+    const existing = await prisma.codingQuestion.findUnique({ where: { id } });
+    if (!existing) {
+        throw new NotFoundError('Question not found');
+    }
+    if (existing.creatorId !== userId) {
+        throw new ForbiddenError('Unauthorized');
+    }
+    if (existing.status === 'CLOSED') {
+        throw new ConflictError('Question is already closed');
+    }
+
+    return await prisma.codingQuestion.update({
+        where: { id },
+        data: { status: 'CLOSED' }
     });
 };
 
@@ -184,118 +268,100 @@ exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {
     }));
 };
 
-exports.submitCodingQuestion = async (prisma, userId, id, { code, language, status }) => {
-    return await prisma.codingSubmission.create({
+exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, language }) => {
+    if (!code || typeof code !== 'string') {
+        throw new BadRequestError('Code is required');
+    }
+    if (!['javascript', 'python', 'java'].includes(language)) {
+        throw new BadRequestError('Unsupported language');
+    }
+
+    const { question, isPrivileged } = await assertCanAccessCodingQuestion(prisma, userId, userRole, id, { requireLive: true });
+
+    const testCases = parseTestCases(question.testCases);
+    if (testCases.length === 0) {
+        throw new BadRequestError('This question has no test cases configured');
+    }
+
+    // The server re-runs every test case itself here, against the real
+    // (never-redacted) test cases it just fetched, and decides pass/fail —
+    // any `status`/`results` the client sends is ignored, so a submission
+    // can't be faked by simply POSTing status: "PASSED". The client no longer
+    // pre-verifies its own code before calling this endpoint, since doing so
+    // against the redacted hidden test cases would just fail every time.
+    const { results, error } = await codeRunner.runTestCases(language, code, testCases);
+    const status = !error && results && results.length > 0 && results.every(r => r.passed)
+        ? 'PASSED'
+        : 'FAILED';
+
+    const submission = await prisma.codingSubmission.create({
         data: {
             userId,
             codingQuestionId: id,
             code,
             language,
-            status // 'PASSED' or 'FAILED'
+            status
         }
+    });
+
+    return { submission, results: redactHiddenResults(results, testCases, isPrivileged), error };
+};
+
+exports.getMySubmissions = async (prisma, userId, userRole, id) => {
+    // Self-scoped (userId is always the requester's own), but still gated on
+    // booking/LIVE status so a stranger can't probe a question's existence.
+    await assertCanAccessCodingQuestion(prisma, userId, userRole, id, { requireLive: true });
+
+    return await prisma.codingSubmission.findMany({
+        where: { userId, codingQuestionId: id },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, code: true, language: true, status: true, createdAt: true }
     });
 };
 
-exports.getCodingQuestionById = async (prisma, userId, id) => {
-    const question = await prisma.codingQuestion.findUnique({
-        where: { id },
-        include: {
-            submissions: {
-                where: { userId, status: 'PASSED' },
-                select: { id: true }
-            }
-        }
+exports.getCodingQuestionById = async (prisma, userId, userRole, id) => {
+    const { question, isPrivileged } = await assertCanAccessCodingQuestion(prisma, userId, userRole, id, { requireLive: true });
+
+    const submissions = await prisma.codingSubmission.findMany({
+        where: { userId, codingQuestionId: id, status: 'PASSED' },
+        select: { id: true }
     });
 
-    if (!question) {
-        throw new NotFoundError('Question not found');
-    }
+    const testCases = parseTestCases(question.testCases);
+    const visibleTestCases = isPrivileged ? testCases : redactHiddenTestCases(testCases);
 
     return {
         ...question,
-        isSolved: question.submissions.length > 0
+        testCases: JSON.stringify(visibleTestCases),
+        // The reference solution is a mentor-only authoring aid — never ship
+        // it to a student, even a booked/LIVE one.
+        referenceSolution: isPrivileged ? question.referenceSolution : undefined,
+        isSolved: submissions.length > 0
     };
 };
 
-const executePiston = async (language, sourceCode, input = '') => {
-    if (sourceCode.length > 10000) {
-        throw new BadRequestError('Code exceeds maximum length of 10,000 characters');
+exports.executeCode = async (prisma, userId, userRole, { language, code, testCases, codingQuestionId }) => {
+    if (!codingQuestionId) {
+        throw new BadRequestError('codingQuestionId is required');
     }
 
-    try {
-        const resp = await axios.post(
-            process.env.PISTON_API_URL || 'https://emkc.org/api/v2/piston/execute',
-            {
-                language: language.toLowerCase(),
-                version: '*',
-                files: [{ name: 'solution', content: sourceCode }],
-                stdin: input || '',
-            },
-            { timeout: 10000 }
-        );
-        return { 
-            stdout: resp.data.run.stdout, 
-            stderr: resp.data.run.stderr, 
-            exitCode: resp.data.run.code 
-        };
-    } catch (error) {
-        logger.error('Piston API execution failed:', error.message || error);
-        throw new AppError('Code execution service unavailable', 503);
-    }
-};
-
-exports.executeCode = async ({ language, code, testCases }) => {
-    if (!code || typeof code !== 'string') {
-        throw new BadRequestError("Code must be a string");
-    }
-    if (code.length > 10000) {
-        throw new BadRequestError('Code exceeds maximum length of 10,000 characters');
-    }
-
-    if (!Array.isArray(testCases) || testCases.length === 0 || testCases.length > 10) {
-        throw new BadRequestError("Test cases must be an array with a maximum of 10 items");
-    }
-
-    for (let i = 0; i < testCases.length; i++) {
-        const tc = testCases[i];
-        if (!tc || typeof tc.input !== 'string' || tc.input.length > 500) {
-            throw new BadRequestError(`Test case ${i + 1} input must be a string under 500 characters`);
-        }
-    }
+    // Confirms the requester is booked into the session (or is the creator/an
+    // admin) and that the question is currently LIVE, before letting them
+    // spend a Piston execution on it.
+    const { isPrivileged } = await assertCanAccessCodingQuestion(prisma, userId, userRole, codingQuestionId, { requireLive: true });
 
     if (language === 'javascript') {
-        return { success: false, message: "JS execution should happen on client" };
+        return { success: false, message: 'JS execution should happen on client' };
     }
 
-    const sourceContent = getDriverCode(language, code, testCases);
-    
-    const run = await executePiston(language, sourceContent);
-
-    if (run.stderr) {
-        return { error: run.stderr };
+    const { results, logs, error } = await codeRunner.runTestCases(language, code, testCases);
+    if (error || !results) {
+        return { results, logs, error };
     }
 
-    const rawOutput = run.stdout;
-    let logs = '';
-    let resultsOutput = rawOutput;
-    
-    if (rawOutput.includes('===LOGS_DONE===')) {
-        const parts = rawOutput.split('===LOGS_DONE===');
-        logs = parts[0].trim();
-        resultsOutput = parts[1].trim();
-    }
-
-    const outputs = resultsOutput.split('|||');
-
-    const results = testCases.map((tc, index) => {
-        const actual = outputs[index] ? outputs[index].replace(/\n/g, '') : 'No Output';
-        return {
-            input: tc.input,
-            expected: tc.output,
-            actual: actual,
-            passed: actual.trim() === tc.output.trim()
-        };
-    });
-
-    return { results, logs };
+    // Non-creators never see the real input/expected/actual for a hidden
+    // test case in the raw API response, even though the client only ever
+    // *displays* a redacted version — this closes the devtools-network-tab
+    // leak of the un-redacted values.
+    return { results: redactHiddenResults(results, testCases, isPrivileged), logs };
 };

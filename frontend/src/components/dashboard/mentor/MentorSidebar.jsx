@@ -7,7 +7,8 @@ import {
     HelpCircle,
     Settings,
     QrCode,
-    AlertTriangle
+    AlertTriangle,
+    Code
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import EarningsTeaserCard from './EarningsTeaserCard';
@@ -21,6 +22,7 @@ import { useTheme } from '../../../context/ThemeContext';
 const TAB_PATHS = {
     'Dashboard': '/mentor/dashboard',
     'My Sessions': '/mentor/sessions',
+    'Coding Questions': '/mentor/coding-questions',
     'Reports': '/mentor/reports',
     'Scan Attendance': '/mentor/scan-attendance',
     'Reviews Received': '/mentor/reviews',
@@ -31,6 +33,7 @@ const TAB_PATHS = {
 const BASE_ITEMS = [
     { icon: LayoutDashboard, label: 'Dashboard' },
     { icon: Calendar, label: 'My Sessions' },
+    { icon: Code, label: 'Coding Questions' },
     { icon: AlertTriangle, label: 'Reports' },
     { icon: QrCode, label: 'Scan Attendance' },
     { icon: Star, label: 'Reviews Received' },

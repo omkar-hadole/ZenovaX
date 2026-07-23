@@ -5,8 +5,12 @@ const codingChallengeController = require('../controllers/codingChallengeControl
 
 router.post('/create', protect, authorize('MENTOR', 'BOTH'), codingChallengeController.createCodingQuestion);
 router.post('/execute', protect, require('../controllers/codingExecutionController').executeCode);
+router.get('/mine', protect, authorize('MENTOR', 'BOTH'), codingChallengeController.getCodingQuestionsByCreator);
 router.put('/:id/launch', protect, authorize('MENTOR', 'BOTH'), codingChallengeController.launchCodingQuestion);
+router.put('/:id/close', protect, authorize('MENTOR', 'BOTH'), codingChallengeController.closeCodingQuestion);
+router.put('/:id', protect, authorize('MENTOR', 'BOTH'), codingChallengeController.updateCodingQuestion);
 router.get('/session/:sessionId', protect, codingChallengeController.getCodingQuestionsBySession);
+router.get('/:id/submissions/mine', protect, codingChallengeController.getMySubmissions);
 router.get('/:id', protect, codingChallengeController.getCodingQuestionById);
 router.post('/:id/submit', protect, codingChallengeController.submitCodingQuestion);
 

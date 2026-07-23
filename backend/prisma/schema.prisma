@@ -847,9 +847,16 @@ model CodingQuestion {
   // Details
   title           String
   description     String        @db.Text
-  testCases       String        @db.Text // JSON strings like [{input: "1", output: "2"}]
+  testCases       String        @db.Text // JSON strings like [{input: "1", output: "2", isHidden: false}]
   difficulty      String        @default("MEDIUM")
-  
+
+  // Authoring extras (all optional/backward-compatible with older rows)
+  allowedLanguages   String?    @db.Text // JSON array e.g. ["javascript","python"]; null = all 3 languages
+  starterCode        String?    @db.Text // JSON map { javascript, python, java } of starter code per language
+  referenceSolution  String?    @db.Text
+  timeLimitMinutes   Int?
+  points             Int?       @default(100)
+
   // Status
   status          QuizStatus    @default(DRAFT)
   
@@ -883,6 +890,7 @@ model CodingSubmission {
   
   @@index([userId])
   @@index([codingQuestionId])
+  @@index([userId, codingQuestionId])
   @@map("coding_submissions")
 }
 
