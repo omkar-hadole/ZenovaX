@@ -66,13 +66,21 @@ exports.askAI = async (user, { question, username } = {}) => {
     }
 
     try {
-        const result = await model.generateContent(SYSTEM_PROMPT + question, { timeout: 30000 });
+        // Gemini occasionally degrades under load (503 "high demand") and can
+        // otherwise take 10-20+s to respond — a 30s timeout means a chat
+        // widget hangs for half a minute before failing. 8s keeps the worst
+        // case bounded to something a "thinking..." indicator can cover.
+        const result = await model.generateContent(SYSTEM_PROMPT + question, { timeout: 8000 });
         return { answer: result.response.text() };
     } catch (error) {
         logger.error("AI Service Error:", { message: error.message, status: error.status });
 
         if (error.status === 429 || error.message.includes("429")) {
             return { answer: "API Quota Exceeded (429). Your Google Project has no quota left. Please create a NEW Project." };
+        }
+
+        if (error.code === 'ETIMEDOUT' || /timeout|abort/i.test(error.message || '')) {
+            return { answer: "The AI assistant is taking too long to respond right now. Please try again in a moment." };
         }
 
         return { answer: "I'm having trouble connecting to the AI service right now. Please try again later." };
