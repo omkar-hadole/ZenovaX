@@ -91,7 +91,10 @@ exports.askAI = async (user, { question, username } = {}) => {
     if (!model) {
         if (!process.env.GEMINI_API_KEY) {
             logger.warn("GEMINI_API_KEY is not set. AI assistant is unavailable.");
-            return { answer: "The AI assistant is not configured right now. Please contact WhatsApp support for help." };
+            return {
+                answer: "Zen's free assistant isn't available right now. Please contact WhatsApp support, or connect your own ChatGPT account below to keep chatting.",
+                suggestChatGPT: true
+            };
         }
         model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
     }
@@ -106,18 +109,28 @@ exports.askAI = async (user, { question, username } = {}) => {
     } catch (error) {
         logger.error("AI Service Error:", { message: error.message, status: error.status });
 
+        // Whatever the reason Gemini failed, the fix from the user's side is
+        // the same — try again, or connect their own ChatGPT account — so
+        // every failure branch here surfaces that option via `suggestChatGPT`
+        // rather than leaving them stuck with only a generic error.
         if (error.status === 429 || error.message.includes("429")) {
             return {
-                answer: "API Quota Exceeded (429). Your Google Project has no quota left. Please create a NEW Project.",
-                quotaExceeded: true
+                answer: "Zen's free assistant has hit its usage limit for now. Try again shortly, or connect your own ChatGPT account below to keep chatting.",
+                suggestChatGPT: true
             };
         }
 
         if (error.code === 'ETIMEDOUT' || /timeout|abort/i.test(error.message || '')) {
-            return { answer: "The AI assistant is taking too long to respond right now. Please try again in a moment." };
+            return {
+                answer: "Zen's free assistant is a bit busy right now. Try again in a moment, or connect your own ChatGPT account below to keep chatting.",
+                suggestChatGPT: true
+            };
         }
 
-        return { answer: "I'm having trouble connecting to the AI service right now. Please try again later." };
+        return {
+            answer: "Zen's free assistant is having trouble responding right now. Try again shortly, or connect your own ChatGPT account below to keep chatting.",
+            suggestChatGPT: true
+        };
     }
 };
 

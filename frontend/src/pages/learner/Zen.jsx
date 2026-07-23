@@ -220,7 +220,7 @@ const Zen = () => {
                 : await axios.post(API_ENDPOINT, { question: q, username });
 
             setChat(prev => [...prev, { role: 'assistant', text: data.answer }]);
-            if (data.quotaExceeded && !chatGptConnected) {
+            if (data.suggestChatGPT && !chatGptConnected) {
                 setShowQuotaSuggestion(true);
             }
         } catch {
@@ -351,11 +351,11 @@ const Zen = () => {
             <div className="w-full flex justify-center p-6 pt-2 z-50 bg-white/0">
                 <div className="w-full max-w-[850px]">
 
-                    {/* Optional ChatGPT fallback suggestion — shown when Gemini's free quota is exhausted */}
+                    {/* Optional ChatGPT fallback suggestion — shown whenever Zen's default assistant fails to respond */}
                     {showQuotaSuggestion && (
                         <div className="mb-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between gap-3 text-sm">
                             <span className="text-indigo-700 dark:text-indigo-300">
-                                Gemini's free quota is exhausted right now. Connect your own ChatGPT account to keep chatting.
+                                Zen's default assistant is busy right now. Connect your own ChatGPT account to keep chatting.
                             </span>
                             {needsChatGptExtension ? (
                                 <button
