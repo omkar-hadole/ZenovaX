@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles, Link2, CheckCircle2, LogOut } from 'lucide-react';
+import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, "").replace(/\/api$/, "");
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
+const CHATGPT_ENDPOINT = `${BASE_URL}/api/help/ask-ai-chatgpt`;
 const BRAND_COLOR = '#7A79E6'; // ZenovaX Brand Color
+const PROVIDER_STORAGE_KEY = 'zen-ai-provider';
 
 const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
     const canvasRef = useRef(null);
@@ -98,10 +101,29 @@ const Zen = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [provider, setProviderState] = useState(() => localStorage.getItem(PROVIDER_STORAGE_KEY) || 'gemini');
+    const [showQuotaSuggestion, setShowQuotaSuggestion] = useState(false);
     const { user } = useAuth();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const bottomRef = useRef(null);
+
+    const setProvider = (next) => {
+        setProviderState(next);
+        localStorage.setItem(PROVIDER_STORAGE_KEY, next);
+    };
+
+    // Optional per-user fallback: each student connects their OWN ChatGPT
+    // account (never a shared/pooled credential — see helpService.js for
+    // why). Redirects back to this same page rather than the extension-based
+    // flow, so no browser extension install is required.
+    const { isSignedIn: chatGptConnected, login: connectChatGPT, logout: disconnectChatGPT } = useSignInWithChatGPT({
+        redirectUri: `${window.location.origin}/zen`,
+        onSuccess: () => {
+            setProvider('chatgpt');
+            setShowQuotaSuggestion(false);
+        },
+    });
 
     // Auto-scroll to the latest message/typing indicator, same as
     // ChatGPT/Gemini, instead of leaving the user stuck wherever they were.
@@ -125,12 +147,24 @@ const Zen = () => {
         setInput('');
         setIsTyping(false);
         setLoading(true);
+        setShowQuotaSuggestion(false);
         setChat(prev => [...prev, { role: 'user', text: q }]);
 
+        const username = user?.name || user?.firstName || "Creator";
+        // `provider` is a persisted preference, but the ChatGPT session it
+        // refers to may have expired since — fall back to Gemini rather than
+        // send a request that's guaranteed to fail.
+        const useChatGPT = provider === 'chatgpt' && chatGptConnected;
+
         try {
-            const username = user?.name || user?.firstName || "Creator";
-            const { data } = await axios.post(API_ENDPOINT, { question: q, username });
+            const { data } = useChatGPT
+                ? await axios.post(CHATGPT_ENDPOINT, { question: q, username }, { headers: await openaiAuthHeaders() })
+                : await axios.post(API_ENDPOINT, { question: q, username });
+
             setChat(prev => [...prev, { role: 'assistant', text: data.answer }]);
+            if (data.quotaExceeded && !chatGptConnected) {
+                setShowQuotaSuggestion(true);
+            }
         } catch {
             setChat(prev => [...prev, { role: 'assistant', text: "Service unavailable. Please contact support." }]);
         }
@@ -217,6 +251,63 @@ const Zen = () => {
             {/* Input Footer - Stays at bottom */}
             <div className="w-full flex justify-center p-6 pt-2 z-50 bg-white/0">
                 <div className="w-full max-w-[850px]">
+
+                    {/* Optional ChatGPT fallback suggestion — shown when Gemini's free quota is exhausted */}
+                    {showQuotaSuggestion && (
+                        <div className="mb-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between gap-3 text-sm">
+                            <span className="text-indigo-700 dark:text-indigo-300">
+                                Gemini's free quota is exhausted right now. Connect your own ChatGPT account to keep chatting.
+                            </span>
+                            <button
+                                onClick={connectChatGPT}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors"
+                            >
+                                <Link2 className="w-3.5 h-3.5" /> Connect ChatGPT
+                            </button>
+                        </div>
+                    )}
+
+                    {/* AI provider selector — Gemini is the default shared assistant; connecting a
+                        personal ChatGPT account is entirely optional and per-user (never pooled). */}
+                    <div className="mb-2 flex items-center gap-2 px-1">
+                        <button
+                            onClick={() => setProvider('gemini')}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${provider === 'gemini' || !chatGptConnected
+                                ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'
+                                : 'text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300'
+                                }`}
+                        >
+                            Zen (default)
+                        </button>
+                        {chatGptConnected ? (
+                            <>
+                                <button
+                                    onClick={() => setProvider('chatgpt')}
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${provider === 'chatgpt'
+                                        ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'
+                                        : 'text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300'
+                                        }`}
+                                >
+                                    <CheckCircle2 className="w-3 h-3" /> Your ChatGPT
+                                </button>
+                                <button
+                                    onClick={disconnectChatGPT}
+                                    title="Disconnect ChatGPT"
+                                    className="ml-auto flex items-center gap-1 px-2 py-1 rounded-full text-xs text-slate-400 dark:text-gray-500 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                                >
+                                    <LogOut className="w-3 h-3" /> Disconnect
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={connectChatGPT}
+                                className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-slate-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                            >
+                                <Link2 className="w-3 h-3" /> Connect your ChatGPT (optional)
+                            </button>
+                        )}
+                    </div>
+
                     <div className="w-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-700 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[22px] p-2 relative flex items-end gap-2 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
 
                         {/* Sparkles Icon */}

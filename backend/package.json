@@ -15,8 +15,12 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@openai-oauth/ai-sdk": "^2.0.0",
+    "@openai-oauth/core": "^2.0.0",
+    "@openai-oauth/web": "^2.0.0",
     "@prisma/client": "^6.19.3",
     "@sentry/node": "^10.57.0",
+    "ai": "^6.0.234",
     "axios": "^1.13.3",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.78.0",
@@ -39,7 +43,8 @@
     "semver": "^7.5.4",
     "serverless-http": "^4.0.0",
     "winston": "^3.19.0",
-    "xss": "^1.0.15"
+    "xss": "^1.0.15",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "eslint": "^8.0.0",

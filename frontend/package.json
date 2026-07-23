@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@openai-oauth/react": "^2.0.0",
     "@sentry/react": "^10.57.0",
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.4",
