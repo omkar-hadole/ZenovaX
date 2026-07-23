@@ -101,6 +101,13 @@ const Zen = () => {
     const { user } = useAuth();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const bottomRef = useRef(null);
+
+    // Auto-scroll to the latest message/typing indicator, same as
+    // ChatGPT/Gemini, instead of leaving the user stuck wherever they were.
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, [chat, loading]);
 
 
     const getGreeting = () => {
@@ -201,6 +208,7 @@ const Zen = () => {
                                     </div>
                                 </div>
                             )}
+                            <div ref={bottomRef} />
                         </div>
                     )}
                 </div>
