@@ -15,7 +15,12 @@ function csrfProtection(req, res, next) {
         '/api/auth/resend-verification',
         '/api/auth/forgot-password',
         '/api/auth/reset-password',
-        '/api/auth/csrf'
+        '/api/auth/csrf',
+        // Carries the user's own ChatGPT OAuth token as its Authorization
+        // Bearer header, not a ZenovaX session — step 3 below would
+        // otherwise mistake that for an authenticated ZenovaX session and
+        // demand a CSRF cookie/header pair this request never has.
+        '/api/help/ask-ai-chatgpt'
     ];
     if (exemptPaths.some(p => path === p)) {
         return next();

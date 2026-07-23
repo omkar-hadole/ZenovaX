@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { Send, Sparkles, Link2, CheckCircle2, LogOut } from 'lucide-react';
+import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check, MessageSquarePlus } from 'lucide-react';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -11,6 +11,20 @@ const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
 const CHATGPT_ENDPOINT = `${BASE_URL}/api/help/ask-ai-chatgpt`;
 const BRAND_COLOR = '#7A79E6'; // ZenovaX Brand Color
 const PROVIDER_STORAGE_KEY = 'zen-ai-provider';
+// sessionStorage (not localStorage): survives an accidental refresh or
+// coming back to the tab later, but is cleared automatically once the
+// browser/tab is actually closed — matching what was asked for.
+const CHAT_STORAGE_KEY = 'zen-chat-history';
+
+const loadStoredChat = () => {
+    try {
+        const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+};
 
 const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
     const canvasRef = useRef(null);
@@ -97,12 +111,14 @@ const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
 };
 
 const Zen = () => {
-    const [chat, setChat] = useState([]);
+    const [chat, setChat] = useState(loadStoredChat);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [provider, setProviderState] = useState(() => localStorage.getItem(PROVIDER_STORAGE_KEY) || 'gemini');
     const [showQuotaSuggestion, setShowQuotaSuggestion] = useState(false);
+    const [thinkingSeconds, setThinkingSeconds] = useState(0);
+    const [copiedIndex, setCopiedIndex] = useState(null);
     const { user } = useAuth();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -139,6 +155,40 @@ const Zen = () => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, [chat, loading]);
 
+    // Persist chat to sessionStorage so an accidental refresh (or coming back
+    // to the tab later) doesn't lose the conversation — sessionStorage itself
+    // is cleared automatically once the tab/browser is closed.
+    useEffect(() => {
+        sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chat));
+    }, [chat]);
+
+    const handleNewChat = () => {
+        setChat([]);
+        sessionStorage.removeItem(CHAT_STORAGE_KEY);
+        setShowQuotaSuggestion(false);
+        setInput('');
+    };
+
+    // Elapsed-time ticker for the "thinking" indicator, matching ChatGPT/Claude's
+    // "still working on it" style feedback instead of a static, unchanging label.
+    useEffect(() => {
+        if (!loading) {
+            setThinkingSeconds(0);
+            return;
+        }
+        const intervalId = setInterval(() => {
+            setThinkingSeconds(s => s + 1);
+        }, 1000);
+        return () => clearInterval(intervalId);
+    }, [loading]);
+
+    const getThinkingMessage = (seconds) => {
+        if (seconds < 4) return 'Zen is thinking';
+        if (seconds < 10) return 'Still working on it';
+        if (seconds < 18) return 'Almost done';
+        return 'Just a little longer';
+    };
+
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -170,7 +220,7 @@ const Zen = () => {
                 : await axios.post(API_ENDPOINT, { question: q, username });
 
             setChat(prev => [...prev, { role: 'assistant', text: data.answer }]);
-            if (data.quotaExceeded && !chatGptConnected) {
+            if (data.suggestChatGPT && !chatGptConnected) {
                 setShowQuotaSuggestion(true);
             }
         } catch {
@@ -191,12 +241,34 @@ const Zen = () => {
         }
     };
 
+    const handleCopy = async (text, index) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedIndex(index);
+            setTimeout(() => setCopiedIndex(prev => (prev === index ? null : prev)), 2000);
+        } catch {
+            // Clipboard access can be denied by the browser — fail silently,
+            // nothing else meaningful to do here.
+        }
+    };
+
     return (
 
         <div className="h-[calc(100vh-6rem)] bg-white dark:bg-gray-950 flex flex-col relative font-outfit overflow-hidden">
             {/* Soft Ambient Background Glows */}
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-100/40 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-100/40 dark:bg-blue-500/10 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2"></div>
+
+            {/* New Chat — clears the conversation from screen and sessionStorage */}
+            {chat.length > 0 && (
+                <button
+                    onClick={handleNewChat}
+                    title="New chat"
+                    className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-gray-400 bg-white/80 dark:bg-gray-900/80 border border-slate-100 dark:border-gray-700 shadow-sm hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-md transition-all backdrop-blur-sm"
+                >
+                    <MessageSquarePlus className="w-4 h-4" /> New Chat
+                </button>
+            )}
 
             {/* Main Scrollable Area */}
             <div className="flex-1 w-full overflow-y-auto relative z-10 flex flex-col items-center custom-scrollbar">
@@ -226,7 +298,7 @@ const Zen = () => {
                     {chat.length > 0 && (
                         <div className="w-full max-w-[850px] space-y-4 mb-4 px-4">
                             {chat.map((m, i) => (
-                                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div key={i} className={`group flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
                                     <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed ${m.role === 'user'
                                         ? 'text-white rounded-tr-sm shadow-md shadow-indigo-500/10'
                                         : 'bg-white/80 dark:bg-gray-800/80 border border-slate-100 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-tl-sm shadow-sm'
@@ -241,12 +313,31 @@ const Zen = () => {
                                             <ReactMarkdown>{m.text}</ReactMarkdown>
                                         </div>
                                     </div>
+                                    {m.role === 'assistant' && (
+                                        <button
+                                            onClick={() => handleCopy(m.text, i)}
+                                            className={`mt-1.5 ml-1 flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 transition-all ${copiedIndex === i ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                }`}
+                                        >
+                                            {copiedIndex === i ? (
+                                                <><Check className="w-3.5 h-3.5 text-emerald-500" /> Copied</>
+                                            ) : (
+                                                <><Copy className="w-3.5 h-3.5" /> Copy</>
+                                            )}
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                             {loading && (
                                 <div className="px-4">
                                     <div className="text-sm text-slate-400 dark:text-gray-500 font-medium flex items-center gap-2">
-                                        Zen is thinking...
+                                        <span className="flex gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" />
+                                        </span>
+                                        {getThinkingMessage(thinkingSeconds)}
+                                        {thinkingSeconds > 0 && ` · ${thinkingSeconds}s`}
                                     </div>
                                 </div>
                             )}
@@ -260,11 +351,11 @@ const Zen = () => {
             <div className="w-full flex justify-center p-6 pt-2 z-50 bg-white/0">
                 <div className="w-full max-w-[850px]">
 
-                    {/* Optional ChatGPT fallback suggestion — shown when Gemini's free quota is exhausted */}
+                    {/* Optional ChatGPT fallback suggestion — shown whenever Zen's default assistant fails to respond */}
                     {showQuotaSuggestion && (
                         <div className="mb-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between gap-3 text-sm">
                             <span className="text-indigo-700 dark:text-indigo-300">
-                                Gemini's free quota is exhausted right now. Connect your own ChatGPT account to keep chatting.
+                                Zen's default assistant is busy right now. Connect your own ChatGPT account to keep chatting.
                             </span>
                             {needsChatGptExtension ? (
                                 <button

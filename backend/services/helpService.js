@@ -29,7 +29,15 @@ const loadOpenAIOAuthModules = () => {
 
 const HELP_CONTEXT = fs.readFileSync(path.join(__dirname, '../HELP_CENTER.md'), 'utf8');
 
+// Gemini is the shared, free-tier default — kept strictly on-topic so the
+// pooled quota isn't spent on general-purpose chat.
 const SYSTEM_PROMPT = `You're ZenovaX support. Context:\n${HELP_CONTEXT}\n\nAnswer ONLY using context. If unrelated, say "I can’t help with this. Please contact WhatsApp support."\n\nQuestion: `;
+
+// The ChatGPT fallback runs on the user's OWN account/credits, so there's no
+// shared-resource reason to refuse general questions — it still gets the
+// ZenovaX context so platform questions stay accurate, but otherwise behaves
+// like a normal assistant.
+const CHATGPT_SYSTEM_PROMPT = `You're Zen, ZenovaX's AI assistant, running on the user's own connected ChatGPT account. Here's context about the ZenovaX platform for when it's relevant:\n${HELP_CONTEXT}\n\nAnswer the user's question normally — use the context above for ZenovaX-specific questions, and your own general knowledge for everything else.\n\nQuestion: `;
 
 const OWNER_TRIGGERS = [
     'who created',
@@ -83,7 +91,10 @@ exports.askAI = async (user, { question, username } = {}) => {
     if (!model) {
         if (!process.env.GEMINI_API_KEY) {
             logger.warn("GEMINI_API_KEY is not set. AI assistant is unavailable.");
-            return { answer: "The AI assistant is not configured right now. Please contact WhatsApp support for help." };
+            return {
+                answer: "Zen's free assistant isn't available right now. Please contact WhatsApp support, or connect your own ChatGPT account below to keep chatting.",
+                suggestChatGPT: true
+            };
         }
         model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
     }
@@ -98,18 +109,28 @@ exports.askAI = async (user, { question, username } = {}) => {
     } catch (error) {
         logger.error("AI Service Error:", { message: error.message, status: error.status });
 
+        // Whatever the reason Gemini failed, the fix from the user's side is
+        // the same — try again, or connect their own ChatGPT account — so
+        // every failure branch here surfaces that option via `suggestChatGPT`
+        // rather than leaving them stuck with only a generic error.
         if (error.status === 429 || error.message.includes("429")) {
             return {
-                answer: "API Quota Exceeded (429). Your Google Project has no quota left. Please create a NEW Project.",
-                quotaExceeded: true
+                answer: "Zen's free assistant has hit its usage limit for now. Try again shortly, or connect your own ChatGPT account below to keep chatting.",
+                suggestChatGPT: true
             };
         }
 
         if (error.code === 'ETIMEDOUT' || /timeout|abort/i.test(error.message || '')) {
-            return { answer: "The AI assistant is taking too long to respond right now. Please try again in a moment." };
+            return {
+                answer: "Zen's free assistant is a bit busy right now. Try again in a moment, or connect your own ChatGPT account below to keep chatting.",
+                suggestChatGPT: true
+            };
         }
 
-        return { answer: "I'm having trouble connecting to the AI service right now. Please try again later." };
+        return {
+            answer: "Zen's free assistant is having trouble responding right now. Try again shortly, or connect your own ChatGPT account below to keep chatting.",
+            suggestChatGPT: true
+        };
     }
 };
 
@@ -139,13 +160,20 @@ exports.askAIWithChatGPT = async (user, { question, username } = {}, requestHead
         throw new BadRequestError("ChatGPT sign-in required — connect your ChatGPT account first.");
     }
 
+    // Unlike Gemini's 8s (a shared, rate-limited resource), this runs on the
+    // user's own ChatGPT account, and longer answers (stories, thoughtful
+    // responses) can genuinely take 10-20s+ with gpt-5.4-mini. 25s leaves
+    // headroom under the app's own 30s request timeout (server.js) and the
+    // Lambda's 30s function timeout in production, so this code gets to
+    // return a friendly message before the infra layer just kills the
+    // connection.
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     try {
         const provider = createOpenAIOAuth(auth);
         const result = await generateText({
             model: provider('gpt-5.4-mini'),
-            prompt: SYSTEM_PROMPT + question,
+            prompt: CHATGPT_SYSTEM_PROMPT + question,
             abortSignal: controller.signal,
         });
         return { answer: result.text };
