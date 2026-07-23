@@ -29,6 +29,15 @@ const prisma = require("./utils/db");
 
 const app = express();
 
+// Behind API Gateway there's exactly one hop adding X-Forwarded-For before
+// this Lambda. Without this, Express's default `trust proxy: false` makes
+// express-rate-limit treat that header as untrustworthy and throw a
+// ValidationError on every request — which, under serverless-http, can crash
+// the invocation before Express finishes writing a response. API Gateway then
+// returns its own generic error with no CORS headers, which is what actually
+// surfaces in the browser as a "CORS" failure.
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
