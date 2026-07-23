@@ -29,7 +29,15 @@ const loadOpenAIOAuthModules = () => {
 
 const HELP_CONTEXT = fs.readFileSync(path.join(__dirname, '../HELP_CENTER.md'), 'utf8');
 
+// Gemini is the shared, free-tier default — kept strictly on-topic so the
+// pooled quota isn't spent on general-purpose chat.
 const SYSTEM_PROMPT = `You're ZenovaX support. Context:\n${HELP_CONTEXT}\n\nAnswer ONLY using context. If unrelated, say "I can’t help with this. Please contact WhatsApp support."\n\nQuestion: `;
+
+// The ChatGPT fallback runs on the user's OWN account/credits, so there's no
+// shared-resource reason to refuse general questions — it still gets the
+// ZenovaX context so platform questions stay accurate, but otherwise behaves
+// like a normal assistant.
+const CHATGPT_SYSTEM_PROMPT = `You're Zen, ZenovaX's AI assistant, running on the user's own connected ChatGPT account. Here's context about the ZenovaX platform for when it's relevant:\n${HELP_CONTEXT}\n\nAnswer the user's question normally — use the context above for ZenovaX-specific questions, and your own general knowledge for everything else.\n\nQuestion: `;
 
 const OWNER_TRIGGERS = [
     'who created',
@@ -145,7 +153,7 @@ exports.askAIWithChatGPT = async (user, { question, username } = {}, requestHead
         const provider = createOpenAIOAuth(auth);
         const result = await generateText({
             model: provider('gpt-5.4-mini'),
-            prompt: SYSTEM_PROMPT + question,
+            prompt: CHATGPT_SYSTEM_PROMPT + question,
             abortSignal: controller.signal,
         });
         return { answer: result.text };
