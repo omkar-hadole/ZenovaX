@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -135,8 +135,14 @@ export default function CommandBar() {
     const modalRef = useRef(null);
 
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
     const { theme } = useTheme();
+
+    // Close command bar automatically whenever route changes
+    useEffect(() => {
+        setIsOpen(false);
+    }, [location.pathname]);
 
     const setProvider = (next) => {
         setProviderState(next);
