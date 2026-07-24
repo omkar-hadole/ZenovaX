@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -88,12 +88,34 @@ export default function CodeDebuggerPanel({ question, code, language, isOpen, on
     const [messages, setMessages] = useState([]);
     const [input, setInput]       = useState('');
     const [loading, setLoading]   = useState(false);
-    const [codeVisible, setCodeVisible] = useState(false);
+    // Visible by default — the panel sits over part of the editor, so
+    // showing the live code snippet here keeps it in view rather than
+    // requiring an extra click every time the panel opens.
+    const [codeVisible, setCodeVisible] = useState(true);
     const [copiedIdx, setCopiedIdx]     = useState(null);
 
     const inputRef   = useRef(null);
     const bottomRef  = useRef(null);
     const { user }   = useAuth();
+
+    // Auto-focus the input the moment the panel opens, so the user can start
+    // typing immediately instead of having to click into it first.
+    useEffect(() => {
+        if (isOpen) {
+            const focusTimer = setTimeout(() => inputRef.current?.focus(), 250);
+            return () => clearTimeout(focusTimer);
+        }
+    }, [isOpen]);
+
+    // Esc closes the panel, matching standard modal/panel conventions.
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isOpen, onClose]);
 
     const scrollToBottom = () => {
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
@@ -187,17 +209,16 @@ User's request: ${userQuestion}`;
 
     return (
         <>
-            {/* Subtle backdrop (doesn't block editor) */}
+            {/* Slide-in Panel — starts below the header (top-16) rather than
+                top-0, so it never covers the Run/Submit/language controls
+                sitting there. No full-screen dimming backdrop: the whole
+                point of a "context-aware" debugger is to reference your live
+                code while chatting, so the editor stays fully visible and
+                interactive behind it — the panel's own shadow provides
+                enough visual separation. */}
             <div
-                className="fixed inset-0 z-[80] pointer-events-none"
-                style={{ background: 'rgba(0,0,0,0.25)' }}
-            />
-
-            {/* Slide-in Panel */}
-            <div
-                className="fixed right-0 top-0 bottom-0 z-[90] flex flex-col font-sans"
+                className="fixed right-0 top-16 bottom-0 z-[90] flex flex-col font-sans w-[420px] max-w-[92vw]"
                 style={{
-                    width: '420px',
                     background: '#16161a',
                     borderLeft: '1px solid rgba(255,255,255,0.08)',
                     boxShadow: '-20px 0 60px -10px rgba(0,0,0,0.5)',
@@ -209,6 +230,7 @@ User's request: ${userQuestion}`;
                         from { transform: translateX(100%); opacity: 0; }
                         to   { transform: translateX(0);   opacity: 1; }
                     }
+                    .debugger-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
                     .debugger-scroll::-webkit-scrollbar { width: 4px; }
                     .debugger-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
                     .debugger-input:focus { outline: none; }
@@ -429,11 +451,18 @@ User's request: ${userQuestion}`;
                         <textarea
                             ref={inputRef}
                             value={input}
-                            onChange={e => setInput(e.target.value)}
+                            onChange={e => {
+                                setInput(e.target.value);
+                                // Auto-grow with content instead of staying a
+                                // fixed 1-row box that just scrolls internally.
+                                e.target.style.height = 'auto';
+                                e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+                            }}
                             onKeyDown={e => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
                                     handleSend();
+                                    e.target.style.height = 'auto';
                                 }
                             }}
                             placeholder="Ask Zen about your code… (Enter to send)"
@@ -454,7 +483,7 @@ User's request: ${userQuestion}`;
                         </button>
                     </div>
                     <p className="text-center text-[10px] text-gray-600 mt-2">
-                        Shift+Enter for new line · Zen sees your live code
+                        Shift+Enter for new line · Esc to close · Zen sees your live code
                     </p>
                 </div>
             </div>
