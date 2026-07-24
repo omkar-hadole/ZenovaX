@@ -1,7 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check, MessageSquarePlus } from 'lucide-react';
+import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check, MessageSquarePlus, ExternalLink } from 'lucide-react';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -27,7 +33,255 @@ const loadStoredChat = () => {
     }
 };
 
-const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
+const CodeBlock = React.memo(({ language, value }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyCode = async () => {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {}
+    };
+
+    return (
+        <div className="relative my-3 rounded-xl overflow-hidden border border-slate-800 bg-gray-950 text-gray-100 font-mono text-xs shadow-lg">
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800 text-gray-400 text-xs select-none">
+                <span className="font-bold uppercase tracking-wider text-[11px] text-indigo-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+                    {language || 'code'}
+                </span>
+                <button
+                    onClick={handleCopyCode}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-800/80 hover:bg-gray-700 text-gray-300 hover:text-white transition-all text-[11px] font-medium"
+                    title="Copy code"
+                >
+                    {copied ? (
+                        <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Copied!</span>
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy code</span>
+                        </>
+                    )}
+                </button>
+            </div>
+            <div className="p-3 overflow-x-auto custom-scrollbar">
+                <SyntaxHighlighter
+                    language={language || 'text'}
+                    style={vscDarkPlus}
+                    customStyle={{
+                        margin: 0,
+                        padding: 0,
+                        background: 'transparent',
+                        fontSize: '0.85rem',
+                        lineHeight: '1.6',
+                    }}
+                    codeTagProps={{
+                        style: { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }
+                    }}
+                >
+                    {value}
+                </SyntaxHighlighter>
+            </div>
+        </div>
+    );
+});
+
+const USER_MARKDOWN_COMPONENTS = {
+    a: ({ node, children, href, ...props }) => (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white underline font-semibold hover:text-indigo-100 inline-flex items-center gap-0.5 transition-colors"
+            {...props}
+        >
+            {children}
+            <ExternalLink className="w-3.5 h-3.5 inline ml-0.5 opacity-80" />
+        </a>
+    ),
+    strong: ({ node, children, ...props }) => (
+        <strong className="font-bold text-white" {...props}>
+            {children}
+        </strong>
+    ),
+    em: ({ node, children, ...props }) => (
+        <em className="italic text-indigo-100" {...props}>
+            {children}
+        </em>
+    ),
+    h1: ({ node, children, ...props }) => (
+        <h1 className="text-lg font-bold text-white mt-3 mb-1" {...props}>
+            {children}
+        </h1>
+    ),
+    h2: ({ node, children, ...props }) => (
+        <h2 className="text-base font-bold text-white mt-2 mb-1" {...props}>
+            {children}
+        </h2>
+    ),
+    h3: ({ node, children, ...props }) => (
+        <h3 className="text-sm font-semibold text-white mt-2 mb-1" {...props}>
+            {children}
+        </h3>
+    ),
+    ul: ({ node, children, ...props }) => (
+        <ul className="list-disc list-outside ml-5 my-2 space-y-1 text-white" {...props}>
+            {children}
+        </ul>
+    ),
+    ol: ({ node, children, ...props }) => (
+        <ol className="list-decimal list-outside ml-5 my-2 space-y-1 text-white" {...props}>
+            {children}
+        </ol>
+    ),
+    li: ({ node, children, ...props }) => (
+        <li className="leading-relaxed" {...props}>
+            {children}
+        </li>
+    ),
+    blockquote: ({ node, children, ...props }) => (
+        <blockquote className="border-l-4 border-white/60 pl-3 py-1 my-2 italic bg-white/10 text-white rounded-r" {...props}>
+            {children}
+        </blockquote>
+    ),
+    code({ node, inline, className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || '');
+        const codeString = String(children).replace(/\n$/, '');
+
+        if (!inline && (match || codeString.includes('\n'))) {
+            return <CodeBlock language={match ? match[1] : ''} value={codeString} />;
+        }
+
+        return (
+            <code className="px-1.5 py-0.5 mx-0.5 rounded bg-white/20 text-white font-mono text-xs font-semibold" {...props}>
+                {children}
+            </code>
+        );
+    }
+};
+
+const ASSISTANT_MARKDOWN_COMPONENTS = {
+    a: ({ node, children, href, ...props }) => (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 dark:text-indigo-400 font-semibold underline underline-offset-2 hover:text-indigo-700 dark:hover:text-indigo-300 inline-flex items-center gap-0.5 transition-colors"
+            {...props}
+        >
+            {children}
+            <ExternalLink className="w-3.5 h-3.5 inline ml-0.5 opacity-80" />
+        </a>
+    ),
+    strong: ({ node, children, ...props }) => (
+        <strong className="font-bold text-slate-900 dark:text-white" {...props}>
+            {children}
+        </strong>
+    ),
+    em: ({ node, children, ...props }) => (
+        <em className="italic text-slate-800 dark:text-gray-200" {...props}>
+            {children}
+        </em>
+    ),
+    h1: ({ node, children, ...props }) => (
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white mt-4 mb-2 border-b border-slate-200 dark:border-gray-800 pb-1" {...props}>
+            {children}
+        </h1>
+    ),
+    h2: ({ node, children, ...props }) => (
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-3 mb-2" {...props}>
+            {children}
+        </h2>
+    ),
+    h3: ({ node, children, ...props }) => (
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-2 mb-1" {...props}>
+            {children}
+        </h3>
+    ),
+    ul: ({ node, children, ...props }) => (
+        <ul className="list-disc list-outside ml-5 my-2 space-y-1 text-slate-700 dark:text-gray-300" {...props}>
+            {children}
+        </ul>
+    ),
+    ol: ({ node, children, ...props }) => (
+        <ol className="list-decimal list-outside ml-5 my-2 space-y-1 text-slate-700 dark:text-gray-300" {...props}>
+            {children}
+        </ol>
+    ),
+    li: ({ node, children, ...props }) => (
+        <li className="leading-relaxed" {...props}>
+            {children}
+        </li>
+    ),
+    blockquote: ({ node, children, ...props }) => (
+        <blockquote className="border-l-4 border-indigo-500 pl-4 py-1.5 my-3 italic bg-indigo-50/60 dark:bg-indigo-950/40 text-slate-700 dark:text-gray-300 rounded-r-lg" {...props}>
+            {children}
+        </blockquote>
+    ),
+    code({ node, inline, className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || '');
+        const codeString = String(children).replace(/\n$/, '');
+
+        if (!inline && (match || codeString.includes('\n'))) {
+            return <CodeBlock language={match ? match[1] : ''} value={codeString} />;
+        }
+
+        return (
+            <code className="px-1.5 py-0.5 mx-0.5 rounded-md bg-slate-100 dark:bg-gray-800/90 text-indigo-600 dark:text-indigo-300 font-mono text-xs font-semibold border border-slate-200 dark:border-gray-700/60" {...props}>
+                {children}
+            </code>
+        );
+    }
+};
+
+const ChatMessageItem = React.memo(({ m, i, isCopied, onCopy }) => {
+    const isUser = m.role === 'user';
+    return (
+        <div className={`group flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+            <div
+                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed ${
+                    isUser
+                        ? 'text-white rounded-tr-sm shadow-md shadow-indigo-500/10'
+                        : 'bg-white/80 dark:bg-gray-800/80 border border-slate-100 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-tl-sm shadow-sm'
+                }`}
+                style={{ backgroundColor: isUser ? BRAND_COLOR : undefined }}
+            >
+                <ReactMarkdown
+                    remarkPlugins={[remarkBreaks, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={isUser ? USER_MARKDOWN_COMPONENTS : ASSISTANT_MARKDOWN_COMPONENTS}
+                >
+                    {m.text}
+                </ReactMarkdown>
+            </div>
+            {!isUser && (
+                <button
+                    onClick={() => onCopy(m.text, i)}
+                    className={`mt-1.5 ml-1 flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 transition-all ${
+                        isCopied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                >
+                    {isCopied ? (
+                        <>
+                            <Check className="w-3.5 h-3.5 text-emerald-500" /> Copied
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="w-3.5 h-3.5" /> Copy
+                        </>
+                    )}
+                </button>
+            )}
+        </div>
+    );
+});
+
+const AnimatedOrb = React.memo(({ isTyping, isThinking, isDark }) => {
     const canvasRef = useRef(null);
     const particlesRef = useRef([]);
     const animationRef = useRef(null);
@@ -55,46 +309,54 @@ const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
             }
         }
 
+        let isVisible = true;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                isVisible = entry.isIntersecting;
+            },
+            { threshold: 0.05 }
+        );
+        observer.observe(canvas);
+
         const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (isVisible && !document.hidden) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Orb gradient — adapts to theme
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius + 40);
-            if (isDark) {
-                // Dark mode: richer, more saturated colors fading to transparent black
-                gradient.addColorStop(0, 'rgba(140, 130, 255, 0.95)');
-                gradient.addColorStop(0.35, 'rgba(100, 80, 230, 0.55)');
-                gradient.addColorStop(0.7, 'rgba(80, 60, 200, 0.15)');
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            } else {
-                // Light mode: original soft pastel gradient
-                gradient.addColorStop(0, 'rgba(180, 190, 255, 0.9)');
-                gradient.addColorStop(0.4, 'rgba(122, 121, 230, 0.5)');
-                gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
-            }
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            particlesRef.current.forEach((particle, i) => {
-                particle.angle += particle.speed;
-
-                let radiusModifier = 0;
-                if (isThinking) {
-                    radiusModifier = Math.sin(Date.now() / 200 + particle.offset) * 8;
-                } else if (isTyping) {
-                    radiusModifier = Math.sin(Date.now() / 300 + particle.offset) * 4;
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius + 40);
+                if (isDark) {
+                    gradient.addColorStop(0, 'rgba(140, 130, 255, 0.95)');
+                    gradient.addColorStop(0.35, 'rgba(100, 80, 230, 0.55)');
+                    gradient.addColorStop(0.7, 'rgba(80, 60, 200, 0.15)');
+                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                } else {
+                    gradient.addColorStop(0, 'rgba(180, 190, 255, 0.9)');
+                    gradient.addColorStop(0.4, 'rgba(122, 121, 230, 0.5)');
+                    gradient.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
                 }
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                const x = centerX + Math.cos(particle.angle) * (particle.radius + radiusModifier);
-                const y = centerY + Math.sin(particle.angle) * (particle.radius + radiusModifier);
+                particlesRef.current.forEach((particle) => {
+                    particle.angle += particle.speed;
 
-                ctx.beginPath();
-                ctx.arc(x, y, particle.size, 0, Math.PI * 2);
-                ctx.fillStyle = isDark
-                    ? `rgba(160, 150, 255, ${particle.opacity})`
-                    : `rgba(122, 121, 230, ${particle.opacity})`;
-                ctx.fill();
-            });
+                    let radiusModifier = 0;
+                    if (isThinking) {
+                        radiusModifier = Math.sin(Date.now() / 200 + particle.offset) * 8;
+                    } else if (isTyping) {
+                        radiusModifier = Math.sin(Date.now() / 300 + particle.offset) * 4;
+                    }
+
+                    const x = centerX + Math.cos(particle.angle) * (particle.radius + radiusModifier);
+                    const y = centerY + Math.sin(particle.angle) * (particle.radius + radiusModifier);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+                    ctx.fillStyle = isDark
+                        ? `rgba(160, 150, 255, ${particle.opacity})`
+                        : `rgba(122, 121, 230, ${particle.opacity})`;
+                    ctx.fill();
+                });
+            }
 
             animationRef.current = requestAnimationFrame(animate);
         };
@@ -102,6 +364,7 @@ const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
         animate();
 
         return () => {
+            observer.disconnect();
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
@@ -109,7 +372,7 @@ const AnimatedOrb = ({ isTyping, isThinking, isDark }) => {
     }, [isTyping, isThinking, isDark]);
 
     return <canvas ref={canvasRef} width={200} height={200} className="mx-auto" />;
-};
+});
 
 const Zen = () => {
     const [chat, setChat] = useState(loadStoredChat);
@@ -150,11 +413,14 @@ const Zen = () => {
     });
     const needsChatGptExtension = chatGptStatus === 'needs-extension';
 
-    // Auto-scroll to the latest message/typing indicator, same as
-    // ChatGPT/Gemini, instead of leaving the user stuck wherever they were.
+    // Auto-scroll to the latest message/typing indicator only when a new message is added or loading starts.
+    const prevChatLengthRef = useRef(chat.length);
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }, [chat, loading]);
+        if (chat.length > prevChatLengthRef.current || loading) {
+            bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+        prevChatLengthRef.current = chat.length;
+    }, [chat.length, loading]);
 
     // Persist chat to sessionStorage so an accidental refresh (or coming back
     // to the tab later) doesn't lose the conversation — sessionStorage itself
@@ -256,7 +522,7 @@ const Zen = () => {
         }
     };
 
-    const handleCopy = async (text, index) => {
+    const handleCopy = useCallback(async (text, index) => {
         try {
             await navigator.clipboard.writeText(text);
             setCopiedIndex(index);
@@ -265,7 +531,7 @@ const Zen = () => {
             // Clipboard access can be denied by the browser — fail silently,
             // nothing else meaningful to do here.
         }
-    };
+    }, []);
 
     return (
 
@@ -286,7 +552,7 @@ const Zen = () => {
             )}
 
             {/* Main Scrollable Area */}
-            <div className="flex-1 w-full overflow-y-auto relative z-10 flex flex-col items-center custom-scrollbar">
+            <div className="flex-1 w-full overflow-y-auto relative z-10 flex flex-col items-center custom-scrollbar [contain:content]">
                 <div className="w-full max-w-[900px] flex flex-col items-center my-auto p-4 pb-4">
 
                     {/* Header Section */}
@@ -313,35 +579,13 @@ const Zen = () => {
                     {chat.length > 0 && (
                         <div className="w-full max-w-[850px] space-y-4 mb-4 px-4">
                             {chat.map((m, i) => (
-                                <div key={i} className={`group flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300 ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className={`max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed ${m.role === 'user'
-                                        ? 'text-white rounded-tr-sm shadow-md shadow-indigo-500/10'
-                                        : 'bg-white/80 dark:bg-gray-800/80 border border-slate-100 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-tl-sm shadow-sm'
-                                        }`}
-                                        style={{ backgroundColor: m.role === 'user' ? BRAND_COLOR : undefined }}
-                                    >
-                                        <div className={`prose prose-sm max-w-none ${m.role === 'user' ? 'prose-invert' : ''}`}>
-                                            {/* XSS Safety: ReactMarkdown does not use dangerouslySetInnerHTML by default.
-                                                Raw HTML tags in AI-generated markdown are stripped because rehype-raw
-                                                is not installed. If rehype-raw is ever added, wrap m.text with
-                                                sanitizeHTML() from src/utils/sanitize.js before passing it here. */}
-                                            <ReactMarkdown>{m.text}</ReactMarkdown>
-                                        </div>
-                                    </div>
-                                    {m.role === 'assistant' && (
-                                        <button
-                                            onClick={() => handleCopy(m.text, i)}
-                                            className={`mt-1.5 ml-1 flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 transition-all ${copiedIndex === i ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                                                }`}
-                                        >
-                                            {copiedIndex === i ? (
-                                                <><Check className="w-3.5 h-3.5 text-emerald-500" /> Copied</>
-                                            ) : (
-                                                <><Copy className="w-3.5 h-3.5" /> Copy</>
-                                            )}
-                                        </button>
-                                    )}
-                                </div>
+                                <ChatMessageItem
+                                    key={i}
+                                    m={m}
+                                    i={i}
+                                    isCopied={copiedIndex === i}
+                                    onCopy={handleCopy}
+                                />
                             ))}
                             {loading && (
                                 <div className="px-4">

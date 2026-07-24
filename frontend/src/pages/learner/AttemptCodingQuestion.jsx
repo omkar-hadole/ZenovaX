@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle, History } from 'lucide-react';
+import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle, History, Bug } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 import Toast from '../../components/Toast';
+import CodeDebuggerPanel from '../../components/CodeDebuggerPanel';
 
 export default function AttemptCodingQuestion({ previewMode = false, backPath }) {
     const { id } = useParams();
@@ -25,6 +26,7 @@ export default function AttemptCodingQuestion({ previewMode = false, backPath })
     const [toast, setToast] = useState(null);
     const [submissions, setSubmissions] = useState([]);
     const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
+    const [debuggerOpen, setDebuggerOpen] = useState(false);
 
     const fetchSubmissions = async () => {
         try {
@@ -470,6 +472,21 @@ class Solution {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Zen AI Debugger Button */}
+                    <button
+                        onClick={() => setDebuggerOpen(prev => !prev)}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${
+                            debuggerOpen
+                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/30'
+                                : 'text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border-white/10'
+                        }`}
+                    >
+                        <Bug className="w-3.5 h-3.5" />
+                        {debuggerOpen ? 'Close Zen' : 'Ask Zen AI'}
+                    </button>
+
+                    <div className="h-6 w-px bg-white/10" />
+
                     <div className="relative group">
                         <button
                             onClick={handleFormatCode}
@@ -854,6 +871,15 @@ class Solution {
                 </div>
             )}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {/* Context-Aware Zen AI Debugger Panel */}
+            <CodeDebuggerPanel
+                question={question}
+                code={code}
+                language={language}
+                isOpen={debuggerOpen}
+                onClose={() => setDebuggerOpen(false)}
+            />
         </div>
     );
 }

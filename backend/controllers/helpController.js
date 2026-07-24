@@ -17,3 +17,12 @@ exports.askAIWithChatGPT = async (req, res, next) => {
     return next(error);
   }
 };
+
+exports.askCodeDebugger = async (req, res, next) => {
+  try {
+    const result = await helpService.askCodeDebugger(req.body, req.headers);
+    return res.json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
