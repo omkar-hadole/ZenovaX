@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check, MessageSquarePlus, ExternalLink } from 'lucide-react';
@@ -249,7 +252,8 @@ const ChatMessageItem = React.memo(({ m, i, isCopied, onCopy }) => {
                 style={{ backgroundColor: isUser ? BRAND_COLOR : undefined }}
             >
                 <ReactMarkdown
-                    remarkPlugins={[remarkBreaks]}
+                    remarkPlugins={[remarkBreaks, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
                     components={isUser ? USER_MARKDOWN_COMPONENTS : ASSISTANT_MARKDOWN_COMPONENTS}
                 >
                     {m.text}

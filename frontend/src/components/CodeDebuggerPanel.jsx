@@ -2,6 +2,9 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import {
     Sparkles,
     X,
@@ -398,7 +401,11 @@ User's request: ${userQuestion}`;
                                             border: `1px solid ${msg.isError ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.07)'}`,
                                         }}
                                     >
-                                        <ReactMarkdown remarkPlugins={[remarkBreaks]} components={MARKDOWN_COMPONENTS}>
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkBreaks, remarkMath]}
+                                            rehypePlugins={[rehypeKatex]}
+                                            components={MARKDOWN_COMPONENTS}
+                                        >
                                             {msg.text}
                                         </ReactMarkdown>
                                     </div>
