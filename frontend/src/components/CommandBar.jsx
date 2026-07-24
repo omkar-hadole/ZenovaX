@@ -448,13 +448,16 @@ export default function CommandBar() {
                             close
                         </span>
                     </div>
-                    <button
-                        onClick={() => { setIsOpen(false); navigate('/zen'); }}
-                        className="flex items-center gap-1 font-medium hover:text-indigo-500 transition-colors"
-                        style={{ color: '#9ca3af' }}
-                    >
-                        Zen Workspace <ArrowRight className="w-3 h-3" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">Zen is AI and can make mistakes.</span>
+                        <button
+                            onClick={() => { setIsOpen(false); navigate('/zen'); }}
+                            className="flex items-center gap-1 font-medium hover:text-indigo-500 transition-colors"
+                            style={{ color: '#9ca3af' }}
+                        >
+                            Zen Workspace <ArrowRight className="w-3 h-3" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
