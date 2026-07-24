@@ -721,6 +721,7 @@ const Zen = () => {
                             <Send size={17} strokeWidth={2.5} />
                         </button>
                     </div>
+                    <p className="text-[11px] text-slate-400 dark:text-gray-500 text-center mt-2 select-none">Zen is AI and can make mistakes.</p>
                 </div>
             </div>
         </div>

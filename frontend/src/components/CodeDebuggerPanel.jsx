@@ -3,6 +3,7 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -21,7 +22,8 @@ import {
     Zap,
     ExternalLink,
     Lock,
-    Link2
+    Link2,
+    GripVertical
 } from 'lucide-react';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 
@@ -185,14 +187,14 @@ export default function CodeDebuggerPanel({ question, code, language, isOpen, on
     const [messages, setMessages] = useState([]);
     const [input, setInput]       = useState('');
     const [loading, setLoading]   = useState(false);
-    // Visible by default — the panel sits over part of the editor, so
-    // showing the live code snippet here keeps it in view rather than
-    // requiring an extra click every time the panel opens.
-    const [codeVisible, setCodeVisible] = useState(true);
+    const [codeVisible, setCodeVisible] = useState(false);
     const [copiedIdx, setCopiedIdx]     = useState(null);
+    const [panelWidth, setPanelWidth]   = useState(420);
 
-    const inputRef   = useRef(null);
-    const bottomRef  = useRef(null);
+    const inputRef    = useRef(null);
+    const bottomRef   = useRef(null);
+    const isDragging  = useRef(false);
+    const panelRef    = useRef(null);
 
     // Same hook, same default (no custom sessionStore/redirectUri) as
     // Zen.jsx — that means it reads/writes the exact same underlying
@@ -226,6 +228,31 @@ export default function CodeDebuggerPanel({ question, code, language, isOpen, on
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
+
+    // Panel resize via drag handle
+    const handleDragStart = useCallback((e) => {
+        e.preventDefault();
+        isDragging.current = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const handleDragMove = (ev) => {
+            if (!isDragging.current || !panelRef.current) return;
+            const newWidth = window.innerWidth - ev.clientX;
+            setPanelWidth(Math.max(320, Math.min(window.innerWidth * 0.6, newWidth)));
+        };
+
+        const handleDragEnd = () => {
+            isDragging.current = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            window.removeEventListener('mousemove', handleDragMove);
+            window.removeEventListener('mouseup', handleDragEnd);
+        };
+
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', handleDragEnd);
+    }, []);
 
     const scrollToBottom = () => {
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
@@ -314,52 +341,59 @@ User's request: ${userQuestion}`;
 
     return (
         <>
-            {/* Slide-in Panel — starts below the header (top-16) rather than
-                top-0, so it never covers the Run/Submit/language controls
-                sitting there. No full-screen dimming backdrop: the whole
-                point of a "context-aware" debugger is to reference your live
-                code while chatting, so the editor stays fully visible and
-                interactive behind it — the panel's own shadow provides
-                enough visual separation. */}
+            <style>{`
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to   { transform: translateX(0);   opacity: 1; }
+                }
+                .debugger-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+                .debugger-scroll::-webkit-scrollbar { width: 4px; }
+                .debugger-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+                .debugger-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+                .debugger-input:focus { outline: none; }
+                .debugger-input::placeholder { color: rgba(255,255,255,0.25); }
+                .debugger-resize-handle { cursor: col-resize; transition: background 0.15s; }
+                .debugger-resize-handle:hover { background: rgba(99,102,241,0.4) !important; }
+            `}</style>
+
             <div
-                className="fixed right-0 top-16 bottom-0 z-[90] flex flex-col font-sans w-[420px] max-w-[92vw]"
+                ref={panelRef}
+                className="fixed right-0 top-16 bottom-0 z-[90] flex flex-col font-sans"
                 style={{
+                    width: panelWidth,
+                    maxWidth: '92vw',
                     background: '#16161a',
-                    borderLeft: '1px solid rgba(255,255,255,0.08)',
+                    borderLeft: '1px solid rgba(255,255,255,0.06)',
                     boxShadow: '-20px 0 60px -10px rgba(0,0,0,0.5)',
                     animation: 'slideInRight 0.22s cubic-bezier(0.22,1,0.36,1) both',
                 }}
             >
-                <style>{`
-                    @keyframes slideInRight {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to   { transform: translateX(0);   opacity: 1; }
-                    }
-                    .debugger-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
-                    .debugger-scroll::-webkit-scrollbar { width: 4px; }
-                    .debugger-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-                    .debugger-input:focus { outline: none; }
-                    .debugger-input::placeholder { color: rgba(255,255,255,0.25); }
-                `}</style>
-
-                {/* ── Header ── */}
+                {/* Resize Handle */}
                 <div
-                    className="flex items-center justify-between px-4 py-3.5 flex-shrink-0"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#1c1c21' }}
+                    onMouseDown={handleDragStart}
+                    className="debugger-resize-handle absolute left-0 top-0 bottom-0 w-1.5 z-50 hover:w-2 transition-all"
+                    style={{ background: 'transparent', marginLeft: '-3px' }}
+                >
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity">
+                        <GripVertical className="w-3 h-3 text-gray-500" />
+                    </div>
+                </div>
+
+                {/* Header */}
+                <div
+                    className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: '#1a1a1f' }}
                 >
                     <div className="flex items-center gap-2.5">
                         <div
-                            className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.3)' }}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)' }}
                         >
                             <Bug className="w-3.5 h-3.5 text-indigo-400" />
                         </div>
-                        <div>
-                            <p className="text-[13px] font-bold text-white leading-tight">Zen AI Debugger</p>
-                            <p className="text-[10px] text-gray-500 leading-none mt-0.5">Sees your question + code</p>
-                        </div>
+                        <p className="text-[13px] font-semibold text-white">Zen AI</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                         {messages.length > 0 && (
                             <button
                                 onClick={handleClear}
@@ -377,41 +411,40 @@ User's request: ${userQuestion}`;
                     </div>
                 </div>
 
-                {/* ── Locked state: ChatGPT not connected ── */}
+                {/* Locked state */}
                 {!chatGptConnected ? (
                     <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
                         <div
-                            className="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center"
-                            style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)' }}
+                            className="w-12 h-12 rounded-xl mb-4 flex items-center justify-center"
+                            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.15)' }}
                         >
-                            <Lock className="w-6 h-6 text-indigo-400" />
+                            <Lock className="w-5 h-5 text-indigo-400" />
                         </div>
-                        <p className="text-[15px] font-bold text-white mb-2">Connect ChatGPT to unlock the AI Debugger</p>
-                        <p className="text-[12.5px] text-gray-500 leading-relaxed mb-6 max-w-[280px]">
-                            This debugger runs on your own ChatGPT account, not ZenovaX's shared assistant — connect
-                            once and it stays unlocked here and in Zen (<span className="text-gray-400">/zen</span>).
+                        <p className="text-[14px] font-semibold text-white mb-1.5">Connect ChatGPT</p>
+                        <p className="text-[12px] text-gray-500 leading-relaxed mb-5 max-w-[260px]">
+                            Connect your ChatGPT account to use the AI debugger.
                         </p>
 
                         {needsChatGptExtension ? (
-                            <div className="space-y-2.5 w-full max-w-[240px]">
+                            <div className="space-y-2 w-full max-w-[220px]">
                                 <button
                                     onClick={() => window.open(chatGptInstallUrl, '_blank', 'noopener,noreferrer')}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-[13px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-[13px] font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
                                     style={{ background: '#6366f1' }}
                                 >
-                                    <Link2 className="w-3.5 h-3.5" /> Install the ChatGPT extension
+                                    <Link2 className="w-3.5 h-3.5" /> Install Extension
                                 </button>
                                 <button
                                     onClick={connectChatGPT}
-                                    className="w-full text-[11.5px] text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+                                    className="w-full text-[11px] text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
                                 >
-                                    Installed it? Try again
+                                    Installed? Try again
                                 </button>
                             </div>
                         ) : (
                             <button
                                 onClick={connectChatGPT}
-                                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white text-[13px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+                                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white text-[13px] font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
                                 style={{ background: '#6366f1' }}
                             >
                                 <Link2 className="w-3.5 h-3.5" /> Connect ChatGPT
@@ -420,31 +453,31 @@ User's request: ${userQuestion}`;
                     </div>
                 ) : (
                 <>
-                {/* ── Context Preview Bar ── */}
+                {/* Context Preview Bar */}
                 <div
-                    className="px-4 py-2.5 flex-shrink-0"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#111114' }}
+                    className="px-4 py-2 flex-shrink-0"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#131316' }}
                 >
                     <button
                         onClick={() => setCodeVisible(v => !v)}
                         className="w-full flex items-center justify-between text-left group"
                     >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                             <span
-                                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md"
-                                style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}
+                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}
                             >
                                 {language}
                             </span>
-                            <span className="text-[11px] text-gray-400 font-medium truncate max-w-[200px]">
+                            <span className="text-[11px] text-gray-400 font-medium truncate">
                                 {question?.title || 'Coding Question'}
                             </span>
                             <span
-                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
                                 style={{
-                                    background: question?.difficulty === 'HARD' ? 'rgba(239,68,68,0.15)' :
-                                                question?.difficulty === 'MEDIUM' ? 'rgba(245,158,11,0.15)' :
-                                                'rgba(16,185,129,0.15)',
+                                    background: question?.difficulty === 'HARD' ? 'rgba(239,68,68,0.12)' :
+                                                question?.difficulty === 'MEDIUM' ? 'rgba(245,158,11,0.12)' :
+                                                'rgba(16,185,129,0.12)',
                                     color: question?.difficulty === 'HARD' ? '#f87171' :
                                            question?.difficulty === 'MEDIUM' ? '#fbbf24' :
                                            '#34d399',
@@ -453,63 +486,48 @@ User's request: ${userQuestion}`;
                                 {question?.difficulty}
                             </span>
                         </div>
-                        <div className="flex items-center gap-1 text-gray-600 group-hover:text-gray-400 transition-colors">
-                            <span className="text-[10px]">{codeVisible ? 'Hide' : 'Preview'}</span>
+                        <div className="flex items-center gap-1 text-gray-600 group-hover:text-gray-400 transition-colors flex-shrink-0 ml-2">
                             {codeVisible ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </div>
                     </button>
 
                     {codeVisible && (
-                        <div
-                            className="mt-2 rounded-lg overflow-hidden"
-                            style={{ border: '1px solid rgba(255,255,255,0.07)' }}
-                        >
-                            <div className="flex items-center justify-between px-3 py-1.5"
-                                style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <span className="text-[10px] font-mono text-gray-500">Your current code</span>
-                                <span className="text-[10px] text-gray-600">{code?.split('\n').length || 0} lines</span>
-                            </div>
-                            <pre className="p-3 font-mono text-[11px] text-gray-400 overflow-x-auto max-h-32 leading-relaxed"
-                                style={{ background: 'rgba(0,0,0,0.3)' }}>
-                                {code?.slice(0, 400) || '// empty'}{code?.length > 400 ? '\n…' : ''}
-                            </pre>
-                        </div>
+                        <pre className="mt-2 p-2.5 rounded-lg font-mono text-[11px] text-gray-400 overflow-x-auto max-h-28 leading-relaxed"
+                            style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            {code?.slice(0, 350) || '// empty'}{code?.length > 350 ? '\n…' : ''}
+                        </pre>
                     )}
                 </div>
 
                 {/* ── Messages / Chat Body ── */}
                 <div className="debugger-scroll flex-1 overflow-y-auto px-4 py-3 space-y-3">
 
-                    {/* Empty state — quick prompt chips */}
+                    {/* Empty state */}
                     {messages.length === 0 && !loading && (
-                        <div className="space-y-4">
-                            <div className="text-center pt-4">
+                        <div className="space-y-3 pt-6">
+                            <div className="text-center">
                                 <div
-                                    className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center"
-                                    style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)' }}
+                                    className="w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center"
+                                    style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.15)' }}
                                 >
-                                    <Sparkles className="w-6 h-6 text-indigo-400" />
+                                    <Sparkles className="w-5 h-5 text-indigo-400" />
                                 </div>
-                                <p className="text-[13px] font-semibold text-white mb-1">Zen sees your code</p>
-                                <p className="text-[12px] text-gray-500 leading-relaxed">
-                                    Ask me to debug, hint, or explain.<br />I have full context of the question and your solution.
-                                </p>
+                                <p className="text-[12px] text-gray-500">What can I help with?</p>
                             </div>
 
-                            {/* Quick prompt chips */}
-                            <div className="grid grid-cols-2 gap-2 pt-1">
+                            <div className="grid grid-cols-2 gap-1.5 pt-1">
                                 {QUICK_PROMPTS.map(({ icon: Icon, label, prompt }) => (
                                     <button
                                         key={label}
                                         onClick={() => handleSend(prompt)}
-                                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all hover:bg-white/[0.06] active:scale-[0.98]"
                                         style={{
-                                            background: 'rgba(255,255,255,0.04)',
-                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            border: '1px solid rgba(255,255,255,0.06)',
                                         }}
                                     >
                                         <Icon className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
-                                        <span className="text-[12px] font-medium text-gray-300">{label}</span>
+                                        <span className="text-[11.5px] text-gray-300">{label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -521,43 +539,34 @@ User's request: ${userQuestion}`;
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.role === 'user' ? (
                                 <div
-                                    className="max-w-[85%] px-3.5 py-2.5 rounded-2xl rounded-tr-sm text-[13.5px] text-white font-medium"
+                                    className="max-w-[85%] px-3 py-2 rounded-2xl rounded-tr-sm text-[13px] text-white"
                                     style={{ background: '#6366f1' }}
                                 >
                                     {msg.text}
                                 </div>
                             ) : (
                                 <div className="max-w-[95%] group">
-                                    {/* AI icon + label */}
-                                    <div className="flex items-center gap-1.5 mb-1.5">
-                                        <div
-                                            className="w-4 h-4 rounded flex items-center justify-center"
-                                            style={{ background: 'rgba(99,102,241,0.2)' }}
-                                        >
-                                            <Sparkles className="w-2.5 h-2.5 text-indigo-400" />
-                                        </div>
-                                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Zen AI</span>
+                                    <div className="flex items-center gap-1.5 mb-1.5 ml-1">
+                                        <span className="text-[10px] font-semibold text-indigo-400">Zen AI</span>
                                     </div>
-                                    {/* Content card */}
                                     <div
-                                        className="px-4 py-3 rounded-2xl rounded-tl-sm"
+                                        className="px-3.5 py-2.5 rounded-2xl rounded-tl-sm"
                                         style={{
-                                            background: msg.isError ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.05)',
-                                            border: `1px solid ${msg.isError ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.07)'}`,
+                                            background: msg.isError ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.04)',
+                                            border: `1px solid ${msg.isError ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)'}`,
                                         }}
                                     >
                                         <ReactMarkdown
-                                            remarkPlugins={[remarkBreaks, remarkMath]}
+                                            remarkPlugins={[remarkBreaks, remarkMath, remarkGfm]}
                                             rehypePlugins={[rehypeKatex]}
                                             components={MARKDOWN_COMPONENTS}
                                         >
                                             {msg.text}
                                         </ReactMarkdown>
                                     </div>
-                                    {/* Copy button */}
                                     <button
                                         onClick={() => handleCopy(msg.text, i)}
-                                        className="mt-1 flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors opacity-0 group-hover:opacity-100"
+                                        className="mt-1 ml-1 flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors opacity-0 group-hover:opacity-100"
                                     >
                                         {copiedIdx === i ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                                         {copiedIdx === i ? 'Copied' : 'Copy'}
@@ -570,19 +579,11 @@ User's request: ${userQuestion}`;
                     {/* Typing indicator */}
                     {loading && (
                         <div className="flex justify-start">
-                            <div>
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                    <div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.2)' }}>
-                                        <Sparkles className="w-2.5 h-2.5 text-indigo-400" />
-                                    </div>
-                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Zen AI</span>
-                                </div>
-                                <div className="px-4 py-3 rounded-2xl rounded-tl-sm"
-                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                                        <span className="text-[12px] text-gray-500">Analyzing your code…</span>
-                                    </div>
+                            <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm"
+                                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                                    <span className="text-[12px] text-gray-500">Thinking…</span>
                                 </div>
                             </div>
                         </div>
@@ -591,22 +592,20 @@ User's request: ${userQuestion}`;
                     <div ref={bottomRef} />
                 </div>
 
-                {/* ── Input Row ── */}
+                {/* Input Row */}
                 <div
                     className="px-3 py-3 flex-shrink-0"
-                    style={{ borderTop: '1px solid rgba(255,255,255,0.07)', background: '#1c1c21' }}
+                    style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#1a1a1f' }}
                 >
                     <div
-                        className="flex items-end gap-2 px-3 py-2.5 rounded-2xl"
-                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
                     >
                         <textarea
                             ref={inputRef}
                             value={input}
                             onChange={e => {
                                 setInput(e.target.value);
-                                // Auto-grow with content instead of staying a
-                                // fixed 1-row box that just scrolls internally.
                                 e.target.style.height = 'auto';
                                 e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
                             }}
@@ -617,26 +616,24 @@ User's request: ${userQuestion}`;
                                     e.target.style.height = 'auto';
                                 }
                             }}
-                            placeholder="Ask Zen about your code… (Enter to send)"
+                            placeholder="Ask Zen anything…"
                             rows={1}
-                            className="debugger-input flex-1 bg-transparent text-[13.5px] text-white resize-none leading-relaxed"
+                            className="debugger-input flex-1 bg-transparent text-[13px] text-white resize-none leading-relaxed"
                             style={{ maxHeight: '100px', minHeight: '20px' }}
                         />
                         <button
                             onClick={() => handleSend()}
                             disabled={!input.trim() || loading}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0 hover:opacity-85 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all flex-shrink-0 hover:opacity-85 active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
                             style={{ background: '#6366f1' }}
                         >
                             {loading
-                                ? <Loader2 className="w-4 h-4 text-white animate-spin" />
-                                : <Send className="w-4 h-4 text-white" />
+                                ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                                : <Send className="w-3.5 h-3.5 text-white" />
                             }
                         </button>
                     </div>
-                    <p className="text-center text-[10px] text-gray-600 mt-2">
-                        Shift+Enter for new line · Esc to close · Zen sees your live code
-                    </p>
+                    <p className="text-[10px] text-gray-600 text-center mt-2 select-none">Zen is AI and can make mistakes.</p>
                 </div>
                 </>
                 )}
