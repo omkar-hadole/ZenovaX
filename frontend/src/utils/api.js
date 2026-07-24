@@ -7,6 +7,22 @@ const getCookie = (name) => {
   return null;
 };
 
+// Shared with any caller that builds its own request instead of going
+// through apiCall (e.g. Zen.jsx, which needs to layer its own headers on
+// top) — falls back from localStorage to the non-httpOnly csrfToken cookie,
+// since localStorage is only populated once App.jsx's csrf bootstrap fetch
+// resolves, and a fresh page load can beat that race.
+export const getCsrfToken = () => {
+  let csrfToken = localStorage.getItem('csrfToken');
+  if (!csrfToken) {
+    csrfToken = getCookie('csrfToken');
+    if (csrfToken) {
+      localStorage.setItem('csrfToken', csrfToken);
+    }
+  }
+  return csrfToken;
+};
+
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -60,10 +76,7 @@ export const register = async (name, email, password) => {
 
 export const logout = async () => {
   try {
-    let csrfToken = localStorage.getItem('csrfToken');
-    if (!csrfToken) {
-      csrfToken = getCookie('csrfToken');
-    }
+    const csrfToken = getCsrfToken();
     const headers = {};
     if (csrfToken) {
       headers['X-CSRF-Token'] = csrfToken;
@@ -112,13 +125,7 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
     headers['Content-Type'] = 'application/json';
   }
 
-  let csrfToken = localStorage.getItem('csrfToken');
-  if (!csrfToken) {
-    csrfToken = getCookie('csrfToken');
-    if (csrfToken) {
-      localStorage.setItem('csrfToken', csrfToken);
-    }
-  }
+  let csrfToken = getCsrfToken();
   const method = (options.method || 'GET').toUpperCase();
   if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
     headers['X-CSRF-Token'] = csrfToken;

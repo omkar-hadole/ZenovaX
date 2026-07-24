@@ -5,6 +5,7 @@ import { Send, Sparkles, Link2, CheckCircle2, LogOut, Copy, Check, MessageSquare
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { getCsrfToken } from '../../utils/api';
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, "").replace(/\/api$/, "");
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
@@ -214,10 +215,24 @@ const Zen = () => {
         // send a request that's guaranteed to fail.
         const useChatGPT = provider === 'chatgpt' && chatGptConnected;
 
+        // withCredentials + X-CSRF-Token: send the ZenovaX auth cookie (when
+        // logged in) so the backend can personalize answers with the user's
+        // own sessions/mentors, satisfying csrf.js's double-submit check now
+        // that a real session cookie rides along. Logged-out users have no
+        // cookie and no CSRF token, so this stays a no-op for them.
+        const csrfToken = getCsrfToken();
+        const csrfHeaders = csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
+
         try {
             const { data } = useChatGPT
-                ? await axios.post(CHATGPT_ENDPOINT, { question: q, username }, { headers: await openaiAuthHeaders() })
-                : await axios.post(API_ENDPOINT, { question: q, username });
+                ? await axios.post(CHATGPT_ENDPOINT, { question: q, username }, {
+                    withCredentials: true,
+                    headers: { ...(await openaiAuthHeaders()), ...csrfHeaders }
+                })
+                : await axios.post(API_ENDPOINT, { question: q, username }, {
+                    withCredentials: true,
+                    headers: csrfHeaders
+                });
 
             setChat(prev => [...prev, { role: 'assistant', text: data.answer }]);
             if (data.suggestChatGPT && !chatGptConnected) {
