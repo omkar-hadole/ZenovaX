@@ -210,6 +210,59 @@ exports.askAI = async (prisma, user, { question, username } = {}) => {
     }
 };
 
+// Context-Aware Coding Debugger (frontend/src/components/CodeDebuggerPanel.jsx):
+// reuses the same shared Gemini model/quota as askAI, but does NOT wrap the
+// question in buildSystemPrompt's "answer ONLY using ZenovaX help-center
+// context, refuse anything unrelated" instruction — a debugging question
+// about the user's own code isn't covered by that context at all, so Gemini
+// would (and did) refuse it under that prompt. The caller already sends a
+// complete, self-contained coding-assistant prompt (question + test cases +
+// code), so this endpoint passes it through with no extra restrictive
+// framing — that mismatch, not anything about the model itself, was why the
+// debugger only worked when the user switched to their own ChatGPT account.
+exports.askCodeDebugger = async (prisma, user, { question } = {}) => {
+    if (!question) {
+        throw new BadRequestError("Question is required");
+    }
+
+    if (!model) {
+        if (!process.env.GEMINI_API_KEY) {
+            logger.warn("GEMINI_API_KEY is not set. AI assistant is unavailable.");
+            return {
+                answer: "Zen's free assistant isn't available right now. Please contact WhatsApp support, or connect your own ChatGPT account in Zen to keep chatting.",
+                suggestChatGPT: true
+            };
+        }
+        model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
+    }
+
+    try {
+        const result = await model.generateContent(question, { timeout: 8000 });
+        return { answer: result.response.text() };
+    } catch (error) {
+        logger.error("Code Debugger AI Service Error:", { message: error.message, status: error.status });
+
+        if (error.status === 429 || error.message.includes("429")) {
+            return {
+                answer: "Zen's free assistant has hit its usage limit for now. Try again shortly, or connect your own ChatGPT account in Zen to keep debugging.",
+                suggestChatGPT: true
+            };
+        }
+
+        if (error.code === 'ETIMEDOUT' || /timeout|abort/i.test(error.message || '')) {
+            return {
+                answer: "Zen's free assistant is a bit busy right now. Try again in a moment, or connect your own ChatGPT account in Zen to keep debugging.",
+                suggestChatGPT: true
+            };
+        }
+
+        return {
+            answer: "Zen's free assistant is having trouble responding right now. Try again shortly, or connect your own ChatGPT account in Zen to keep debugging.",
+            suggestChatGPT: true
+        };
+    }
+};
+
 // Optional, per-user fallback: instead of the shared Gemini key, this uses
 // the requester's OWN ChatGPT OAuth session (its access token + account id,
 // read straight off this one request's headers — never stored or reused for
