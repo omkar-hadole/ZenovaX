@@ -6,7 +6,6 @@ import remarkBreaks from 'remark-breaks';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import {
     Sparkles,
-    Command,
     X,
     Send,
     Calendar,
@@ -20,7 +19,6 @@ import {
     ExternalLink,
     MessageSquare,
     Loader2,
-    Navigation,
     Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -32,29 +30,26 @@ const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
 const CHATGPT_ENDPOINT = `${BASE_URL}/api/help/ask-ai-chatgpt`;
 const PROVIDER_STORAGE_KEY = 'zen-ai-provider';
 
-const AI_ACTIONS = [
-    { id: 'next-session',    icon: Calendar,     label: 'When is my next session?',                    prompt: 'When is my next session?' },
-    { id: 'recommend',       icon: Users,         label: 'Recommend a mentor for Fullstack MERN',       prompt: 'Recommend top mentors for Fullstack MERN development' },
-    { id: 'refund',          icon: HelpCircle,    label: 'What is the refund & cancellation policy?',   prompt: 'What is the refund and cancellation policy for sessions?' },
-];
-
-const NAV_ACTIONS = [
-    { id: 'nav-bookings',    icon: BookOpen,      label: 'Go to My Bookings',                path: '/bookings' },
-    { id: 'nav-mentors',     icon: Users,         label: 'Browse Mentors Directory',          path: '/mentors' },
-    { id: 'nav-zen',         icon: MessageSquare, label: 'Open Zen AI Workspace',             path: '/zen' },
+const QUICK_ACTIONS = [
+    { id: 'next-session',  icon: Calendar,     label: 'When is my next session?',                  prompt: 'When is my next session?' },
+    { id: 'recommend',     icon: Users,         label: 'Recommend a mentor for Fullstack MERN',     prompt: 'Recommend top mentors for Fullstack MERN development' },
+    { id: 'refund',        icon: HelpCircle,    label: 'What is the refund & cancellation policy?', prompt: 'What is the refund and cancellation policy for sessions?' },
+    { id: 'nav-bookings',  icon: BookOpen,      label: 'Go to My Bookings',                         path: '/bookings' },
+    { id: 'nav-mentors',   icon: Users,         label: 'Browse Mentors Directory',                  path: '/mentors' },
+    { id: 'nav-zen',       icon: MessageSquare, label: 'Open Zen AI Workspace',                     path: '/zen' },
 ];
 
 const MARKDOWN_COMPONENTS = {
     a: ({ node, children, href, ...props }) => (
         <a href={href} target="_blank" rel="noopener noreferrer"
-            className="text-violet-600 dark:text-violet-400 font-medium underline decoration-violet-300 dark:decoration-violet-700 underline-offset-2 hover:text-violet-700 dark:hover:text-violet-300 inline-flex items-center gap-0.5 transition-colors"
+            className="text-indigo-600 dark:text-indigo-400 font-medium underline underline-offset-2 hover:opacity-80 inline-flex items-center gap-0.5 transition-opacity"
             {...props}
         >
-            {children}<ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
+            {children}<ExternalLink className="w-3 h-3 ml-0.5 opacity-60" />
         </a>
     ),
     strong: ({ node, children, ...props }) => (
-        <strong className="font-semibold text-gray-900 dark:text-white" {...props}>{children}</strong>
+        <strong className="font-semibold text-gray-900 dark:text-gray-100" {...props}>{children}</strong>
     ),
     ul: ({ node, children, ...props }) => (
         <ul className="list-disc list-outside ml-4 my-2 space-y-1 text-gray-600 dark:text-gray-300 text-[13px]" {...props}>{children}</ul>
@@ -64,21 +59,21 @@ const MARKDOWN_COMPONENTS = {
     ),
     li: ({ node, children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
     code: ({ node, inline, children, ...props }) => (
-        <code className="px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-violet-700 dark:text-violet-300 font-mono text-[11px] border border-gray-200 dark:border-gray-700" {...props}>
+        <code className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-300 font-mono text-[11px] border border-gray-200 dark:border-gray-700" {...props}>
             {children}
         </code>
     ),
     p: ({ node, children, ...props }) => (
-        <p className="leading-relaxed mb-1 last:mb-0 text-gray-700 dark:text-gray-300 text-[13px]" {...props}>{children}</p>
+        <p className="leading-relaxed mb-1.5 last:mb-0 text-gray-700 dark:text-gray-300 text-[13.5px]" {...props}>{children}</p>
     )
 };
 
 export default function CommandBar() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [query, setQuery]   = useState('');
+    const [isOpen, setIsOpen]       = useState(false);
+    const [query, setQuery]         = useState('');
     const [aiResponse, setAiResponse] = useState(null);
-    const [loading, setLoading]   = useState(false);
-    const [copied, setCopied]     = useState(false);
+    const [loading, setLoading]     = useState(false);
+    const [copied, setCopied]       = useState(false);
     const [provider, setProviderState] = useState(() => localStorage.getItem(PROVIDER_STORAGE_KEY) || 'gemini');
 
     const inputRef = useRef(null);
@@ -94,10 +89,8 @@ export default function CommandBar() {
         localStorage.setItem(PROVIDER_STORAGE_KEY, next);
     };
 
-    const {
-        isSignedIn: chatGptConnected,
-        login: connectChatGPT
-    } = useSignInWithChatGPT({ onSuccess: () => setProvider('chatgpt') });
+    const { isSignedIn: chatGptConnected, login: connectChatGPT } =
+        useSignInWithChatGPT({ onSuccess: () => setProvider('chatgpt') });
 
     // Global keyboard shortcut
     useEffect(() => {
@@ -120,8 +113,8 @@ export default function CommandBar() {
 
     // Focus & reset
     useEffect(() => {
-        if (isOpen) { setTimeout(() => inputRef.current?.focus(), 60); }
-        else { setQuery(''); setAiResponse(null); setLoading(false); }
+        if (isOpen)  { setTimeout(() => inputRef.current?.focus(), 60); }
+        else         { setQuery(''); setAiResponse(null); setLoading(false); }
     }, [isOpen]);
 
     const handleAskAI = useCallback(async (questionText) => {
@@ -152,7 +145,7 @@ export default function CommandBar() {
     }, [query, loading, user, chatGptConnected]);
 
     const handleAction = (action) => {
-        if (action.path)   { setIsOpen(false); navigate(action.path); }
+        if (action.path)    { setIsOpen(false); navigate(action.path); }
         else if (action.prompt) { setQuery(action.prompt); handleAskAI(action.prompt); }
     };
 
@@ -161,137 +154,132 @@ export default function CommandBar() {
         try { await navigator.clipboard.writeText(aiResponse); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
     };
 
-    const allActions  = [...AI_ACTIONS, ...NAV_ACTIONS];
-    const filtered    = query.trim()
-        ? allActions.filter(a => a.label.toLowerCase().includes(query.toLowerCase()))
-        : allActions;
-    const filteredAI  = filtered.filter(a => !!a.prompt);
-    const filteredNav = filtered.filter(a => !!a.path);
-    const useChatGPTActive = provider === 'chatgpt' && chatGptConnected;
+    const filtered = query.trim()
+        ? QUICK_ACTIONS.filter(a => a.label.toLowerCase().includes(query.toLowerCase()))
+        : QUICK_ACTIONS;
 
     if (!isOpen) return null;
 
     return (
-        /* ── Backdrop ── */
         <div
-            className="fixed inset-0 z-[9999] flex items-start justify-center font-outfit"
-            style={{ paddingTop: 'clamp(64px, 12vh, 140px)', padding: '0 16px' }}
+            className="fixed inset-0 z-[9999] flex justify-center font-outfit"
+            style={{ alignItems: 'flex-start', paddingTop: 'clamp(72px, 12vh, 130px)', padding: '0 16px' }}
         >
-            {/* Blurred overlay */}
+            {/* ── Backdrop ── */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0"
+                style={{ background: 'rgba(15,15,20,0.45)', backdropFilter: 'blur(8px)' }}
                 onClick={() => setIsOpen(false)}
             />
 
             {/* ── Panel ── */}
             <div
-                className="relative w-full max-w-[640px] flex flex-col overflow-hidden z-10"
+                className="relative w-full z-10 flex flex-col overflow-hidden"
                 style={{
-                    maxHeight: '76vh',
-                    marginTop: 'clamp(64px, 12vh, 140px)',
-                    borderRadius: '20px',
-                    background: 'var(--cb-bg)',
-                    border: '1px solid var(--cb-border)',
-                    boxShadow: '0 32px 80px -10px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset',
+                    maxWidth: '620px',
+                    marginTop: 'clamp(72px, 12vh, 130px)',
+                    maxHeight: '78vh',
+                    borderRadius: '18px',
+                    background: '#ffffff',
+                    border: '1px solid #e8e9ef',
+                    boxShadow: '0 20px 60px -8px rgba(0,0,0,0.14), 0 4px 16px -4px rgba(0,0,0,0.07)',
+                    animation: 'cbPanelIn 0.17s cubic-bezier(0.22,1,0.36,1) both',
                 }}
             >
+                {/* Dark mode panel style */}
                 <style>{`
-                    :root {
-                        --cb-bg: #ffffff;
-                        --cb-bg2: #f8f8fb;
-                        --cb-border: rgba(0,0,0,0.09);
-                        --cb-text: #111827;
-                        --cb-muted: #6b7280;
-                        --cb-hover: rgba(124,114,250,0.07);
-                        --cb-divider: rgba(0,0,0,0.06);
-                        --cb-tag-bg: rgba(124,114,250,0.08);
-                        --cb-tag-text: #6355e0;
-                        --cb-violet: #7C72FA;
+                    @media (prefers-color-scheme: dark) {}
+                    .dark .cb-panel { background: #18181b !important; border-color: rgba(255,255,255,0.08) !important; }
+                    .dark .cb-input-row { border-color: rgba(255,255,255,0.07) !important; }
+                    .dark .cb-model-bar { background: #111113 !important; border-color: rgba(255,255,255,0.06) !important; }
+                    .dark .cb-footer { background: #111113 !important; border-color: rgba(255,255,255,0.06) !important; color: #6b7280 !important; }
+                    .dark .cb-footer kbd { background: #1c1c20 !important; border-color: rgba(255,255,255,0.08) !important; color: #9ca3af !important; }
+                    .dark .cb-action-row:hover { background: rgba(99,102,241,0.07) !important; }
+                    .dark .cb-action-icon { background: #27272a !important; border-color: rgba(255,255,255,0.06) !important; color: #9ca3af !important; }
+                    .dark .cb-action-label { color: #e4e4e7 !important; }
+                    .dark .cb-section-label { color: #52525b !important; }
+                    .dark .cb-divider { background: rgba(255,255,255,0.05) !important; }
+                    .dark .cb-input { color: #f4f4f5 !important; }
+                    .dark .cb-input::placeholder { color: #71717a !important; }
+                    .dark .cb-response-card { background: #f8f8ff08 !important; border-color: rgba(99,102,241,0.18) !important; }
+                    .dark .cb-response-badge { background: rgba(99,102,241,0.12) !important; color: #a5b4fc !important; }
+                    .dark .cb-copy-btn { background: #27272a !important; border-color: rgba(255,255,255,0.07) !important; color: #a1a1aa !important; }
+                    .dark .cb-model-btn-active { background: #27272a !important; color: #a5b4fc !important; }
+                    .dark .cb-panel { background: #18181b !important; }
+                    @keyframes cbPanelIn {
+                        from { opacity: 0; transform: scale(0.965) translateY(-10px); }
+                        to   { opacity: 1; transform: scale(1) translateY(0); }
                     }
-                    .dark {
-                        --cb-bg: #141417;
-                        --cb-bg2: #1c1c20;
-                        --cb-border: rgba(255,255,255,0.08);
-                        --cb-text: #f1f1f3;
-                        --cb-muted: #8a8a9a;
-                        --cb-hover: rgba(124,114,250,0.09);
-                        --cb-divider: rgba(255,255,255,0.06);
-                        --cb-tag-bg: rgba(124,114,250,0.14);
-                        --cb-tag-text: #a79ffb;
-                        --cb-violet: #9189fb;
-                    }
-                    .cb-input::placeholder { color: var(--cb-muted); }
-                    .cb-scroll { overflow-y: auto; }
+                    @keyframes cbFadeIn { from { opacity:0; } to { opacity:1; } }
+                    .cb-response-anim { animation: cbFadeIn 0.22s ease both; }
                     .cb-scroll::-webkit-scrollbar { width: 4px; }
-                    .cb-scroll::-webkit-scrollbar-thumb { background: var(--cb-divider); border-radius: 4px; }
-                    .cb-action-row:hover { background: var(--cb-hover); }
-                    @keyframes cb-in { from { opacity:0; transform: scale(0.97) translateY(-8px); } to { opacity:1; transform: scale(1) translateY(0); } }
-                    .cb-panel-anim { animation: cb-in 0.18s cubic-bezier(0.22,1,0.36,1) both; }
-                    @keyframes cb-fade { from { opacity:0; } to { opacity:1; } }
-                    .cb-response-anim { animation: cb-fade 0.25s ease both; }
+                    .cb-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+                    .dark .cb-scroll::-webkit-scrollbar-thumb { background: #3f3f46; }
+                    .cb-action-row { cursor: pointer; border-radius: 10px; transition: background 0.12s; }
+                    .cb-action-row:hover { background: rgba(99,102,241,0.06); }
+                    .cb-action-row:hover .cb-action-label { color: #4f46e5 !important; }
                 `}</style>
 
-                {/* ── Search Row ── */}
+                {/* ── Search Input Row ── */}
                 <div
-                    className="flex items-center gap-3 px-4 py-3.5"
-                    style={{ borderBottom: '1px solid var(--cb-divider)' }}
+                    className="cb-input-row flex items-center gap-3 px-4 py-3.5"
+                    style={{ borderBottom: '1px solid #eeeef2' }}
                 >
-                    {/* Zen Icon */}
+                    {/* Zen icon — simple, flat */}
                     <div
                         className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg, #7C72FA 0%, #a78bfa 100%)', boxShadow: '0 4px 12px rgba(124,114,250,0.35)' }}
+                        style={{ background: '#eef2ff', color: '#6366f1' }}
                     >
-                        <Sparkles className="w-4 h-4 text-white" />
+                        <Sparkles className="w-4 h-4" />
                     </div>
 
-                    {/* Input */}
                     <input
                         ref={inputRef}
                         type="text"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAskAI(); } }}
-                        placeholder="Ask Zen AI or jump to a page..."
+                        placeholder="Ask Zen AI or search…"
                         className="cb-input flex-1 bg-transparent text-[15px] font-medium focus:outline-none"
-                        style={{ color: 'var(--cb-text)' }}
+                        style={{ color: '#111827' }}
                     />
 
-                    {/* Right side */}
+                    {/* Right controls */}
                     {loading ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-violet-500 flex-shrink-0" />
+                        <Loader2 className="w-4 h-4 animate-spin text-indigo-400 flex-shrink-0" />
                     ) : query.trim() ? (
                         <button
                             onClick={() => handleAskAI()}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold flex-shrink-0 transition-opacity hover:opacity-85"
-                            style={{ background: 'linear-gradient(135deg, #7C72FA 0%, #9e94fb 100%)' }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-[12px] font-semibold flex-shrink-0 transition-opacity hover:opacity-85 active:opacity-70"
+                            style={{ background: '#6366f1' }}
                         >
-                            <Send className="w-3 h-3" /> Ask
+                            <Send className="w-3 h-3" /> Ask Zen
                         </button>
                     ) : null}
 
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg transition-all hover:bg-gray-100 dark:hover:bg-white/10 flex-shrink-0"
-                        style={{ color: 'var(--cb-muted)' }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                        style={{ color: '#9ca3af' }}
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* ── Model Switcher ── */}
+                {/* ── Model Switcher Bar ── */}
                 <div
-                    className="flex items-center justify-between px-4 py-2"
-                    style={{ borderBottom: '1px solid var(--cb-divider)', background: 'var(--cb-bg2)' }}
+                    className="cb-model-bar flex items-center justify-between px-4 py-2"
+                    style={{ borderBottom: '1px solid #eeeef2', background: '#fafafa' }}
                 >
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-medium" style={{ color: 'var(--cb-muted)' }}>Model:</span>
+                    <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-gray-400 mr-1">Model</span>
                         <button
                             onClick={() => setProvider('gemini')}
-                            className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-all"
+                            className="cb-model-btn-active text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-all"
                             style={
                                 provider === 'gemini' || !chatGptConnected
-                                    ? { background: 'var(--cb-tag-bg)', color: 'var(--cb-tag-text)' }
-                                    : { color: 'var(--cb-muted)' }
+                                    ? { background: '#eef2ff', color: '#6366f1' }
+                                    : { color: '#9ca3af' }
                             }
                         >
                             Zen AI
@@ -302,215 +290,142 @@ export default function CommandBar() {
                                 className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-all flex items-center gap-1"
                                 style={
                                     provider === 'chatgpt'
-                                        ? { background: 'var(--cb-tag-bg)', color: 'var(--cb-tag-text)' }
-                                        : { color: 'var(--cb-muted)' }
+                                        ? { background: '#eef2ff', color: '#6366f1' }
+                                        : { color: '#9ca3af' }
                                 }
                             >
-                                <Check className="w-3 h-3 text-emerald-500" /> Your ChatGPT
+                                <Check className="w-3 h-3 text-emerald-500" />
+                                ChatGPT
                             </button>
                         ) : (
                             <button
                                 onClick={connectChatGPT}
-                                className="text-[11px] font-medium flex items-center gap-1 transition-colors hover:opacity-70"
-                                style={{ color: 'var(--cb-violet)' }}
+                                className="text-[11px] font-medium flex items-center gap-1 hover:opacity-70 transition-opacity"
+                                style={{ color: '#6366f1' }}
                             >
                                 <ExternalLink className="w-3 h-3" /> Connect ChatGPT
                             </button>
                         )}
                     </div>
-
-                    <div className="flex items-center gap-1">
-                        <kbd
-                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md border"
-                            style={{ color: 'var(--cb-muted)', borderColor: 'var(--cb-border)', background: 'var(--cb-bg)' }}
-                        >
-                            ⌘K
-                        </kbd>
-                        <span className="text-[10px]" style={{ color: 'var(--cb-muted)' }}>to toggle</span>
-                    </div>
+                    <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded border text-gray-400"
+                        style={{ borderColor: '#e5e7eb', background: '#fff' }}>
+                        ⌘K
+                    </kbd>
                 </div>
 
                 {/* ── Scrollable Body ── */}
-                <div className="cb-scroll flex-1 py-3">
+                <div className="cb-scroll flex-1 overflow-y-auto py-2 px-2">
 
-                    {/* AI Response */}
+                    {/* AI Response Card */}
                     {aiResponse && (
-                        <div className="cb-response-anim px-3 pb-3">
-                            <div
-                                className="rounded-2xl p-4"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(124,114,250,0.06) 0%, rgba(167,139,250,0.04) 100%)',
-                                    border: '1px solid rgba(124,114,250,0.2)'
-                                }}
-                            >
-                                {/* Response Header */}
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div
-                                            className="w-5 h-5 rounded-md flex items-center justify-center"
-                                            style={{ background: 'var(--cb-tag-bg)' }}
-                                        >
-                                            <Sparkles className="w-3 h-3" style={{ color: 'var(--cb-violet)' }} />
-                                        </div>
-                                        <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--cb-violet)' }}>
-                                            {useChatGPTActive ? 'ChatGPT' : 'Zen AI'}
-                                        </span>
+                        <div className="cb-response-card cb-response-anim rounded-2xl p-4 mb-2 mx-1"
+                            style={{ background: '#f5f5ff', border: '1px solid #e0e0fa' }}>
+                            {/* Card Header */}
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-md flex items-center justify-center"
+                                        style={{ background: '#eef2ff' }}>
+                                        <Sparkles className="w-3 h-3 text-indigo-500" />
                                     </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <button
-                                            onClick={handleCopy}
-                                            className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all hover:opacity-80"
-                                            style={{ color: 'var(--cb-muted)', background: 'var(--cb-bg)', border: '1px solid var(--cb-border)' }}
-                                        >
-                                            {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                                            {copied ? 'Copied' : 'Copy'}
-                                        </button>
-                                        <button
-                                            onClick={() => { setIsOpen(false); navigate('/zen'); }}
-                                            className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg text-white font-semibold transition-all hover:opacity-85"
-                                            style={{ background: 'var(--cb-violet)' }}
-                                        >
-                                            Open Zen <ArrowRight className="w-3 h-3" />
-                                        </button>
-                                    </div>
+                                    <span className="cb-response-badge text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                        style={{ background: '#eef2ff', color: '#6366f1' }}>
+                                        Zen AI
+                                    </span>
                                 </div>
-
-                                {/* Response Text */}
-                                <div>
-                                    <ReactMarkdown remarkPlugins={[remarkBreaks]} components={MARKDOWN_COMPONENTS}>
-                                        {aiResponse}
-                                    </ReactMarkdown>
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        onClick={handleCopy}
+                                        className="cb-copy-btn flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all hover:opacity-80"
+                                        style={{ background: '#fff', border: '1px solid #e5e7eb', color: '#6b7280' }}
+                                    >
+                                        {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                                        {copied ? 'Copied' : 'Copy'}
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsOpen(false); navigate('/zen'); }}
+                                        className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg text-white font-semibold hover:opacity-85 transition-opacity"
+                                        style={{ background: '#6366f1' }}
+                                    >
+                                        Full Chat <ArrowRight className="w-3 h-3" />
+                                    </button>
                                 </div>
+                            </div>
+                            {/* Markdown Content */}
+                            <div>
+                                <ReactMarkdown remarkPlugins={[remarkBreaks]} components={MARKDOWN_COMPONENTS}>
+                                    {aiResponse}
+                                </ReactMarkdown>
                             </div>
                         </div>
                     )}
 
                     {/* Loading Skeleton */}
                     {loading && !aiResponse && (
-                        <div className="px-3 pb-3">
-                            <div
-                                className="rounded-2xl p-4 space-y-2.5"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(124,114,250,0.05) 0%, rgba(167,139,250,0.03) 100%)',
-                                    border: '1px solid rgba(124,114,250,0.15)'
-                                }}
-                            >
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--cb-violet)' }} />
-                                    <span className="text-[12px] font-medium animate-pulse" style={{ color: 'var(--cb-muted)' }}>
-                                        Zen is thinking…
-                                    </span>
-                                </div>
-                                {[70, 55, 80, 40].map((w, i) => (
-                                    <div
-                                        key={i}
-                                        className="h-2.5 rounded-full animate-pulse"
-                                        style={{ width: `${w}%`, background: 'var(--cb-divider)' }}
-                                    />
-                                ))}
+                        <div className="rounded-2xl p-4 mb-2 mx-1"
+                            style={{ background: '#f5f5ff', border: '1px solid #e0e0fa' }}>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                                <span className="text-[12px] font-medium text-gray-400 animate-pulse">Zen is thinking…</span>
                             </div>
+                            {[68, 52, 76, 38].map((w, i) => (
+                                <div key={i} className="h-2 rounded-full mb-2 animate-pulse"
+                                    style={{ width: `${w}%`, background: '#e0e0fa' }} />
+                            ))}
                         </div>
                     )}
 
-                    {/* ── AI Prompts Group ── */}
-                    {filteredAI.length > 0 && (
-                        <div className="mb-1">
-                            <div className="flex items-center gap-1.5 px-4 pb-1.5">
-                                <Zap className="w-3 h-3" style={{ color: 'var(--cb-muted)' }} />
-                                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cb-muted)' }}>
-                                    Ask Zen
-                                </span>
-                            </div>
-                            {filteredAI.map((action) => {
-                                const Icon = action.icon;
-                                return (
-                                    <button
-                                        key={action.id}
-                                        onClick={() => handleAction(action)}
-                                        className="cb-action-row w-full flex items-center gap-3 px-4 py-2.5 transition-all text-left group"
-                                    >
-                                        <div
-                                            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
-                                            style={{
-                                                background: 'var(--cb-tag-bg)',
-                                                color: 'var(--cb-violet)'
-                                            }}
-                                        >
-                                            <Icon className="w-4 h-4" />
-                                        </div>
-                                        <span
-                                            className="flex-1 text-[13.5px] font-medium truncate"
-                                            style={{ color: 'var(--cb-text)' }}
-                                        >
-                                            {action.label}
-                                        </span>
-                                        <CornerDownLeft
-                                            className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                            style={{ color: 'var(--cb-muted)' }}
-                                        />
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    {/* Divider between AI and Nav sections */}
-                    {filteredAI.length > 0 && filteredNav.length > 0 && (
-                        <div className="mx-4 my-1.5" style={{ height: '1px', background: 'var(--cb-divider)' }} />
-                    )}
-
-                    {/* ── Navigation Group ── */}
-                    {filteredNav.length > 0 && (
+                    {/* ── Suggestions List ── */}
+                    {filtered.length > 0 && (
                         <div>
-                            <div className="flex items-center gap-1.5 px-4 py-1.5">
-                                <Navigation className="w-3 h-3" style={{ color: 'var(--cb-muted)' }} />
-                                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cb-muted)' }}>
-                                    Navigate
+                            <div className="flex items-center gap-1.5 px-3 pt-1 pb-1">
+                                <Zap className="w-3 h-3 text-gray-400" />
+                                <span className="cb-section-label text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                    Suggestions
                                 </span>
                             </div>
-                            {filteredNav.map((action) => {
-                                const Icon = action.icon;
-                                return (
-                                    <button
-                                        key={action.id}
-                                        onClick={() => handleAction(action)}
-                                        className="cb-action-row w-full flex items-center gap-3 px-4 py-2.5 transition-all text-left group"
-                                    >
-                                        <div
-                                            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                                            style={{ background: 'var(--cb-bg2)', color: 'var(--cb-muted)', border: '1px solid var(--cb-border)' }}
+                            <div className="space-y-0.5">
+                                {filtered.map(action => {
+                                    const Icon = action.icon;
+                                    return (
+                                        <button
+                                            key={action.id}
+                                            onClick={() => handleAction(action)}
+                                            className="cb-action-row w-full flex items-center gap-3 px-3 py-2.5 group text-left"
                                         >
-                                            <Icon className="w-4 h-4" />
-                                        </div>
-                                        <span
-                                            className="flex-1 text-[13.5px] font-medium truncate"
-                                            style={{ color: 'var(--cb-text)' }}
-                                        >
-                                            {action.label}
-                                        </span>
-                                        <ArrowRight
-                                            className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                            style={{ color: 'var(--cb-muted)' }}
-                                        />
-                                    </button>
-                                );
-                            })}
+                                            <div
+                                                className="cb-action-icon w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                                                style={{ background: '#f3f4f6', border: '1px solid #e9eaec', color: '#6b7280' }}
+                                            >
+                                                <Icon className="w-4 h-4" />
+                                            </div>
+                                            <span
+                                                className="cb-action-label flex-1 text-[13.5px] font-medium text-left truncate transition-colors"
+                                                style={{ color: '#374151' }}
+                                            >
+                                                {action.label}
+                                            </span>
+                                            <CornerDownLeft
+                                                className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-gray-300"
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
 
                     {/* Empty state */}
-                    {filtered.length === 0 && !loading && !aiResponse && (
-                        <div className="py-12 text-center px-6">
-                            <div
-                                className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center"
-                                style={{ background: 'var(--cb-tag-bg)' }}
-                            >
-                                <Sparkles className="w-6 h-6" style={{ color: 'var(--cb-violet)' }} />
+                    {filtered.length === 0 && !loading && !aiResponse && query.trim() && (
+                        <div className="py-10 text-center px-6">
+                            <div className="w-10 h-10 rounded-2xl mx-auto mb-3 flex items-center justify-center"
+                                style={{ background: '#eef2ff' }}>
+                                <Sparkles className="w-5 h-5 text-indigo-400" />
                             </div>
-                            <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--cb-text)' }}>Ask Zen anything</p>
-                            <p className="text-[12px]" style={{ color: 'var(--cb-muted)' }}>
-                                Press <kbd className="px-1.5 py-0.5 rounded-md text-[11px] font-mono"
-                                    style={{ background: 'var(--cb-bg2)', border: '1px solid var(--cb-border)', color: 'var(--cb-text)' }}>Enter ↵</kbd> to send "{query.trim()}"
+                            <p className="text-[13px] font-medium text-gray-600 mb-1">No matching suggestions</p>
+                            <p className="text-[12px] text-gray-400">
+                                Press <kbd className="px-1.5 py-0.5 rounded border text-[11px]"
+                                    style={{ background: '#f9fafb', borderColor: '#e5e7eb', color: '#374151' }}>Enter ↵</kbd>{' '}
+                                to ask Zen AI
                             </p>
                         </div>
                     )}
@@ -518,30 +433,25 @@ export default function CommandBar() {
 
                 {/* ── Footer ── */}
                 <div
-                    className="flex items-center justify-between px-4 py-2.5 text-[11px]"
-                    style={{ borderTop: '1px solid var(--cb-divider)', color: 'var(--cb-muted)' }}
+                    className="cb-footer flex items-center justify-between px-4 py-2.5 text-[11px] text-gray-400"
+                    style={{ borderTop: '1px solid #eeeef2', background: '#fafafa' }}
                 >
                     <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px]"
-                                style={{ background: 'var(--cb-bg2)', border: '1px solid var(--cb-border)', color: 'var(--cb-text)' }}>↑↓</kbd>
-                            navigate
+                            <kbd className="px-1.5 py-0.5 rounded border font-mono text-[10px] text-gray-500"
+                                style={{ background: '#fff', borderColor: '#e5e7eb' }}>↵</kbd>
+                            ask
                         </span>
                         <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px]"
-                                style={{ background: 'var(--cb-bg2)', border: '1px solid var(--cb-border)', color: 'var(--cb-text)' }}>↵</kbd>
-                            ask / open
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 rounded font-mono text-[10px]"
-                                style={{ background: 'var(--cb-bg2)', border: '1px solid var(--cb-border)', color: 'var(--cb-text)' }}>esc</kbd>
+                            <kbd className="px-1.5 py-0.5 rounded border font-mono text-[10px] text-gray-500"
+                                style={{ background: '#fff', borderColor: '#e5e7eb' }}>esc</kbd>
                             close
                         </span>
                     </div>
                     <button
                         onClick={() => { setIsOpen(false); navigate('/zen'); }}
-                        className="flex items-center gap-1 font-medium transition-opacity hover:opacity-70"
-                        style={{ color: 'var(--cb-violet)' }}
+                        className="flex items-center gap-1 font-medium hover:text-indigo-500 transition-colors"
+                        style={{ color: '#9ca3af' }}
                     >
                         Zen Workspace <ArrowRight className="w-3 h-3" />
                     </button>
