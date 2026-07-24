@@ -539,6 +539,56 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
     };
 };
 
+// Learner-facing mentor discovery with actual filters — getMentors above only
+// paginates a fixed rating-sort with no way to narrow by department/skill.
+// Deliberately DB-fresh (no cache) since filter combinations are unbounded;
+// callers (Zen's tool layer) are expected to keep result counts small.
+exports.searchMentorsFiltered = async (prisma, { department, skillKeyword, limit } = {}) => {
+  const take = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 10);
+
+  const where = { role: "MENTOR", isProfileComplete: true };
+  if (department) {
+    where.department = department;
+  }
+  if (skillKeyword) {
+    where.mentorSkills = { contains: skillKeyword };
+  }
+
+  const mentors = await prisma.user.findMany({
+    where,
+    orderBy: [
+      { averageRating: 'desc' },
+      { totalSessions: 'desc' }
+    ],
+    take,
+    select: {
+      name: true,
+      department: true,
+      mentorSkills: true,
+      averageRating: true,
+      totalSessions: true,
+      totalReviews: true
+    }
+  });
+
+  return mentors.map((mentor) => {
+    let skills = [];
+    try {
+      skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
+    } catch (e) {
+      // Ignore parsing errors
+    }
+    return {
+      name: mentor.name,
+      department: mentor.department,
+      mentorSkills: skills,
+      averageRating: mentor.averageRating,
+      totalSessions: mentor.totalSessions,
+      totalReviews: mentor.totalReviews
+    };
+  });
+};
+
 exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {
     const user = await prisma.user.findUnique({
         where: { id },
