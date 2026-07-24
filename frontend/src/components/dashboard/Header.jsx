@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, BookOpen, User as UserIcon } from 'lucide-react';
+import { Search, Loader2, BookOpen, User as UserIcon, Sparkles } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
@@ -143,9 +143,11 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                                                             <UserIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                                         )}
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{mentor.name}</p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{mentor.department || 'Mentor'}</p>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{mentor.name}</p>
+                                                        {mentor.department && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{mentor.department}</p>
+                                                        )}
                                                     </div>
                                                 </button>
                                             ))}
@@ -155,18 +157,20 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                                     {sessionResults.length > 0 && (
                                         <div>
                                             <p className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Sessions</p>
-                                            {sessionResults.map((session) => (
+                                            {sessionResults.map((sessionItem) => (
                                                 <button
-                                                    key={session.id}
-                                                    onClick={() => handleSelectSession(session.id)}
+                                                    key={sessionItem.id}
+                                                    onClick={() => handleSelectSession(sessionItem.id)}
                                                     className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
                                                 >
-                                                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-                                                        <BookOpen className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+                                                        <BookOpen className="w-4 h-4" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{session.title}</p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{session.mentor?.name || 'Mentor'}</p>
+                                                        <p className="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">{sessionItem.title}</p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                            {sessionItem.mentor?.name ? `By ${sessionItem.mentor.name}` : sessionItem.mode}
+                                                        </p>
                                                     </div>
                                                 </button>
                                             ))}
@@ -177,6 +181,19 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                         </div>
                     )}
                 </div>
+
+                {/* Cmd+K Ask Zen Floating AI Trigger */}
+                <button
+                    onClick={() => window.dispatchEvent(new Event('open-command-bar'))}
+                    title="Open Zen AI Command Bar (Cmd+K)"
+                    className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-gray-800 rounded-full shadow-sm hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:shadow-md transition-all text-slate-600 dark:text-gray-300 group cursor-pointer"
+                >
+                    <Sparkles className="w-4 h-4 text-[#7A79E6] group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-semibold">Ask Zen</span>
+                    <kbd className="ml-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-gray-800 text-slate-400 dark:text-gray-500 border border-slate-200 dark:border-gray-700">
+                        ⌘K
+                    </kbd>
+                </button>
 
                 <ThemeToggle />
 

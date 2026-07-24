@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
+import CommandBar from '../components/CommandBar';
 import logoLight from '../assets/logo.svg';
 import logoDark from '../assets/footerlogo.svg';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +44,7 @@ export default function LearnerLayout() {
 
     return (
         <ErrorBoundary>
+            <CommandBar />
             <div className="flex h-screen bg-[#F5F6FA] dark:bg-gray-950 font-outfit">
                 <Sidebar
                     logo={theme === 'dark' ? logoDark : logoLight}

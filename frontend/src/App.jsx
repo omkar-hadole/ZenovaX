@@ -54,6 +54,8 @@ const Reports = lazy(() => import('./pages/admin/Reports'));
 const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
 const MentorSessionDetailsPage = lazy(() => import('./pages/mentor/MentorSessionDetailsPage'));
 
+import CommandBar from './components/CommandBar';
+
 function App() {
     const { user } = useAuth();
 
@@ -79,6 +81,7 @@ function App() {
 
     return (
         <BrowserRouter>
+            <CommandBar />
             <Suspense fallback={
                 <div className="flex justify-center items-center h-screen bg-[#F5F6FA]">
                     <div className="flex flex-col items-center gap-4">
