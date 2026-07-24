@@ -211,55 +211,53 @@ exports.askAI = async (prisma, user, { question, username } = {}) => {
 };
 
 // Context-Aware Coding Debugger (frontend/src/components/CodeDebuggerPanel.jsx):
-// reuses the same shared Gemini model/quota as askAI, but does NOT wrap the
-// question in buildSystemPrompt's "answer ONLY using ZenovaX help-center
-// context, refuse anything unrelated" instruction — a debugging question
-// about the user's own code isn't covered by that context at all, so Gemini
-// would (and did) refuse it under that prompt. The caller already sends a
-// complete, self-contained coding-assistant prompt (question + test cases +
-// code), so this endpoint passes it through with no extra restrictive
-// framing — that mismatch, not anything about the model itself, was why the
-// debugger only worked when the user switched to their own ChatGPT account.
-exports.askCodeDebugger = async (prisma, user, { question } = {}) => {
+// unlike askAI/askAIWithChatGPT, this ALWAYS requires the user's own
+// connected ChatGPT account — deliberately never falls back to the shared
+// Gemini key. Debugging prompts embed the full question + test cases + the
+// user's live code, which is a much heavier payload than a typical help
+// question; gating it behind the user's own account keeps that cost off the
+// shared free quota entirely. The frontend enforces this too (shows a
+// locked state until connected), this is the server-side backstop.
+//
+// The caller already sends a complete, self-contained coding-assistant
+// prompt (see buildContextPrompt in CodeDebuggerPanel.jsx), so this passes
+// it straight through with no extra system-prompt wrapping — layering
+// askAIWithChatGPT's ZenovaX-support framing on top would just be redundant
+// noise here, not a functional problem, but there's no reason to pay for it.
+exports.askCodeDebugger = async ({ question } = {}, requestHeaders = {}) => {
     if (!question) {
         throw new BadRequestError("Question is required");
     }
 
-    if (!model) {
-        if (!process.env.GEMINI_API_KEY) {
-            logger.warn("GEMINI_API_KEY is not set. AI assistant is unavailable.");
-            return {
-                answer: "Zen's free assistant isn't available right now. Please contact WhatsApp support, or connect your own ChatGPT account in Zen to keep chatting.",
-                suggestChatGPT: true
-            };
-        }
-        model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
+    const { createOpenAIOAuth, openaiCredentials, generateText } = await loadOpenAIOAuthModules();
+
+    let auth;
+    try {
+        auth = openaiCredentials(new Headers(requestHeaders));
+    } catch (error) {
+        throw new BadRequestError("ChatGPT sign-in required — connect your ChatGPT account to use the debugger.");
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     try {
-        const result = await model.generateContent(question, { timeout: 8000 });
-        return { answer: result.response.text() };
+        const provider = createOpenAIOAuth(auth);
+        const result = await generateText({
+            model: provider('gpt-5.4-mini'),
+            prompt: question,
+            abortSignal: controller.signal,
+        });
+        return { answer: result.text };
     } catch (error) {
-        logger.error("Code Debugger AI Service Error:", { message: error.message, status: error.status });
+        logger.error("Code Debugger ChatGPT Error:", { message: error.message });
 
-        if (error.status === 429 || error.message.includes("429")) {
-            return {
-                answer: "Zen's free assistant has hit its usage limit for now. Try again shortly, or connect your own ChatGPT account in Zen to keep debugging.",
-                suggestChatGPT: true
-            };
+        if (/timeout|abort/i.test(error.message || '')) {
+            return { answer: "Your ChatGPT account is taking too long to respond right now. Please try again in a moment." };
         }
 
-        if (error.code === 'ETIMEDOUT' || /timeout|abort/i.test(error.message || '')) {
-            return {
-                answer: "Zen's free assistant is a bit busy right now. Try again in a moment, or connect your own ChatGPT account in Zen to keep debugging.",
-                suggestChatGPT: true
-            };
-        }
-
-        return {
-            answer: "Zen's free assistant is having trouble responding right now. Try again shortly, or connect your own ChatGPT account in Zen to keep debugging.",
-            suggestChatGPT: true
-        };
+        return { answer: "I couldn't reach your ChatGPT account right now. Try reconnecting and asking again." };
+    } finally {
+        clearTimeout(timeoutId);
     }
 };
 

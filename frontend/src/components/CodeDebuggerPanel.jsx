@@ -17,18 +17,19 @@ import {
     Bug,
     Lightbulb,
     Zap,
-    ExternalLink
+    ExternalLink,
+    Lock,
+    Link2
 } from 'lucide-react';
-import { getCsrfToken } from '../utils/api';
-import { useAuth } from '../context/AuthContext';
+import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '').replace(/\/api$/, '');
-// Its own endpoint (not /ask-ai) because that path's system prompt is
-// deliberately restricted to "answer ONLY using ZenovaX help-center
-// content" to protect the shared Gemini quota — which made it refuse every
-// debugging question, since code isn't in that context. This endpoint skips
-// that restriction since the caller already sends a complete, self-contained
-// coding-assistant prompt.
+// Deliberately requires the user's own connected ChatGPT account — never
+// falls back to ZenovaX's shared Gemini key. Debugging prompts embed the
+// full question + test cases + the user's live code, a much heavier payload
+// than a typical help question, so this keeps that cost off the shared free
+// quota entirely (see helpService.js#askCodeDebugger for the server-side
+// enforcement of the same rule).
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-code-debugger`;
 
 const MARKDOWN_COMPONENTS = {
@@ -99,16 +100,29 @@ export default function CodeDebuggerPanel({ question, code, language, isOpen, on
 
     const inputRef   = useRef(null);
     const bottomRef  = useRef(null);
-    const { user }   = useAuth();
 
-    // Auto-focus the input the moment the panel opens, so the user can start
-    // typing immediately instead of having to click into it first.
+    // Same hook, same default (no custom sessionStore/redirectUri) as
+    // Zen.jsx — that means it reads/writes the exact same underlying
+    // IndexedDB-backed session, so connecting once in either place unlocks
+    // both seamlessly, and disconnecting locks both. No page-specific wiring
+    // needed for that — it's just how the library's default session store
+    // works when both call sites use it unmodified.
+    const {
+        status: chatGptStatus,
+        installUrl: chatGptInstallUrl,
+        isSignedIn: chatGptConnected,
+        login: connectChatGPT,
+    } = useSignInWithChatGPT();
+    const needsChatGptExtension = chatGptStatus === 'needs-extension';
+
+    // Auto-focus the input the moment the panel opens (once unlocked), so
+    // the user can start typing immediately instead of having to click in.
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && chatGptConnected) {
             const focusTimer = setTimeout(() => inputRef.current?.focus(), 250);
             return () => clearTimeout(focusTimer);
         }
-    }, [isOpen]);
+    }, [isOpen, chatGptConnected]);
 
     // Esc closes the panel, matching standard modal/panel conventions.
     useEffect(() => {
@@ -165,6 +179,7 @@ User's request: ${userQuestion}`;
     };
 
     const handleSend = useCallback(async (overrideText) => {
+        if (!chatGptConnected) return;
         const text = (overrideText || input).trim();
         if (!text || loading) return;
 
@@ -174,17 +189,11 @@ User's request: ${userQuestion}`;
         setLoading(true);
         scrollToBottom();
 
-        const csrfToken   = getCsrfToken();
-        const csrfHeaders = csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
-
         try {
             const { data } = await axios.post(
                 API_ENDPOINT,
-                {
-                    question: buildContextPrompt(text),
-                    username: user?.name || user?.firstName || 'Learner'
-                },
-                { withCredentials: true, headers: csrfHeaders }
+                { question: buildContextPrompt(text) },
+                { headers: await openaiAuthHeaders() }
             );
             setMessages(prev => [...prev, { role: 'ai', text: data.answer }]);
         } catch {
@@ -197,7 +206,7 @@ User's request: ${userQuestion}`;
             setLoading(false);
             scrollToBottom();
         }
-    }, [input, loading, question, code, language, user]);
+    }, [input, loading, question, code, language, chatGptConnected]);
 
     const handleCopy = async (text, idx) => {
         try { await navigator.clipboard.writeText(text); setCopiedIdx(idx); setTimeout(() => setCopiedIdx(null), 2000); } catch {}
@@ -275,6 +284,49 @@ User's request: ${userQuestion}`;
                     </div>
                 </div>
 
+                {/* ── Locked state: ChatGPT not connected ── */}
+                {!chatGptConnected ? (
+                    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+                        <div
+                            className="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center"
+                            style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.2)' }}
+                        >
+                            <Lock className="w-6 h-6 text-indigo-400" />
+                        </div>
+                        <p className="text-[15px] font-bold text-white mb-2">Connect ChatGPT to unlock the AI Debugger</p>
+                        <p className="text-[12.5px] text-gray-500 leading-relaxed mb-6 max-w-[280px]">
+                            This debugger runs on your own ChatGPT account, not ZenovaX's shared assistant — connect
+                            once and it stays unlocked here and in Zen (<span className="text-gray-400">/zen</span>).
+                        </p>
+
+                        {needsChatGptExtension ? (
+                            <div className="space-y-2.5 w-full max-w-[240px]">
+                                <button
+                                    onClick={() => window.open(chatGptInstallUrl, '_blank', 'noopener,noreferrer')}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-[13px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+                                    style={{ background: '#6366f1' }}
+                                >
+                                    <Link2 className="w-3.5 h-3.5" /> Install the ChatGPT extension
+                                </button>
+                                <button
+                                    onClick={connectChatGPT}
+                                    className="w-full text-[11.5px] text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+                                >
+                                    Installed it? Try again
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={connectChatGPT}
+                                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white text-[13px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+                                style={{ background: '#6366f1' }}
+                            >
+                                <Link2 className="w-3.5 h-3.5" /> Connect ChatGPT
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                <>
                 {/* ── Context Preview Bar ── */}
                 <div
                     className="px-4 py-2.5 flex-shrink-0"
@@ -493,6 +545,8 @@ User's request: ${userQuestion}`;
                         Shift+Enter for new line · Esc to close · Zen sees your live code
                     </p>
                 </div>
+                </>
+                )}
             </div>
         </>
     );
