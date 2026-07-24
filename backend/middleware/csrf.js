@@ -15,28 +15,24 @@ function csrfProtection(req, res, next) {
         '/api/auth/resend-verification',
         '/api/auth/forgot-password',
         '/api/auth/reset-password',
-        '/api/auth/csrf',
-        // Carries the user's own ChatGPT OAuth token as its Authorization
-        // Bearer header, not a ZenovaX session — step 3 below would
-        // otherwise mistake that for an authenticated ZenovaX session and
-        // demand a CSRF cookie/header pair this request never has.
-        '/api/help/ask-ai-chatgpt'
+        '/api/auth/csrf'
     ];
     if (exemptPaths.some(p => path === p)) {
         return next();
     }
 
-    // 3. If the user is not authenticated (no token cookie or Authorization Bearer token),
-    // then CSRF is not a risk because no credentials/session can be hijacked.
-    let hasSession = false;
-    if (req.cookies && req.cookies.token) {
-        hasSession = true;
-    } else {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith("Bearer ")) {
-            hasSession = true;
-        }
-    }
+    // 3. Only a cookie-based session is a CSRF risk. A request authenticated
+    // purely via an Authorization: Bearer header is immune to CSRF by
+    // construction — browsers never auto-attach a custom header cross-origin
+    // the way they auto-attach cookies, so there's nothing for a forged
+    // cross-site request to ride on. This holds regardless of whose Bearer
+    // token it is (a hypothetical ZenovaX one, or — as with Zen's ChatGPT
+    // fallback — a third-party OpenAI OAuth token); treating "any Bearer
+    // header present" as "authenticated ZenovaX session" was a bug that
+    // caused false-positive 403s on requests that never touched a ZenovaX
+    // session at all. Do not re-add a Bearer branch here without re-deriving
+    // this reasoning.
+    const hasSession = !!(req.cookies && req.cookies.token);
 
     if (!hasSession) {
         return next();
