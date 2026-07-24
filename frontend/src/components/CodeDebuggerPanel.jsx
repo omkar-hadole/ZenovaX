@@ -5,6 +5,8 @@ import remarkBreaks from 'remark-breaks';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
     Sparkles,
     X,
@@ -32,6 +34,64 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').repla
 // enforcement of the same rule).
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-code-debugger`;
 
+const CodeBlock = React.memo(({ language, value }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyCode = async () => {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {}
+    };
+
+    return (
+        <div className="relative my-3 rounded-xl overflow-hidden border border-white/10 bg-black/50 text-gray-100 font-mono text-xs shadow-lg">
+            <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10 text-gray-400 text-xs select-none">
+                <span className="font-bold uppercase tracking-wider text-[11px] text-indigo-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+                    {language || 'code'}
+                </span>
+                <button
+                    onClick={handleCopyCode}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-all text-[11px] font-medium"
+                    title="Copy code"
+                >
+                    {copied ? (
+                        <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Copied!</span>
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy code</span>
+                        </>
+                    )}
+                </button>
+            </div>
+            <div className="p-3 overflow-x-auto debugger-scroll">
+                <SyntaxHighlighter
+                    language={language || 'text'}
+                    style={vscDarkPlus}
+                    customStyle={{
+                        margin: 0,
+                        padding: 0,
+                        background: 'transparent',
+                        fontSize: '0.8rem',
+                        lineHeight: '1.6',
+                    }}
+                    codeTagProps={{
+                        style: { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }
+                    }}
+                >
+                    {value}
+                </SyntaxHighlighter>
+            </div>
+        </div>
+    );
+});
+
 const MARKDOWN_COMPONENTS = {
     a: ({ node, children, href, ...props }) => (
         <a href={href} target="_blank" rel="noopener noreferrer"
@@ -42,33 +102,66 @@ const MARKDOWN_COMPONENTS = {
         </a>
     ),
     strong: ({ node, children, ...props }) => (
-        <strong className="font-semibold text-white" {...props}>{children}</strong>
+        <strong className="font-bold text-white" {...props}>{children}</strong>
     ),
-    ul: ({ node, children, ...props }) => (
-        <ul className="list-disc list-outside ml-4 my-1.5 space-y-1 text-gray-300 text-[13px]" {...props}>{children}</ul>
+    em: ({ node, children, ...props }) => (
+        <em className="italic text-gray-200" {...props}>{children}</em>
     ),
-    ol: ({ node, children, ...props }) => (
-        <ol className="list-decimal list-outside ml-4 my-1.5 space-y-1 text-gray-300 text-[13px]" {...props}>{children}</ol>
+    h1: ({ node, children, ...props }) => (
+        <h1 className="text-lg font-bold text-white mt-4 mb-2 border-b border-white/10 pb-1" {...props}>{children}</h1>
     ),
-    li: ({ node, children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
-    code: ({ node, inline, children, ...props }) => (
-        <code
-            className="px-1.5 py-0.5 rounded bg-white/10 text-indigo-300 font-mono text-[11px] border border-white/10"
-            {...props}
-        >
-            {children}
-        </code>
-    ),
-    pre: ({ node, children, ...props }) => (
-        <pre className="my-2 p-3 rounded-lg bg-black/40 border border-white/10 overflow-x-auto text-[12px] font-mono text-gray-300 leading-relaxed" {...props}>
-            {children}
-        </pre>
-    ),
-    p: ({ node, children, ...props }) => (
-        <p className="leading-relaxed mb-2 last:mb-0 text-gray-300 text-[13.5px]" {...props}>{children}</p>
+    h2: ({ node, children, ...props }) => (
+        <h2 className="text-base font-bold text-white mt-3 mb-1.5" {...props}>{children}</h2>
     ),
     h3: ({ node, children, ...props }) => (
-        <h3 className="text-sm font-bold text-white mt-3 mb-1.5" {...props}>{children}</h3>
+        <h3 className="text-sm font-semibold text-white mt-2.5 mb-1" {...props}>{children}</h3>
+    ),
+    ul: ({ node, children, ...props }) => (
+        <ul className="list-disc list-outside ml-5 my-2 space-y-1 text-gray-300 text-[13px]" {...props}>{children}</ul>
+    ),
+    ol: ({ node, children, ...props }) => (
+        <ol className="list-decimal list-outside ml-5 my-2 space-y-1 text-gray-300 text-[13px]" {...props}>{children}</ol>
+    ),
+    li: ({ node, children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
+    table: ({ node, children, ...props }) => (
+        <div className="my-3 overflow-x-auto rounded-lg border border-white/10" {...props}>
+            <table className="w-full text-[12.5px] border-collapse" {...props}>{children}</table>
+        </div>
+    ),
+    thead: ({ node, children, ...props }) => (
+        <thead className="bg-white/5 border-b border-white/10" {...props}>{children}</thead>
+    ),
+    tbody: ({ node, children, ...props }) => (
+        <tbody className="divide-y divide-white/5" {...props}>{children}</tbody>
+    ),
+    tr: ({ node, children, ...props }) => (
+        <tr className="hover:bg-white/5 transition-colors" {...props}>{children}</tr>
+    ),
+    th: ({ node, children, ...props }) => (
+        <th className="px-3 py-2 text-left font-bold text-indigo-300 uppercase tracking-wider text-[11px]" {...props}>{children}</th>
+    ),
+    td: ({ node, children, ...props }) => (
+        <td className="px-3 py-2 text-gray-300 whitespace-nowrap" {...props}>{children}</td>
+    ),
+    blockquote: ({ node, children, ...props }) => (
+        <blockquote className="border-l-4 border-indigo-500/60 pl-4 py-1.5 my-3 italic bg-indigo-500/10 text-gray-300 rounded-r-lg" {...props}>{children}</blockquote>
+    ),
+    code({ node, inline, className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || '');
+        const codeString = String(children).replace(/\n$/, '');
+
+        if (!inline && (match || codeString.includes('\n'))) {
+            return <CodeBlock language={match ? match[1] : ''} value={codeString} />;
+        }
+
+        return (
+            <code className="px-1.5 py-0.5 mx-0.5 rounded bg-white/10 text-indigo-300 font-mono text-[11px] border border-white/10" {...props}>
+                {children}
+            </code>
+        );
+    },
+    p: ({ node, children, ...props }) => (
+        <p className="leading-relaxed mb-2 last:mb-0 text-gray-300 text-[13.5px]" {...props}>{children}</p>
     ),
 };
 

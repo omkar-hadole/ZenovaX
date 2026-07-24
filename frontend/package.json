@@ -35,6 +35,7 @@
     "react-syntax-highlighter": "^16.1.0",
     "rehype-katex": "^7.0.1",
     "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "tailwindcss": "^4.1.16",
     "three": "^0.180.0"
