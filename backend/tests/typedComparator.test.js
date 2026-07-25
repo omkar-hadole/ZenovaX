@@ -1,4 +1,4 @@
-const { typedCompare, FLOAT_EPSILON } = require('../services/typedComparator');
+const { typedCompare } = require('../services/typedComparator');
 
 let passed = 0;
 let failed = 0;

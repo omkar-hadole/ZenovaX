@@ -13,6 +13,14 @@ const deepEqual = (a, b, elementType) => {
 };
 
 const typedCompare = (expected, actual, returnType) => {
+  const bothArrays = Array.isArray(expected) && Array.isArray(actual);
+
+  if (bothArrays) {
+    if (expected.length !== actual.length) return false;
+    const innerType = isArrayType(returnType) ? baseTypeOf(returnType) : returnType;
+    return expected.every((_, i) => typedCompare(expected[i], actual[i], innerType));
+  }
+
   const isArr = isArrayType(returnType);
   const base = baseTypeOf(returnType);
 

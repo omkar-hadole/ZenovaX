@@ -23,7 +23,8 @@
 11. [Security Model](#11-security-model)
 12. [File Map](#12-file-map)
 13. [Current Limitations](#13-current-limitations)
-14. [Extension Points for HTML/CSS/React](#14-extension-points-for-htmlcssreact)
+14. [Structured Question Support](#14-structured-question-support)
+15. [Extension Points for HTML/CSS/React](#15-extension-points-for-htmlcssreact)
 
 ---
 
@@ -97,7 +98,12 @@ graph TB
 | `difficulty` | `'EASY'` | `'MEDIUM'` | `'MEDIUM'` | Select: Easy / Medium / Hard |
 | `points` | number | `100` | Numeric input, min 0 |
 | `timeLimitMinutes` | string → number | `''` | Optional, parsed to Number or null. |
-| `testCases` | Array | `[{input: '', output: '', isHidden: false}]` | See test case section below |
+| `testCases` | Array | `[{input: '', output: '', isHidden: false}]` | Legacy test case section below |
+| `questionType` | `'legacy' | 'structured'` | `'legacy'` | Toggle between input/output and typed function |
+| `functionName` | string | `''` | Structured: function name (e.g. `twoSum`) |
+| `parameters` | Array | `[{name, type}]` | Structured: typed parameter list |
+| `returnType` | string | `'integer'` | Structured: return type (e.g. `integer[]`) |
+| `structuredTestCases` | Array | `[{inputs: {}, expected, isHidden}]` | Structured: named-parameter test cases |
 | `allowedLanguages` | string[] | `['javascript', 'python', 'java']` | Toggle buttons; at least one required |
 | `starterCode` | object | `{javascript: '', python: '', java: ''}` | Per-language code editor (Monaco). Optional. |
 | `referenceSolution` | string | `''` | Mentor-only notes, never sent to students |
@@ -323,6 +329,8 @@ class Solution {
 
 ### Required Function/Class Structure
 
+### Legacy (default)
+
 All languages require a **single function** named `solve` that accepts a single `input` argument and returns a value.
 
 | Language | Signature | Return type |
@@ -331,11 +339,32 @@ All languages require a **single function** named `solve` that accepts a single 
 | Python | `def solve(input): ...` | Any (stringified via `str()`) |
 | Java | `public static String solve(String input)` | `String` |
 
+### Structured (typed functions)
+
+For `questionType: 'structured'`, the function signature is defined by the mentor:
+
+- `functionName` — the function name (e.g. `twoSum`)
+- `parameters` — `[{name: 'nums', type: 'integer[]'}, {name: 'target', type: 'integer'}]`
+- `returnType` — e.g. `integer[]`
+
+Starter code is auto-generated from the signature per language. Supported types:
+
+| Type family | Examples |
+|---|---|
+| Scalar | `integer`, `float`, `string`, `boolean` |
+| 1D array | `integer[]`, `float[]`, `string[]`, `boolean[]` |
+| 2D array | `integer[][]`, `float[][]`, `string[][]`, `boolean[][]` |
+
 ### How Submitted Code Is Combined With Runner Code
 
+#### Legacy
 - **JavaScript:** User's raw code is wrapped as `new Function('input', code + '\nreturn solve(input);')` in the web worker. On backend (submit), it's run via `vm.runInContext`.
 - **Python:** User's code is prepended with a driver script that iterates inputs, calls `solve(i)`, and prints results separated by `|||` with a `===LOGS_DONE===` delimiter.
 - **Java:** User's code (a `Solution` class) is prepended with a `Main` class driver that creates a `Solution` instance, calls `s.solve(input)` for each input, and uses the same `|||` delimiter as Python.
+
+#### Structured
+- **JavaScript:** `runStructuredJavaScriptTestCases` in `codeRunner.js` builds a function call using `serializeArgs(functionName, params, inputs, 'javascript')` and evaluates it via `vm.runInContext`.
+- **Python/Java:** `buildStructuredDriverCode` in `argSerializer.js` generates a driver that unpacks named inputs from JSON, calls `functionName(**args)` (Python) or `s.functionName(arg1, arg2, ...)` (Java), and serializes results. Output follows the same `===LOGS_DONE===` / `|||` protocol.
 
 ### Hidden Boilerplate (Not Visible to User)
 
@@ -633,6 +662,7 @@ const JS_TIMEOUT_MS = 3000;        // server-side JS vm timeout
 
 ### Result Comparison
 
+#### Legacy (string-based)
 All results are compared using:
 ```javascript
 actual.trim() === String(expected).trim()
@@ -643,6 +673,22 @@ This means:
 - **Newlines:** `\n` is stripped from actual output before comparison in the backend: `actual.replace(/\n/g, '')`. In the web worker, `trim()` is used.
 - **Type handling:** Everything is converted to String. Objects are `JSON.stringify`'d in the worker; Python results use `str()`.
 - **Case sensitivity:** Preserved (no `.toLowerCase()`).
+
+#### Structured (typed comparison)
+For `questionType: 'structured'`, results are compared using `typedCompare()` in `backend/services/typedComparator.js`:
+
+| Type | Comparison |
+|---|---|
+| `integer` | `Number(actual) === Number(expected)` |
+| `float` | `Math.abs(actual - expected) < 1e-6` |
+| `string` | Exact match |
+| `boolean` | `Boolean(actual) === Boolean(expected)` |
+| `integer[]` | Deep equality, order-sensitive |
+| `float[]` | Deep equality, ε = 1e-6 per element |
+| `string[]` / `boolean[]` | Deep equality, order-sensitive |
+| 2D arrays | Recursive deep equality |
+
+44 unit tests in `backend/tests/typedComparator.test.js` cover all types, edge cases (NaN, empty arrays, boundary epsilon), and negative numbers.
 
 ---
 
@@ -826,8 +872,8 @@ All endpoints are under `/api/coding-questions` unless noted.
 ### Question Management (Mentor)
 
 | Method | Path | Purpose | Auth | Body |
-|---|---|---|---|---|
-| `POST` | `/create` | Create draft | Mentor/Both | `{title, description, difficulty, testCases, sessionId, allowedLanguages?, starterCode?, referenceSolution?, timeLimitMinutes?, points?}` |
+|---|---|---|---|---|---|
+| `POST` | `/create` | Create draft | Mentor/Both | `{title, description, difficulty, testCases, sessionId, allowedLanguages?, starterCode?, referenceSolution?, timeLimitMinutes?, points?, questionType?, functionName?, parameters?, returnType?, structuredTestCases?}` |
 | `PUT` | `/:id` | Update draft/live | Mentor/Both (owner) | Same as create (partial) |
 | `PUT` | `/:id/launch` | Set LIVE + notify | Mentor/Both (owner) | — |
 | `PUT` | `/:id/close` | Set CLOSED | Mentor/Both (owner) | — |
@@ -899,6 +945,13 @@ model CodingQuestion {
   referenceSolution  String?    @db.Text
   timeLimitMinutes   Int?
   points             Int?       @default(100)
+
+  // Structured question fields (2026-07-25 migration)
+  questionType          String?   @default("legacy")  // "legacy" | "structured"
+  functionName          String?                       // e.g. "twoSum"
+  parameters            String?    @db.Text           // JSON: [{name, type}]
+  returnType            String?                       // e.g. "integer[]"
+  structuredTestCases   String?    @db.Text           // JSON: [{inputs, expected, isHidden}]
 
   // Status
   status          QuizStatus    @default(DRAFT)
@@ -1042,8 +1095,13 @@ The `assertCanAccessCodingQuestion` function in `codingService.js` enforces:
 | `backend/routes/codingChallengeRoutes.js` | All coding question routes (17 lines) |
 | `backend/controllers/codingChallengeController.js` | Controller: delegates to codingService (82 lines) |
 | `backend/controllers/codingExecutionController.js` | Controller for `/execute` endpoint (13 lines) |
-| `backend/services/codingService.js` | Core business logic: CRUD, access control, submission, execution orchestration (367 lines) |
-| `backend/services/codeRunner.js` | Execution engine: driver code generation, Piston API, vm runner, test comparison (240 lines) |
+| `backend/services/codingService.js` | Core business logic: CRUD, access control, submission, execution orchestration (512 lines) |
+| `backend/services/codeRunner.js` | Execution engine: driver code generation, Piston API, vm runner, test comparison, structured runner (363 lines) |
+| `backend/services/typedComparator.js` | Type-aware comparison engine (~100 lines) |
+| `backend/services/argSerializer.js` | Value/call serialization and driver code generation (~148 lines) |
+| `backend/services/starterCodeGenerator.js` | Starter code generation per language (~60 lines) |
+| `backend/services/questionTypeEngine.js` | Orchestrator and validation (~82 lines) |
+| `backend/tests/typedComparator.test.js` | 44 unit tests for typed comparison (~200 lines) |
 | `backend/services/pyodideRunner.js` | Pyodide worker pool manager (87 lines) |
 | `backend/services/pyodideWorker.js` | Pyodide worker_thread: loads Pyodide, runs Python, returns stdout (67 lines) |
 | `backend/middleware/auth.js` | JWT auth and role authorization |
@@ -1099,7 +1157,7 @@ The current architecture makes fundamental assumptions that prevent HTML/CSS que
 - **No plagiarism detection.**
 - **No multi-file support:** Each question has one editor, one file.
 - **No import/library management:** Students can only use standard library.
-- **No rich test case types:** Input/output are plain strings. No JSON objects, arrays, or typed data.
+- **No rich test case types:** Legacy input/output are plain strings. Structured questions add typed parameters and expected values (arrays, nested arrays, numbers, booleans).
 - **No performance metrics:** No runtime measurement, memory measurement, or big-O analysis.
 - **Pyodide memory:** ~14MB loaded once, but long-running Python scripts with large data could exhaust memory.
 - **VM security:** The Node `vm` module is explicitly noted as "not a hardened security sandbox."
@@ -1107,7 +1165,61 @@ The current architecture makes fundamental assumptions that prevent HTML/CSS que
 
 ---
 
-## 14. Extension Points for HTML/CSS/React
+## 14. Structured Question Support
+
+### Overview
+
+Structured questions extend the legacy `solve(input)` model with typed function signatures, named parameters, type-aware comparison, and automatic starter code generation — all while maintaining full backward compatibility.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   questionTypeEngine.js                  │
+│  (Orchestrator — pure functions, no execution engine)    │
+├──────────────┬────────────────┬─────────────────────────┤
+│ typedComp-   │  argSerializer │  starterCodeGenerator    │
+│ arator.js    │  .js           │  .js                     │
+│ (comparison) │ (serialization │ (starter code per lang)  │
+│              │  + driver gen) │                          │
+└──────────────┴────────────────┴─────────────────────────┘
+```
+
+### Engine-Agnostic Layer
+
+All three modules are pure functions with zero dependencies on `vm`, Pyodide, or Piston:
+
+| Module | Function | Purpose |
+|---|---|---|
+| `typedComparator.js` | `typedCompare(expected, actual, type)` | Returns boolean |
+| `argSerializer.js` | `serializeValue(value, type, language)` | Serializes typed value to JS/Python/Java literal |
+| `argSerializer.js` | `serializeArgs(functionName, params, inputs, language)` | Builds `functionName(arg1, arg2, ...)` call string |
+| `argSerializer.js` | `buildStructuredDriverCode(language, userCode, functionName, params, testCases)` | Generates Python/Java driver wrapper for structured execution |
+| `starterCodeGenerator.js` | `generateStarterCode(functionName, params, returnType, language)` | Generates student starter function stub |
+
+### Backend Integration
+
+- **`codingService.js`**: `createCodingQuestion`, `updateCodingQuestion`, `getCodingQuestionById` pass through structured fields. `submitCodingQuestion` and `executeCode` route to `runStructuredTestCases` when `questionType === 'structured'`.
+- **`codeRunner.js`**: `runStructuredTestCases()` handles JS via `vm` with `serializeArgs`, Python/Java via `buildStructuredDriverCode`. Results use `typedCompare()` instead of string equality.
+- **Hidden test case redaction**: Separate `redactHiddenStructuredTestCases()` / `redactHiddenStructuredResults()` functions for structured format.
+
+### Frontend Integration
+
+- **`LaunchCodingQuestion.jsx`**: Question type toggle (legacy/structured). Structured mode shows function signature builder, typed parameter editor, structured test case inputs.
+- **`AttemptCodingQuestion.jsx`**: Detects structured vs legacy. Shows typed function signature. Auto-generates starter code from signature. Sends `isStructured` + `functionName` + `parameters` + `returnType` to the web worker and API.
+- **`codeRunner.worker.js`**: Handles `isStructured` flag: builds function call with named args, uses `typedCompare` inline for pass/fail.
+
+### New Files
+
+| File | Lines | Purpose |
+|---|---|---|
+| `backend/services/typedComparator.js` | ~100 | Type-aware comparison engine |
+| `backend/services/argSerializer.js` | ~148 | Value/call serialization + driver code gen |
+| `backend/services/starterCodeGenerator.js` | ~60 | Starter code generation per language |
+| `backend/services/questionTypeEngine.js` | ~82 | Orchestrator + validation |
+| `backend/tests/typedComparator.test.js` | ~200 | 44 unit tests |
+
+## 15. Extension Points for HTML/CSS/React
 
 ### What Would Need to Change
 
@@ -1242,17 +1354,21 @@ const redactHiddenResults = (results, testCases, isPrivileged) => {
 
 ```javascript
 // frontend/src/workers/codeRunner.worker.js
+// Now handles both legacy and structured:
 self.onmessage = (e) => {
-    const { code, testCases } = e.data;
-    // ... for each test case:
-    let userFunc;
-    try {
+    const { code, testCases, functionName, parameters, returnType, isStructured } = e.data;
+    // For each test case:
+    if (isStructured) {
+        const paramNames = parameters.map(p => p.name).join(', ');
+        userFunc = new Function(...parameters.map(p => p.name), code + `\nreturn ${functionName}(${paramNames});`);
+        const args = parameters.map(p => serializeValue(tc.inputs[p.name], p.type));
+        result = userFunc(...args);
+        passed = typedCompare(tc.expected, actualVal, returnType);
+    } else {
         userFunc = new Function('input', code + '\nreturn solve(input);');
-    } catch (syntaxErr) {
-        throw new SyntaxError(syntaxErr.message);
+        result = userFunc(tc.input);
+        passed = userOutput.trim() === expectedVal;
     }
-    const result = userFunc(tc.input);
-    // ... compare and postMessage results
 };
 ```
 

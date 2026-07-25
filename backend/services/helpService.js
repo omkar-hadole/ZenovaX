@@ -163,6 +163,61 @@ exports.askAI = async (prisma, cache, user, { question, username } = {}) => {
     }
 };
 
+const CODING_QUESTION_GENERATION_PROMPT = `You are an expert coding question generator. Given a user's description, generate a complete coding question in JSON format. Return ONLY valid JSON, no markdown, no explanation.
+
+The JSON must match this exact schema:
+{
+  "title": "Short title",
+  "description": "Detailed problem statement with examples and constraints",
+  "difficulty": "EASY" | "MEDIUM" | "HARD",
+  "functionName": "camelCaseFunctionName",
+  "parameters": [
+    { "name": "param1", "type": "integer|float|string|boolean|integer[]|float[]|string[]|boolean[]" }
+  ],
+  "returnType": "integer|float|string|boolean|integer[]|float[]|string[]|boolean[]",
+  "testCases": [
+    {
+      "inputs": { "param1": value },
+      "expected": value
+    }
+  ]
+}
+
+Rules:
+- Generate exactly 3 sample (visible) test cases and 2 hidden test cases (total 5).
+- Set isHidden to true for test case indices 3 and 4.
+- All values in test cases must be valid JSON (strings in double quotes, numbers unquoted, arrays in brackets).
+- Choose appropriate types. For arrays use JSON array syntax.
+- The difficulty must reflect the actual complexity.
+- functionName must be a valid camelCase identifier.
+- Generate diverse test cases including edge cases.`;
+
+exports.generateCodingQuestion = async (prisma, cache, user, { prompt } = {}) => {
+    if (!prompt) {
+        throw new BadRequestError("Prompt is required");
+    }
+
+    if (!model) {
+        if (!process.env.GEMINI_API_KEY) {
+            logger.warn("GEMINI_API_KEY is not set.");
+            return { error: "AI assistant is not configured. Please set GEMINI_API_KEY." };
+        }
+        model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
+    }
+
+    try {
+        const chat = model.startChat({ generationConfig: { temperature: 0.2, maxOutputTokens: 4096 } });
+        const response = (await chat.sendMessage(`${CODING_QUESTION_GENERATION_PROMPT}\n\nUser request: ${prompt}`)).response;
+        const text = response.text();
+        const cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        return { question: parsed };
+    } catch (error) {
+        logger.error("Generate Coding Question Error:", { message: error.message });
+        return { error: "Failed to generate question. Try being more specific in your description." };
+    }
+};
+
 exports.askCodeDebugger = async ({ question } = {}, requestHeaders = {}) => {
     if (!question) {
         throw new BadRequestError("Question is required");

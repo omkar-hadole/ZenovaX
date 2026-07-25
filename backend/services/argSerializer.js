@@ -71,7 +71,6 @@ const buildStructuredDriverCode = (language, userCode, functionName, params, tes
   const testCasesJson = JSON.stringify(testCases.map(tc => ({ inputs: tc.inputs, expected: tc.expected })));
 
   if (language === 'python') {
-    const paramNames = (params || []).map(p => p.name).join(', ');
     return `
 import sys
 import json
@@ -96,7 +95,8 @@ def driver():
     sys.stdout = old_stdout
     print(user_stdout_capture.getvalue(), end="")
     print("===LOGS_DONE===")
-    print("|||".join(results))
+    for r in results:
+        print("PASS:" + r)
 
 if __name__ == "__main__":
     import io as io
@@ -105,8 +105,7 @@ if __name__ == "__main__":
   }
 
   if (language === 'java') {
-    const javaParams = (params || []).map(p => `${mapTypeToJava(p.type)} ${p.name}`).join(', ');
-    const javaCalls = testCases.map((tc, idx) => {
+    const javaCalls = testCases.map((tc, _idx) => {
       const argStr = (params || []).map(p => serializeValue(tc.inputs[p.name], p.type, 'java')).join(', ');
       return `
             ${argStr};
@@ -134,7 +133,9 @@ public class Main {
 
         System.out.print(userOut.toString());
         System.out.println("===LOGS_DONE===");
-        System.out.print(String.join("|||", results));
+        for(String r : results) {
+            System.out.println("PASS:" + r);
+        }
     }
 }
 

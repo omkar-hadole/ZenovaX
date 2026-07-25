@@ -11,9 +11,6 @@ const typeComment = (type) => {
 };
 
 const generateStarterCode = (functionName, params, returnType, language) => {
-  const paramNames = (params || []).map(p => p.name).join(', ');
-  const paramStr = (params || []).map(p => `${p.name}`).join(', ');
-
   if (language === 'javascript') {
     const jsParams = (params || []).map(p => p.name).join(', ');
     let comment = (params || []).map(p => `// @param {${typeComment(p.type)}} ${p.name}`).join('\n');

@@ -39,7 +39,7 @@ const validateFunctionSignature = (functionName, params, returnType) => {
   return errors;
 };
 
-const validateStructuredTestCases = (testCases, params, returnType) => {
+const validateStructuredTestCases = (testCases, params) => {
   const errors = [];
   if (!Array.isArray(testCases) || testCases.length === 0) {
     errors.push('At least one test case is required');
