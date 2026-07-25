@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { useSignInWithChatGPT } from '@openai-oauth/react';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import {
   ArrowLeft, Save, Rocket, Plus, Trash2, EyeOff, Eye,
-  Code2, FileText, Sparkles, ChevronDown, Check, X, GripVertical, Link2, LogOut, ExternalLink
+  Code2, FileText, Sparkles, ChevronDown, Check, X, GripVertical, Link2, ExternalLink, FileEdit
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import Toast from '../components/Toast';
@@ -66,6 +71,51 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+const PREVIEW_MARKDOWN = {
+  a: ({ children, href, ...props }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#8B84FF] font-semibold underline underline-offset-2 hover:text-[#7B74F0] transition-colors" {...props}>{children}</a>
+  ),
+  strong: ({ children, ...props }) => (
+    <strong className="font-bold text-gray-900 dark:text-white" {...props}>{children}</strong>
+  ),
+  em: ({ children, ...props }) => (
+    <em className="italic text-gray-700 dark:text-gray-300" {...props}>{children}</em>
+  ),
+  h1: ({ children, ...props }) => (
+    <h1 className="text-lg font-bold text-gray-900 dark:text-white mt-4 mb-2 border-b border-gray-200 dark:border-gray-700 pb-1" {...props}>{children}</h1>
+  ),
+  h2: ({ children, ...props }) => (
+    <h2 className="text-base font-bold text-gray-900 dark:text-white mt-3 mb-1.5" {...props}>{children}</h2>
+  ),
+  h3: ({ children, ...props }) => (
+    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mt-3 mb-1" {...props}>{children}</h3>
+  ),
+  ul: ({ children, ...props }) => (
+    <ul className="list-disc list-outside ml-5 my-2 space-y-0.5 text-gray-800 dark:text-gray-200" {...props}>{children}</ul>
+  ),
+  ol: ({ children, ...props }) => (
+    <ol className="list-decimal list-outside ml-5 my-2 space-y-0.5 text-gray-800 dark:text-gray-200" {...props}>{children}</ol>
+  ),
+  li: ({ children, ...props }) => (
+    <li className="leading-relaxed" {...props}>{children}</li>
+  ),
+  p: ({ children, ...props }) => (
+    <p className="mb-2 leading-relaxed text-gray-800 dark:text-gray-200" {...props}>{children}</p>
+  ),
+  pre: ({ children, ...props }) => (
+    <pre className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 my-2 overflow-x-auto text-sm font-mono text-gray-800 dark:text-gray-200" {...props}>{children}</pre>
+  ),
+  code: ({ className, children, ...props }) => {
+    if (className) {
+      return <code className="text-sm font-mono text-gray-800 dark:text-gray-200" {...props}>{children}</code>;
+    }
+    return <code className="text-[#7871fc] font-semibold" {...props}>{children}</code>;
+  },
+  blockquote: ({ children, ...props }) => (
+    <blockquote className="border-l-3 border-[#8B84FF]/40 pl-3 py-1 my-2 italic text-gray-600 dark:text-gray-400" {...props}>{children}</blockquote>
+  ),
+};
+
 export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
   const { id } = useParams();
   const isEditMode = Boolean(id);
@@ -98,13 +148,13 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiFilled, setAiFilled] = useState(false);
   const [animatingFields, setAnimatingFields] = useState({});
+  const [showPreview, setShowPreview] = useState(false);
 
   const {
     status: chatGptStatus,
     installUrl: chatGptInstallUrl,
     isSignedIn: chatGptConnected,
     login: connectChatGPT,
-    logout: disconnectChatGPT,
   } = useSignInWithChatGPT({
     onSuccess: () => {
       setAiPrompt('');
@@ -525,7 +575,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
   const isEditingLive = isEditMode && status === 'LIVE';
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto -mb-8">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button
@@ -569,16 +619,6 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                 <span className="text-sm font-bold text-gray-900 dark:text-gray-100">Generate with Zen</span>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Describe the problem — Zen fills everything in</p>
               </div>
-              {chatGptConnected && (
-                <button
-                  type="button"
-                  onClick={disconnectChatGPT}
-                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
-                  title="Disconnect ChatGPT"
-                >
-                  <LogOut className="w-3 h-3" /> Disconnect
-                </button>
-              )}
             </div>
             {chatGptConnected ? (
               <div className="flex gap-3">
@@ -742,16 +782,38 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Problem Statement <span className="text-red-400">*</span>
-              </label>
-              <textarea
-                value={questionData.description}
-                onChange={(e) => setQuestionData({ ...questionData, description: e.target.value })}
-                rows={5}
-                className={`w-full p-3 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-[#C9C7F5] focus:border-transparent transition-all resize-y ${animatingFields.description ? 'ai-fill-target' : ''}`}
-                placeholder="Describe the problem, input format, constraints, example, etc."
-              />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Problem Statement <span className="text-red-400">*</span>
+                </label>
+                {questionData.description && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-[#8B84FF] dark:hover:text-[#8B84FF] transition-colors"
+                  >
+                    {showPreview ? <FileEdit className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    {showPreview ? 'Edit' : 'Preview'}
+                  </button>
+                )}
+              </div>
+              {showPreview ? (
+                <div className="w-full p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl min-h-[140px] text-sm overflow-auto">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkBreaks, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={PREVIEW_MARKDOWN}
+                  >{questionData.description}</ReactMarkdown>
+                </div>
+              ) : (
+                <textarea
+                  value={questionData.description}
+                  onChange={(e) => setQuestionData({ ...questionData, description: e.target.value })}
+                  rows={7}
+                  className={`w-full p-3 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-[#C9C7F5] focus:border-transparent transition-all resize-y font-mono text-sm ${animatingFields.description ? 'ai-fill-target' : ''}`}
+                  placeholder="Describe the problem, input format, constraints, example, etc."
+                />
+              )}
             </div>
           </div>
         </Section>

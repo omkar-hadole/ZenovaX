@@ -168,7 +168,7 @@ const CODING_QUESTION_GENERATION_PROMPT = `You are an expert coding question gen
 The JSON must match this exact schema:
 {
   "title": "Short title",
-  "description": "Detailed problem statement with examples and constraints",
+  "description": "Problem statement using markdown for formatting — see rules below",
   "difficulty": "EASY" | "MEDIUM" | "HARD",
   "functionName": "camelCaseFunctionName",
   "parameters": [
@@ -183,14 +183,29 @@ The JSON must match this exact schema:
   ]
 }
 
-Rules:
-- Generate exactly 3 sample (visible) test cases and 2 hidden test cases (total 5).
-- Set isHidden to true for test case indices 3 and 4.
-- All values in test cases must be valid JSON (strings in double quotes, numbers unquoted, arrays in brackets).
-- Choose appropriate types. For arrays use JSON array syntax.
-- The difficulty must reflect the actual complexity.
-- functionName must be a valid camelCase identifier.
-- Generate diverse test cases including edge cases.`;
+Rules for the generated JSON:
+
+Rules for the generated JSON:
+
+1. FORMATTING — The description field supports these formatting options:
+   - \`text\` for highlighting key terms (renders in accent color — use sparingly for **Parameters**, function names, or important keywords only)
+   - **text** for bold emphasis (renders as normal bold, not colored)
+   - ### for section headings (use sparingly)
+   - - for bullet lists (e.g. constraints)
+   - $\\text{10}^5$ for power notation via LaTeX math
+
+2. PROBLEM STATEMENT — Write a complete, realistic problem statement. Do NOT include an "Examples" section or any "Example 1/2" content. The UI already displays example test cases separately — repeating them would be duplicative.
+
+3. LINE BREAKS — Be intentional with newlines:
+   - Do NOT insert a newline after every sentence.
+   - Only add a newline between logical sections (paragraphs, constraint lists, etc.).
+   - Keep related sentences in the same paragraph.
+
+4. SPACING — No trailing spaces. No blank lines between short lines that belong together. The description should be compact and clean.
+
+5. TEST CASES — Generate exactly 3 sample (visible) test cases and 2 hidden test cases (total 5). Set isHidden to true for test case indices 3 and 4. All values must be valid JSON (strings in double quotes, numbers unquoted, arrays in brackets). Choose appropriate types. Generate diverse test cases including edge cases.
+
+6. difficulty must reflect actual complexity. functionName must be a valid camelCase identifier.`;
 
 exports.generateCodingQuestion = async (prisma, cache, user, { prompt } = {}) => {
     if (!prompt) {

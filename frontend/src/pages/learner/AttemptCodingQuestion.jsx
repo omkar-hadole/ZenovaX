@@ -1,10 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle, History, Bug } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 import Toast from '../../components/Toast';
 import CodeDebuggerPanel from '../../components/CodeDebuggerPanel';
+
+const MD = {
+  strong: ({ children, ...props }) => <strong className="font-bold text-gray-100" {...props}>{children}</strong>,
+  em: ({ children, ...props }) => <em className="italic text-gray-300" {...props}>{children}</em>,
+  h1: ({ children, ...props }) => <h1 className="text-lg font-bold text-gray-100 mt-4 mb-2 border-b border-white/10 pb-1" {...props}>{children}</h1>,
+  h2: ({ children, ...props }) => <h2 className="text-base font-bold text-gray-100 mt-3 mb-1.5" {...props}>{children}</h2>,
+  h3: ({ children, ...props }) => <h3 className="text-sm font-semibold text-gray-100 mt-3 mb-1" {...props}>{children}</h3>,
+  ul: ({ children, ...props }) => <ul className="list-disc list-outside ml-5 my-2 space-y-0.5 text-gray-300" {...props}>{children}</ul>,
+  ol: ({ children, ...props }) => <ol className="list-decimal list-outside ml-5 my-2 space-y-0.5 text-gray-300" {...props}>{children}</ol>,
+  li: ({ children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
+  p: ({ children, ...props }) => <p className="mb-2 leading-relaxed text-gray-300" {...props}>{children}</p>,
+  a: ({ children, href, ...props }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-semibold underline underline-offset-2 hover:text-indigo-300 transition-colors" {...props}>{children}</a>,
+  pre: ({ children, ...props }) => <pre className="bg-black/40 border border-white/10 rounded-lg p-3 my-2 overflow-x-auto text-sm font-mono text-gray-200" {...props}>{children}</pre>,
+  code: ({ className, children, ...props }) => {
+    if (className) return <code className="text-sm font-mono text-gray-200" {...props}>{children}</code>;
+    return <code className="text-indigo-400 font-semibold" {...props}>{children}</code>;
+  },
+  blockquote: ({ children, ...props }) => <blockquote className="border-l-3 border-indigo-400/40 pl-3 py-1 my-2 italic text-gray-400" {...props}>{children}</blockquote>,
+};
 
 export default function AttemptCodingQuestion({ previewMode = false, backPath }) {
     const { id } = useParams();
@@ -616,7 +640,13 @@ class Solution {
                     <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                         <div className="prose prose-invert prose-p:text-gray-400 prose-headings:text-gray-200 max-w-none">
                             <h3 className="text-xl font-semibold mb-6 text-gray-100">Problem Description</h3>
-                            <div className="text-base leading-relaxed mb-8 whitespace-pre-wrap font-normal text-gray-400/90">{question.description}</div>
+                            <div className="mb-8">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkBreaks, remarkMath]}
+                                rehypePlugins={[rehypeKatex]}
+                                components={MD}
+                              >{question.description}</ReactMarkdown>
+                            </div>
 
                             {formatSignature(question) && (
                                 <div className="mb-6">
