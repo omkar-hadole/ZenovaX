@@ -8,7 +8,7 @@ import {
     Settings,
     QrCode,
     AlertTriangle,
-    Code
+    Code,
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import EarningsTeaserCard from './EarningsTeaserCard';
@@ -17,8 +17,6 @@ import logoDark from '../../../assets/mentorlogo-dark.svg';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
 
-// Earnings intentionally has no sidebar nav entry — it's reached only via
-// the EarningsTeaserCard below.
 const TAB_PATHS = {
     'Dashboard': '/mentor/dashboard',
     'My Sessions': '/mentor/sessions',

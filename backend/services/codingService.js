@@ -1,5 +1,6 @@
 const logger = require('../utils/logger');
 const codeRunner = require('./codeRunner');
+const { validateFunctionSignature } = require('./questionTypeEngine');
 const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = require('../utils/errors');
 
 // A test case is "hidden" (its input/output shouldn't be shipped to a
@@ -28,6 +29,41 @@ const redactHiddenResults = (results, testCases, isPrivileged) => {
             ? { input: 'Hidden', output: 'Hidden', expected: 'Hidden', actual: r.passed ? 'Hidden' : 'Wrong Answer', passed: r.passed, isHidden: true }
             : { ...r, isHidden: false }
     ));
+};
+
+const isStructuredTestCaseHidden = (tc, index) =>
+    tc && typeof tc.isHidden === 'boolean' ? tc.isHidden : index >= 2;
+
+const redactHiddenStructuredTestCases = (testCasesArray) =>
+    testCasesArray.map((tc, index) => {
+        if (!isStructuredTestCaseHidden(tc, index)) {
+            return { ...tc, isHidden: false };
+        }
+        const redactedInputs = {};
+        if (tc.inputs) {
+            Object.keys(tc.inputs).forEach(k => { redactedInputs[k] = 'Hidden'; });
+        }
+        return { inputs: redactedInputs, expected: 'Hidden', isHidden: true };
+    });
+
+const redactHiddenStructuredResults = (results, testCases, isPrivileged) => {
+    if (!results || isPrivileged) return results;
+    return results.map((r, index) => {
+        if (!isStructuredTestCaseHidden(testCases[index], index)) {
+            return { ...r, isHidden: false };
+        }
+        const redactedInputs = {};
+        if (r.inputs) {
+            Object.keys(r.inputs).forEach(k => { redactedInputs[k] = 'Hidden'; });
+        }
+        return {
+            inputs: redactedInputs,
+            expected: 'Hidden',
+            actual: r.passed ? 'Hidden' : 'Wrong Answer',
+            passed: r.passed,
+            isHidden: true
+        };
+    });
 };
 
 const parseTestCases = (raw) => {
@@ -106,9 +142,25 @@ const buildAuthoringFields = ({ allowedLanguages, starterCode, referenceSolution
 };
 
 exports.createCodingQuestion = async (prisma, userId, payload) => {
-    const { title, description, testCases, difficulty, sessionId } = payload;
+    const { title, description, testCases, difficulty, sessionId, questionType, functionName, parameters, returnType, structuredTestCases } = payload;
     if (!sessionId || !title || !description) {
         throw new BadRequestError('Missing required fields');
+    }
+
+    const isStructured = questionType === 'structured';
+
+    if (isStructured) {
+        const sigErrors = validateFunctionSignature(functionName, parameters, returnType);
+        if (sigErrors.length > 0) {
+            throw new BadRequestError(`Invalid function signature: ${sigErrors.join('; ')}`);
+        }
+        if (!Array.isArray(structuredTestCases) || structuredTestCases.length === 0) {
+            throw new BadRequestError('Structured test cases are required');
+        }
+    } else {
+        if (!testCases || (Array.isArray(testCases) && testCases.length === 0)) {
+            throw new BadRequestError('At least one test case is required');
+        }
     }
 
     const session = await prisma.session.findUnique({
@@ -124,21 +176,31 @@ exports.createCodingQuestion = async (prisma, userId, payload) => {
         throw new ForbiddenError('Unauthorized to add questions to this session');
     }
 
-    // Ensure testCases is stringified if it comes as object
-    let testCasesString = testCases;
-    if (typeof testCases === 'object') {
-        testCasesString = JSON.stringify(testCases);
+    let testCasesString;
+    if (!isStructured && testCases !== undefined) {
+        testCasesString = typeof testCases === 'object' ? JSON.stringify(testCases) : testCases;
+    } else if (!isStructured) {
+        testCasesString = '[]';
     }
+
+    const structuredTestCasesString = isStructured && structuredTestCases
+        ? (typeof structuredTestCases === 'object' ? JSON.stringify(structuredTestCases) : structuredTestCases)
+        : undefined;
 
     return await prisma.codingQuestion.create({
         data: {
             title,
             description,
-            testCases: testCasesString,
+            testCases: testCasesString || '[]',
             difficulty: difficulty || 'MEDIUM',
             sessionId,
             creatorId: userId,
             status: 'DRAFT',
+            questionType: isStructured ? 'structured' : 'legacy',
+            functionName: isStructured ? functionName : undefined,
+            parameters: isStructured ? JSON.stringify(parameters) : undefined,
+            returnType: isStructured ? returnType : undefined,
+            structuredTestCases: structuredTestCasesString,
             ...buildAuthoringFields(payload)
         }
     });
@@ -169,10 +231,15 @@ exports.updateCodingQuestion = async (prisma, userId, id, payload) => {
         throw new ConflictError('A closed question can no longer be edited — create a new one instead');
     }
 
-    const { title, description, testCases, difficulty, sessionId } = payload;
+    const { title, description, testCases, difficulty, sessionId, questionType, functionName, parameters, returnType, structuredTestCases } = payload;
     let testCasesString;
     if (testCases !== undefined) {
         testCasesString = typeof testCases === 'object' ? JSON.stringify(testCases) : testCases;
+    }
+
+    let structuredTestCasesString;
+    if (structuredTestCases !== undefined) {
+        structuredTestCasesString = typeof structuredTestCases === 'object' ? JSON.stringify(structuredTestCases) : structuredTestCases;
     }
 
     return await prisma.codingQuestion.update({
@@ -183,6 +250,11 @@ exports.updateCodingQuestion = async (prisma, userId, id, payload) => {
             ...(testCasesString !== undefined && { testCases: testCasesString }),
             ...(difficulty !== undefined && { difficulty }),
             ...(sessionId !== undefined && { sessionId }),
+            ...(questionType !== undefined && { questionType }),
+            ...(functionName !== undefined && { functionName }),
+            ...(parameters !== undefined && { parameters: typeof parameters === 'object' ? JSON.stringify(parameters) : parameters }),
+            ...(returnType !== undefined && { returnType }),
+            ...(structuredTestCasesString !== undefined && { structuredTestCases: structuredTestCasesString }),
             ...buildAuthoringFields(payload)
         }
     });
@@ -264,6 +336,8 @@ exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {
 
     return questions.map(q => ({
         ...q,
+        testCases: q.testCases,
+        structuredTestCases: q.structuredTestCases,
         isSolved: q.submissions.length > 0
     }));
 };
@@ -277,6 +351,41 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
     }
 
     const { question, isPrivileged } = await assertCanAccessCodingQuestion(prisma, userId, userRole, id, { requireLive: true });
+
+    const isStructured = question.questionType === 'structured';
+
+    if (isStructured) {
+        const structuredTestCases = parseTestCases(question.structuredTestCases);
+        if (structuredTestCases.length === 0) {
+            throw new BadRequestError('This question has no test cases configured');
+        }
+
+        let parameters;
+        try {
+            parameters = typeof question.parameters === 'string' ? JSON.parse(question.parameters) : question.parameters;
+        } catch {
+            throw new BadRequestError('Invalid parameters configuration');
+        }
+
+        const { results, error } = await codeRunner.runStructuredTestCases(
+            language, code, structuredTestCases, question.functionName, parameters, question.returnType
+        );
+        const status = !error && results && results.length > 0 && results.every(r => r.passed)
+            ? 'PASSED'
+            : 'FAILED';
+
+        const submission = await prisma.codingSubmission.create({
+            data: {
+                userId,
+                codingQuestionId: id,
+                code,
+                language,
+                status
+            }
+        });
+
+        return { submission, results: redactHiddenStructuredResults(results, structuredTestCases, isPrivileged), error };
+    }
 
     const testCases = parseTestCases(question.testCases);
     if (testCases.length === 0) {
@@ -327,20 +436,35 @@ exports.getCodingQuestionById = async (prisma, userId, userRole, id) => {
         select: { id: true }
     });
 
-    const testCases = parseTestCases(question.testCases);
-    const visibleTestCases = isPrivileged ? testCases : redactHiddenTestCases(testCases);
+    const isStructured = question.questionType === 'structured';
 
-    return {
+    let visibleTestCases;
+    if (isStructured) {
+        const structuredTestCases = parseTestCases(question.structuredTestCases);
+        visibleTestCases = isPrivileged ? structuredTestCases : redactHiddenStructuredTestCases(structuredTestCases);
+    } else {
+        const testCases = parseTestCases(question.testCases);
+        visibleTestCases = isPrivileged ? testCases : redactHiddenTestCases(testCases);
+    }
+
+    const response = {
         ...question,
-        testCases: JSON.stringify(visibleTestCases),
-        // The reference solution is a mentor-only authoring aid — never ship
-        // it to a student, even a booked/LIVE one.
+        testCases: !isStructured ? JSON.stringify(visibleTestCases) : question.testCases,
+        structuredTestCases: isStructured ? JSON.stringify(visibleTestCases) : question.structuredTestCases,
         referenceSolution: isPrivileged ? question.referenceSolution : undefined,
         isSolved: submissions.length > 0
     };
+
+    if (isStructured) {
+        response.functionName = question.functionName;
+        response.parameters = typeof question.parameters === 'string' ? JSON.parse(question.parameters) : question.parameters;
+        response.returnType = question.returnType;
+    }
+
+    return response;
 };
 
-exports.executeCode = async (prisma, userId, userRole, { language, code, testCases, codingQuestionId }) => {
+exports.executeCode = async (prisma, userId, userRole, { language, code, testCases, structuredTestCases, codingQuestionId }) => {
     if (!codingQuestionId) {
         throw new BadRequestError('codingQuestionId is required');
     }
@@ -348,10 +472,30 @@ exports.executeCode = async (prisma, userId, userRole, { language, code, testCas
     // Confirms the requester is booked into the session (or is the creator/an
     // admin) and that the question is currently LIVE, before letting them
     // spend a Piston execution on it.
-    const { isPrivileged } = await assertCanAccessCodingQuestion(prisma, userId, userRole, codingQuestionId, { requireLive: true });
+    const { question, isPrivileged } = await assertCanAccessCodingQuestion(prisma, userId, userRole, codingQuestionId, { requireLive: true });
 
     if (language === 'javascript') {
         return { success: false, message: 'JS execution should happen on client' };
+    }
+
+    const isStructured = question.questionType === 'structured' || (structuredTestCases && question.functionName);
+
+    if (isStructured) {
+        let parameters;
+        try {
+            parameters = typeof question.parameters === 'string' ? JSON.parse(question.parameters) : question.parameters;
+        } catch {
+            throw new BadRequestError('Invalid parameters configuration');
+        }
+
+        const stcs = structuredTestCases || parseTestCases(question.structuredTestCases);
+        const { results, logs, error } = await codeRunner.runStructuredTestCases(
+            language, code, stcs, question.functionName, parameters, question.returnType
+        );
+        if (error || !results) {
+            return { results, logs, error };
+        }
+        return { results: redactHiddenStructuredResults(results, stcs, isPrivileged), logs };
     }
 
     const { results, logs, error } = await codeRunner.runTestCases(language, code, testCases);

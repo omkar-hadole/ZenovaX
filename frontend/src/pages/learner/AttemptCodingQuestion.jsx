@@ -1,10 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Play, CheckCircle, XCircle, ArrowLeft, RefreshCw, Wand2, Terminal, List, AlertTriangle, History, Bug } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 import Toast from '../../components/Toast';
 import CodeDebuggerPanel from '../../components/CodeDebuggerPanel';
+
+const MD = {
+  strong: ({ children, ...props }) => <strong className="font-bold text-gray-100" {...props}>{children}</strong>,
+  em: ({ children, ...props }) => <em className="italic text-gray-300" {...props}>{children}</em>,
+  h1: ({ children, ...props }) => <h1 className="text-lg font-bold text-gray-100 mt-4 mb-2 border-b border-white/10 pb-1" {...props}>{children}</h1>,
+  h2: ({ children, ...props }) => <h2 className="text-base font-bold text-gray-100 mt-3 mb-1.5" {...props}>{children}</h2>,
+  h3: ({ children, ...props }) => <h3 className="text-sm font-semibold text-gray-100 mt-3 mb-1" {...props}>{children}</h3>,
+  ul: ({ children, ...props }) => <ul className="list-disc list-outside ml-5 my-2 space-y-0.5 text-gray-300" {...props}>{children}</ul>,
+  ol: ({ children, ...props }) => <ol className="list-decimal list-outside ml-5 my-2 space-y-0.5 text-gray-300" {...props}>{children}</ol>,
+  li: ({ children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
+  p: ({ children, ...props }) => <p className="mb-2 leading-relaxed text-gray-300" {...props}>{children}</p>,
+  a: ({ children, href, ...props }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-semibold underline underline-offset-2 hover:text-indigo-300 transition-colors" {...props}>{children}</a>,
+  pre: ({ children, ...props }) => <pre className="bg-black/40 border border-white/10 rounded-lg p-3 my-2 overflow-x-auto text-sm font-mono text-gray-200" {...props}>{children}</pre>,
+  code: ({ className, children, ...props }) => {
+    if (className) return <code className="text-sm font-mono text-gray-200" {...props}>{children}</code>;
+    return <code className="text-indigo-400 font-semibold" {...props}>{children}</code>;
+  },
+  blockquote: ({ children, ...props }) => <blockquote className="border-l-3 border-indigo-400/40 pl-3 py-1 my-2 italic text-gray-400" {...props}>{children}</blockquote>,
+};
 
 export default function AttemptCodingQuestion({ previewMode = false, backPath }) {
     const { id } = useParams();
@@ -114,6 +138,28 @@ export default function AttemptCodingQuestion({ previewMode = false, backPath })
         return langs.map(l => ({ value: l, label: LANGUAGE_LABELS[l] || l }));
     })();
 
+    const STRUCTURED_TYPE_MAP = {
+        integer: 'int', float: 'double', string: 'String', boolean: 'boolean',
+        'integer[]': 'int[]', 'float[]': 'double[]', 'string[]': 'String[]', 'boolean[]': 'boolean[]',
+        'integer[][]': 'int[][]', 'float[][]': 'double[][]', 'string[][]': 'String[][]', 'boolean[][]': 'boolean[][]'
+    };
+
+    const generateStructuredBoilerplate = (functionName, parameters, returnType, lang) => {
+        const paramStr = parameters.map(p => p.name).join(', ');
+        if (lang === 'javascript') {
+            return `// Write your solution here\nfunction ${functionName}(${paramStr}) {\n  // Your code here\n  \n}`;
+        }
+        if (lang === 'python') {
+            return `# Write your solution here\ndef ${functionName}(${paramStr}):\n    # Your code here\n    pass\n`;
+        }
+        if (lang === 'java') {
+            const jParams = parameters.map(p => `${STRUCTURED_TYPE_MAP[p.type] || 'String'} ${p.name}`).join(', ');
+            const jRet = STRUCTURED_TYPE_MAP[returnType] || 'void';
+            return `// Write your solution here\nclass Solution {\n    public static ${jRet} ${functionName}(${jParams}) {\n        // Your code here\n        \n    }\n}\n`;
+        }
+        return '';
+    };
+
     const BOILERPLATES = {
         javascript: `// Write your solution here
 function solve(input) {
@@ -137,8 +183,16 @@ class Solution {
 
     const draftKey = (lang) => `coding-draft-${id}-${lang}`;
 
+    const formatSignature = (q) => {
+        if (q?.questionType !== 'structured' || !q?.functionName) return null;
+        let params = [];
+        try { params = typeof q.parameters === 'string' ? JSON.parse(q.parameters) : q.parameters; } catch {}
+        const paramStr = params.map(p => `${p.name}: ${p.type}`).join(', ');
+        return `${q.functionName}(${paramStr}) → ${q.returnType}`;
+    };
+
     // Starter code precedence: student's own cached draft > mentor-authored
-    // starter code for this question/language > the generic boilerplate.
+    // starter code for this question/language > generated structured stub > generic boilerplate.
     const getInitialCode = (lang, q) => {
         const cached = localStorage.getItem(draftKey(lang));
         if (cached !== null) return cached;
@@ -147,6 +201,13 @@ class Solution {
                 const map = typeof q.starterCode === 'string' ? JSON.parse(q.starterCode) : q.starterCode;
                 if (map?.[lang]) return map[lang];
             } catch (e) { console.error('Failed to parse starter code', e); }
+        }
+        if (q?.questionType === 'structured' && q?.functionName) {
+            let params = [];
+            try { params = typeof q.parameters === 'string' ? JSON.parse(q.parameters) : q.parameters; } catch {}
+            if (params.length > 0) {
+                return generateStructuredBoilerplate(q.functionName, params, q.returnType, lang);
+            }
         }
         return BOILERPLATES[lang];
     };
@@ -295,9 +356,16 @@ class Solution {
             return;
         }
 
+        const isStructured = question.questionType === 'structured';
+
         let allTestCases = [];
+        let structuredTestCases = [];
         try {
-            allTestCases = typeof question.testCases === 'string' ? JSON.parse(question.testCases) : question.testCases;
+            if (isStructured) {
+                structuredTestCases = typeof question.structuredTestCases === 'string' ? JSON.parse(question.structuredTestCases) : question.structuredTestCases;
+            } else {
+                allTestCases = typeof question.testCases === 'string' ? JSON.parse(question.testCases) : question.testCases;
+            }
         } catch (e) {
             console.error("Test cases parse error", e);
             setOutput(prev => [...prev, { type: 'error', text: 'System Error: Invalid test cases format.' }]);
@@ -306,7 +374,12 @@ class Solution {
             return;
         }
 
-        const testCasesToRun = previewMode ? allTestCases : allTestCases.slice(0, 2);
+        const testCasesToRun = isStructured
+            ? (previewMode ? structuredTestCases : structuredTestCases.slice(0, 2))
+            : (previewMode ? allTestCases : allTestCases.slice(0, 2));
+
+        let parameters = [];
+        try { parameters = typeof question.parameters === 'string' ? JSON.parse(question.parameters) : (question.parameters || []); } catch {}
 
         const processResults = async (rawResults, error) => {
             if (error) {
@@ -321,9 +394,12 @@ class Solution {
 
         if (language === 'python' || language === 'java') {
             try {
+                const body = isStructured
+                    ? { language, code, structuredTestCases: testCasesToRun, codingQuestionId: id }
+                    : { language, code, testCases: testCasesToRun, codingQuestionId: id };
                 const { results, logs, error } = await apiCall('/coding-questions/execute', {
                     method: 'POST',
-                    body: JSON.stringify({ language, code, testCases: testCasesToRun, codingQuestionId: id })
+                    body: JSON.stringify(body)
                 });
                 await processResults(results, error);
                 if (logs) {
@@ -362,7 +438,10 @@ class Solution {
                 resolve({ error: e.message || 'Worker error' });
             };
 
-            worker.postMessage({ code, testCases: testCasesToRun });
+            const workerMsg = isStructured
+                ? { code, testCases: testCasesToRun, isStructured: true, functionName: question.functionName, parameters, returnType: question.returnType }
+                : { code, testCases: testCasesToRun };
+            worker.postMessage(workerMsg);
         });
 
         if (workerResult.logs?.length > 0) {
@@ -561,23 +640,65 @@ class Solution {
                     <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                         <div className="prose prose-invert prose-p:text-gray-400 prose-headings:text-gray-200 max-w-none">
                             <h3 className="text-xl font-semibold mb-6 text-gray-100">Problem Description</h3>
-                            <div className="text-base leading-relaxed mb-8 whitespace-pre-wrap font-normal text-gray-400/90">{question.description}</div>
+                            <div className="mb-8">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkBreaks, remarkMath]}
+                                rehypePlugins={[rehypeKatex]}
+                                components={MD}
+                              >{question.description}</ReactMarkdown>
+                            </div>
+
+                            {formatSignature(question) && (
+                                <div className="mb-6">
+                                    <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">Function Signature</h4>
+                                    <div className="font-mono text-sm text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 p-3 rounded-lg">
+                                        {formatSignature(question)}
+                                    </div>
+                                </div>
+                            )}
 
                             <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">Example Test Cases</h4>
                             <div className="space-y-4">
                                 {(() => {
                                     try {
-                                        const cases = typeof question.testCases === 'string' ? JSON.parse(question.testCases) : question.testCases;
+                                        const isStructured = question.questionType === 'structured';
+                                        let cases;
+                                        if (isStructured) {
+                                            cases = typeof question.structuredTestCases === 'string' ? JSON.parse(question.structuredTestCases) : question.structuredTestCases;
+                                        } else {
+                                            cases = typeof question.testCases === 'string' ? JSON.parse(question.testCases) : question.testCases;
+                                        }
+                                        let params = [];
+                                        try { params = typeof question.parameters === 'string' ? JSON.parse(question.parameters) : question.parameters; } catch {}
                                         return cases.slice(0, 2).map((tc, i) => (
                                             <div key={i} className="bg-white/5 rounded-xl p-5 border border-white/5 hover:border-white/10 transition-colors">
-                                                <div className="mb-3">
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Input</span>
-                                                    <div className="font-mono text-sm text-gray-300 bg-black/30 p-2.5 rounded-lg mt-1.5">{tc.input}</div>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Output</span>
-                                                    <div className="font-mono text-sm text-gray-300 bg-black/30 p-2.5 rounded-lg mt-1.5">{tc.output}</div>
-                                                </div>
+                                                {isStructured ? (
+                                                    <>
+                                                        <div className="mb-3 space-y-2">
+                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Inputs</span>
+                                                            {params.filter(p => p.name).map(p => (
+                                                                <div key={p.name} className="font-mono text-sm text-gray-300 bg-black/30 p-2 rounded-lg mt-1">
+                                                                    {p.name} ({p.type}): {tc.inputs?.[p.name] !== undefined ? JSON.stringify(tc.inputs[p.name]) : '—'}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Expected</span>
+                                                            <div className="font-mono text-sm text-gray-300 bg-black/30 p-2.5 rounded-lg mt-1.5">{JSON.stringify(tc.expected)}</div>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="mb-3">
+                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Input</span>
+                                                            <div className="font-mono text-sm text-gray-300 bg-black/30 p-2.5 rounded-lg mt-1.5">{tc.input}</div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Output</span>
+                                                            <div className="font-mono text-sm text-gray-300 bg-black/30 p-2.5 rounded-lg mt-1.5">{tc.output}</div>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         ));
                                     } catch (e) {
@@ -755,14 +876,32 @@ class Solution {
                                                         {/* Details (Only for failed tests) */}
                                                         {!res.isHidden && !res.passed && (
                                                             <div className="px-4 pb-4 pt-0">
-                                                                <div className="grid grid-cols-2 gap-4 bg-black/20 p-3 rounded border border-white/5">
-                                                                    <div>
-                                                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Expected</span>
-                                                                        <div className="font-mono text-sm text-emerald-300/80">{res.expected}</div>
-                                                                    </div>
-                                                                    <div>
-                                                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Actual</span>
-                                                                        <div className="font-mono text-sm text-rose-300/80">{res.actual}</div>
+                                                                <div className="bg-black/20 p-3 rounded border border-white/5 space-y-3">
+                                                                    {res.inputs && question.questionType === 'structured' && (
+                                                                        <div>
+                                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Inputs</span>
+                                                                            {Object.entries(res.inputs).map(([key, val]) => (
+                                                                                <div key={key} className="font-mono text-xs text-gray-400 mt-1">
+                                                                                    {key}: {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {res.input !== undefined && (
+                                                                        <div>
+                                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Input</span>
+                                                                            <div className="font-mono text-sm text-gray-400">{res.input}</div>
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Expected</span>
+                                                                            <div className="font-mono text-sm text-emerald-300/80">{typeof res.expected === 'object' ? JSON.stringify(res.expected) : String(res.expected)}</div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Actual</span>
+                                                                            <div className="font-mono text-sm text-rose-300/80">{typeof res.actual === 'object' ? JSON.stringify(res.actual) : String(res.actual)}</div>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/dashboard/Header';
@@ -11,6 +11,8 @@ import { QrCode } from 'lucide-react';
 
 export default function MentorLayout() {
     const { user } = useAuth();
+    const location = useLocation();
+    const isZenPage = location.pathname === '/mentor/zen';
 
     const [mySessions, setMySessions] = useState([]);
     const [sessionRequests, setSessionRequests] = useState([]);
@@ -99,7 +101,7 @@ export default function MentorLayout() {
                     <main className="flex-1 overflow-y-auto">
                         <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search mentors" />
 
-                        <div className="p-8">
+                        <div className={isZenPage ? '' : 'p-8'}>
                             <ErrorBoundary>
                                 <Outlet context={{
                                     mySessions,

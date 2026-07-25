@@ -19,7 +19,10 @@ import {
     ExternalLink,
     MessageSquare,
     Loader2,
-    Zap
+    Zap,
+    Star,
+    DollarSign,
+    QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -29,8 +32,10 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').repla
 const API_ENDPOINT = `${BASE_URL}/api/help/ask-ai`;
 const CHATGPT_ENDPOINT = `${BASE_URL}/api/help/ask-ai-chatgpt`;
 const PROVIDER_STORAGE_KEY = 'zen-ai-provider';
+const COMMAND_BAR_STORAGE_KEY = 'command-bar-state';
+const CHAT_STORAGE_KEY = 'zen-chat-history';
 
-const QUICK_ACTIONS = [
+const LEARNER_QUICK_ACTIONS = [
     { id: 'next-session',  icon: Calendar,     label: 'When is my next session?',                  prompt: 'When is my next session?' },
     { id: 'recommend',     icon: Users,         label: 'Recommend a mentor for Fullstack MERN',     prompt: 'Recommend top mentors for Fullstack MERN development' },
     { id: 'refund',        icon: HelpCircle,    label: 'What is the refund & cancellation policy?', prompt: 'What is the refund and cancellation policy for sessions?' },
@@ -38,6 +43,20 @@ const QUICK_ACTIONS = [
     { id: 'nav-mentors',   icon: Users,         label: 'Browse Mentors Directory',                  path: '/mentors' },
     { id: 'nav-zen',       icon: MessageSquare, label: 'Open Zen AI Workspace',                     path: '/zen' },
 ];
+
+const MENTOR_QUICK_ACTIONS = [
+    { id: 'next-session',    icon: Calendar,     label: 'What are my upcoming sessions?',            prompt: 'What are my upcoming sessions based on my schedule?' },
+    { id: 'nav-sessions',    icon: Calendar,     label: 'View My Sessions',                          path: '/mentor/sessions' },
+    { id: 'nav-reviews',     icon: Star,         label: 'View My Reviews',                           path: '/mentor/reviews' },
+    { id: 'nav-earnings',    icon: DollarSign,   label: 'View My Earnings',                          path: '/mentor/earnings' },
+    { id: 'nav-scan',        icon: QrCode,       label: 'Scan Attendance',                           path: '/mentor/scan-attendance' },
+    { id: 'nav-cq',          icon: BookOpen,     label: 'Coding Questions',                          path: '/mentor/coding-questions' },
+    { id: 'prepare-session', icon: Sparkles,     label: 'Help me prepare for my next session',        prompt: 'Help me prepare for my next session based on my upcoming schedule' },
+    { id: 'summarize',       icon: HelpCircle,   label: 'Summarize my recent sessions',               prompt: 'Summarize my recent sessions and give me highlights' },
+    { id: 'nav-zen',         icon: MessageSquare, label: 'Open Zen AI Workspace',                     path: '/mentor/zen' },
+];
+
+const isMentor = (role) => role === 'MENTOR' || role === 'BOTH';
 
 const MARKDOWN_COMPONENTS = {
     a: ({ node, children, href, ...props }) => (
@@ -80,6 +99,10 @@ export default function CommandBar() {
     const navigate  = useNavigate();
     const location  = useLocation();
     const { user }  = useAuth();
+    const mentor = isMentor(user?.role);
+    const zenPath = mentor ? '/mentor/zen' : '/zen';
+
+    const QUICK_ACTIONS = mentor ? MENTOR_QUICK_ACTIONS : LEARNER_QUICK_ACTIONS;
 
     // Close on route change
     useEffect(() => { setIsOpen(false); }, [location.pathname]);
@@ -111,10 +134,27 @@ export default function CommandBar() {
         };
     }, [isOpen]);
 
-    // Focus & reset
+    // Save state on close, restore on open, and reset
     useEffect(() => {
-        if (isOpen)  { setTimeout(() => inputRef.current?.focus(), 60); }
-        else         { setQuery(''); setAiResponse(null); setLoading(false); }
+        if (isOpen) {
+            setTimeout(() => inputRef.current?.focus(), 60);
+            try {
+                const saved = sessionStorage.getItem(COMMAND_BAR_STORAGE_KEY);
+                if (saved) {
+                    const { query: q, aiResponse: r } = JSON.parse(saved);
+                    if (q) setQuery(q);
+                    if (r) setAiResponse(r);
+                }
+            } catch {}
+        } else {
+            try {
+                const state = { query, aiResponse };
+                sessionStorage.setItem(COMMAND_BAR_STORAGE_KEY, JSON.stringify(state));
+            } catch {}
+            setQuery('');
+            setAiResponse(null);
+            setLoading(false);
+        }
     }, [isOpen]);
 
     const handleAskAI = useCallback(async (questionText) => {
@@ -124,7 +164,7 @@ export default function CommandBar() {
         setLoading(true);
         setAiResponse(null);
 
-        const username    = user?.name || user?.firstName || 'Learner';
+        const username    = user?.name || user?.firstName || (mentor ? 'Mentor' : 'Learner');
         const csrfToken   = getCsrfToken();
         const csrfHeaders = csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
         const activeP     = localStorage.getItem(PROVIDER_STORAGE_KEY) || 'gemini';
@@ -137,17 +177,30 @@ export default function CommandBar() {
                 : await axios.post(API_ENDPOINT, { question: q, username },
                     { withCredentials: true, headers: csrfHeaders });
             setAiResponse(data.answer);
+            setQuery('');
         } catch {
             setAiResponse("Zen AI is unavailable right now. Try again or open the full chat workspace.");
         } finally {
             setLoading(false);
         }
-    }, [query, loading, user, chatGptConnected]);
+    }, [query, loading, user, chatGptConnected, mentor]);
 
     const handleAction = (action) => {
         if (action.path)    { setIsOpen(false); navigate(action.path); }
         else if (action.prompt) { setQuery(action.prompt); handleAskAI(action.prompt); }
     };
+
+    const navigateToZenWorkspace = useCallback(() => {
+        const chatHistory = [];
+        if (query) chatHistory.push({ role: 'user', text: query });
+        if (aiResponse) chatHistory.push({ role: 'assistant', text: aiResponse });
+        if (chatHistory.length > 0) {
+            sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
+        }
+        sessionStorage.removeItem(COMMAND_BAR_STORAGE_KEY);
+        setIsOpen(false);
+        navigate(zenPath);
+    }, [query, aiResponse, navigate, zenPath]);
 
     const handleCopy = async () => {
         if (!aiResponse) return;
@@ -342,7 +395,7 @@ export default function CommandBar() {
                                         {copied ? 'Copied' : 'Copy'}
                                     </button>
                                     <button
-                                        onClick={() => { setIsOpen(false); navigate('/zen'); }}
+                                        onClick={navigateToZenWorkspace}
                                         className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg text-white font-semibold hover:opacity-85 transition-opacity"
                                         style={{ background: '#6366f1' }}
                                     >
@@ -451,7 +504,7 @@ export default function CommandBar() {
                     <div className="flex items-center gap-3">
                         <span className="text-[10px] text-gray-400 dark:text-gray-500">Zen is AI and can make mistakes.</span>
                         <button
-                            onClick={() => { setIsOpen(false); navigate('/zen'); }}
+                            onClick={navigateToZenWorkspace}
                             className="flex items-center gap-1 font-medium hover:text-indigo-500 transition-colors"
                             style={{ color: '#9ca3af' }}
                         >
