@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
+import { useSignInWithChatGPT } from '@openai-oauth/react';
 import {
   ArrowLeft, Save, Rocket, Plus, Trash2, EyeOff, Eye,
-  Code2, FileText, Sparkles, ChevronDown, Check, X, GripVertical
+  Code2, FileText, Sparkles, ChevronDown, Check, X, GripVertical, Link2, LogOut, ExternalLink
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import Toast from '../components/Toast';
@@ -97,6 +98,20 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiFilled, setAiFilled] = useState(false);
   const [animatingFields, setAnimatingFields] = useState({});
+
+  const {
+    status: chatGptStatus,
+    installUrl: chatGptInstallUrl,
+    isSignedIn: chatGptConnected,
+    login: connectChatGPT,
+    logout: disconnectChatGPT,
+  } = useSignInWithChatGPT({
+    onSuccess: () => {
+      setAiPrompt('');
+      setToast({ message: 'ChatGPT connected! You can now generate questions with Zen.', type: 'success' });
+    },
+  });
+  const needsChatGptExtension = chatGptStatus === 'needs-extension';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -388,7 +403,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
       }
       const q = data.question;
       if (!q) {
-        setToast({ message: 'AI returned an empty response. Try again.', type: 'error' });
+        setToast({ message: 'Zen returned an empty response. Try again.', type: 'error' });
         return;
       }
 
@@ -550,51 +565,101 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
               <div className="w-8 h-8 rounded-xl bg-[#8B84FF]/10 dark:bg-[#8B84FF]/10 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-[#8B84FF] dark:text-[#8B84FF]" />
               </div>
-              <div>
-                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">Generate with AI</span>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Describe the problem — AI fills everything in</p>
+              <div className="flex-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">Generate with Zen</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Describe the problem — Zen fills everything in</p>
               </div>
+              {chatGptConnected && (
+                <button
+                  type="button"
+                  onClick={disconnectChatGPT}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                  title="Disconnect ChatGPT"
+                >
+                  <LogOut className="w-3 h-3" /> Disconnect
+                </button>
+              )}
             </div>
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !aiGenerating) handleAIGenerate(); }}
-                  className={`w-full p-3.5 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-2 rounded-xl text-sm outline-none transition-all duration-300 ${
-                    aiFilled
-                      ? 'border-green-300 dark:border-green-500/40 bg-green-50 dark:bg-green-500/5'
-                      : aiGenerating
-                        ? 'border-[#8B84FF]/40 dark:border-[#8B84FF]/40 bg-[#8B84FF]/5 dark:bg-[#8B84FF]/5'
-                        : 'border-gray-200 dark:border-gray-700 focus:border-[#8B84FF]/50 dark:focus:border-[#8B84FF]/50 focus:bg-white dark:focus:bg-gray-800'
-                  }`}
-                  placeholder="e.g. &quot;two sum problem with 5 test cases&quot;"
+            {chatGptConnected ? (
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !aiGenerating) handleAIGenerate(); }}
+                    className={`w-full p-3.5 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-2 rounded-xl text-sm outline-none transition-all duration-300 ${
+                      aiFilled
+                        ? 'border-green-300 dark:border-green-500/40 bg-green-50 dark:bg-green-500/5'
+                        : aiGenerating
+                          ? 'border-[#8B84FF]/40 dark:border-[#8B84FF]/40 bg-[#8B84FF]/5 dark:bg-[#8B84FF]/5'
+                          : 'border-gray-200 dark:border-gray-700 focus:border-[#8B84FF]/50 dark:focus:border-[#8B84FF]/50 focus:bg-white dark:focus:bg-gray-800'
+                    }`}
+                    placeholder='e.g. "two sum problem with 8 test cases"'
+                    disabled={aiGenerating}
+                  />
+                  {aiGenerating && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#8B84FF] animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#8B84FF] animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#8B84FF] animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  )}
+                  {aiFilled && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Check className="w-4 h-4 text-green-500 animate-bounce" />
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAIGenerate}
                   disabled={aiGenerating}
-                />
-                {aiGenerating && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#8B84FF] animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#8B84FF] animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#8B84FF] animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                )}
-                {aiFilled && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Check className="w-4 h-4 text-green-500 animate-bounce" />
-                  </div>
-                )}
+                  className="flex items-center gap-2 px-5 py-3.5 bg-[#8B84FF] text-white rounded-xl font-medium hover:bg-[#7B74F0] transition-all disabled:opacity-50 whitespace-nowrap shadow-sm hover:shadow-md active:scale-[0.98]"
+                >
+                  <Sparkles className={`w-4 h-4 ${aiGenerating ? 'animate-spin' : ''}`} />
+                  {aiGenerating ? 'Generating...' : 'Generate'}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleAIGenerate}
-                disabled={aiGenerating}
-                className="flex items-center gap-2 px-5 py-3.5 bg-[#8B84FF] text-white rounded-xl font-medium hover:bg-[#7B74F0] transition-all disabled:opacity-50 whitespace-nowrap shadow-sm hover:shadow-md active:scale-[0.98]"
-              >
-                <Sparkles className={`w-4 h-4 ${aiGenerating ? 'animate-spin' : ''}`} />
-                {aiGenerating ? 'Generating...' : 'Generate'}
-              </button>
-            </div>
+            ) : (
+              <div className="bg-gray-50 dark:bg-gray-800/60 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#8B84FF]/10 dark:bg-[#8B84FF]/10 flex items-center justify-center flex-shrink-0">
+                    <Link2 className="w-4 h-4 text-[#8B84FF]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Connect ChatGPT to generate questions with Zen</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Connect once — works across Zen chat and coding question generation</p>
+                  </div>
+                  {needsChatGptExtension ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => window.open(chatGptInstallUrl, '_blank', 'noopener,noreferrer')}
+                        className="flex items-center gap-1.5 px-4 py-2.5 bg-[#8B84FF] text-white rounded-xl font-medium hover:bg-[#7B74F0] transition-all text-sm whitespace-nowrap"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Install Extension
+                      </button>
+                      <button
+                        type="button"
+                        onClick={connectChatGPT}
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-[#8B84FF] dark:hover:text-[#8B84FF] underline underline-offset-2 whitespace-nowrap"
+                      >
+                        Installed? Try again
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={connectChatGPT}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-[#8B84FF] text-white rounded-xl font-medium hover:bg-[#7B74F0] transition-all text-sm shadow-sm hover:shadow-md whitespace-nowrap"
+                    >
+                      <Link2 className="w-3.5 h-3.5" /> Connect ChatGPT
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             <p className="mt-2.5 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-[#8B84FF]" />
               Auto-fills title, description, function signature, parameters, and test cases
