@@ -101,7 +101,7 @@ export default function MentorLayout() {
                     <main className="flex-1 overflow-y-auto">
                         <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search mentors" />
 
-                        <div className={isZenPage ? '' : 'p-8'}>
+                        <div className={isZenPage ? '' : 'pt-8 px-8'}>
                             <ErrorBoundary>
                                 <Outlet context={{
                                     mySessions,
