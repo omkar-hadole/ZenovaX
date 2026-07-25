@@ -2,19 +2,6 @@ const logger = require("../utils/logger");
 const sessionService = require("./sessionService");
 const profileService = require("./profileService");
 
-// Zen's tool layer: narrowly-scoped, authorized data access for the AI
-// assistant. Every function that touches another user's data takes `userId`
-// as an explicit parameter sourced ONLY from the authenticated request
-// (never from model-supplied args) — no function here accepts a caller-
-// controlled user id, so there's no parameter surface for a prompt-injection
-// attempt to target another user's data.
-//
-// Free-text fields sourced from other users (mentor bios, session
-// descriptions) are attacker-controlled — a malicious mentor could plant an
-// injection payload in their own profile once and have it replayed into any
-// learner's Zen conversation. Truncation below bounds the blast radius;
-// helpService.js's system prompt adds the "tool results are data, not
-// instructions" instruction as defense-in-depth on top of this.
 const MAX_NAME_LENGTH = 80;
 const MAX_DESC_LENGTH = 200;
 const MAX_BIO_LENGTH = 300;
@@ -22,24 +9,30 @@ const MAX_BIO_LENGTH = 300;
 const truncate = (str, max) =>
     (typeof str === 'string' && str.length > max) ? `${str.slice(0, max)}…` : (str || '');
 
-// Cheap, unconditional per-request identity snippet — NOT a model-invoked
-// tool. One indexed findUnique, three scalar fields, no joins. This is what
-// lets "Hey Zen" be personalized without spending a tool round-trip on it.
-// Returns `{ text, name }` — `text` is the prompt-ready snippet, `name` is
-// the bare first name for the owner easter egg (see matchOwnerQuestion).
+const safeParseJSON = (str, fallback = []) => {
+    if (!str) return fallback;
+    try { const p = JSON.parse(str); return Array.isArray(p) ? p : fallback; } catch { return fallback; }
+};
+
 const EMPTY_IDENTITY = { text: '', name: null };
 exports.getUserIdentitySnippet = async (prisma, userId) => {
     if (!userId) return EMPTY_IDENTITY;
     try {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { name: true, year: true, department: true }
+            select: { name: true, year: true, department: true, mentorSkills: true, role: true }
         });
         if (!user) return EMPTY_IDENTITY;
         const name = truncate(user.name, MAX_NAME_LENGTH) || null;
         const parts = [name];
-        if (user.year) parts.push(`Year ${user.year}`);
-        if (user.department) parts.push(truncate(user.department, MAX_NAME_LENGTH));
+        if (user.role === 'MENTOR' || user.role === 'BOTH') {
+            const skills = safeParseJSON(user.mentorSkills, []);
+            if (skills.length > 0) parts.push(`Skills: ${skills.slice(0, 5).join(', ')}`);
+            if (user.department) parts.push(truncate(user.department, MAX_NAME_LENGTH));
+        } else {
+            if (user.year) parts.push(`Year ${user.year}`);
+            if (user.department) parts.push(truncate(user.department, MAX_NAME_LENGTH));
+        }
         return { text: parts.filter(Boolean).join(', '), name: name ? name.split(' ')[0] : null };
     } catch (error) {
         logger.error('Zen: failed to load identity snippet', { message: error.message });
@@ -47,11 +40,6 @@ exports.getUserIdentitySnippet = async (prisma, userId) => {
     }
 };
 
-// sessionService.getMyBookings has no booking-status filter of its own (only
-// session-status conditions), so PENDING/CANCELLED bookings would otherwise
-// surface as if they were real attended/upcoming sessions — filter explicitly
-// before slicing to the requested limit. Over-fetch to keep enough rows after
-// filtering; `getMyBookings` itself caps `limit` at 50.
 exports.getRecentSessions = async (prisma, userId, { limit } = {}) => {
     if (!userId) return { error: true, reason: 'unauthorized' };
     const take = Math.min(Math.max(parseInt(limit, 10) || 2, 1), 10);
@@ -87,10 +75,6 @@ exports.searchMentors = async (prisma, { department, skillKeyword, limit } = {})
     }
 };
 
-// Shared by getMentorDetails and checkMentorHistory. No `mode: 'insensitive'`
-// — that's Postgres/MongoDB-only in Prisma and throws on this project's
-// MySQL datasource; MySQL's default collation is already case-insensitive.
-// The orderBy makes ambiguous multi-match name lookups deterministic.
 const resolveMentor = async (prisma, name) => {
     if (!name || typeof name !== 'string') return null;
     return prisma.user.findFirst({
@@ -100,11 +84,6 @@ const resolveMentor = async (prisma, name) => {
     });
 };
 
-// `profileService.getProfileById` unconditionally selects `email` with no
-// viewer gating, and only masks (not strips) `phoneNumber`. Neither belongs
-// in an AI chat response for a third party regardless of what the profile
-// *page* permission model allows — both are explicitly excluded below via
-// allow-list construction (never spread-then-omit).
 exports.getMentorDetails = async (prisma, cache, userId, mentorName) => {
     try {
         const mentor = await resolveMentor(prisma, mentorName);
@@ -145,6 +124,147 @@ exports.checkMentorHistory = async (prisma, userId, mentorName) => {
         };
     } catch (error) {
         logger.error('Zen: checkMentorHistory failed', { message: error.message });
+        return { error: true, reason: 'temporarily_unavailable' };
+    }
+};
+
+const sanitizeSession = (s) => ({
+    title: truncate(s.title, MAX_NAME_LENGTH),
+    subject: truncate(s.subject, MAX_NAME_LENGTH),
+    scheduledAt: s.scheduledAt,
+    duration: s.duration,
+    status: s.status,
+    mode: s.mode,
+    department: truncate(s.department, MAX_NAME_LENGTH),
+    totalBookings: s.totalBookings ?? 0,
+});
+
+exports.getMentorUpcomingSessions = async (prisma, userId, { limit } = {}) => {
+    if (!userId) return { error: true, reason: 'unauthorized' };
+    const take = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20);
+    try {
+        const sessions = await prisma.session.findMany({
+            where: {
+                mentorId: userId,
+                status: { in: ['UPCOMING', 'LIVE'] },
+                scheduledAt: { gte: new Date() },
+                isDeleted: false,
+            },
+            orderBy: { scheduledAt: 'asc' },
+            take,
+            select: {
+                title: true, subject: true, scheduledAt: true, duration: true,
+                status: true, mode: true, department: true, totalBookings: true,
+            }
+        });
+        return sessions.map(sanitizeSession);
+    } catch (error) {
+        logger.error('Zen: getMentorUpcomingSessions failed', { message: error.message });
+        return { error: true, reason: 'temporarily_unavailable' };
+    }
+};
+
+exports.getMentorRecentSessions = async (prisma, userId, { limit } = {}) => {
+    if (!userId) return { error: true, reason: 'unauthorized' };
+    const take = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20);
+    try {
+        const sessions = await prisma.session.findMany({
+            where: {
+                mentorId: userId,
+                status: 'COMPLETED',
+                isDeleted: false,
+            },
+            orderBy: { scheduledAt: 'desc' },
+            take,
+            select: {
+                title: true, subject: true, scheduledAt: true, duration: true,
+                status: true, mode: true, department: true, totalBookings: true,
+            }
+        });
+        return sessions.map(sanitizeSession);
+    } catch (error) {
+        logger.error('Zen: getMentorRecentSessions failed', { message: error.message });
+        return { error: true, reason: 'temporarily_unavailable' };
+    }
+};
+
+exports.getMentorProfile = async (prisma, userId) => {
+    if (!userId) return { error: true, reason: 'unauthorized' };
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                name: true, department: true, bio: true, mentorSkills: true,
+                averageRating: true, totalSessions: true, totalReviews: true,
+                uniqueLearners: true, badgeLevel: true,
+            }
+        });
+        if (!user) return { found: false };
+        return {
+            name: user.name,
+            department: user.department,
+            bio: truncate(user.bio, MAX_BIO_LENGTH),
+            skills: safeParseJSON(user.mentorSkills, []),
+            averageRating: user.averageRating,
+            totalSessions: user.totalSessions,
+            totalReviews: user.totalReviews,
+            uniqueLearners: user.uniqueLearners,
+            badgeLevel: user.badgeLevel,
+        };
+    } catch (error) {
+        logger.error('Zen: getMentorProfile failed', { message: error.message });
+        return { error: true, reason: 'temporarily_unavailable' };
+    }
+};
+
+exports.getMentorReviews = async (prisma, userId, { limit } = {}) => {
+    if (!userId) return { error: true, reason: 'unauthorized' };
+    const take = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20);
+    try {
+        const reviews = await prisma.review.findMany({
+            where: { mentorId: userId },
+            orderBy: { createdAt: 'desc' },
+            take,
+            select: {
+                rating: true, comment: true, createdAt: true,
+                session: { select: { title: true } },
+            }
+        });
+        return reviews.map(r => ({
+            rating: r.rating,
+            comment: truncate(r.comment, MAX_DESC_LENGTH),
+            sessionTitle: truncate(r.session?.title, MAX_NAME_LENGTH),
+            date: r.createdAt,
+        }));
+    } catch (error) {
+        logger.error('Zen: getMentorReviews failed', { message: error.message });
+        return { error: true, reason: 'temporarily_unavailable' };
+    }
+};
+
+exports.getMentorMentees = async (prisma, userId, { limit } = {}) => {
+    if (!userId) return { error: true, reason: 'unauthorized' };
+    const take = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    try {
+        const bookings = await prisma.booking.findMany({
+            where: {
+                session: { mentorId: userId },
+                status: { in: ['CONFIRMED', 'COMPLETED'] },
+            },
+            select: { user: { select: { id: true, name: true } } },
+            take: take * 2,
+        });
+        const seen = new Set();
+        const mentees = [];
+        for (const b of bookings) {
+            if (!b.user || seen.has(b.user.id)) continue;
+            seen.add(b.user.id);
+            mentees.push({ name: (b.user.name || 'Unknown').split(' ')[0] });
+            if (mentees.length >= take) break;
+        }
+        return mentees;
+    } catch (error) {
+        logger.error('Zen: getMentorMentees failed', { message: error.message });
         return { error: true, reason: 'temporarily_unavailable' };
     }
 };
