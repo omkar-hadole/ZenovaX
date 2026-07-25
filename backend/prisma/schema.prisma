@@ -847,7 +847,7 @@ model CodingQuestion {
   // Details
   title           String
   description     String        @db.Text
-  testCases       String        @db.Text // JSON strings like [{input: "1", output: "2", isHidden: false}]
+  testCases       String        @db.Text     // JSON strings like [{input: "1", output: "2", isHidden: false}]
   difficulty      String        @default("MEDIUM")
 
   // Authoring extras (all optional/backward-compatible with older rows)
@@ -856,6 +856,13 @@ model CodingQuestion {
   referenceSolution  String?    @db.Text
   timeLimitMinutes   Int?
   points             Int?       @default(100)
+
+  // Structured question fields (questionType !== "legacy")
+  questionType         String?   @default("legacy")   // "legacy" | "structured"
+  functionName         String?                        // e.g. "twoSum"
+  parameters           String?   @db.Text             // JSON: [{name:"nums",type:"integer[]"},{name:"target",type:"integer"}]
+  returnType           String?                        // e.g. "integer[]"
+  structuredTestCases  String?   @db.Text             // JSON: [{inputs:{nums:[2,7,11,15],target:9},expected:[0,1],isHidden:false}]
 
   // Status
   status          QuizStatus    @default(DRAFT)
