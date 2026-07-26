@@ -432,13 +432,13 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                     {q.status === 'LIVE' && (
                                                         <div className="flex items-center gap-2">
                                                             <button
-                                                                onClick={() => navigate(`/quiz/${q.id}/attempt`)}
+                                                                onClick={() => navigate(`/quiz/${q.id}/attempt?from=${encodeURIComponent(window.location.pathname)}`)}
                                                                 className="px-5 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 dark:shadow-purple-950/50 flex items-center gap-2"
                                                             >
                                                                 <PlayCircle size={16} /> Start
                                                             </button>
                                                             <button
-                                                                onClick={() => window.open(`/quiz/${q.id}/attempt`, '_blank')}
+                                                                onClick={() => window.open(`/quiz/${q.id}/attempt?from=${encodeURIComponent(window.location.pathname)}`, '_blank')}
                                                                 title="Open in new tab"
                                                                 className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-xl transition-colors"
                                                             >

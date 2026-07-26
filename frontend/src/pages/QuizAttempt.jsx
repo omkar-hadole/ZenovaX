@@ -1,394 +1,998 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowUp,
+  BookOpen,
+  Check,
+  CheckCircle2,
+  Clock3,
+  Flag,
+  Loader2,
+  Trophy,
+  X,
+  XCircle,
+} from 'lucide-react';
+
 import { apiCall } from '../utils/api';
-import { Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, ArrowLeft, BookOpen, Timer } from 'lucide-react';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/common/ConfirmModal';
+
+/* -------------------------------------------------------------------------- */
+/*                                  Helpers                                   */
+/* -------------------------------------------------------------------------- */
+
+const parseOptions = (options) => {
+  if (Array.isArray(options)) return options;
+
+  if (typeof options === 'string') {
+    try {
+      const parsed = JSON.parse(options);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
+
+const formatTime = (seconds) => {
+  const safeSeconds = Math.max(0, Number(seconds) || 0);
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = safeSeconds % 60;
+
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const formatTimeTaken = (seconds) => {
+  if (seconds === null || seconds === undefined) return '—';
+
+  const safeSeconds = Math.max(0, Number(seconds) || 0);
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = safeSeconds % 60;
+
+  if (mins > 0) return `${mins}m ${secs}s`;
+  return `${secs}s`;
+};
+
+/* -------------------------------------------------------------------------- */
+/*                               Loading State                                */
+/* -------------------------------------------------------------------------- */
+
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0B0D12] flex items-center justify-center px-6">
+      <div className="flex flex-col items-center">
+        <div className="w-12 h-12 rounded-2xl bg-[#EEF0FF] dark:bg-[#171A2B] flex items-center justify-center mb-4">
+          <Loader2 className="w-5 h-5 text-[#6264D9] animate-spin" />
+        </div>
+
+        <p className="text-sm font-semibold text-[#24262D] dark:text-white">
+          Loading quiz
+        </p>
+
+        <p className="text-xs text-[#8A8F9C] mt-1">
+          Preparing your questions...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                Error State                                 */
+/* -------------------------------------------------------------------------- */
+
+function ErrorScreen({ error, onBack }) {
+  return (
+    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0B0D12] flex items-center justify-center px-5">
+      <div className="w-full max-w-[420px] bg-white dark:bg-[#12151C] border border-[#E8E9EE] dark:border-[#252936] rounded-3xl p-8 shadow-[0_12px_40px_rgba(20,24,40,0.06)] text-center">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+          <AlertTriangle className="w-6 h-6 text-red-500" />
+        </div>
+
+        <h1 className="mt-5 text-xl font-bold tracking-[-0.02em] text-[#202229] dark:text-white">
+          Unable to start quiz
+        </h1>
+
+        <p className="mt-2 text-sm leading-6 text-[#737885] dark:text-[#9297A5]">
+          {error}
+        </p>
+
+        <button
+          onClick={onBack}
+          className="mt-7 w-full h-11 rounded-xl bg-[#202229] dark:bg-white text-white dark:text-[#15171C] text-sm font-semibold transition hover:opacity-90 active:scale-[0.99]"
+        >
+          Back to dashboard
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Result Component                              */
+/* -------------------------------------------------------------------------- */
+
+function ResultScreen({ quiz, result, from, navigate }) {
+  const answers = Array.isArray(result?.answers) ? result.answers : [];
+  const questions = Array.isArray(quiz?.questions) ? quiz.questions : [];
+
+  const correctCount = answers.filter((answer) => answer?.isCorrect).length;
+  const totalQuestions = questions.length;
+
+  const percentage =
+    Number(result?.totalMarks) > 0
+      ? Math.round((Number(result.score) / Number(result.totalMarks)) * 100)
+      : 0;
+
+  const passingMarks = result?.passingMarks > 0 ? result.passingMarks : Math.max(1, Math.round(Number(result.totalMarks) * 0.4));
+  const isPassed = Number(result.score) >= passingMarks;
+
+  return (
+    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0B0D12] text-[#202229] dark:text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-[#E7E8EC] dark:border-[#232731] bg-white/95 dark:bg-[#0F1117]/95 backdrop-blur-xl">
+        <div className="max-w-[1240px] mx-auto h-[68px] px-4 sm:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center min-w-0">
+            <button
+              onClick={() => navigate(from)}
+              className="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center text-[#686D78] hover:bg-[#F3F4F6] dark:hover:bg-[#1A1D25] transition"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-[18px] h-[18px]" />
+            </button>
+
+            <div className="w-px h-6 bg-[#E6E7EA] dark:bg-[#2A2E39] mx-3 sm:mx-4" />
+
+            <div className="min-w-0">
+              <h1 className="font-semibold text-sm sm:text-[15px] truncate">
+                {quiz?.title}
+              </h1>
+
+              {quiz?.session?.title && (
+                <p className="text-[12px] text-[#9498A2] truncate mt-0.5">
+                  {quiz.session.title}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-[#737885] dark:text-[#9A9EAA]">
+            <BookOpen className="w-4 h-4" />
+            Quiz results
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-[1240px] mx-auto px-4 sm:px-6 py-6 lg:py-8">
+        {/* Result Hero */}
+        <section className="bg-white dark:bg-[#12151C] border border-[#E7E8EC] dark:border-[#252936] rounded-3xl overflow-hidden">
+          <div className="p-6 sm:p-8 lg:p-10">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="flex items-start gap-5">
+                <div
+                  className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-2xl flex items-center justify-center ${
+                    isPassed
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10'
+                      : 'bg-red-50 dark:bg-red-500/10'
+                  }`}
+                >
+                  {isPassed ? (
+                    <Trophy className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
+                  ) : (
+                    <XCircle className="w-7 h-7 text-red-500" />
+                  )}
+                </div>
+
+                <div>
+                  <div
+                    className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      isPassed
+                        ? 'text-emerald-500 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/10'
+                        : 'text-red-500 bg-red-50 dark:text-red-300 dark:bg-red-500/10'
+                    }`}
+                  >
+                    {isPassed ? (
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    ) : (
+                      <XCircle className="w-3.5 h-3.5" />
+                    )}
+
+                    {isPassed ? 'Passed' : 'Not passed'}
+                  </div>
+
+                  <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-[-0.035em]">
+                    {percentage >= 90 ? 'Outstanding!' : percentage >= 70 ? 'Great work!' : percentage >= passingMarks ? 'Good effort!' : 'Keep practicing'}
+                  </h2>
+
+                  <p className="mt-2 text-sm sm:text-[15px] text-[#7C818D] dark:text-[#9297A5]">
+                    You answered {correctCount} of {totalQuestions} questions
+                    correctly.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-end lg:items-center gap-3">
+                <span className="text-5xl sm:text-6xl font-bold tracking-[-0.06em]">
+                  {percentage}
+                </span>
+
+                <span className="text-xl text-[#9A9EAA] font-medium mb-1">
+                  %
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-[#ECEDEF] dark:border-[#252936] grid grid-cols-2 md:grid-cols-4">
+            <ResultStat
+              label="Score"
+              value={`${result?.score ?? 0}/${result?.totalMarks ?? 0}`}
+            />
+
+            <ResultStat
+              label="Correct"
+              value={`${correctCount}/${totalQuestions}`}
+            />
+
+            <ResultStat
+              label="Passing marks"
+              value={passingMarks}
+            />
+
+            <ResultStat
+              label="Time taken"
+              value={formatTimeTaken(result?.timeTaken)}
+              last
+            />
+          </div>
+        </section>
+
+        {/* Review */}
+        <section className="mt-6 bg-white dark:bg-[#12151C] border border-[#E7E8EC] dark:border-[#252936] rounded-3xl overflow-hidden">
+          <div className="px-5 sm:px-7 py-5 border-b border-[#ECEDEF] dark:border-[#252936] flex items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-[15px]">Answer review</h3>
+              <p className="text-xs text-[#9297A3] mt-1">
+                Review your responses and correct answers.
+              </p>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#777C87]">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              {correctCount} correct
+            </div>
+          </div>
+
+          <div className="divide-y divide-[#ECEDEF] dark:divide-[#252936]">
+            {questions.map((question, index) => {
+              const answer = answers.find(
+                (item) => item?.questionId === question.id
+              );
+
+              const isCorrect = Boolean(answer?.isCorrect);
+              const options = parseOptions(question.options);
+
+              return (
+                <article
+                  key={question.id}
+                  className="p-5 sm:p-7 lg:p-8"
+                >
+                  <div className="flex gap-4">
+                    <div
+                      className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${
+                        isCorrect
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
+                          : 'bg-red-50 dark:bg-red-500/10 text-red-400'
+                      }`}
+                    >
+                      {isCorrect ? (
+                        <Check className="w-4 h-4" strokeWidth={2.5} />
+                      ) : (
+                        <X className="w-4 h-4" strokeWidth={2.5} />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.12em] font-bold text-[#A0A4AE]">
+                            Question {index + 1}
+                          </p>
+
+                          <h4 className="mt-2 text-[15px] sm:text-base leading-7 font-semibold text-[#2A2D34] dark:text-[#F2F3F5]">
+                            {question.questionText}
+                          </h4>
+                        </div>
+
+                        <span
+                          className={`text-xs font-semibold ${
+                            isCorrect
+                            ? 'text-emerald-500 dark:text-emerald-400'
+                            : 'text-red-400'
+                          }`}
+                        >
+                          {answer?.marksObtained ?? 0}/
+                          {answer?.marks ?? question.marks} marks
+                        </span>
+                      </div>
+
+                      <div className="mt-5 grid gap-2.5">
+                        {options.map((option, optionIndex) => {
+                          const isSelected =
+                            option === answer?.selectedAnswer;
+
+                          const isCorrectOption =
+                            option === answer?.correctAnswer;
+
+                          let optionClass =
+                            'border-[#E6E8EC] dark:border-[#2A2E38] bg-white dark:bg-[#12151C]';
+
+                          let letterClass =
+                            'border-[#DADCE2] dark:border-[#363B47] text-[#8A8F99]';
+
+                          let textClass =
+                            'text-[#555A65] dark:text-[#B4B8C1]';
+
+                          if (isCorrectOption) {
+                            optionClass =
+                              'border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/[0.06]';
+
+                            letterClass =
+                              'border-emerald-400 bg-emerald-400 text-white';
+
+                            textClass =
+                              'text-emerald-600 dark:text-emerald-300 font-medium';
+                          }
+
+                          if (isSelected && !isCorrectOption) {
+                            optionClass =
+                              'border-red-300 dark:border-red-500/30 bg-red-50/60 dark:bg-red-500/[0.06]';
+
+                            letterClass =
+                              'border-red-400 bg-red-400 text-white';
+
+                            textClass =
+                              'text-red-500 dark:text-red-300 font-medium';
+                          }
+
+                          return (
+                            <div
+                              key={`${question.id}-${optionIndex}`}
+                              className={`min-h-[52px] px-4 py-3 rounded-xl border flex items-center gap-3 ${optionClass}`}
+                            >
+                              <div
+                                className={`w-7 h-7 rounded-lg border flex-shrink-0 flex items-center justify-center text-xs font-semibold ${letterClass}`}
+                              >
+                                {String.fromCharCode(65 + optionIndex)}
+                              </div>
+
+                              <span
+                                className={`flex-1 text-sm leading-6 ${textClass}`}
+                              >
+                                {option}
+                              </span>
+
+                              {isCorrectOption && (
+                                <span className="hidden sm:inline-flex text-[11px] font-semibold text-emerald-500 dark:text-emerald-300">
+                                  Correct answer
+                                </span>
+                              )}
+
+                              {isSelected && !isCorrectOption && (
+                                <span className="hidden sm:inline-flex text-[11px] font-semibold text-red-500 dark:text-red-300">
+                                  Your answer
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="h-11 px-6 rounded-xl border border-[#D7D9FA] text-[#7B74F1] text-sm font-semibold hover:bg-[#FAFAFF] transition flex items-center gap-2"
+          >
+            <ArrowUp className="w-4 h-4" />
+            Go to top
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function ResultStat({ label, value, last = false }) {
+  return (
+    <div
+      className={`px-5 sm:px-7 py-5 ${
+        !last ? 'border-r border-[#ECEDEF] dark:border-[#252936]' : ''
+      }`}
+    >
+      <p className="text-[11px] sm:text-xs font-medium text-[#9297A3]">
+        {label}
+      </p>
+
+      <p className="mt-1.5 text-base sm:text-lg font-bold tracking-[-0.02em]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               Main Component                               */
+/* -------------------------------------------------------------------------- */
 
 export default function QuizAttempt() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
   const [timeLeft, setTimeLeft] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
   const [result, setResult] = useState(null);
   const [toast, setToast] = useState(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+
   const startedAt = useRef(null);
+  const submitLock = useRef(false);
+
+  const from =
+    new URLSearchParams(window.location.search).get('from') || '/dashboard';
+
+  /* ------------------------------------------------------------------------ */
+  /*                                Fetch Quiz                                */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
+    const fetchQuiz = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await apiCall(`/quiz/${id}/attempt`);
+
+        if (response.alreadyAttempted) {
+          setQuiz(response.quiz);
+
+          setResult({
+            score: response.attempt.score,
+            totalMarks: response.attempt.totalMarks,
+            isPassed: response.attempt.isPassed,
+            passingMarks: response.quiz.passingMarks,
+            averageScore: response.attempt.averageScore,
+            timeTaken: response.attempt.timeTaken,
+            answers: response.attempt.answers || [],
+          });
+
+          return;
+        }
+
+        setQuiz(response.quiz);
+
+        const initialAnswers = {};
+
+        response.quiz.questions.forEach((question) => {
+          initialAnswers[question.id] = '';
+        });
+
+        setAnswers(initialAnswers);
+
+        startedAt.current = new Date().toISOString();
+
+        if (response.quiz.duration) {
+          setTimeLeft(Number(response.quiz.duration) * 60);
+        }
+      } catch (err) {
+        setError(err?.message || 'Failed to load quiz.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchQuiz();
   }, [id]);
 
-  useEffect(() => {
-    if (timeLeft === 0) {
-      handleSubmit();
-    }
-    if (timeLeft === null || timeLeft === undefined) return;
+  /* ------------------------------------------------------------------------ */
+  /*                                  Timer                                   */
+  /* ------------------------------------------------------------------------ */
 
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+  useEffect(() => {
+    if (result || timeLeft === null || timeLeft === undefined) return;
+
+    if (timeLeft <= 0) {
+      handleSubmit(true);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setTimeLeft((previous) => Math.max(0, previous - 1));
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+    return () => window.clearTimeout(timer);
+  }, [timeLeft, result]);
 
-  const fetchQuiz = async () => {
-    try {
-      const response = await apiCall(`/quiz/${id}/attempt`);
-      if (response.alreadyAttempted) {
-        setResult({
-          score: response.attempt.score,
-          totalMarks: response.attempt.totalMarks,
-          isPassed: response.attempt.isPassed,
-          passingMarks: response.quiz.passingMarks,
-          averageScore: response.attempt.score,
-          timeTaken: response.attempt.timeTaken,
-          answers: response.attempt.answers
-        });
-        setQuiz(response.quiz);
-        setLoading(false);
-        return;
-      }
-      setQuiz(response.quiz);
+  /* ------------------------------------------------------------------------ */
+  /*                                Computed                                  */
+  /* ------------------------------------------------------------------------ */
 
-      const initialAnswers = {};
-      response.quiz.questions.forEach(q => {
-        initialAnswers[q.id] = '';
-      });
-      setAnswers(initialAnswers);
+  const questions = quiz?.questions || [];
+  const question = questions[currentQuestionIndex];
 
-      startedAt.current = new Date().toISOString();
+  const options = useMemo(
+    () => parseOptions(question?.options),
+    [question]
+  );
 
-      if (response.quiz.duration) {
-        setTimeLeft(response.quiz.duration * 60);
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to load quiz');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const answeredCount = useMemo(() => {
+    return Object.values(answers).filter(
+      (answer) => answer !== '' && answer !== null && answer !== undefined
+    ).length;
+  }, [answers]);
+
+  const totalQuestions = questions.length;
+
+  const progress =
+    totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
+
+  const isLastQuestion =
+    currentQuestionIndex === totalQuestions - 1;
+
+  const unansweredCount = Math.max(
+    0,
+    totalQuestions - answeredCount
+  );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                Handlers                                  */
+  /* ------------------------------------------------------------------------ */
 
   const handleOptionSelect = (questionId, option) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: option
+    setAnswers((previous) => ({
+      ...previous,
+      [questionId]: option,
     }));
   };
 
-  const handleSubmit = async () => {
-    if (submitting) return;
+  const handleSubmit = async (automatic = false) => {
+    if (submitLock.current || submitting || result) return;
+
+    submitLock.current = true;
     setSubmitting(true);
+
     try {
       const response = await apiCall(`/quiz/${id}/submit`, {
         method: 'POST',
         body: JSON.stringify({
           answers,
-          startedAt: startedAt.current
-        })
+          startedAt: startedAt.current,
+        }),
       });
+
       setResult(response.result);
     } catch (err) {
-      setToast({ message: err.message || 'Failed to submit quiz', type: 'error' });
+      submitLock.current = false;
       setSubmitting(false);
+
+      setToast({
+        message:
+          err?.message ||
+          (automatic
+            ? 'Time expired, but the quiz could not be submitted.'
+            : 'Failed to submit quiz.'),
+        type: 'error',
+      });
     }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const goToQuestion = (index) => {
+    if (index < 0 || index >= totalQuestions) return;
+    setCurrentQuestionIndex(index);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const formatTimeTaken = (seconds) => {
-    if (!seconds) return 'N/A';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    if (mins > 0) return `${mins}m ${secs}s`;
-    return `${secs}s`;
-  };
+  /* ------------------------------------------------------------------------ */
+  /*                                  States                                  */
+  /* ------------------------------------------------------------------------ */
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#F4F4F9] dark:bg-gray-950">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C9C7F5]"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#F4F4F9] dark:bg-gray-950 p-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
-        </div>
+      <ErrorScreen
+        error={error}
+        onBack={() => navigate('/dashboard')}
+      />
+    );
+  }
 
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-[2rem] shadow-sm border border-red-100 dark:border-red-500/20 text-center max-w-md relative z-10">
-          <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-10 h-10 text-red-500 dark:text-red-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Unable to Start Quiz</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8">{error}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="w-full bg-[#C9C7F5] text-[#5a59b5] py-3.5 rounded-xl font-bold hover:bg-[#b8b6e5] transition-colors"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
+  if (!quiz || !questions.length) {
+    return (
+      <ErrorScreen
+        error="This quiz does not contain any questions."
+        onBack={() => navigate(from)}
+      />
     );
   }
 
   if (result) {
-    const isPassed = result.isPassed;
-    const correctCount = result.answers.filter(a => a.isCorrect).length;
-    const totalQuestions = quiz.questions.length;
-    const percentage = result.totalMarks > 0 ? Math.round((result.score / result.totalMarks) * 100) : 0;
-
     return (
-      <div className="min-h-screen bg-[#F4F4F9] dark:bg-gray-950 p-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors">
-              <ArrowLeft className="w-5 h-5 text-gray-500" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{quiz?.title}</h1>
-              <p className="text-sm text-gray-400">{quiz?.session?.title}</p>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
-            <div className="flex items-center gap-5">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${isPassed ? 'bg-green-100' : 'bg-red-100'}`}>
-                {isPassed ? <CheckCircle className="w-8 h-8 text-green-500" /> : <XCircle className="w-8 h-8 text-red-400" />}
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{isPassed ? 'Congratulations, you passed!' : 'Keep practicing'}</h2>
-                <p className="text-gray-500 mt-0.5">
-                  {correctCount}/{totalQuestions} correct &middot; Scored <strong>{result.score}/{result.totalMarks}</strong> ({percentage}%)
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {result.timeTaken && (
-                  <div className="text-center px-4 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <div className="text-xs text-gray-400 font-medium">Time</div>
-                    <div className="text-base font-bold text-gray-700 dark:text-gray-200">{formatTimeTaken(result.timeTaken)}</div>
-                  </div>
-                )}
-                <div className="text-center px-4 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                  <div className="text-xs text-gray-400 font-medium">Average</div>
-                  <div className="text-base font-bold text-gray-700 dark:text-gray-200">{result.averageScore || percentage}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Answer Review
-              </h3>
-              <span className="text-sm text-gray-400">{correctCount}/{totalQuestions} correct</span>
-            </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {quiz.questions.map((q, index) => {
-                const answer = result.answers.find(a => a.questionId === q.id);
-                const isCorrect = answer?.isCorrect;
-                const options = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-
-                return (
-                  <div key={q.id} className="px-6 py-5">
-                    <div className="flex items-start gap-3 mb-3">
-                      <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
-                        {isCorrect ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                      </span>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800 dark:text-gray-100">
-                          <span className="text-gray-400 mr-2">Q{index + 1}.</span>
-                          {q.questionText}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="ml-9 space-y-2">
-                      {options.map((opt, oi) => {
-                        const isSelected = opt === answer?.selectedAnswer;
-                        const isCorrectOpt = opt === answer?.correctAnswer;
-                        let borderColor = 'border-gray-100 dark:border-gray-700';
-                        let bgColor = 'bg-white dark:bg-gray-900';
-                        let textColor = 'text-gray-700 dark:text-gray-300';
-                        let indicator = null;
-                        if (isCorrectOpt) {
-                          borderColor = 'border-green-400';
-                          bgColor = 'bg-green-50/50 dark:bg-green-500/5';
-                          textColor = 'text-green-700 dark:text-green-300 font-medium';
-                          indicator = <span className="ml-auto text-xs font-semibold text-green-600">Correct answer</span>;
-                        }
-                        if (isSelected && !isCorrect) {
-                          borderColor = 'border-red-400';
-                          bgColor = 'bg-red-50/50 dark:bg-red-500/5';
-                          textColor = 'text-red-600 dark:text-red-400 font-medium';
-                          indicator = <span className="ml-auto text-xs font-semibold text-red-500">Your answer</span>;
-                        }
-                        if (isSelected && isCorrectOpt) {
-                          indicator = <span className="ml-auto text-xs font-semibold text-green-600">Your answer (correct)</span>;
-                        }
-                        return (
-                          <div key={oi} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 ${borderColor} ${bgColor}`}>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isCorrectOpt ? 'border-green-500 bg-green-50' : isSelected && !isCorrect ? 'border-red-500 bg-red-50' : 'border-gray-200 dark:border-gray-600'}`}>
-                              {(isCorrectOpt || (isSelected && !isCorrect)) && (
-                                <div className={`w-2.5 h-2.5 rounded-full ${isCorrectOpt ? 'bg-green-500' : 'bg-red-500'}`} />
-                              )}
-                            </div>
-                            <span className={`flex-1 text-base ${textColor}`}>{opt}</span>
-                            {indicator}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="ml-9 mt-2 flex items-center gap-4 text-sm text-gray-400">
-                      <span>Marks: <strong className={isCorrect ? 'text-green-600' : 'text-red-500'}>{answer?.marksObtained || 0}</strong>/{answer?.marks || q.marks}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ResultScreen
+        quiz={quiz}
+        result={result}
+        from={from}
+        navigate={navigate}
+      />
     );
   }
 
-  const question = quiz.questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
-  const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
+  /* ------------------------------------------------------------------------ */
+  /*                                Quiz UI                                   */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="min-h-screen bg-[#F4F4F9] dark:bg-gray-950 relative overflow-hidden flex flex-col">
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
-      </div>
+    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0B0D12] text-[#202229] dark:text-white">
+      {/* Top Navigation */}
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-[#0F1117]/95 backdrop-blur-xl border-b border-[#E6E8EC] dark:border-[#232731]">
+        <div className="max-w-[1280px] mx-auto h-[68px] px-4 sm:px-6 flex items-center justify-between gap-4">
+          {/* Quiz information */}
+          <div className="flex items-center min-w-0">
+            <button
+              onClick={() => navigate(from)}
+              className="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center text-[#6E737E] hover:text-[#202229] dark:hover:text-white hover:bg-[#F2F3F5] dark:hover:bg-[#1A1D25] transition"
+              aria-label="Exit quiz"
+            >
+              <ArrowLeft className="w-[18px] h-[18px]" />
+            </button>
 
-      <header className="relative z-10 pt-6 px-6 pb-2">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between bg-white/60 dark:bg-gray-900/60 backdrop-blur-md p-4 rounded-[1.5rem] border border-white/50 dark:border-gray-800/50 shadow-sm">
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500 dark:text-gray-400">
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="font-bold text-gray-900 dark:text-gray-100 text-lg leading-tight">{quiz.title}</h1>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{quiz.session.title}</p>
+            <div className="w-px h-6 bg-[#E5E7EB] dark:bg-[#292D37] mx-3 sm:mx-4" />
+
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-[15px] font-semibold tracking-[-0.01em] truncate max-w-[180px] sm:max-w-[400px]">
+                {quiz.title}
+              </h1>
+
+              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] sm:text-xs text-[#969AA4]">
+                {quiz.session?.title && (
+                  <>
+                    <span className="truncate max-w-[130px] sm:max-w-[260px]">
+                      {quiz.session.title}
+                    </span>
+
+                    <span className="w-1 h-1 rounded-full bg-[#C5C8CF]" />
+                  </>
+                )}
+
+                <span>
+                  {answeredCount}/{totalQuestions} answered
+                </span>
               </div>
             </div>
-
-            {timeLeft !== null && (
-              <div className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono font-bold transition-colors ${timeLeft < 60
-                ? 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-500/20 animate-pulse'
-                : 'bg-white dark:bg-gray-800 text-[#5a59b5] dark:text-[#b3b1f0] border border-[#C9C7F5] dark:border-[#C9C7F5]/40'
-                }`}>
-                <Clock className="w-4 h-4" />
-                <span className="text-lg">{formatTime(timeLeft)}</span>
-              </div>
-            )}
           </div>
+
+          {/* Timer */}
+          {timeLeft !== null && (
+            <div
+              className={`flex-shrink-0 h-10 px-3 sm:px-4 rounded-xl flex items-center gap-2 border transition ${
+                timeLeft <= 60
+                  ? 'border-red-200 bg-red-50 text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400'
+                  : 'border-[#E3E5EA] dark:border-[#2A2E38] bg-[#FAFAFB] dark:bg-[#161920] text-[#454A54] dark:text-[#D7D9DE]'
+              }`}
+            >
+              <Clock3
+                className={`w-4 h-4 ${
+                  timeLeft <= 60
+                    ? 'text-red-500'
+                    : 'text-[#777C88]'
+                }`}
+              />
+
+              <span className="font-mono tabular-nums text-sm font-bold tracking-tight">
+                {formatTime(timeLeft)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Overall progress */}
+        <div className="h-[3px] bg-[#F0F1F3] dark:bg-[#1B1E25]">
+          <div
+            className="h-full bg-[#C9C7F5] transition-[width] duration-300"
+            style={{
+              width: `${progress}%`,
+            }}
+          />
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto p-6 relative z-10 flex flex-col h-full">
-        <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-sm border border-[#C9C7F5]/20 dark:border-gray-800 flex-1 flex flex-col overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gray-100 dark:bg-gray-800">
-            <div
-              className="h-full bg-gradient-to-r from-[#C9C7F5] to-[#5a59b5] transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+      {/* Main layout */}
+      <main className="max-w-[1280px] mx-auto px-4 sm:px-6 py-5 sm:py-7 lg:py-8">
+        <div className="grid lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)] gap-6 lg:gap-8">
+          {/* ---------------------------------------------------------------- */}
+          {/*                         Desktop Sidebar                           */}
+          {/* ---------------------------------------------------------------- */}
 
-          <div className="flex-1 p-8 md:p-12 flex flex-col relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9C7F5]/5 rounded-bl-[100%] pointer-events-none" />
+          <aside className="hidden lg:block">
+            <div className="sticky top-[100px]">
+              <div className="mb-4">
+                <p className="text-[11px] uppercase tracking-[0.12em] font-bold text-[#999DA7]">
+                  Questions
+                </p>
 
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <span className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-lg">Q{currentQuestionIndex + 1}</span>
-                <span>/ {quiz.questions.length}</span>
-              </span>
-              <div className="flex items-center gap-2 text-[#b59a5a] dark:text-[#e0c076] bg-[#F7D483]/10 px-3 py-1.5 rounded-lg border border-[#F7D483]/20">
-                <span className="text-xs font-bold">{question.marks} Points</span>
+                <p className="text-xs text-[#A2A6AF] mt-1">
+                  Click a question to jump to it.
+                </p>
               </div>
-            </div>
 
-            <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full relative z-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-10 leading-snug">
-                {question.questionText}
-              </h2>
+              <div className="grid grid-cols-5 gap-2">
+                {questions.map((item, index) => {
+                  const isCurrent =
+                    index === currentQuestionIndex;
 
-              <div className="grid gap-4">
-                {JSON.parse(question.options).map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleOptionSelect(question.id, option)}
-                    className={`group w-full text-left p-5 rounded-[1.25rem] border-2 transition-all duration-200 relative overflow-hidden ${answers[question.id] === option
-                      ? 'border-[#C9C7F5] bg-[#C9C7F5]/10 text-[#5a59b5] dark:text-[#b3b1f0] shadow-sm'
-                      : 'border-gray-100 dark:border-gray-800 hover:border-[#C9C7F5]/50 hover:bg-gray-50 dark:hover:bg-gray-800/60 text-gray-600 dark:text-gray-300'
+                  const isAnswered =
+                    answers[item.id] !== '' &&
+                    answers[item.id] !== null &&
+                    answers[item.id] !== undefined;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => goToQuestion(index)}
+                      className={`aspect-square rounded-lg text-xs font-semibold border transition ${
+                        isCurrent
+                          ? 'bg-[#C9C7F5] border-[#C9C7F5] text-[#5a59b5]'
+                          : isAnswered
+                            ? 'bg-[#F4F4FF] dark:bg-[#6264D9]/10 border-[#D7D9FA] dark:border-[#6264D9]/25 text-[#7B74F1]'
+                            : 'bg-white dark:bg-[#12151C] border-[#E2E4E8] dark:border-[#292D37] text-[#858A95] hover:border-[#C9C7F5] hover:text-[#7B74F1]'
                       }`}
-                  >
-                    <div className="flex items-center gap-5 relative z-10">
-                      <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors ${answers[question.id] === option
-                        ? 'border-[#C9C7F5] bg-white dark:bg-gray-900 text-[#5a59b5] dark:text-[#b3b1f0]'
-                        : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 group-hover:border-[#C9C7F5]/50'
-                        }`}>
-                        <span className="font-bold text-sm">{String.fromCharCode(65 + index)}</span>
-                      </div>
-                      <span className="text-lg font-medium">{option}</span>
-                    </div>
-                  </button>
-                ))}
+                    >
+                      {index + 1}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 pt-5 border-t border-[#E4E6EA] dark:border-[#242832] space-y-3">
+                <Legend
+                  className="bg-[#C9C7F5]"
+                  label="Current"
+                />
+
+                <Legend
+                  className="bg-[#F4F4FF] border border-[#D7D9FA] dark:border-[#6264D9]/30"
+                  label="Answered"
+                />
+
+                <Legend
+                  className="bg-white dark:bg-[#12151C] border border-[#DCDDDF] dark:border-[#30343E]"
+                  label="Not answered"
+                />
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-white dark:bg-[#12151C] border border-[#E5E7EB] dark:border-[#272B35] p-4">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#8A8F99]">
+                    Progress
+                  </span>
+
+                  <span className="font-semibold">
+                    {answeredCount}/{totalQuestions}
+                  </span>
+                </div>
+
+                <div className="h-1.5 rounded-full bg-[#EEEFF2] dark:bg-[#242832] mt-3 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#C9C7F5] transition-all duration-300"
+                    style={{
+                      width: `${progress}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </aside>
 
-          <div className="p-6 bg-gray-50/50 dark:bg-gray-800/40 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between relative z-10">
-            <button
-              onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-              disabled={currentQuestionIndex === 0}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-colors ${currentQuestionIndex === 0
-                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm'
-                }`}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Previous
-            </button>
+          {/* ---------------------------------------------------------------- */}
+          {/*                           Question Area                           */}
+          {/* ---------------------------------------------------------------- */}
 
-            {isLastQuestion ? (
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="bg-[#C9C7F5] text-[#5a59b5] px-8 py-3.5 rounded-[1rem] font-bold text-sm hover:bg-[#b8b6e5] transition-all shadow-md shadow-[#C9C7F5]/20 hover:-translate-y-0.5 flex items-center gap-2"
-              >
-                {submitting ? 'Submitting...' : 'Finish Quiz'}
-                <CheckCircle className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                className="bg-gray-900 text-white px-8 py-3.5 rounded-[1rem] font-bold text-sm hover:bg-gray-800 transition-all shadow-md hover:-translate-y-0.5 flex items-center gap-2"
-              >
-                Next Question
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+          <section className="min-w-0">
+            <div className="bg-white dark:bg-[#12151C] border border-[#E5E7EB] dark:border-[#262A34] rounded-2xl sm:rounded-3xl shadow-[0_2px_12px_rgba(16,24,40,0.025)] overflow-hidden">
+              {/* Question header */}
+              <div className="px-5 sm:px-7 lg:px-9 pt-6 sm:pt-8">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[11px] uppercase tracking-[0.13em] font-bold text-[#969AA4]">
+                      Question {currentQuestionIndex + 1}
+                    </span>
+                    <span className="w-1 h-1 bg-[#D0D2D7] rounded-full" />
+                    <span className="text-xs text-[#A0A4AD]">
+                      {currentQuestionIndex + 1} of {totalQuestions}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FFF8E8] text-[#9A7022]">
+                    <Trophy className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-semibold">
+                      {question.marks} {Number(question.marks) === 1 ? 'mark' : 'marks'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Question */}
+              <div className="px-5 sm:px-7 lg:px-9 pt-7 pb-8 sm:pb-10">
+                <h2 className="max-w-[850px] text-xl sm:text-2xl lg:text-[26px] leading-[1.45] font-semibold tracking-[-0.025em] text-[#24262D] dark:text-[#F3F4F6]">
+                  {question.questionText}
+                </h2>
+
+
+                {/* Options */}
+                <div className="mt-7 sm:mt-8 grid gap-3">
+                  {options.map((option, index) => {
+                    const selected = answers[question.id] === option;
+
+                    return (
+                      <button
+                        key={`${question.id}-${index}`}
+                        onClick={() => handleOptionSelect(question.id, option)}
+                        className={`group w-full min-h-[62px] sm:min-h-[66px] px-4 sm:px-5 py-3.5 rounded-xl sm:rounded-2xl border text-left transition-all duration-150 ${
+                          selected
+                            ? 'border-[#C9C7F5] bg-[#FAFAFF] shadow-[0_0_0_1px_rgba(201,199,245,0.3)]'
+                            : 'border-[#E3E5E9] dark:border-[#2A2E38] bg-white dark:bg-[#12151C] hover:border-[#D7D9FA] hover:bg-[#FAFAFE]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 rounded-[10px] border flex items-center justify-center text-xs sm:text-sm font-bold transition ${
+                            selected
+                              ? 'bg-[#C9C7F5] border-[#C9C7F5] text-[#5a59b5]'
+                              : 'border-[#D9DBE0] text-[#898E99] group-hover:border-[#C9C7F5] group-hover:text-[#7B74F1]'
+                          }`}>
+                            {selected ? <Check className="w-4 h-4" strokeWidth={2.5} /> : String.fromCharCode(65 + index)}
+                          </div>
+                          <span className={`flex-1 text-sm sm:text-[15px] leading-6 ${
+                            selected
+                              ? 'text-[#5a59b5] dark:text-[#B9BAF5] font-medium'
+                              : 'text-[#50545E] dark:text-[#C1C4CB] font-medium'
+                          }`}>
+                            {option}
+                          </span>
+                          {selected && (
+                            <div className="hidden sm:flex w-5 h-5 rounded-full bg-[#C9C7F5] items-center justify-center">
+                              <Check className="w-3 h-3 text-[#5a59b5]" strokeWidth={3} />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Bottom navigation */}
+              <div className="px-5 sm:px-7 lg:px-9 py-4 border-t border-[#EBECEF] dark:border-[#252933] bg-[#FBFBFC] dark:bg-[#101319] flex items-center justify-between gap-3">
+                <button
+                  onClick={() => goToQuestion(currentQuestionIndex - 1)}
+                  disabled={currentQuestionIndex === 0}
+                  className={`h-11 px-3 sm:px-5 rounded-xl flex items-center gap-2 text-sm font-semibold transition ${
+                    currentQuestionIndex === 0
+                      ? 'text-[#C3C6CC] cursor-not-allowed'
+                      : 'text-[#606570] hover:bg-white hover:shadow-sm'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+
+                <div className="hidden md:block text-xs text-[#A0A4AD]">
+                  {unansweredCount === 0
+                    ? 'All questions answered'
+                    : `${unansweredCount} unanswered`}
+                </div>
+
+                {isLastQuestion ? (
+                  <button
+                    onClick={() => setShowSubmitConfirm(true)}
+                    disabled={submitting}
+                    className="h-11 px-5 sm:px-7 rounded-xl bg-[#C9C7F5] text-[#5a59b5] flex items-center justify-center gap-2 text-sm font-semibold shadow-sm hover:bg-[#b8b6e5] active:scale-[0.98] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Submitting
+                      </>
+                    ) : (
+                      <>
+                        Finish quiz
+                        <CheckCircle2 className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => goToQuestion(currentQuestionIndex + 1)}
+                    className="h-11 px-5 sm:px-6 rounded-xl bg-[#C9C7F5] text-[#5a59b5] flex items-center gap-2 text-sm font-semibold hover:bg-[#b8b6e5] active:scale-[0.98] transition"
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom information */}
+            <div className="mt-4 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] sm:text-xs text-[#9A9EA8]">
+              <div className="flex items-center gap-1.5">
+                <Flag className="w-3.5 h-3.5" />
+                Your answers are saved when you submit the quiz.
+              </div>
+              {timeLeft !== null && (
+                <div className="flex items-center gap-1.5">
+                  <Clock3 className="w-3.5 h-3.5" />
+                  Quiz submits automatically when time expires.
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </main>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      <ConfirmModal
+        isOpen={showSubmitConfirm}
+        title="Submit quiz?"
+        message={`You have answered ${answeredCount} of ${totalQuestions} questions. Once submitted, you cannot change your answers.`}
+        confirmText="Submit"
+        type="default"
+        onConfirm={() => {
+          setShowSubmitConfirm(false);
+          handleSubmit(false);
+        }}
+        onCancel={() => setShowSubmitConfirm(false)}
+      />
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                Small UI                                    */
+/* -------------------------------------------------------------------------- */
+
+function Legend({ className, label }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span
+        className={`w-3 h-3 rounded-[4px] flex-shrink-0 ${className}`}
+      />
+
+      <span className="text-xs text-[#8B909A]">
+        {label}
+      </span>
     </div>
   );
 }
