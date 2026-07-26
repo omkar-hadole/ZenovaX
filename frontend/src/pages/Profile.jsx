@@ -20,7 +20,6 @@ import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import Toast from '../components/Toast';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
-import ThemeToggle from '../components/ThemeToggle';
 
 const PREDEFINED_AVATARS = [
   '/avatars/Boy_1.png',
@@ -395,7 +394,6 @@ export default function Profile() {
             </button>
 
             <div className="flex items-center gap-3">
-              <ThemeToggle />
               {isOwnProfile && (
                 <div className="flex items-center gap-2">
                   {isEditing ? (
