@@ -253,16 +253,6 @@ export default function LaunchQuiz() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {!isEditMode && (
-                  <button
-                    onClick={handleSaveDraft}
-                    disabled={submitting}
-                    className="px-6 py-3 text-gray-700 dark:text-gray-300 font-bold hover:bg-white dark:hover:bg-gray-800 rounded-[1rem] transition-all flex items-center gap-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm"
-                  >
-                    <Save className="w-5 h-5" />
-                    Save Draft
-                  </button>
-                )}
                 <button
                   onClick={isEditMode ? () => submitQuiz(false) : handleLaunchClick}
                   disabled={submitting}
