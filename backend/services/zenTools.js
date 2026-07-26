@@ -1,6 +1,7 @@
 const logger = require("../utils/logger");
 const sessionService = require("./sessionService");
 const profileService = require("./profileService");
+const { getFinishedSessionsCount } = require("../utils/sessionUtils");
 
 const MAX_NAME_LENGTH = 80;
 const MAX_DESC_LENGTH = 200;
@@ -200,13 +201,17 @@ exports.getMentorProfile = async (prisma, userId) => {
             }
         });
         if (!user) return { found: false };
+
+        const finishedSessionsCount = await getFinishedSessionsCount(prisma, userId);
+        const effectiveSessions = Math.max(user.totalSessions, finishedSessionsCount);
+
         return {
             name: user.name,
             department: user.department,
             bio: truncate(user.bio, MAX_BIO_LENGTH),
             skills: safeParseJSON(user.mentorSkills, []),
             averageRating: user.averageRating,
-            totalSessions: user.totalSessions,
+            totalSessions: effectiveSessions,
             totalReviews: user.totalReviews,
             uniqueLearners: user.uniqueLearners,
             badgeLevel: user.badgeLevel,

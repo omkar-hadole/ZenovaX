@@ -1,4 +1,5 @@
 const { calculateBadges } = require("../utils/badges");
+const { getFinishedSessionsCount } = require("../utils/sessionUtils");
 
 exports.getDashboardData = async (prisma, cache, userId) => {
     const now = new Date();
@@ -71,7 +72,7 @@ exports.getDashboardData = async (prisma, cache, userId) => {
             }
         });
 
-        cachedTopMentors = topMentors.map(mentor => {
+        cachedTopMentors = await Promise.all(topMentors.map(async (mentor) => {
             let skills = [];
             try {
                 skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
@@ -79,10 +80,12 @@ exports.getDashboardData = async (prisma, cache, userId) => {
                 // Ignore parsing errors
             }
 
+            const finishedSessionsCount = await getFinishedSessionsCount(prisma, mentor.id);
+            const effectiveSessions = Math.max(mentor.totalSessions, finishedSessionsCount);
             const uniqueLearners = mentor.uniqueLearners || 0;
             const badges = calculateBadges({
                 ...mentor,
-                totalSessions: mentor.totalSessions
+                totalSessions: effectiveSessions
             }, uniqueLearners);
 
             return {
@@ -92,14 +95,14 @@ exports.getDashboardData = async (prisma, cache, userId) => {
                 profilePicture: mentor.profilePicture,
                 mentorSkills: skills,
                 averageRating: mentor.averageRating,
-                totalSessions: mentor.totalSessions,
+                totalSessions: effectiveSessions,
                 totalReviews: mentor.totalReviews,
                 followersCount: mentor._count.followers,
                 likesCount: mentor._count.likesReceived,
                 uniqueLearners,
                 badges
             };
-        });
+        }));
 
         if (cache) {
             await cache.set(topMentorsCacheKey, cachedTopMentors, 300); // 5 minutes TTL
