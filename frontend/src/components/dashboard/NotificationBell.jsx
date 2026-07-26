@@ -17,6 +17,7 @@ import {
     Code2,
     FileText,
     Loader2,
+    Megaphone,
 } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 
@@ -36,6 +37,7 @@ const TYPE_ICON = {
     RESOURCE_UPLOADED: FileText,
     SESSION_REQUEST_APPROVED: CheckCircle2,
     SESSION_REQUEST_REJECTED: XCircle,
+    ADMIN_BROADCAST: Megaphone,
 };
 
 const POLL_INTERVAL_MS = 45_000;
@@ -47,7 +49,6 @@ export default function NotificationBell() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [loaded, setLoaded] = useState(false);
     const [markingAll, setMarkingAll] = useState(false);
 
     const fetchUnreadCount = useCallback(async () => {
@@ -88,7 +89,6 @@ export default function NotificationBell() {
             const { notifications: list, unreadCount: count } = await apiCall('/notifications?limit=15');
             setNotifications(list);
             setUnreadCount(count);
-            setLoaded(true);
         } catch {
             // Leave whatever was previously loaded in place.
         } finally {
@@ -99,7 +99,7 @@ export default function NotificationBell() {
     const handleToggle = () => {
         const next = !open;
         setOpen(next);
-        if (next && !loaded) {
+        if (next) {
             fetchNotifications();
         }
     };
@@ -114,7 +114,11 @@ export default function NotificationBell() {
         }
         setOpen(false);
         if (notification.link) {
-            navigate(notification.link);
+            if (notification.link.startsWith('http://') || notification.link.startsWith('https://')) {
+                window.open(notification.link, '_blank', 'noopener,noreferrer');
+            } else {
+                navigate(notification.link);
+            }
         }
     };
 
@@ -195,7 +199,7 @@ export default function NotificationBell() {
                                                     <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
                                                         {notification.title}
                                                     </p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                                                    <p className={`text-xs text-gray-500 dark:text-gray-400 mt-0.5 ${notification.type === 'ADMIN_BROADCAST' ? '' : 'line-clamp-2'}`}>
                                                         {notification.message}
                                                     </p>
                                                     <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">

@@ -280,6 +280,70 @@ exports.getReports = async (prisma, queryParams) => {
     };
 };
 
+exports.getSessionsList = async (prisma, queryParams) => {
+    const page = parseInt(queryParams.page, 10) || 1;
+    const limit = parseInt(queryParams.limit, 10) || 50;
+    const skip = (page - 1) * limit;
+    const search = queryParams.search || '';
+
+    const where = {
+        isDeleted: false,
+        ...(search ? { title: { contains: search } } : {})
+    };
+
+    const [sessions, total] = await Promise.all([
+        prisma.session.findMany({
+            where,
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                title: true,
+                subject: true,
+                mentor: { select: { name: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        }),
+        prisma.session.count({ where })
+    ]);
+
+    return { sessions, total };
+};
+
+exports.searchUsers = async (prisma, queryParams) => {
+    const search = queryParams.search || '';
+    const role = queryParams.role || '';
+    const limit = parseInt(queryParams.limit, 10) || 20;
+
+    if (!search) {
+        return { users: [] };
+    }
+
+    const where = {
+        isDeleted: false,
+        OR: [
+            { name: { contains: search } },
+            { email: { contains: search } },
+        ],
+        ...(role ? { role } : {})
+    };
+
+    const users = await prisma.user.findMany({
+        where,
+        take: limit,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            profilePicture: true,
+        },
+        orderBy: { name: 'asc' }
+    });
+
+    return { users };
+};
+
 exports.handleReportAction = async (prisma, cache, { reportId, action }) => {
     if (!reportId || !action) {
         throw new BadRequestError("Report ID and action are required");

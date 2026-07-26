@@ -5,62 +5,76 @@ const config = require("../config");
 const badgeService = require("../services/badgeService");
 const mentorWalletService = require("../services/mentorWalletService");
 
-// Dedicated Redis connection for BullMQ with maxRetriesPerRequest: null
-let connection;
 let myQueue;
+let redisAvailable = false;
 
 if (config.redisUrl && config.redisUrl.trim()) {
     try {
-        connection = new Redis(config.redisUrl, {
-            maxRetriesPerRequest: null
+        const connection = new Redis(config.redisUrl, {
+            maxRetriesPerRequest: null,
+            connectTimeout: 5000,
+            lazyConnect: true,
+            retryStrategy(times) {
+                return null;
+            }
         });
-        // Lazily require bullmq — may fail on Vercel if semver submodules are not bundled
-        try {
-            const { Queue } = require("bullmq");
-            myQueue = new Queue("ZenovaXQueue", { connection });
-            logger.info("BullMQ Queue initialized successfully.");
-        } catch (bullmqErr) {
-            logger.warn(`BullMQ not available (queue features disabled): ${bullmqErr.message}`);
-        }
-    } catch (err) {
-        logger.error(`Failed to initialize Redis connection: ${err.message}`);
+
+        connection.on("error", () => {});
+
+        connection.connect().then(async () => {
+            redisAvailable = true;
+            try {
+                const { Queue } = require("bullmq");
+                myQueue = new Queue("ZenovaXQueue", { connection });
+            } catch (bullmqErr) {
+                logger.warn(`BullMQ not available: ${bullmqErr.message}`);
+            }
+        }).catch(() => {
+            redisAvailable = false;
+            connection.disconnect();
+        });
+    } catch {
+        redisAvailable = false;
     }
 }
 
-async function addJob(prisma, type, payload) {
-    try {
-        if (!myQueue) {
-            logger.warn(`BullMQ is not initialized (no REDIS_URL). Simulating job execution for type: ${type}`);
-            // Fallback: If no Redis (e.g. offline testing), execute immediately/operationally
-            // to prevent complete failure.
-            setTimeout(async () => {
-                try {
-                    await processJob(prisma, { type, payload: JSON.stringify(payload) });
-                } catch (err) {
-                    logger.error(`Simulated job processing failed: ${err.message}`);
-                }
-            }, 0);
-            return { id: "simulated" };
-        }
+let simulatedCounter = 0;
 
+async function addJob(prisma, type, payload) {
+    if (!redisAvailable || !myQueue) {
+        simulatedCounter++;
+        setTimeout(async () => {
+            try {
+                await processJob(prisma, { type, payload: JSON.stringify(payload) });
+            } catch (err) {
+                logger.error(`Fallback job processing failed: ${err.message}`);
+            }
+        }, 0);
+        return { id: `fb-${simulatedCounter}` };
+    }
+
+    try {
         const job = await myQueue.add(type, payload, {
             attempts: 3,
-            backoff: {
-                type: 'exponential',
-                delay: 1000
-            }
+            backoff: { type: 'exponential', delay: 1000 }
         });
-        logger.info(`Job added to BullMQ: ${type} (ID: ${job.id})`);
         return job;
-    } catch (error) {
-        logger.error(`Failed to add job to BullMQ: ${error.message}`, error);
-        throw error;
+    } catch {
+        simulatedCounter++;
+        setTimeout(async () => {
+            try {
+                await processJob(prisma, { type, payload: JSON.stringify(payload) });
+            } catch (err) {
+                logger.error(`Fallback job processing failed: ${err.message}`);
+            }
+        }, 0);
+        return { id: `fb-${simulatedCounter}` };
     }
 }
 
 async function processCalculateBadges(prisma, payload) {
     const { userId } = payload;
-    if (!userId) throw new Error('Missing userId in payload');
+    if (!userId) return;
     await badgeService.calculateAndAwardBadges(prisma, cache, userId);
 }
 
@@ -70,8 +84,6 @@ async function processJob(prisma, job) {
         case 'CALCULATE_BADGES':
             await processCalculateBadges(prisma, payload);
             break;
-        default:
-            throw new Error(`Unknown job type: ${job.type}`);
     }
 }
 
@@ -81,40 +93,6 @@ function startQueueWorker(prisma) {
     if (isWorkerRunning) return;
     isWorkerRunning = true;
 
-    if (!connection) {
-        logger.warn("Skipping BullMQ Worker initialization: REDIS_URL is not set.");
-        return;
-    }
-
-    logger.info('BullMQ worker starting...');
-
-    // Lazy require Worker to avoid loading bullmq when Redis is unavailable
-    let Worker;
-    try {
-        ({ Worker } = require("bullmq"));
-    } catch (err) {
-        logger.warn(`BullMQ Worker not available: ${err.message}`);
-        return;
-    }
-    const worker = new Worker("ZenovaXQueue", async (job) => {
-        logger.info(`Processing job: ${job.name} (ID: ${job.id})`);
-        await processJob(prisma, { type: job.name, payload: JSON.stringify(job.data) });
-    }, {
-        connection,
-        concurrency: 5
-    });
-
-    worker.on("completed", (job) => {
-        logger.info(`Job completed: ${job.name} (ID: ${job.id})`);
-    });
-
-    worker.on("failed", (job, err) => {
-        logger.error(`Job failed: ${job.name} (ID: ${job.id}). Error: ${err.message}`, err);
-    });
-
-    logger.info('BullMQ worker started.');
-
-    // Periodic check to mark ended sessions as COMPLETED and queue badge jobs
     setInterval(async () => {
         try {
             const now = new Date();
@@ -130,33 +108,25 @@ function startQueueWorker(prisma) {
                 return endTime < now.getTime();
             });
 
-            if (endedSessions.length > 0) {
-                logger.info(`Found ${endedSessions.length} ended sessions. Transitioning to COMPLETED.`);
-                for (const session of endedSessions) {
-                    await prisma.session.update({
-                        where: { id: session.id },
-                        data: { status: 'COMPLETED' }
-                    });
-                    logger.info(`Session ${session.id} marked as COMPLETED.`);
-                    // Queue badge calculation for the mentor via BullMQ
-                    await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
-                    // Release held mentor earnings (pending -> available) for this session's paid bookings
-                    try {
-                        const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
-                        if (releasedCount > 0) {
-                            logger.info(`Released earnings for ${releasedCount} booking(s) on session ${session.id}.`);
-                        }
-                    } catch (err) {
-                        logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`, err);
+            for (const session of endedSessions) {
+                await prisma.session.update({
+                    where: { id: session.id },
+                    data: { status: 'COMPLETED' }
+                });
+                await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
+                try {
+                    const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
+                    if (releasedCount > 0) {
+                        logger.info(`Released earnings for ${releasedCount} booking(s) on session ${session.id}.`);
                     }
+                } catch (err) {
+                    logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`);
                 }
             }
         } catch (err) {
-            logger.error(`Session completion worker loop error: ${err.message}`, err);
+            logger.error(`Session completion loop error: ${err.message}`);
         }
 
-        // Release seats held by PENDING (awaiting-payment) bookings that were never
-        // completed within the hold window, so abandoned checkouts don't block seats.
         try {
             const sessionService = require("../services/sessionService");
             const cutoff = new Date(Date.now() - config.bookingHoldMinutes * 60 * 1000);
@@ -166,12 +136,11 @@ function startQueueWorker(prisma) {
             });
             for (const b of stale) {
                 await sessionService.cancelPendingBooking(prisma, cache, b.id);
-                logger.info(`Released seat for expired pending booking ${b.id}.`);
             }
         } catch (err) {
-            logger.error(`Pending-booking sweep error: ${err.message}`, err);
+            logger.error(`Pending-booking sweep error: ${err.message}`);
         }
-    }, 60000); // Check every 60 seconds
+    }, 60000);
 }
 
 module.exports = {

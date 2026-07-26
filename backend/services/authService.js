@@ -7,6 +7,7 @@ const {
     isValidPassword,
     isValidName,
     sanitizeString,
+    hashToken,
 } = require("../utils/validation");
 const config = require("../config");
 const { BadRequestError, ConflictError, UnauthorizedError, ForbiddenError, NotFoundError } = require("../utils/errors");
@@ -29,9 +30,8 @@ exports.register = async (prisma, { name, email, password } = {}) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const newUser = await prisma.user.create({
         data: {
@@ -39,7 +39,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
             email: email.trim(),
             password: hashedPassword,
             isEmailVerified: false,
-            verificationToken,
+            verificationToken: hashToken(verificationToken),
             verificationTokenExpires
         },
         select: {
@@ -58,7 +58,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
     return newUser;
 };
 
-exports.login = async (prisma, { email, password } = {}) => {
+exports.login = async (prisma, { email, password, rememberMe, userAgent } = {}) => {
     if (!isValidEmail(email)) {
         throw new BadRequestError("Invalid email or domain");
     }
@@ -82,12 +82,12 @@ exports.login = async (prisma, { email, password } = {}) => {
 
     const { password: _, ...user } = userRecord;
 
-    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role);
+    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role, rememberMe, userAgent);
 
     return { user, accessToken, refreshToken };
 };
 
-exports.generateTokens = async (prisma, userId, userRole) => {
+exports.generateTokens = async (prisma, userId, userRole, rememberMe = false, userAgent = null) => {
     const secret = new TextEncoder().encode(config.jwtSecret);
     const accessToken = await new SignJWT({ userId, role: userRole })
         .setProtectedHeader({ alg: "HS256" })
@@ -97,11 +97,16 @@ exports.generateTokens = async (prisma, userId, userRole) => {
 
     const refreshToken = crypto.randomBytes(64).toString('hex');
 
+    const refreshTokenMaxAge = rememberMe
+        ? 30 * 24 * 60 * 60 * 1000
+        : 7 * 24 * 60 * 60 * 1000;
+
     await prisma.refreshToken.create({
         data: {
-            token: refreshToken,
+            token: hashToken(refreshToken),
             userId,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            expiresAt: new Date(Date.now() + refreshTokenMaxAge),
+            userAgent
         }
     });
 
@@ -114,14 +119,13 @@ exports.verifyEmail = async (prisma, token) => {
     }
 
     const user = await prisma.user.findUnique({
-        where: { verificationToken: token }
+        where: { verificationToken: hashToken(token) }
     });
 
     if (!user) {
         throw new BadRequestError("Invalid or expired verification token");
     }
 
-    // Check if token expired
     if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
         throw new BadRequestError("Verification link has expired. Please request a new one.");
     }
@@ -146,22 +150,18 @@ exports.resendVerification = async (prisma, email) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-        throw new NotFoundError("User not found");
+    if (!user || user.isEmailVerified) {
+        // Always return success to prevent email enumeration
+        return { success: true };
     }
 
-    if (user.isEmailVerified) {
-        throw new BadRequestError("Email is already verified");
-    }
-
-    // Generate new token
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await prisma.user.update({
         where: { id: user.id },
         data: {
-            verificationToken,
+            verificationToken: hashToken(verificationToken),
             verificationTokenExpires
         }
     });
@@ -188,7 +188,7 @@ exports.forgotPassword = async (prisma, email) => {
 
     await prisma.user.update({
         where: { id: user.id },
-        data: { passwordResetToken: token, passwordResetExpiry: expiry }
+        data: { passwordResetToken: hashToken(token), passwordResetExpiry: expiry }
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -207,7 +207,7 @@ exports.resetPassword = async (prisma, token, newPassword) => {
     }
 
     const user = await prisma.user.findUnique({
-        where: { passwordResetToken: token }
+        where: { passwordResetToken: hashToken(token) }
     });
 
     if (!user || !user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
@@ -263,4 +263,58 @@ exports.changePassword = async (prisma, userId, currentPassword, newPassword) =>
     });
 
     return { success: true };
+};
+
+exports.getSessions = async (prisma, userId, currentToken) => {
+    const tokens = await prisma.refreshToken.findMany({
+        where: {
+            userId,
+            revoked: false,
+            expiresAt: { gt: new Date() }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    const hashedCurrent = hashToken(currentToken);
+
+    return tokens.map(t => ({
+        id: t.id,
+        createdAt: t.createdAt,
+        expiresAt: t.expiresAt,
+        isCurrent: t.token === hashedCurrent,
+        userAgent: t.userAgent
+    }));
+};
+
+exports.revokeSession = async (prisma, userId, sessionId) => {
+    const token = await prisma.refreshToken.findUnique({
+        where: { id: sessionId }
+    });
+
+    if (!token || token.userId !== userId) {
+        return false;
+    }
+
+    await prisma.refreshToken.update({
+        where: { id: sessionId },
+        data: { revoked: true }
+    });
+
+    return token;
+};
+
+exports.revokeAllSessions = async (prisma, userId, currentToken) => {
+    const hashedCurrent = hashToken(currentToken);
+
+    const result = await prisma.refreshToken.updateMany({
+        where: {
+            userId,
+            revoked: false,
+            token: { not: hashedCurrent },
+            expiresAt: { gt: new Date() }
+        },
+        data: { revoked: true }
+    });
+
+    return result.count;
 };

@@ -8,6 +8,7 @@ import {
     Flag,
     Settings,
     Wallet,
+    Megaphone,
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
@@ -37,6 +38,7 @@ export default function AdminLayout() {
         { icon: Clock, label: 'Pending Sessions', path: '/admin/pending-sessions' },
         { icon: BookOpen, label: 'All Sessions', path: '/admin/all-sessions' },
         { icon: Users, label: 'All Users', path: '/admin/users' },
+        { icon: Megaphone, label: 'Push Notification', path: '/admin/notifications' },
         { icon: Wallet, label: 'Payments', path: '/admin/payments' },
         { icon: Flag, label: 'Reports / Flagged', path: '/admin/reports' },
         { icon: Settings, label: 'Settings', path: '/admin/settings' },

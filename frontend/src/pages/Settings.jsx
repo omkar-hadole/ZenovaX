@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Sun, Moon, Shield, AlertTriangle, Loader2, Lock, Phone, X, Palette, Info } from 'lucide-react';
+import { Eye, EyeOff, Sun, Moon, Shield, AlertTriangle, Loader2, Lock, Phone, X, Palette, Info, Smartphone, LogOut } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -58,6 +58,85 @@ export default function Settings() {
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
     const [deactivatePassword, setDeactivatePassword] = useState('');
     const [deactivateLoading, setDeactivateLoading] = useState(false);
+
+    const [sessions, setSessions] = useState([]);
+    const [sessionsLoading, setSessionsLoading] = useState(true);
+    const [revokingId, setRevokingId] = useState(null);
+    const [revokingAll, setRevokingAll] = useState(false);
+
+    const fetchSessions = useCallback(async () => {
+        try {
+            const data = await apiCall('/auth/sessions');
+            setSessions(data.sessions);
+        } catch {
+            // silently fail
+        } finally {
+            setSessionsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { fetchSessions(); }, [fetchSessions]);
+
+    const handleRevoke = async (id) => {
+        setRevokingId(id);
+        try {
+            const data = await apiCall(`/auth/sessions/${id}`, { method: 'DELETE' });
+            if (data.currentSessionRevoked) {
+                setToast({ message: 'Session revoked. Redirecting...', type: 'success' });
+                localStorage.removeItem('user');
+                localStorage.removeItem('csrfToken');
+                setTimeout(() => navigate('/auth'), 1000);
+                return;
+            }
+            setSessions(prev => prev.filter(s => s.id !== id));
+            setToast({ message: 'Session revoked', type: 'success' });
+        } catch (err) {
+            setToast({ message: err.message || 'Failed to revoke session', type: 'error' });
+        } finally {
+            setRevokingId(null);
+        }
+    };
+
+    const handleRevokeAll = async () => {
+        setRevokingAll(true);
+        try {
+            await apiCall('/auth/sessions', { method: 'DELETE' });
+            setSessions(prev => prev.filter(s => !s.isCurrent));
+            setToast({ message: 'Other sessions revoked', type: 'success' });
+        } catch (err) {
+            setToast({ message: err.message || 'Failed to revoke sessions', type: 'error' });
+        } finally {
+            setRevokingAll(false);
+        }
+    };
+
+    const formatDate = (d) => {
+        const date = new Date(d);
+        return date.toLocaleDateString(undefined, {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    };
+
+    const parseDeviceName = (ua) => {
+        if (!ua) return 'Unknown device';
+        let name = '';
+        if (ua.includes('Chrome') && !ua.includes('Edg')) name = 'Chrome';
+        else if (ua.includes('Firefox')) name = 'Firefox';
+        else if (ua.includes('Safari') && !ua.includes('Chrome')) name = 'Safari';
+        else if (ua.includes('Edg')) name = 'Edge';
+        else name = 'Browser';
+
+        let os = 'Unknown OS';
+        if (ua.includes('Windows')) os = 'Windows';
+        else if (ua.includes('Mac OS') || ua.includes('Macintosh')) os = 'macOS';
+        else if (ua.includes('Linux') && !ua.includes('Android')) os = 'Linux';
+        else if (ua.includes('Android')) os = 'Android';
+        else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+        else if (ua.includes('CrOS')) os = 'ChromeOS';
+
+        return `${name} on ${os}`;
+    };
 
     const handleChangePassword = async (e) => {
         e.preventDefault();
@@ -289,6 +368,76 @@ export default function Settings() {
                         {passwordLoading ? 'Updating...' : 'Change Password'}
                     </button>
                 </form>
+            </section>
+
+            {/* Active Sessions */}
+            <section className={CARD}>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1 flex items-center gap-2">
+                    <Smartphone className="w-5 h-5 text-gray-400 dark:text-gray-500" /> Active Sessions
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    These are the devices currently signed into your account.
+                </p>
+
+                {sessionsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                    </div>
+                ) : sessions.length === 0 ? (
+                    <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
+                        No active sessions found.
+                    </p>
+                ) : (
+                    <div className="space-y-3">
+                        {sessions.map(session => (
+                            <div
+                                key={session.id}
+                                className="flex items-center justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/60 rounded-xl"
+                            >
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {parseDeviceName(session.userAgent)}
+                                        </span>
+                                        {session.isCurrent && (
+                                            <span className="px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] font-bold uppercase tracking-wider border border-green-100 dark:border-green-500/20">
+                                                Current
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        Created {formatDate(session.createdAt)}
+                                    </p>
+                                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                                        Expires {formatDate(session.expiresAt)}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleRevoke(session.id)}
+                                    disabled={revokingId === session.id}
+                                    className="flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                    aria-label="Revoke session"
+                                >
+                                    {revokingId === session.id
+                                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                                        : <LogOut className="w-4 h-4" />
+                                    }
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {sessions.filter(s => !s.isCurrent).length > 0 && (
+                    <button
+                        onClick={handleRevokeAll}
+                        disabled={revokingAll}
+                        className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
+                    >
+                        {revokingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                        {revokingAll ? 'Revoking...' : 'Log out all other devices'}
+                    </button>
+                )}
             </section>
 
             {/* Danger zone */}

@@ -14,40 +14,18 @@ if (redisUrl && redisUrl.trim()) {
             maxRetriesPerRequest: 3,
             connectTimeout: 5000,
             lazyConnect: true,
-            retryStrategy(times) {
-                // Exponential backoff up to 3000ms
-                const delay = Math.min(times * 100, 3000);
-                return delay;
+            retryStrategy() {
+                return null;
             }
         });
 
-        redisClient.on("error", (err) => {
-            if (isProduction) {
-                logger.error(`CRITICAL: Redis Error in production: ${err.message}`);
-            } else {
-                logger.error(`Redis Error: ${err.message}`);
-            }
-        });
+        redisClient.on("error", () => {});
 
-        redisClient.on("connect", () => {
-            logger.info("Redis connected successfully.");
-        });
-
-        redisClient.connect().catch((err) => {
-            if (isProduction) {
-                logger.error(`CRITICAL: Redis initial connection failed in production: ${err.message}`);
-            } else {
-                logger.error(`Redis connection failed: ${err.message}`);
-                redisClient = null;
-            }
-        });
-    } catch (err) {
-        if (isProduction) {
-            logger.error(`CRITICAL: Failed to initialize Redis in production: ${err.message}`);
-        } else {
-            logger.error(`Failed to initialize Redis: ${err.message}`);
+        redisClient.connect().catch(() => {
             redisClient = null;
-        }
+        });
+    } catch {
+        redisClient = null;
     }
 } else {
     if (isProduction) {

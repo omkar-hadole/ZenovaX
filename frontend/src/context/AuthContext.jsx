@@ -4,27 +4,13 @@ import { apiCall, registerAuthFailureHandler } from '../utils/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [loading, setLoading] = useState(() => {
-    try {
-      return !localStorage.getItem('user');
-    } catch {
-      return true;
-    }
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const fetchControllerRef = useRef(null);
 
   const clearAllAuthData = useCallback(() => {
     setUser(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('csrfToken');
   }, []);
 
   const fetchUser = useCallback(async (signal) => {
@@ -37,18 +23,11 @@ export function AuthProvider({ children }) {
     try {
       const data = await apiCall('/profile/me', { signal: controller.signal });
       if (!controller.signal.aborted) {
-        const userData = data?.user || null;
-        setUser(userData);
-        if (userData) {
-          localStorage.setItem('user', JSON.stringify(userData));
-        } else {
-          localStorage.removeItem('user');
-        }
+        setUser(data?.user || null);
       }
     } catch (err) {
       if (!controller.signal.aborted) {
         setUser(null);
-        localStorage.removeItem('user');
       }
     } finally {
       if (!controller.signal.aborted) {
@@ -74,9 +53,6 @@ export function AuthProvider({ children }) {
 
   const login = (userData) => {
     setUser(userData);
-    if (userData) {
-      localStorage.setItem('user', JSON.stringify(userData));
-    }
   };
 
   const logout = async () => {
@@ -89,12 +65,7 @@ export function AuthProvider({ children }) {
   };
 
   const updateUser = (updates) => {
-    setUser(prev => {
-      if (!prev) return null;
-      const updated = { ...prev, ...updates };
-      localStorage.setItem('user', JSON.stringify(updated));
-      return updated;
-    });
+    setUser(prev => prev ? { ...prev, ...updates } : null);
   };
 
   const refetchUser = useCallback(() => {

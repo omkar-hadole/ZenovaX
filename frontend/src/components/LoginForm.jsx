@@ -11,6 +11,7 @@ export default function LoginForm({ onToggle, showToast }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const validateEmail = (email) => {
     return email.endsWith('@nst.rishihood.edu.in') && email.includes('@');
@@ -33,7 +34,7 @@ export default function LoginForm({ onToggle, showToast }) {
     setNeedsVerification(false);
 
     try {
-      const data = await apiLogin(formData.email, formData.password);
+      const data = await apiLogin(formData.email, formData.password, rememberMe);
       login(data.user);
       showToast({ message: 'Login successful!', type: 'success' });
 
@@ -157,6 +158,8 @@ export default function LoginForm({ onToggle, showToast }) {
           <label className="flex items-center text-gray-600 dark:text-gray-400 font-light">
             <input
               type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500/30"
             />
             <span className="ml-2">Remember me</span>

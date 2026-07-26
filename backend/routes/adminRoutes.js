@@ -31,4 +31,10 @@ router.get('/payouts', adminController.getPayouts);
 router.post('/payouts/:id/mark-paid', adminController.markPayoutPaid);
 router.post('/payouts/:id/mark-failed', adminController.markPayoutFailed);
 
+// Admin Push Notifications
+router.post('/notifications/push', adminController.pushNotification);
+router.get('/notifications/history', adminController.getNotificationHistory);
+router.get('/notifications/sessions', adminController.getSessionsList);
+router.get('/notifications/users/search', adminController.searchUsers);
+
 module.exports = router;

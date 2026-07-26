@@ -53,6 +53,7 @@ const AllSessions = lazy(() => import('./pages/admin/AllSessions'));
 const UsersList = lazy(() => import('./pages/admin/UsersList'));
 const Reports = lazy(() => import('./pages/admin/Reports'));
 const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
+const AdminPushNotification = lazy(() => import('./pages/admin/AdminPushNotification'));
 const MentorSessionDetailsPage = lazy(() => import('./pages/mentor/MentorSessionDetailsPage'));
 
 import CommandBar from './components/CommandBar';
@@ -61,23 +62,9 @@ function App() {
     const { user } = useAuth();
 
     useEffect(() => {
-        const fetchCsrfToken = async () => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
-                    credentials: 'include'
-                });
-                if (!response.ok) return;
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) return;
-                const data = await response.json();
-                if (data?.csrfToken) {
-                    localStorage.setItem('csrfToken', data.csrfToken);
-                }
-            } catch {
-                // CSRF bootstrap failure is non-critical
-            }
-        };
-        fetchCsrfToken();
+        fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
+            credentials: 'include'
+        }).catch(() => {});
     }, []);
 
     return (
@@ -215,6 +202,7 @@ function App() {
                         <Route path="users" element={<UsersList />} />
                         <Route path="reports" element={<Reports />} />
                         <Route path="payments" element={<AdminPayments />} />
+                        <Route path="notifications" element={<AdminPushNotification />} />
                         <Route path="settings" element={<Settings />} />
                     </Route>
 

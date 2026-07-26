@@ -103,6 +103,8 @@ model User {
   likesGiven        Like[]    @relation("UserLikesGiven")
   reportsFiled      Report[]  @relation("ReportedBy")
   refreshTokens     RefreshToken[]
+  deviceTokens            String?   @db.Text // JSON array of FCM device tokens
+  adminNotificationLogs   AdminNotificationLog[] @relation("AdminNotificationLogs")
 }
 
 model Follow {
@@ -775,6 +777,15 @@ enum NotificationType {
   RESOURCE_UPLOADED
   SESSION_REQUEST_APPROVED
   SESSION_REQUEST_REJECTED
+  ADMIN_BROADCAST
+}
+
+enum AudienceType {
+  ALL
+  LEARNERS
+  MENTORS
+  COURSE_ENROLLED
+  SINGLE_USER
 }
 
 model Notification {
@@ -801,6 +812,23 @@ model Notification {
   @@index([isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+model AdminNotificationLog {
+  id            String       @id @default(uuid())
+  adminId       String
+  admin         User         @relation("AdminNotificationLogs", fields: [adminId], references: [id])
+  title         String
+  message       String       @db.Text
+  link          String?
+  audienceType  AudienceType
+  audienceId    String?      // sessionId for COURSE_ENROLLED, userId for SINGLE_USER
+  totalSent     Int          @default(0)
+  createdAt     DateTime     @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("admin_notification_logs")
 }
 
 // REPORTS & FLAGGED CONTENT
@@ -924,6 +952,7 @@ model RefreshToken {
   expiresAt DateTime
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+  userAgent String?
 
   @@index([userId])
   @@index([token])

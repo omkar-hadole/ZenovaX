@@ -1,5 +1,10 @@
 const nodemailer = require('nodemailer');
 const logger = require('./logger');
+
+const escapeHtml = (str) => {
+  if (typeof str !== 'string') return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+};
 // import logo from 
 // Configure transporter
 // In production, these should be env variables. 
@@ -20,23 +25,22 @@ const transporter = nodemailer.createTransport({
  * @param {string} html - Email body (HTML)
  */
 const sendEmail = async (to, subject, html) => {
-    try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            logger.warn("Email credentials not found in environment. Email NOT sent.");
-            logger.debug("Email simulation", { to, subject });
-            return;
-        }
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        logger.warn("Email credentials not found in environment. Email NOT sent.");
+        logger.debug("Email simulation", { to, subject });
+        return;
+    }
 
+    try {
         await transporter.sendMail({
             from: process.env.EMAIL_FROM || '"ZenovaX Support" <noreply@zenovax.com>',
             to,
             subject,
             html
         });
-        // console.log(`📧 Email sent to ${to}`);
     } catch (error) {
         logger.error("Failed to send email:", error);
-        // Don't throw, just log. We don't want to break the auth flow if email fails (though ideally we would handle it).
+        throw new Error("Failed to send email. Please try again later.");
     }
 };
 
@@ -58,6 +62,7 @@ exports.sendVerificationEmail = async (email, token) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="referrer" content="no-referrer" />
   <title>Verify your email</title>
 </head>
 <body style="margin:0; padding:0; background-color:#f4f6fb; font-family: Arial, sans-serif;">
@@ -93,7 +98,7 @@ exports.sendVerificationEmail = async (email, token) => {
 
               <!-- Button -->
               <div style="text-align:center; margin:32px 0;">
-                <a href="${verificationLink}"
+                <a href="${verificationLink}" rel="noreferrer"
                    style="
                      display:inline-block;
                      background:#7A79E6;
@@ -117,7 +122,7 @@ exports.sendVerificationEmail = async (email, token) => {
               </p>
 
               <p style="word-break:break-all; font-size:13px;">
-                <a href="${verificationLink}" style="color:#7A79E6;">
+                <a href="${verificationLink}" rel="noreferrer" style="color:#7A79E6;">
                   ${verificationLink}
                 </a>
               </p>
@@ -164,6 +169,7 @@ exports.sendVerificationEmail = async (email, token) => {
  * @param {string} resetUrl - Password reset URL
  */
 exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
+    const safeName = escapeHtml(name);
     const subject = "Reset your ZenovaX Password";
     const html = `
 <!DOCTYPE html>
@@ -171,6 +177,7 @@ exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="referrer" content="no-referrer" />
   <title>Reset your password</title>
 </head>
 <body style="margin:0; padding:0; background-color:#f4f6fb; font-family: Arial, sans-serif;">
@@ -197,7 +204,7 @@ exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
           <!-- Content -->
           <tr>
             <td style="color:#111827; font-size:16px; line-height:1.6;">
-              <p style="margin-top:0;">Hey ${name} 👋</p>
+              <p style="margin-top:0;">Hey ${safeName} 👋</p>
 
               <p>
                 We received a request to reset the password for your <strong>ZenovaX</strong> account.
@@ -206,7 +213,7 @@ exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
 
               <!-- Button -->
               <div style="text-align:center; margin:32px 0;">
-                <a href="${resetUrl}"
+                <a href="${resetUrl}" rel="noreferrer"
                    style="
                      display:inline-block;
                      background:#7A79E6;
@@ -234,7 +241,7 @@ exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
               </p>
 
               <p style="word-break:break-all; font-size:13px;">
-                <a href="${resetUrl}" style="color:#7A79E6;">
+                <a href="${resetUrl}" rel="noreferrer" style="color:#7A79E6;">
                   ${resetUrl}
                 </a>
               </p>

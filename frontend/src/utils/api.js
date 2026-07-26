@@ -7,20 +7,8 @@ const getCookie = (name) => {
   return null;
 };
 
-// Shared with any caller that builds its own request instead of going
-// through apiCall (e.g. Zen.jsx, which needs to layer its own headers on
-// top) — falls back from localStorage to the non-httpOnly csrfToken cookie,
-// since localStorage is only populated once App.jsx's csrf bootstrap fetch
-// resolves, and a fresh page load can beat that race.
 export const getCsrfToken = () => {
-  let csrfToken = localStorage.getItem('csrfToken');
-  if (!csrfToken) {
-    csrfToken = getCookie('csrfToken');
-    if (csrfToken) {
-      localStorage.setItem('csrfToken', csrfToken);
-    }
-  }
-  return csrfToken;
+  return getCookie('csrfToken');
 };
 
 let isRefreshing = false;
@@ -31,11 +19,11 @@ const processQueue = (error) => {
   failedQueue = [];
 };
 
-export const login = async (email, password) => {
+export const login = async (email, password, rememberMe = false) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, rememberMe }),
     credentials: 'include',
   });
 
@@ -45,11 +33,6 @@ export const login = async (email, password) => {
     const error = new Error(data.error || 'Login failed');
     Object.assign(error, data);
     throw error;
-  }
-
-  localStorage.setItem('user', JSON.stringify(data.user));
-  if (data.csrfToken) {
-    localStorage.setItem('csrfToken', data.csrfToken);
   }
 
   return data;
@@ -88,11 +71,9 @@ export const logout = async () => {
     });
     const data = await response.json();
     localStorage.removeItem('user');
-    localStorage.removeItem('csrfToken');
     return data;
   } catch (error) {
     localStorage.removeItem('user');
-    localStorage.removeItem('csrfToken');
     throw error;
   }
 };
@@ -180,10 +161,9 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
       });
 
       if (refreshResponse.ok) {
-        // Update CSRF token from refresh response if provided
         const refreshData = await refreshResponse.json().catch(() => ({}));
         if (refreshData.csrfToken) {
-          localStorage.setItem('csrfToken', csrfToken = refreshData.csrfToken);
+          csrfToken = refreshData.csrfToken;
         }
 
         processQueue(null);
@@ -213,7 +193,6 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
           authFailureHandler();
         } else {
           localStorage.removeItem('user');
-          localStorage.removeItem('csrfToken');
           window.location.href = '/auth';
         }
         throw error;
@@ -224,7 +203,6 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
         authFailureHandler();
       } else {
         localStorage.removeItem('user');
-        localStorage.removeItem('csrfToken');
         window.location.href = '/auth';
       }
       throw err;
