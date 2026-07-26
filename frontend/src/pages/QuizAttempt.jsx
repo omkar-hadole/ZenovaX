@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiCall } from '../utils/api';
-import { Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, ArrowLeft, HelpCircle, BookOpen, Trophy, Star } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, ArrowLeft, BookOpen, Trophy, Timer } from 'lucide-react';
 import Toast from '../components/Toast';
 
 export default function QuizAttempt() {
@@ -10,12 +10,13 @@ export default function QuizAttempt() {
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [answers, setAnswers] = useState({}); 
+  const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [toast, setToast] = useState(null);
+  const startedAt = useRef(null);
 
   useEffect(() => {
     fetchQuiz();
@@ -25,7 +26,7 @@ export default function QuizAttempt() {
     if (timeLeft === 0) {
       handleSubmit();
     }
-    if (!timeLeft) return;
+    if (timeLeft === null || timeLeft === undefined) return;
 
     const timer = setInterval(() => {
       setTimeLeft(prev => prev - 1);
@@ -44,6 +45,8 @@ export default function QuizAttempt() {
         initialAnswers[q.id] = '';
       });
       setAnswers(initialAnswers);
+
+      startedAt.current = new Date().toISOString();
 
       if (response.quiz.duration) {
         setTimeLeft(response.quiz.duration * 60);
@@ -68,7 +71,10 @@ export default function QuizAttempt() {
     try {
       const response = await apiCall(`/quiz/${id}/submit`, {
         method: 'POST',
-        body: JSON.stringify({ answers })
+        body: JSON.stringify({
+          answers,
+          startedAt: startedAt.current
+        })
       });
       setResult(response.result);
     } catch (err) {
@@ -81,6 +87,14 @@ export default function QuizAttempt() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatTimeTaken = (seconds) => {
+    if (!seconds) return 'N/A';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) return `${mins}m ${secs}s`;
+    return `${secs}s`;
   };
 
   if (loading) {
@@ -146,6 +160,15 @@ export default function QuizAttempt() {
               </div>
             </div>
 
+            {result.timeTaken && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm mb-6">
+                <Timer className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  Time Taken: <strong>{formatTimeTaken(result.timeTaken)}</strong>
+                </span>
+              </div>
+            )}
+
             <button
               onClick={() => navigate('/dashboard')}
               className="bg-gray-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10 hover:shadow-xl hover:-translate-y-1"
@@ -191,6 +214,10 @@ export default function QuizAttempt() {
                               <span className="text-green-600 dark:text-green-400 font-medium">{answer?.correctAnswer}</span>
                             </div>
                           )}
+                          <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
+                            <span className="font-bold min-w-[60px]">Marks:</span>
+                            <span>{answer?.marksObtained || 0}/{answer?.marks || q.marks}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -259,7 +286,6 @@ export default function QuizAttempt() {
                 <span>/ {quiz.questions.length}</span>
               </span>
               <div className="flex items-center gap-2 text-[#b59a5a] dark:text-[#e0c076] bg-[#F7D483]/10 px-3 py-1.5 rounded-lg border border-[#F7D483]/20">
-                <Star className="w-4 h-4 fill-current" />
                 <span className="text-xs font-bold">{question.marks} Points</span>
               </div>
             </div>
