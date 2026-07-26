@@ -19,6 +19,23 @@ async function auth(req, res, next) {
     const secret = new TextEncoder().encode(config.jwtSecret);
     const { payload } = await jwtVerify(token, secret);
     req.user = { id: payload.userId, role: payload.role };
+
+    // Real-time session revocation check
+    const refreshTokenCookie = req.cookies ? req.cookies.refreshToken : null;
+    if (refreshTokenCookie && req.prisma) {
+      const revoked = await req.prisma.refreshToken.findUnique({
+        where: { token: refreshTokenCookie },
+        select: { revoked: true }
+      });
+      if (revoked && revoked.revoked) {
+        const isProd = config.nodeEnv === 'production';
+        res.clearCookie("token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+        res.clearCookie("refreshToken", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+        res.clearCookie("csrfToken", { httpOnly: false, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+        return res.status(401).json({ error: "Session revoked" });
+      }
+    }
+
     next();
   } catch (err) {
     if (err.code === "ERR_JWT_EXPIRED") {

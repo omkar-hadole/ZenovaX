@@ -58,7 +58,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
     return newUser;
 };
 
-exports.login = async (prisma, { email, password, rememberMe } = {}) => {
+exports.login = async (prisma, { email, password, rememberMe, userAgent } = {}) => {
     if (!isValidEmail(email)) {
         throw new BadRequestError("Invalid email or domain");
     }
@@ -82,12 +82,12 @@ exports.login = async (prisma, { email, password, rememberMe } = {}) => {
 
     const { password: _, ...user } = userRecord;
 
-    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role, rememberMe);
+    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role, rememberMe, userAgent);
 
     return { user, accessToken, refreshToken };
 };
 
-exports.generateTokens = async (prisma, userId, userRole, rememberMe = false) => {
+exports.generateTokens = async (prisma, userId, userRole, rememberMe = false, userAgent = null) => {
     const secret = new TextEncoder().encode(config.jwtSecret);
     const accessToken = await new SignJWT({ userId, role: userRole })
         .setProtectedHeader({ alg: "HS256" })
@@ -105,7 +105,8 @@ exports.generateTokens = async (prisma, userId, userRole, rememberMe = false) =>
         data: {
             token: refreshToken,
             userId,
-            expiresAt: new Date(Date.now() + refreshTokenMaxAge)
+            expiresAt: new Date(Date.now() + refreshTokenMaxAge),
+            userAgent
         }
     });
 
@@ -267,4 +268,54 @@ exports.changePassword = async (prisma, userId, currentPassword, newPassword) =>
     });
 
     return { success: true };
+};
+
+exports.getSessions = async (prisma, userId, currentToken) => {
+    const tokens = await prisma.refreshToken.findMany({
+        where: {
+            userId,
+            revoked: false,
+            expiresAt: { gt: new Date() }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    return tokens.map(t => ({
+        id: t.id,
+        createdAt: t.createdAt,
+        expiresAt: t.expiresAt,
+        isCurrent: t.token === currentToken,
+        userAgent: t.userAgent
+    }));
+};
+
+exports.revokeSession = async (prisma, userId, sessionId) => {
+    const token = await prisma.refreshToken.findUnique({
+        where: { id: sessionId }
+    });
+
+    if (!token || token.userId !== userId) {
+        return false;
+    }
+
+    await prisma.refreshToken.update({
+        where: { id: sessionId },
+        data: { revoked: true }
+    });
+
+    return token;
+};
+
+exports.revokeAllSessions = async (prisma, userId, currentToken) => {
+    const result = await prisma.refreshToken.updateMany({
+        where: {
+            userId,
+            revoked: false,
+            token: { not: currentToken },
+            expiresAt: { gt: new Date() }
+        },
+        data: { revoked: true }
+    });
+
+    return result.count;
 };

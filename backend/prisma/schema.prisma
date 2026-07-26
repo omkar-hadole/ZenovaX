@@ -952,6 +952,7 @@ model RefreshToken {
   expiresAt DateTime
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+  userAgent String?
 
   @@index([userId])
   @@index([token])

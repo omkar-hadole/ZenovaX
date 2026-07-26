@@ -18,7 +18,10 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     try {
         const { rememberMe } = req.body;
-        const { user, accessToken, refreshToken } = await authService.login(req.prisma, req.body);
+        const { user, accessToken, refreshToken } = await authService.login(req.prisma, {
+            ...req.body,
+            userAgent: req.headers['user-agent'] || null
+        });
 
         const csrfToken = crypto.randomBytes(32).toString('hex');
 
@@ -166,7 +169,8 @@ exports.refresh = async (req, res, next) => {
             req.prisma,
             dbToken.userId,
             dbToken.user.role,
-            isRememberMe
+            isRememberMe,
+            req.headers['user-agent'] || null
         );
 
         const isProd = config.nodeEnv === 'production';
@@ -226,6 +230,49 @@ exports.changePassword = async (req, res, next) => {
         const { currentPassword, newPassword } = req.body;
         await authService.changePassword(req.prisma, req.user.id, currentPassword, newPassword);
         return res.status(200).json({ message: "Password changed successfully." });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getSessions = async (req, res, next) => {
+    try {
+        const currentToken = req.cookies?.refreshToken;
+        const sessions = await authService.getSessions(req.prisma, req.user.id, currentToken);
+        return res.status(200).json({ sessions });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.revokeSession = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const currentToken = req.cookies?.refreshToken;
+        const tokenRecord = await authService.revokeSession(req.prisma, req.user.id, id);
+        if (!tokenRecord) {
+            return res.status(404).json({ error: "Session not found" });
+        }
+
+        if (currentToken && tokenRecord.token === currentToken) {
+            const isProd = config.nodeEnv === 'production';
+            res.clearCookie("token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+            res.clearCookie("refreshToken", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+            res.clearCookie("csrfToken", { httpOnly: false, secure: isProd, sameSite: isProd ? "None" : "Lax" });
+            return res.status(200).json({ message: "Session revoked", currentSessionRevoked: true });
+        }
+
+        return res.status(200).json({ message: "Session revoked" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.revokeAllSessions = async (req, res, next) => {
+    try {
+        const currentToken = req.cookies?.refreshToken;
+        const count = await authService.revokeAllSessions(req.prisma, req.user.id, currentToken);
+        return res.status(200).json({ message: `${count} session(s) revoked` });
     } catch (error) {
         next(error);
     }

@@ -16,4 +16,8 @@ router.post("/reset-password", authController.resetPassword);
 router.post("/change-password", protect, authController.changePassword);
 router.get("/csrf", authController.getCsrfToken);
 
+router.get("/sessions", protect, authController.getSessions);
+router.delete("/sessions/:id", protect, authController.revokeSession);
+router.delete("/sessions", protect, authController.revokeAllSessions);
+
 module.exports = router;
