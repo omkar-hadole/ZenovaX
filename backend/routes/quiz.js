@@ -586,6 +586,8 @@ router.get("/:id/results", protect, authorize('MENTOR', 'BOTH'), async (req, res
             return res.status(403).json({ error: "Not authorized to view results for this quiz" });
         }
 
+        const effectivePassingMarks = quiz.passingMarks > 0 ? quiz.passingMarks : Math.max(1, Math.round(quiz.totalMarks * 0.4));
+
         const questionStats = quiz.questions.map(question => {
             const answersForQuestion = quiz.attempts.flatMap(a =>
                 a.answers.filter(ans => ans.questionId === question.id)
@@ -623,7 +625,7 @@ router.get("/:id/results", protect, authorize('MENTOR', 'BOTH'), async (req, res
             user: attempt.user,
             score: attempt.score,
             totalMarks: attempt.totalMarks,
-            isPassed: attempt.isPassed,
+            isPassed: attempt.score >= effectivePassingMarks,
             percentage: attempt.totalMarks > 0 ? Math.round((attempt.score / attempt.totalMarks) * 100) : 0,
             timeTaken: attempt.timeTaken,
             startedAt: attempt.startedAt,
@@ -631,7 +633,7 @@ router.get("/:id/results", protect, authorize('MENTOR', 'BOTH'), async (req, res
         }));
 
         const totalAttempts = attempts.length;
-        const passedCount = attempts.filter(a => a.isPassed).length;
+        const passedCount = attempts.filter(a => a.score >= effectivePassingMarks).length;
         const failedCount = totalAttempts - passedCount;
         const passRate = totalAttempts > 0 ? Math.round((passedCount / totalAttempts) * 100) : 0;
         const averageScore = totalAttempts > 0
