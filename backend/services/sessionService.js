@@ -706,9 +706,7 @@ exports.getMyBookings = async (prisma, userId, queryParams = {}) => {
                                 department: true,
                                 averageRating: true
                             }
-                        },
-                        resources: true,
-                        quizzes: true
+                        }
                     }
                 }
             },

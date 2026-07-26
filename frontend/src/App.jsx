@@ -53,6 +53,7 @@ const AllSessions = lazy(() => import('./pages/admin/AllSessions'));
 const UsersList = lazy(() => import('./pages/admin/UsersList'));
 const Reports = lazy(() => import('./pages/admin/Reports'));
 const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
+const AdminPushNotification = lazy(() => import('./pages/admin/AdminPushNotification'));
 const MentorSessionDetailsPage = lazy(() => import('./pages/mentor/MentorSessionDetailsPage'));
 
 import CommandBar from './components/CommandBar';
@@ -215,6 +216,7 @@ function App() {
                         <Route path="users" element={<UsersList />} />
                         <Route path="reports" element={<Reports />} />
                         <Route path="payments" element={<AdminPayments />} />
+                        <Route path="notifications" element={<AdminPushNotification />} />
                         <Route path="settings" element={<Settings />} />
                     </Route>
 

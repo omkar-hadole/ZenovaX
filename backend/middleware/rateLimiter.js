@@ -6,7 +6,7 @@ const redisClient = cache.redisClient;
 
 // Helper to create a new RedisStore instance for each limiter
 const createRedisStore = (prefix) => {
-  return redisClient ? new RedisStore({
+  return cache.isRedisAvailable() ? new RedisStore({
     sendCommand: (...args) => redisClient.call(...args),
     prefix: `rl:${prefix}:`,
   }) : undefined;

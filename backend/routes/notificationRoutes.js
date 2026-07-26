@@ -43,4 +43,13 @@ router.put('/:id/read', protect, async (req, res, next) => {
     }
 });
 
+router.post('/register-device', protect, async (req, res, next) => {
+    try {
+        const result = await notificationService.registerDeviceToken(req.prisma, req.user.id, req.body.token);
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
 module.exports = router;

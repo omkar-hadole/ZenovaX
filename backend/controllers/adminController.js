@@ -1,5 +1,6 @@
 const adminService = require("../services/adminService");
 const mentorWalletService = require("../services/mentorWalletService");
+const notificationService = require("../services/notificationService");
 
 exports.getDashboardStats = async (req, res, next) => {
     try {
@@ -161,6 +162,44 @@ exports.markPayoutFailed = async (req, res, next) => {
     try {
         const payout = await mentorWalletService.markPayoutFailed(req.prisma, req.params.id, req.body.reason);
         return res.json({ success: true, message: "Payout marked as failed", payout });
+    } catch (error) {
+        return next(error);
+    }
+};
+
+// ---- Admin Push Notifications ----
+
+exports.pushNotification = async (req, res, next) => {
+    try {
+        const result = await notificationService.pushAdminNotification(req.prisma, req.user.id, req.body);
+        return res.json(result);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getNotificationHistory = async (req, res, next) => {
+    try {
+        const result = await notificationService.getNotificationHistory(req.prisma, req.query);
+        return res.json(result);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.getSessionsList = async (req, res, next) => {
+    try {
+        const result = await adminService.getSessionsList(req.prisma, req.query);
+        return res.json(result);
+    } catch (error) {
+        return next(error);
+    }
+};
+
+exports.searchUsers = async (req, res, next) => {
+    try {
+        const result = await adminService.searchUsers(req.prisma, req.query);
+        return res.json(result);
     } catch (error) {
         return next(error);
     }
