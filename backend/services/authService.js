@@ -58,7 +58,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
     return newUser;
 };
 
-exports.login = async (prisma, { email, password } = {}) => {
+exports.login = async (prisma, { email, password, rememberMe } = {}) => {
     if (!isValidEmail(email)) {
         throw new BadRequestError("Invalid email or domain");
     }
@@ -82,12 +82,12 @@ exports.login = async (prisma, { email, password } = {}) => {
 
     const { password: _, ...user } = userRecord;
 
-    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role);
+    const { accessToken, refreshToken } = await exports.generateTokens(prisma, user.id, user.role, rememberMe);
 
     return { user, accessToken, refreshToken };
 };
 
-exports.generateTokens = async (prisma, userId, userRole) => {
+exports.generateTokens = async (prisma, userId, userRole, rememberMe = false) => {
     const secret = new TextEncoder().encode(config.jwtSecret);
     const accessToken = await new SignJWT({ userId, role: userRole })
         .setProtectedHeader({ alg: "HS256" })
@@ -97,11 +97,15 @@ exports.generateTokens = async (prisma, userId, userRole) => {
 
     const refreshToken = crypto.randomBytes(64).toString('hex');
 
+    const refreshTokenMaxAge = rememberMe
+        ? 30 * 24 * 60 * 60 * 1000
+        : 7 * 24 * 60 * 60 * 1000;
+
     await prisma.refreshToken.create({
         data: {
             token: refreshToken,
             userId,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            expiresAt: new Date(Date.now() + refreshTokenMaxAge)
         }
     });
 

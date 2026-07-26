@@ -17,36 +17,39 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
     try {
+        const { rememberMe } = req.body;
         const { user, accessToken, refreshToken } = await authService.login(req.prisma, req.body);
 
         const csrfToken = crypto.randomBytes(32).toString('hex');
 
         const isProd = config.nodeEnv === 'production';
+        const refreshTokenMaxAge = rememberMe
+            ? 30 * 24 * 60 * 60 * 1000
+            : 7 * 24 * 60 * 60 * 1000;
 
         res.cookie('token', accessToken, {
             httpOnly: true,
             secure: isProd,
             sameSite: isProd ? 'None' : 'Lax',
-            maxAge: 15 * 60 * 1000 // 15 min
+            maxAge: 15 * 60 * 1000
         });
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: isProd,
             sameSite: isProd ? 'None' : 'Lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: refreshTokenMaxAge
         });
 
         res.cookie('csrfToken', csrfToken, {
             httpOnly: false,
             secure: isProd,
             sameSite: isProd ? 'None' : 'Lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: refreshTokenMaxAge
         });
 
         return res.status(200).json({ user, csrfToken });
     } catch (error) {
-        // Special case: frontend checks for needsVerification flag in some places
         if (error instanceof ForbiddenError && error.message.includes("verified")) {
             return res.status(403).json({
                 error: error.message,
@@ -138,7 +141,6 @@ exports.refresh = async (req, res, next) => {
         });
 
         if (!dbToken || dbToken.revoked || dbToken.expiresAt < new Date()) {
-            // Clear stale refresh cookie on failure
             const isProd = config.nodeEnv === 'production';
             res.clearCookie("refreshToken", {
                 httpOnly: true,
@@ -153,35 +155,48 @@ exports.refresh = async (req, res, next) => {
             return res.status(401).json({ error: "Invalid or expired refresh token" });
         }
 
-        // Delete old refresh token (rotation)
+        const originalDuration = dbToken.expiresAt.getTime() - dbToken.createdAt.getTime();
+        const isRememberMe = originalDuration > 20 * 24 * 60 * 60 * 1000;
+
         await req.prisma.refreshToken.delete({
             where: { id: dbToken.id }
         });
 
-        // Generate fresh pair
         const { accessToken, refreshToken: newRefreshToken } = await authService.generateTokens(
             req.prisma,
             dbToken.userId,
-            dbToken.user.role
+            dbToken.user.role,
+            isRememberMe
         );
 
-        // Set cookies
         const isProd = config.nodeEnv === 'production';
+        const refreshTokenMaxAge = isRememberMe
+            ? 30 * 24 * 60 * 60 * 1000
+            : 7 * 24 * 60 * 60 * 1000;
+
         res.cookie('token', accessToken, {
             httpOnly: true,
             secure: isProd,
             sameSite: isProd ? 'None' : 'Lax',
-            maxAge: 15 * 60 * 1000 // 15 min
+            maxAge: 15 * 60 * 1000
         });
 
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             secure: isProd,
             sameSite: isProd ? 'None' : 'Lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: refreshTokenMaxAge
         });
 
-        return res.status(200).json({ success: true });
+        const existingCsrf = req.cookies?.csrfToken || crypto.randomBytes(32).toString('hex');
+        res.cookie('csrfToken', existingCsrf, {
+            httpOnly: false,
+            secure: isProd,
+            sameSite: isProd ? 'None' : 'Lax',
+            maxAge: refreshTokenMaxAge
+        });
+
+        return res.status(200).json({ success: true, csrfToken: existingCsrf });
     } catch (error) {
         next(error);
     }

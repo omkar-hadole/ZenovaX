@@ -31,11 +31,11 @@ const processQueue = (error) => {
   failedQueue = [];
 };
 
-export const login = async (email, password) => {
+export const login = async (email, password, rememberMe = false) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, rememberMe }),
     credentials: 'include',
   });
 
