@@ -2,6 +2,7 @@ const authService = require("../services/authService");
 const { ForbiddenError } = require("../utils/errors");
 const crypto = require("crypto");
 const config = require("../config");
+const { hashToken } = require("../utils/validation");
 
 exports.register = async (req, res, next) => {
     try {
@@ -86,7 +87,7 @@ exports.logout = async (req, res, next) => {
         const { refreshToken } = req.cookies || {};
         if (refreshToken) {
             await req.prisma.refreshToken.deleteMany({
-                where: { token: refreshToken }
+                where: { token: hashToken(refreshToken) }
             });
         }
 
@@ -139,7 +140,7 @@ exports.refresh = async (req, res, next) => {
         }
 
         const dbToken = await req.prisma.refreshToken.findUnique({
-            where: { token: refreshToken },
+            where: { token: hashToken(refreshToken) },
             include: { user: true }
         });
 
@@ -254,7 +255,7 @@ exports.revokeSession = async (req, res, next) => {
             return res.status(404).json({ error: "Session not found" });
         }
 
-        if (currentToken && tokenRecord.token === currentToken) {
+        if (currentToken && tokenRecord.token === hashToken(currentToken)) {
             const isProd = config.nodeEnv === 'production';
             res.clearCookie("token", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });
             res.clearCookie("refreshToken", { httpOnly: true, secure: isProd, sameSite: isProd ? "None" : "Lax" });

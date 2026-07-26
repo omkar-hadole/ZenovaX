@@ -62,23 +62,9 @@ function App() {
     const { user } = useAuth();
 
     useEffect(() => {
-        const fetchCsrfToken = async () => {
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
-                    credentials: 'include'
-                });
-                if (!response.ok) return;
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) return;
-                const data = await response.json();
-                if (data?.csrfToken) {
-                    localStorage.setItem('csrfToken', data.csrfToken);
-                }
-            } catch {
-                // CSRF bootstrap failure is non-critical
-            }
-        };
-        fetchCsrfToken();
+        fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
+            credentials: 'include'
+        }).catch(() => {});
     }, []);
 
     return (

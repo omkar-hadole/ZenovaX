@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const xss = require('xss');
 
 function isValidEmail(email) {
@@ -52,6 +53,18 @@ function isValidArray(arr) {
   return Array.isArray(arr);
 }
 
+/**
+ * Hash an auth token with SHA-256 before storing in the database.
+ * Tokens are cryptographically random hex strings used for refresh,
+ * email verification, and password reset flows. Storing them as
+ * SHA-256 hashes ensures a database breach does not expose active
+ * tokens that could be used to impersonate users.
+ */
+function hashToken(token) {
+  if (typeof token !== 'string' || token.length === 0) return '';
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 module.exports = {
   isValidEmail,
   isValidPassword,
@@ -61,4 +74,5 @@ module.exports = {
   isHttpsUrl,
   sanitizeString,
   isValidArray,
+  hashToken,
 };

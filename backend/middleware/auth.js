@@ -1,5 +1,6 @@
 const { jwtVerify } = require("jose");
 const config = require("../config");
+const { hashToken } = require("../utils/validation");
 
 async function auth(req, res, next) {
   let token = req.cookies ? req.cookies.token : null;
@@ -24,7 +25,7 @@ async function auth(req, res, next) {
     const refreshTokenCookie = req.cookies ? req.cookies.refreshToken : null;
     if (refreshTokenCookie && req.prisma) {
       const revoked = await req.prisma.refreshToken.findUnique({
-        where: { token: refreshTokenCookie },
+        where: { token: hashToken(refreshTokenCookie) },
         select: { revoked: true }
       });
       if (revoked && revoked.revoked) {
