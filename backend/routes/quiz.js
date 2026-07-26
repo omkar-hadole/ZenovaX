@@ -322,6 +322,8 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
                         questionText: true,
                         options: true,
                         marks: true,
+                        correctAnswer: true,
+                        explanation: true,
                         order: true
                     },
                     orderBy: { order: 'asc' }
@@ -342,23 +344,6 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
             return res.status(404).json({ error: "Quiz not found" });
         }
 
-        if (quiz.status !== 'LIVE') {
-            return res.status(400).json({ error: "Quiz is not currently live" });
-        }
-
-        const booking = await req.prisma.booking.findUnique({
-            where: {
-                userId_sessionId: {
-                    userId: req.user.id,
-                    sessionId: quiz.sessionId
-                }
-            }
-        });
-
-        if (!booking) {
-            return res.status(403).json({ error: "You must be registered for the session to take this quiz" });
-        }
-
         const existingAttempt = await req.prisma.quizAttempt.findFirst({
             where: {
                 quizId: id,
@@ -374,6 +359,14 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
                 ...q,
                 options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
             }));
+
+            const stats = await req.prisma.quizAttempt.aggregate({
+                where: { quizId: id },
+                _avg: { score: true }
+            });
+
+            const averageScore = stats._avg.score ? parseFloat(stats._avg.score.toFixed(1)) : existingAttempt.score;
+
             return res.json({
                 success: true,
                 alreadyAttempted: true,
@@ -385,6 +378,7 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
                     timeTaken: existingAttempt.timeTaken,
                     startedAt: existingAttempt.startedAt,
                     submittedAt: existingAttempt.submittedAt,
+                    averageScore,
                     answers: existingAttempt.answers.map(a => ({
                         questionId: a.questionId,
                         selectedAnswer: a.selectedAnswer,
@@ -397,6 +391,23 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
                 },
                 quiz
             });
+        }
+
+        if (quiz.status !== 'LIVE') {
+            return res.status(400).json({ error: "Quiz is not currently live" });
+        }
+
+        const booking = await req.prisma.booking.findUnique({
+            where: {
+                userId_sessionId: {
+                    userId: req.user.id,
+                    sessionId: quiz.sessionId
+                }
+            }
+        });
+
+        if (!booking) {
+            return res.status(403).json({ error: "You must be registered for the session to take this quiz" });
         }
 
         res.json({ success: true, quiz });

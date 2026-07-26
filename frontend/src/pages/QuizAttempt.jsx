@@ -479,7 +479,7 @@ export default function QuizAttempt() {
             totalMarks: response.attempt.totalMarks,
             isPassed: response.attempt.isPassed,
             passingMarks: response.quiz.passingMarks,
-            averageScore: response.attempt.averageScore,
+            averageScore: response.attempt.averageScore ?? response.attempt.score,
             timeTaken: response.attempt.timeTaken,
             answers: response.attempt.answers || [],
           });
