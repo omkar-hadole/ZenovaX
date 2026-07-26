@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiCall } from '../utils/api';
-import { Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, ArrowLeft, BookOpen, Trophy, Timer } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, ArrowRight, ArrowLeft, BookOpen, Timer } from 'lucide-react';
 import Toast from '../components/Toast';
 
 export default function QuizAttempt() {
@@ -146,94 +146,114 @@ export default function QuizAttempt() {
 
   if (result) {
     const isPassed = result.isPassed;
+    const correctCount = result.answers.filter(a => a.isCorrect).length;
+    const totalQuestions = quiz.questions.length;
+    const percentage = result.totalMarks > 0 ? Math.round((result.score / result.totalMarks) * 100) : 0;
 
     return (
-      <div className="min-h-screen bg-[#F4F4F9] dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
-        </div>
-
-        <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-sm max-w-4xl w-full overflow-hidden relative z-10 grid grid-cols-1 lg:grid-cols-2">
-          <div className={`p-10 flex flex-col items-center justify-center text-center ${isPassed ? 'bg-gradient-to-br from-[#C9C7F5]/20 to-[#A9C1F7]/20 dark:from-[#C9C7F5]/10 dark:to-[#A9C1F7]/10' : 'bg-red-50/50 dark:bg-red-500/10'}`}>
-            <div className={`w-32 h-32 rounded-full flex items-center justify-center mb-6 shadow-sm border-4 border-white dark:border-gray-900 ${isPassed ? 'bg-[#C9C7F5] text-[#5a59b5]' : 'bg-red-100 dark:bg-red-500/20 text-red-500 dark:text-red-400'}`}>
-              {isPassed ? <Trophy className="w-16 h-16" /> : <XCircle className="w-16 h-16" />}
-            </div>
-
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{isPassed ? 'Congratulations!' : 'Keep Practicing'}</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-xs">{isPassed ? 'You have successfully passed the quiz.' : 'Don\'t worry, you can try again to improve.'}</p>
-
-            <div className="flex items-center gap-4 mb-8">
-              <div className="text-center px-6 py-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-                <div className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Score</div>
-                <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{result.score}<span className="text-lg text-gray-400 dark:text-gray-500">/{result.totalMarks}</span></div>
-              </div>
-              <div className="text-center px-6 py-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-                <div className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">Avg Score</div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{result.averageScore}</div>
-              </div>
-            </div>
-
-            {result.timeTaken && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm mb-6">
-                <Timer className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                  Time Taken: <strong>{formatTimeTaken(result.timeTaken)}</strong>
-                </span>
-              </div>
-            )}
-
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-gray-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10 hover:shadow-xl hover:-translate-y-1"
-            >
-              Back to Dashboard
+      <div className="min-h-screen bg-[#F4F4F9] dark:bg-gray-950 p-6">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors">
+              <ArrowLeft className="w-5 h-5 text-gray-500" />
             </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{quiz?.title}</h1>
+              <p className="text-sm text-gray-400">{quiz?.session?.title}</p>
+            </div>
           </div>
 
-          <div className="p-8 bg-white dark:bg-gray-900 h-[600px] overflow-y-auto">
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-              <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
-                <BookOpen size={18} />
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-5">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 ${isPassed ? 'bg-green-100' : 'bg-red-100'}`}>
+                {isPassed ? <CheckCircle className="w-8 h-8 text-green-500" /> : <XCircle className="w-8 h-8 text-red-400" />}
               </div>
-              Review Answers
-            </h3>
-            <div className="space-y-4">
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{isPassed ? 'Congratulations, you passed!' : 'Keep practicing'}</h2>
+                <p className="text-gray-500 mt-0.5">
+                  {correctCount}/{totalQuestions} correct &middot; Scored <strong>{result.score}/{result.totalMarks}</strong> ({percentage}%)
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {result.timeTaken && (
+                  <div className="text-center px-4 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div className="text-xs text-gray-400 font-medium">Time</div>
+                    <div className="text-base font-bold text-gray-700 dark:text-gray-200">{formatTimeTaken(result.timeTaken)}</div>
+                  </div>
+                )}
+                <div className="text-center px-4 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div className="text-xs text-gray-400 font-medium">Average</div>
+                  <div className="text-base font-bold text-gray-700 dark:text-gray-200">{result.averageScore || percentage}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <h3 className="font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Answer Review
+              </h3>
+              <span className="text-sm text-gray-400">{correctCount}/{totalQuestions} correct</span>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {quiz.questions.map((q, index) => {
                 const answer = result.answers.find(a => a.questionId === q.id);
                 const isCorrect = answer?.isCorrect;
+                const options = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
 
                 return (
-                  <div key={q.id} className="p-5 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/40 hover:bg-white dark:hover:bg-gray-800/60 hover:shadow-sm transition-all group">
-                    <div className="flex items-start gap-3">
-                      <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${isCorrect ? 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400'}`}>
+                  <div key={q.id} className="px-6 py-5">
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
                         {isCorrect ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                       </span>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 mb-3 text-sm">
-                          <span className="text-gray-400 dark:text-gray-500 mr-2 font-mono">My Q{index + 1}.</span>
+                        <p className="font-medium text-gray-800 dark:text-gray-100">
+                          <span className="text-gray-400 mr-2">Q{index + 1}.</span>
                           {q.questionText}
                         </p>
-
-                        <div className="text-xs space-y-2 bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-400 dark:text-gray-500 min-w-[60px]">You:</span>
-                            <span className={`${isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : 'text-red-500 dark:text-red-400 font-medium'}`}>
-                              {answer?.selectedAnswer || 'Skipped'}
-                            </span>
-                          </div>
-                          {!isCorrect && (
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-400 dark:text-gray-500 min-w-[60px]">Correct:</span>
-                              <span className="text-green-600 dark:text-green-400 font-medium">{answer?.correctAnswer}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
-                            <span className="font-bold min-w-[60px]">Marks:</span>
-                            <span>{answer?.marksObtained || 0}/{answer?.marks || q.marks}</span>
-                          </div>
-                        </div>
                       </div>
+                    </div>
+                    <div className="ml-9 space-y-2">
+                      {options.map((opt, oi) => {
+                        const isSelected = opt === answer?.selectedAnswer;
+                        const isCorrectOpt = opt === answer?.correctAnswer;
+                        let borderColor = 'border-gray-100 dark:border-gray-700';
+                        let bgColor = 'bg-white dark:bg-gray-900';
+                        let textColor = 'text-gray-700 dark:text-gray-300';
+                        let indicator = null;
+                        if (isCorrectOpt) {
+                          borderColor = 'border-green-400';
+                          bgColor = 'bg-green-50/50 dark:bg-green-500/5';
+                          textColor = 'text-green-700 dark:text-green-300 font-medium';
+                          indicator = <span className="ml-auto text-xs font-semibold text-green-600">Correct answer</span>;
+                        }
+                        if (isSelected && !isCorrect) {
+                          borderColor = 'border-red-400';
+                          bgColor = 'bg-red-50/50 dark:bg-red-500/5';
+                          textColor = 'text-red-600 dark:text-red-400 font-medium';
+                          indicator = <span className="ml-auto text-xs font-semibold text-red-500">Your answer</span>;
+                        }
+                        if (isSelected && isCorrectOpt) {
+                          indicator = <span className="ml-auto text-xs font-semibold text-green-600">Your answer (correct)</span>;
+                        }
+                        return (
+                          <div key={oi} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 ${borderColor} ${bgColor}`}>
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isCorrectOpt ? 'border-green-500 bg-green-50' : isSelected && !isCorrect ? 'border-red-500 bg-red-50' : 'border-gray-200 dark:border-gray-600'}`}>
+                              {(isCorrectOpt || (isSelected && !isCorrect)) && (
+                                <div className={`w-2.5 h-2.5 rounded-full ${isCorrectOpt ? 'bg-green-500' : 'bg-red-500'}`} />
+                              )}
+                            </div>
+                            <span className={`flex-1 text-base ${textColor}`}>{opt}</span>
+                            {indicator}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="ml-9 mt-2 flex items-center gap-4 text-sm text-gray-400">
+                      <span>Marks: <strong className={isCorrect ? 'text-green-600' : 'text-red-500'}>{answer?.marksObtained || 0}</strong>/{answer?.marks || q.marks}</span>
                     </div>
                   </div>
                 );
