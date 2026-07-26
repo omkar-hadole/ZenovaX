@@ -38,6 +38,20 @@ export default function QuizAttempt() {
   const fetchQuiz = async () => {
     try {
       const response = await apiCall(`/quiz/${id}/attempt`);
+      if (response.alreadyAttempted) {
+        setResult({
+          score: response.attempt.score,
+          totalMarks: response.attempt.totalMarks,
+          isPassed: response.attempt.isPassed,
+          passingMarks: response.quiz.passingMarks,
+          averageScore: response.attempt.score,
+          timeTaken: response.attempt.timeTaken,
+          answers: response.attempt.answers
+        });
+        setQuiz(response.quiz);
+        setLoading(false);
+        return;
+      }
       setQuiz(response.quiz);
 
       const initialAnswers = {};

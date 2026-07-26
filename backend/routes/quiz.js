@@ -363,11 +363,40 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
             where: {
                 quizId: id,
                 userId: req.user.id
+            },
+            include: {
+                answers: true
             }
         });
 
         if (existingAttempt) {
-            return res.status(400).json({ error: "You have already attempted this quiz", attempt: existingAttempt });
+            const questions = quiz.questions.map(q => ({
+                ...q,
+                options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
+            }));
+            return res.json({
+                success: true,
+                alreadyAttempted: true,
+                attempt: {
+                    id: existingAttempt.id,
+                    score: existingAttempt.score,
+                    totalMarks: existingAttempt.totalMarks,
+                    isPassed: existingAttempt.isPassed,
+                    timeTaken: existingAttempt.timeTaken,
+                    startedAt: existingAttempt.startedAt,
+                    submittedAt: existingAttempt.submittedAt,
+                    answers: existingAttempt.answers.map(a => ({
+                        questionId: a.questionId,
+                        selectedAnswer: a.selectedAnswer,
+                        isCorrect: a.isCorrect,
+                        marksObtained: a.marksObtained,
+                        correctAnswer: questions.find(q => q.id === a.questionId)?.correctAnswer || '',
+                        explanation: questions.find(q => q.id === a.questionId)?.explanation || null,
+                        marks: questions.find(q => q.id === a.questionId)?.marks || 0
+                    }))
+                },
+                quiz
+            });
         }
 
         res.json({ success: true, quiz });
