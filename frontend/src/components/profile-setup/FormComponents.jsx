@@ -6,7 +6,7 @@ export const FieldGroup = ({ label, required, children, description }) => (
                 <span className="text-[9px] text-text-subtle font-medium">*</span>
             )}
         </div>
-        {description && <p className="text-xs text-text-muted">{description}</p>}
+        {description && <p className="text-xs" style={{ color: '#52738F' }}>{description}</p>}
         {children}
     </label>
 );

@@ -8,6 +8,7 @@ import RoleSelectionStep from '../components/profile-setup/RoleSelectionStep';
 import BasicInfoStep from '../components/profile-setup/BasicInfoStep';
 import MentorInfoStep from '../components/profile-setup/MentorInfoStep';
 import StepComplete from '../components/profile-setup/StepComplete';
+import ConfirmModal from '../components/profile-setup/ConfirmModal';
 import logoLight from '../assets/logo.svg';
 import bgImage from '../assets/bg-image.jpg';
 
@@ -257,7 +258,7 @@ export default function CompleteProfile() {
                     backgroundSize: '100% 100%',
                     backgroundPosition: 'center center',
                     backgroundRepeat: 'no-repeat',
-                    opacity: 0.95,
+                    opacity: 1,
                 }}
             />
             <div className="fixed inset-0 pointer-events-none"
@@ -296,65 +297,31 @@ export default function CompleteProfile() {
                 </div>
             )}
 
-            {showConfirm && (
-                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                    <div className="bg-surface rounded-2xl shadow-lg p-6 md:p-8 max-w-sm mx-4 w-full">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-                                <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-base font-bold text-text">Submit profile?</h3>
-                                <p className="text-xs text-text-muted">You won't be able to change your role after this.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirm(false)}
-                                className="flex-1 px-4 py-2 rounded-lg border border-border text-text-muted font-semibold hover:bg-surface-2 transition-colors text-sm"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSubmit}
-                                className="flex-1 px-4 py-2 rounded-lg bg-[#6F66FF] text-white font-bold hover:bg-[#5A52E0] transition-colors text-sm"
-                            >
-                                Confirm
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmModal
+                isOpen={showConfirm}
+                onClose={() => setShowConfirm(false)}
+                onConfirm={handleSubmit}
+                icon={Sparkles}
+                iconBgClass="bg-amber-50"
+                iconColorClass="text-amber-600"
+                title="Submit profile?"
+                description="You won't be able to change your role after this."
+                confirmText="Confirm"
+                confirmBtnClass="bg-[#6F66FF] hover:bg-[#5A52E0]"
+            />
 
-            {showLogoutConfirm && (
-                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                    <div className="bg-surface rounded-2xl shadow-lg p-6 md:p-8 max-w-sm mx-4 w-full">
-                        <div className="flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-3">
-                                <LogOut className="w-5 h-5 text-red-500" />
-                            </div>
-                            <h3 className="text-base font-bold text-text mb-1">Leave setup?</h3>
-                            <p className="text-xs text-text-muted mb-5">Your progress won't be saved.</p>
-                            <div className="flex gap-3 w-full">
-                                <button
-                                    onClick={() => setShowLogoutConfirm(false)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-border text-text-muted font-semibold hover:bg-surface-2 transition-colors text-sm"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleLogout}
-                                    className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition-colors text-sm"
-                                >
-                                    Sign Out
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmModal
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleLogout}
+                icon={LogOut}
+                iconBgClass="bg-red-50"
+                iconColorClass="text-red-500"
+                title="Leave setup?"
+                description="Your progress won't be saved."
+                confirmText="Sign Out"
+                confirmBtnClass="bg-red-500 hover:bg-red-600"
+            />
 
             {/* ===== LEFT BRAND PANEL ===== */}
             <aside className="hidden lg:flex w-2/5 shrink-0 flex-col relative overflow-hidden bg-transparent">
@@ -471,7 +438,8 @@ export default function CompleteProfile() {
                     <button
                         onClick={() => setShowLogoutConfirm(true)}
                         disabled={completed}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-red-500 disabled:opacity-0 disabled:pointer-events-none transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 text-xs font-semibold disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 cursor-pointer rounded-lg px-2.5 py-1.5 -mx-2.5 hover:text-red-500 hover:bg-red-50/50"
+                        style={{ color: '#1F2F43' }}
                     >
                         <LogOut className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Sign Out</span>
@@ -529,10 +497,10 @@ export default function CompleteProfile() {
                                         className={`flex items-center gap-2 px-4 py-2.5 rounded-[14px] text-sm font-semibold transition-all duration-200 ${
                                             isFirstStep
                                                 ? 'opacity-0 pointer-events-none'
-                                                : 'hover:bg-[rgba(255,255,255,0.48)] hover:border-[rgba(74,130,175,0.22)] hover:text-[#315D7D] hover:backdrop-blur-[10px] active:bg-[rgba(225,240,250,0.72)] active:scale-[0.985] text-text-muted cursor-pointer'
+                                                : 'bg-[rgba(255,255,255,0.48)] border-[rgba(74,130,175,0.22)] backdrop-blur-[10px] hover:bg-[rgba(255,255,255,0.72)] hover:border-[rgba(59,157,232,0.38)] hover:text-[#1F6FAE] active:bg-[rgba(225,240,250,0.72)] active:scale-[0.985] text-[#315D7D] cursor-pointer'
                                         }`}
                                         style={{
-                                            border: '1px solid transparent',
+                                            border: '1px solid rgba(74,130,175,0.22)',
                                             transition: 'all 0.22s ease',
                                         }}
                                     >

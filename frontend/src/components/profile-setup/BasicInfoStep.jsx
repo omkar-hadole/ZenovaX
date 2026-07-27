@@ -77,10 +77,10 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                 </label>
 
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-text mb-1">
-                        {preview ? 'Profile photo' : 'Add a profile photo'}
-                    </p>
-                    <p className="text-xs text-text-muted mb-2.5">
+<p className="text-sm font-semibold text-black mb-1">
+    {preview ? 'Profile photo' : 'Add a profile photo'}
+</p>
+                    <p className="text-xs" style={{ color: '#52738F' }}>
                         {preview
                             ? 'Tap to change or pick an avatar'
                             : role === 'mentor'
