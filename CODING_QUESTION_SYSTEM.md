@@ -6,7 +6,7 @@
 >
 > **Do not modify production code based on this document alone.** This is a reference.
 
-----
+---
 
 ## Table of Contents
 

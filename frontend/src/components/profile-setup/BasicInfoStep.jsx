@@ -111,7 +111,6 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                     className="w-full rounded-[1.5rem] border border-gray-200 dark:border-gray-700 dark:bg-gray-800 px-4 py-3 text-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#C9C7F5] resize-none"
                     placeholder="I’m focused on building stronger fundamentals in..."
                 />
-                <div className="text-right text-xs text-gray-400 dark:text-gray-500">{150 - basicInfo.bio.length} characters left</div>
             </FieldGroup>
         </div>
     );
