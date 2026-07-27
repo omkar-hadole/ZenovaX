@@ -3,7 +3,7 @@ import { UploadCloud, Shield } from 'lucide-react';
 import { FieldGroup } from './FormComponents';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
-const departmentOptions = ['CSE', 'AI/ML', 'IT', 'BBA', 'ECON', 'DESIGN', 'PSY', 'MEDIA'];
+const departmentOptions = ['AI/ML', 'AI/DS', 'BBA', 'Design', 'Psychology'];
 const yearOptions = ['1', '2', '3', '4'];
 
 const PREDEFINED_AVATARS = [
