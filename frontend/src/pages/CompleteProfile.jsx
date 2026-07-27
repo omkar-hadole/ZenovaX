@@ -421,19 +421,7 @@ export default function CompleteProfile() {
                 <header className="h-12 shrink-0 flex items-center justify-between px-5 lg:px-10 bg-transparent">
                     <div />
 
-                    <div className="flex items-center gap-1.5">
-                        {[1, 2, 3].map((s) => {
-                            const isActiveOrDone = s <= effectiveStep;
-                            return (
-                                <div
-                                    key={s}
-                                    className={`w-6 h-1 rounded-full transition-colors duration-300 ${
-                                        isActiveOrDone ? 'bg-[#6F66FF]' : 'bg-border'
-                                    }`}
-                                />
-                            );
-                        })}
-                    </div>
+
 
                     <button
                         onClick={() => setShowLogoutConfirm(true)}

@@ -55,7 +55,7 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                 >
                     <div className={`w-full h-full rounded-xl flex items-center justify-center transition-all duration-200 ${
                         preview
-                            ? 'ring-2 ring-[#6F66FF] ring-offset-2 ring-offset-bg'
+                            ? 'ring-2 ring-[#6F66FF]'
                             : 'border-2 border-dashed border-border bg-surface-2 group-hover:border-[#6F66FF] group-hover:bg-[#6F66FF]/5'
                     }`}>
                         {preview ? (
@@ -95,21 +95,21 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                                      key={idx}
                                      type="button"
                                      onClick={() => handleSelectPredefinedAvatar(avatar)}
-                                     className={`w-9 h-9 rounded-lg overflow-hidden transition-all duration-200 cursor-pointer ${
-                                         active
-                                             ? 'ring-2 ring-[#6F66FF] ring-offset-2 ring-offset-bg scale-105'
-                                             : 'hover:ring-2 hover:ring-[#6F66FF]/40 hover:scale-105'
-                                     }`}
-                                 >
-                                     <img src={avatar} className="w-full h-full object-cover" alt="" />
-                                 </button>
-                            );
-                        })}
-                        {preview && (
-                             <button
-                                 type="button"
-                                 onClick={() => document.getElementById('profile-picture-input')?.click()}
-                                 className="w-9 h-9 rounded-lg flex items-center justify-center text-text-subtle hover:text-[#6F66FF] transition-all cursor-pointer"
+                                     className={`w-9 h-9 rounded-full overflow-hidden transition-all duration-200 cursor-pointer ${
+                                          active
+                                              ? 'ring-2 ring-[#6F66FF] scale-105'
+                                              : 'hover:ring-2 hover:ring-[#6F66FF]/40 hover:scale-105'
+                                      }`}
+                                  >
+                                      <img src={avatar} className="w-full h-full object-cover" alt="" />
+                                  </button>
+                             );
+                         })}
+                         {preview && (
+                              <button
+                                  type="button"
+                                  onClick={() => document.getElementById('profile-picture-input')?.click()}
+                                  className="w-9 h-9 rounded-full flex items-center justify-center text-text-subtle hover:text-[#6F66FF] transition-all cursor-pointer"
                              >
                                 <UploadCloud className="w-3.5 h-3.5" />
                             </button>
