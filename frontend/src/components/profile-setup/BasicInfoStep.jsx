@@ -21,9 +21,15 @@ function Select({ value, onChange, options, placeholder }) {
             <select
                 value={value}
                 onChange={onChange}
-                className={`w-full rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-all appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#6F66FF]/20 focus:border-[#6F66FF] bg-white/60 backdrop-blur-md ${
-                    hasValue ? 'text-text border-white/30' : 'text-text-subtle border-white/20'
+                className={`w-full rounded-[14px] border px-3.5 py-2.5 text-sm font-medium transition-all appearance-none cursor-pointer focus:outline-none text-[#183B55] focus:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus:border-[#4A9FE5] ${
+                    hasValue ? 'text-[#183B55]' : 'text-[#183B55]/40'
                 }`}
+                style={{
+                    background: 'rgba(255,255,255,0.58)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.8)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
+                }}
             >
                 <option value="" disabled>{placeholder}</option>
                 {options.map((opt) => (
@@ -145,7 +151,13 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                         maxLength={150}
                         value={basicInfo.bio}
                         onChange={(e) => setBasicInfo((prev) => ({ ...prev, bio: e.target.value }))}
-                        className="w-full rounded-lg border px-3.5 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-[#6F66FF]/20 focus:border-[#6F66FF] transition-all resize-none placeholder:text-text-subtle bg-white/60 backdrop-blur-md border-white/30"
+                        className="w-full rounded-[14px] px-3.5 py-2.5 text-sm text-[#183B55] focus:outline-none focus:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus:border-[#4A9FE5] transition-all resize-none placeholder:text-[#183B55]/40"
+                        style={{
+                            background: 'rgba(255,255,255,0.58)',
+                            backdropFilter: 'blur(12px)',
+                            border: '1px solid rgba(255,255,255,0.8)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
+                        }}
                         placeholder="I'm excited to learn about..."
                     />
                     <span className={`absolute bottom-2.5 right-3 text-[10px] font-medium transition-colors ${

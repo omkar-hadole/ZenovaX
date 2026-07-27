@@ -1,7 +1,7 @@
 export const FieldGroup = ({ label, required, children, description }) => (
     <label className="space-y-1.5 block">
         <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-text">{label}</span>
+            <span className="text-sm font-semibold" style={{ color: '#294F6B' }}>{label}</span>
             {required && (
                 <span className="text-[9px] text-text-subtle font-medium">*</span>
             )}
@@ -15,11 +15,20 @@ export const Chip = ({ label, active, onClick }) => (
     <button
         type="button"
         onClick={onClick}
-        className={`px-3.5 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
+        className={`px-3.5 py-1.5 rounded-[14px] text-sm font-medium transition-all duration-200 ${
             active
-                ? 'bg-[#6F66FF] text-white border-[#6F66FF]'
-                : 'border-white/30 bg-white/60 backdrop-blur-md text-text-muted hover:border-[#6F66FF]/40 hover:text-text'
+                ? 'text-white border-transparent'
+                : 'text-[#183B55] hover:border-[#4A9FE5]'
         }`}
+        style={active
+            ? { background: '#287FC4' }
+            : {
+                background: 'rgba(255,255,255,0.58)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.8)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
+            }
+        }
     >
         {label}
     </button>
