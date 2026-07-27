@@ -41,7 +41,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
                     onClick={() => typeof page === 'number' && onPageChange(page)}
                     disabled={typeof page !== 'number'}
                     className={`min-w-[40px] h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${page === currentPage
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-indigo-950'
+                        ? 'bg-black text-white shadow-md shadow-gray-200 dark:bg-white dark:text-black dark:shadow-gray-950'
                         : typeof page === 'number'
                             ? 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                             : 'text-gray-400 dark:text-gray-500 cursor-default'

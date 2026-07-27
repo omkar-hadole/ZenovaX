@@ -15,6 +15,7 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 
 const DashboardPage = lazy(() => import('./pages/learner/DashboardPage'));
 const SessionsPage = lazy(() => import('./pages/learner/SessionsPage'));
@@ -42,6 +43,7 @@ const MentorsList = lazy(() => import('./pages/MentorsList'));
 
 const CreateSession = lazy(() => import('./pages/CreateSession'));
 const LaunchQuiz = lazy(() => import('./pages/LaunchQuiz'));
+const QuizResults = lazy(() => import('./pages/QuizResults'));
 const QuizAttempt = lazy(() => import('./pages/QuizAttempt'));
 const LiveSession = lazy(() => import('./pages/LiveSession'));
 const UploadResource = lazy(() => import('./pages/UploadResource'));
@@ -86,6 +88,7 @@ function App() {
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/unauthorized" element={<Unauthorized />} />
+                    <Route path="/terms" element={<TermsAndConditions />} />
 
                     <Route
                         path="/complete-profile"
@@ -171,6 +174,8 @@ function App() {
                     <Route path="/mentor/edit-session/:id" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH', 'ADMIN']}><DesktopOnlyGuard><CreateSession /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/mentor/upload-resource" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><UploadResource /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/mentor/launch-quiz" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><LaunchQuiz /></DesktopOnlyGuard></ProtectedRoute>} />
+                    <Route path="/mentor/quiz/:quizId/edit" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><LaunchQuiz /></DesktopOnlyGuard></ProtectedRoute>} />
+                    <Route path="/mentor/quiz/:quizId/results" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><QuizResults /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/quiz/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><QuizAttempt /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/coding/:id/attempt" element={<ProtectedRoute><DesktopOnlyGuard><AttemptCodingQuestion /></DesktopOnlyGuard></ProtectedRoute>} />
                     <Route path="/mentor/coding-questions/:id/preview" element={<ProtectedRoute allowedRoles={['MENTOR', 'BOTH']}><DesktopOnlyGuard><MentorCodingPreviewPage /></DesktopOnlyGuard></ProtectedRoute>} />

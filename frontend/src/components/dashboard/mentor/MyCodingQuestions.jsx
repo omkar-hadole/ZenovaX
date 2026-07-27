@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Code, Search, Plus, Rocket, Eye, XCircle, Pencil, Users } from 'lucide-react';
 import { apiCall } from '../../../utils/api';
 import Toast from '../../Toast';
 import ConfirmModal from '../../common/ConfirmModal';
+import Pagination from '../../common/Pagination';
+
+const ITEMS_PER_PAGE = 9;
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -33,6 +36,7 @@ export default function MyCodingQuestions() {
     const [toast, setToast] = useState(null);
     const [busyId, setBusyId] = useState(null);
     const [confirmTarget, setConfirmTarget] = useState(null); // { id, action: 'launch' | 'close' }
+    const [page, setPage] = useState(1);
 
     const fetchQuestions = async () => {
         try {
@@ -50,11 +54,22 @@ export default function MyCodingQuestions() {
         fetchQuestions();
     }, []);
 
-    const filteredQuestions = questions.filter((q) => {
+    const filteredQuestions = useMemo(() => questions.filter((q) => {
         const matchesStatus = statusFilter === 'all' || q.status === statusFilter;
         const matchesSearch = !searchInput.trim() || q.title?.toLowerCase().includes(searchInput.trim().toLowerCase());
         return matchesStatus && matchesSearch;
-    });
+    }), [questions, statusFilter, searchInput]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / ITEMS_PER_PAGE));
+    const validPage = Math.min(page, totalPages);
+    const paginatedQuestions = filteredQuestions.slice(
+        (validPage - 1) * ITEMS_PER_PAGE,
+        validPage * ITEMS_PER_PAGE
+    );
+
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter, searchInput]);
 
     const runAction = async (id, action) => {
         setBusyId(id);
@@ -122,8 +137,8 @@ export default function MyCodingQuestions() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredQuestions.length > 0 ? (
-                    filteredQuestions.map((q) => (
+                {paginatedQuestions.length > 0 ? (
+                    paginatedQuestions.map((q) => (
                         <div
                             key={q.id}
                             className="h-full flex flex-col bg-white dark:bg-gray-900 rounded-[1.5rem] p-6 shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
@@ -195,6 +210,15 @@ export default function MyCodingQuestions() {
                     </div>
                 )}
             </div>
+
+            <Pagination
+                currentPage={validPage}
+                totalPages={totalPages}
+                onPageChange={(p) => {
+                    setPage(p);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+            />
 
             <ConfirmModal
                 isOpen={!!confirmTarget}

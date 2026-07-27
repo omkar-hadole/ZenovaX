@@ -12,7 +12,8 @@ import {
     Heart,
     PlayCircle,
     Code,
-    ExternalLink
+    ExternalLink,
+    BarChart3
 } from "lucide-react";
 import { apiCall } from '../../../utils/api';
 import { getOptimizedImageUrl } from '../../../utils/cloudinary';
@@ -276,42 +277,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
     if (!session) return null;
 
-    const mockSession = {
-        id: "session123",
-        title: "Advanced React Patterns & Performance Optimization",
-        description:
-            "Master the art of building scalable React applications. In this comprehensive session, we'll dive deep into custom hooks, context optimization, suspense, error boundaries, and advanced performance tuning techniques used by top tech companies.",
-        mode: "ONLINE",
-        scheduledAt: new Date().toISOString(),
-        duration: 90,
-        priceType: "PAID",
-        price: 499,
-        maxSeats: 40,
-        availableSeats: 8,
-        isBooked: false,
-        hasReviewed: false,
-        status: "UPCOMING",
-        topics: ["Custom Hooks & Composition", "Context API Performance", "Server Components", "Code Splitting & Suspense"],
-        mentor: {
-            name: "Sarah Johnson",
-            profilePicture:
-                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-            averageRating: 4.9,
-            id: "mentor1",
-            department: "Senior React Developer",
-        },
-        resources: [
-            { id: 1, title: "React Patterns Guide.pdf", fileType: "PDF", fileUrl: "#" },
-            { id: 2, title: "Source Code Repository", fileType: "LINK", fileUrl: "#" },
-            { id: 3, title: "Performance Checklist", fileType: "DOC", fileUrl: "#" },
-        ],
-        quizzes: [
-            { id: 1, title: "React Fundamentals Check", status: "LIVE", questions: 10 },
-            { id: 2, title: "Advanced Concepts", status: "DRAFT", questions: 15 },
-        ],
-    };
-
-    const S = session || mockSession;
+    const S = session;
 
     const handleReviewSubmit = () => {
         setReviewSubmitted(true);
@@ -321,7 +287,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
     return (
         <div className="min-h-screen bg-[#F8F9FC] dark:bg-gray-950">
-            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-10">
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-4 flex items-center justify-between">
                         <button
@@ -355,7 +321,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     userRole={user?.role}
                     userId={user?.id}
                 >
-                    {S.isBooked && (
+                    {(S.isBooked || user?.role === 'MENTOR' || user?.role === 'BOTH') && (
                         <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
                                 <Download className="w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -435,29 +401,55 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                 <div>
                                                     <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{q.title}</h4>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${q.status === 'LIVE' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${q.status === 'LIVE' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : q.status === 'CLOSED' ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400' : 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400'}`}>
                                                             {q.status}
                                                         </span>
-                                                        {q.questions && <span className="text-xs text-gray-400 dark:text-gray-500">• {q.questions} Questions</span>}
+                                                        {q._count?.attempts !== undefined && <span className="text-xs text-gray-400 dark:text-gray-500">• {q._count.attempts} attempts</span>}
                                                     </div>
                                                 </div>
                                             </div>
-                                            {q.status === 'LIVE' && (
+                                            {user?.role === 'MENTOR' || user?.role === 'BOTH' ? (
                                                 <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => navigate(`/quiz/${q.id}/attempt`)}
-                                                        className="px-5 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 dark:shadow-purple-950/50 flex items-center gap-2"
-                                                    >
-                                                        <PlayCircle size={16} /> Start
-                                                    </button>
-                                                    <button
-                                                        onClick={() => window.open(`/quiz/${q.id}/attempt`, '_blank')}
-                                                        title="Open in new tab"
-                                                        className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-xl transition-colors"
-                                                    >
-                                                        <ExternalLink size={16} />
-                                                    </button>
+                                                    {q.status === 'DRAFT' && (
+                                                        <button
+                                                            onClick={() => navigate(`/mentor/quiz/${q.id}/edit`)}
+                                                            className="px-4 py-2 bg-yellow-500 text-white text-sm font-bold rounded-xl hover:bg-yellow-600 transition-colors shadow-sm flex items-center gap-1.5"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    )}
+                                                    {(q.status === 'LIVE' || q.status === 'CLOSED') && (
+                                                        <button
+                                                            onClick={() => navigate(`/mentor/quiz/${q.id}/results`)}
+                                                            className="px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm flex items-center gap-1.5"
+                                                        >
+                                                            <BarChart3 size={14} /> Results
+                                                        </button>
+                                                    )}
                                                 </div>
+                                            ) : (
+                                                <>
+                                                    {q.status === 'LIVE' && (
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => navigate(`/quiz/${q.id}/attempt?from=${encodeURIComponent(window.location.pathname)}`)}
+                                                                className="px-5 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 dark:shadow-purple-950/50 flex items-center gap-2"
+                                                            >
+                                                                <PlayCircle size={16} /> Start
+                                                            </button>
+                                                            <button
+                                                                onClick={() => window.open(`/quiz/${q.id}/attempt?from=${encodeURIComponent(window.location.pathname)}`, '_blank')}
+                                                                title="Open in new tab"
+                                                                className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-xl transition-colors"
+                                                            >
+                                                                <ExternalLink size={16} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    {q.status === 'CLOSED' && (
+                                                        <span className="text-xs text-gray-400 dark:text-gray-500 px-3">Closed</span>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     )) : <p className="text-gray-500 dark:text-gray-400 text-center py-8">No quizzes available.</p>

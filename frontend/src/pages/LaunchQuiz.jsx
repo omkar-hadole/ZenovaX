@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Plus,
@@ -7,17 +7,10 @@ import {
   Save,
   Rocket,
   CheckCircle,
-  HelpCircle,
   Clock,
   Award,
   BookOpen,
-  LayoutDashboard,
-  Calendar,
-  Star,
-  Settings,
-  Layers,
-  QrCode,
-  Code
+  Target
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -27,6 +20,7 @@ import Toast from '../components/Toast';
 
 export default function LaunchQuiz() {
   const navigate = useNavigate();
+  const { quizId } = useParams();
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState('');
@@ -34,6 +28,7 @@ export default function LaunchQuiz() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [toast, setToast] = useState(null);
+  const isEditMode = !!quizId;
 
   const [quizData, setQuizData] = useState({
     title: '',
@@ -53,9 +48,41 @@ export default function LaunchQuiz() {
 
   useEffect(() => {
     if (user && user.id) {
-      fetchSessions();
+      if (isEditMode) {
+        loadQuiz();
+      } else {
+        fetchSessions();
+      }
     }
-  }, [user]);
+  }, [user, quizId]);
+
+  const loadQuiz = async () => {
+    try {
+      const data = await apiCall(`/quiz/${quizId}`);
+      const quiz = data.quiz;
+      const mySessions = await apiCall('/sessions/all');
+      setSessions(mySessions.sessions.filter(s => s.mentorId === user?.id && s.status !== 'COMPLETED'));
+
+      setSelectedSessionId(quiz.sessionId);
+      setQuizData({
+        title: quiz.title,
+        description: quiz.description || '',
+        duration: quiz.duration || 15,
+        totalMarks: quiz.totalMarks,
+        passingMarks: quiz.passingMarks,
+        questions: quiz.questions.map(q => ({
+          questionText: q.questionText,
+          options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+          correctAnswer: q.correctAnswer,
+          marks: q.marks
+        }))
+      });
+    } catch (error) {
+      setToast({ message: 'Failed to load quiz', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchSessions = async () => {
     try {
@@ -108,6 +135,9 @@ export default function LaunchQuiz() {
   const validateQuiz = () => {
     if (!selectedSessionId) return 'Please select a session';
     if (!quizData.title) return 'Please enter a quiz title';
+    if (quizData.passingMarks < 0) return 'Passing marks cannot be negative';
+    const totalMarks = calculateTotalMarks();
+    if (quizData.passingMarks > totalMarks) return 'Passing marks cannot exceed total marks';
 
     for (let i = 0; i < quizData.questions.length; i++) {
       const q = quizData.questions[i];
@@ -119,7 +149,10 @@ export default function LaunchQuiz() {
         return `Question ${i + 1}: At least 2 options are required`;
       }
       if (!q.correctAnswer) {
-        // Optional: warn if no correct answer is set logic could go here if needed
+        return `Question ${i + 1}: Please select a correct answer`;
+      }
+      if (!validOptions.includes(q.correctAnswer)) {
+        return `Question ${i + 1}: Correct answer must match one of the options`;
       }
     }
     return null;
@@ -155,27 +188,33 @@ export default function LaunchQuiz() {
       const payload = {
         sessionId: selectedSessionId,
         ...quizData,
-        totalMarks,
-        passingMarks: Math.ceil(totalMarks * 0.4)
+        totalMarks
       };
 
-      const response = await apiCall('/quiz/create', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-
-      if (launch && response.quiz) {
-        await apiCall(`/quiz/${response.quiz.id}/launch`, { method: 'POST' });
-        setToast({ message: 'Quiz created and launched successfully!', type: 'success' });
+      if (isEditMode) {
+        await apiCall(`/quiz/${quizId}/edit`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+        setToast({ message: 'Quiz updated successfully!', type: 'success' });
+        setTimeout(() => navigate('/mentor/dashboard'), 1500);
       } else {
-        setToast({ message: 'Quiz draft created successfully!', type: 'success' });
+        const response = await apiCall('/quiz/create', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (launch && response.quiz) {
+          await apiCall(`/quiz/${response.quiz.id}/launch`, { method: 'POST' });
+          setToast({ message: 'Quiz created and launched successfully!', type: 'success' });
+        } else {
+          setToast({ message: 'Quiz draft created successfully!', type: 'success' });
+        }
+        setTimeout(() => navigate('/mentor/dashboard'), 1500);
       }
-      setTimeout(() => {
-        navigate('/mentor/dashboard');
-      }, 1500);
     } catch (error) {
-      console.error('Failed to create quiz', error);
-      setToast({ message: error.message || 'Failed to create quiz', type: 'error' });
+      console.error('Failed to save quiz', error);
+      setToast({ message: error.message || 'Failed to save quiz', type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -191,7 +230,6 @@ export default function LaunchQuiz() {
 
   return (
     <div className="flex h-screen bg-[#F4F4F9] dark:bg-gray-950 relative overflow-hidden">
-      {/* Background Blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-[100px]" />
@@ -201,7 +239,7 @@ export default function LaunchQuiz() {
         <MentorSidebar activeTab="Launch Code" />
 
         <main className="flex-1 overflow-y-auto relative">
-          <Header user={user || {}} title="Launch Quiz" />
+          <Header user={user || {}} title={isEditMode ? 'Edit Quiz' : 'Launch Quiz'} />
 
           <div className="p-8 max-w-6xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
@@ -210,26 +248,21 @@ export default function LaunchQuiz() {
                   <ArrowLeft className="text-gray-600 dark:text-gray-300" />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Create & Launch Quiz</h1>
+                  <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{isEditMode ? 'Edit Quiz' : 'Create & Launch Quiz'}</h1>
                   <p className="text-gray-500 dark:text-gray-400">Assess your learners' knowledge</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleSaveDraft}
+                  onClick={isEditMode ? () => submitQuiz(false) : handleLaunchClick}
                   disabled={submitting}
-                  className="px-6 py-3 text-gray-700 dark:text-gray-300 font-bold hover:bg-white dark:hover:bg-gray-800 rounded-[1rem] transition-all flex items-center gap-2 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm"
-                >
-                  <Save className="w-5 h-5" />
-                  Save Draft
-                </button>
-                <button
-                  onClick={handleLaunchClick}
-                  disabled={submitting}
-                  className="px-6 py-3 bg-[#C9C7F5] text-[#5a59b5] font-bold rounded-[1rem] hover:bg-[#b8b6e5] transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-1"
+                  className={`px-6 py-3 font-bold rounded-[1rem] transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-1 ${isEditMode
+                    ? 'bg-[#A9C1F7] text-[#4a7ac7] hover:bg-[#98b0e5]'
+                    : 'bg-[#C9C7F5] text-[#5a59b5] hover:bg-[#b8b6e5]'
+                    }`}
                 >
                   <Rocket className="w-5 h-5" />
-                  Launch Now
+                  {isEditMode ? 'Save Changes' : 'Launch Now'}
                 </button>
               </div>
             </div>
@@ -251,7 +284,8 @@ export default function LaunchQuiz() {
                       <select
                         value={selectedSessionId}
                         onChange={(e) => setSelectedSessionId(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all"
+                        disabled={isEditMode}
+                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] transition-all disabled:opacity-50"
                       >
                         <option value="">-- Choose a session --</option>
                         {sessions.map(session => (
@@ -288,7 +322,7 @@ export default function LaunchQuiz() {
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#A9C1F7]/10 rounded-bl-full -mr-6 -mt-6" />
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                     <div className="p-2 bg-[#A9C1F7]/20 dark:bg-[#A9C1F7]/10 rounded-lg text-[#4a7ac7] dark:text-[#8fb2f2]">
-                      <Settings size={20} />
+                      <Target size={20} />
                     </div>
                     Settings
                   </h3>
@@ -317,6 +351,26 @@ export default function LaunchQuiz() {
                           className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 border-none text-gray-500 dark:text-gray-400 font-bold"
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Passing Marks <span className="text-xs text-gray-400">(default: 40%)</span>
+                      </label>
+                      <div className="relative">
+                        <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <input
+                          type="number"
+                          value={quizData.passingMarks}
+                          onChange={(e) => setQuizData({ ...quizData, passingMarks: parseInt(e.target.value) || 0 })}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#A9C1F7] transition-all"
+                          placeholder="e.g. 10"
+                        />
+                      </div>
+                      {calculateTotalMarks() > 0 && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          {Math.round((quizData.passingMarks / calculateTotalMarks()) * 100) || 0}% of total marks
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -360,9 +414,8 @@ export default function LaunchQuiz() {
                               value={question.questionText}
                               onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
                               placeholder="Enter your question here..."
-                              className="w-full p-4 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none rounded-xl focus:ring-2 focus:ring-[#F7D483] font-medium text-lg placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all required"
+                              className="w-full p-4 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none rounded-xl focus:ring-2 focus:ring-[#F7D483] font-medium text-lg placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all"
                             />
-                            {!question.questionText && <p className="text-red-400 dark:text-red-400 text-xs mt-1 ml-1 hidden group-focus-within/q:block">* Question text required</p>}
                           </div>
                         </div>
 
@@ -390,7 +443,7 @@ export default function LaunchQuiz() {
                               />
                             </div>
                           ))}
-                          <p className="text-xs text-gray-400 dark:text-gray-500 italic">Enter at least 2 options</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 italic">Click the circle to mark as correct answer</p>
                         </div>
 
                         <div className="pl-12 pt-2 flex items-center gap-4 border-t border-gray-50 dark:border-gray-800 mt-4">
@@ -412,7 +465,6 @@ export default function LaunchQuiz() {
             </div>
           </div>
 
-          {/* Confirmation Modal */}
           {showConfirmModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
               <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md shadow-2xl scale-100 animate-in zoom-in-95">
@@ -421,7 +473,7 @@ export default function LaunchQuiz() {
                 </div>
                 <h3 className="text-xl font-bold text-center text-gray-900 dark:text-gray-100 mb-2">Launch Quiz?</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
-                  Are you sure you want to launch this quiz? It will maintain draft status but be available for managing by you.
+                  This will make the quiz available to all registered learners immediately.
                 </p>
                 <div className="flex gap-3">
                   <button

@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 import NotificationBell from './NotificationBell';
-import ThemeToggle from '../ThemeToggle';
 
 export default function Header({ user, title, searchPlaceholder = "Search..." }) {
     const navigate = useNavigate();
@@ -194,8 +193,6 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                         ⌘K
                     </kbd>
                 </button>
-
-                <ThemeToggle />
 
                 <NotificationBell />
 

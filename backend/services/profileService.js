@@ -562,31 +562,37 @@ exports.searchMentorsFiltered = async (prisma, { department, skillKeyword, limit
     ],
     take,
     select: {
+      id: true,
       name: true,
       department: true,
       mentorSkills: true,
       averageRating: true,
       totalSessions: true,
-      totalReviews: true
+      totalReviews: true,
+      _count: { select: { mentorSessions: true } }
     }
   });
 
-  return mentors.map((mentor) => {
+  const results = await Promise.all(mentors.map(async (mentor) => {
     let skills = [];
     try {
       skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
     } catch (e) {
       // Ignore parsing errors
     }
+    const finishedSessionsCount = await getFinishedSessionsCount(prisma, mentor.id);
+    const effectiveSessions = Math.max(mentor.totalSessions, finishedSessionsCount);
     return {
       name: mentor.name,
       department: mentor.department,
       mentorSkills: skills,
       averageRating: mentor.averageRating,
-      totalSessions: mentor.totalSessions,
+      totalSessions: effectiveSessions,
       totalReviews: mentor.totalReviews
     };
-  });
+  }));
+
+  return results;
 };
 
 exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {

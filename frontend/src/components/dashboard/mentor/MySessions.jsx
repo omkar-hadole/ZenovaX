@@ -1,7 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Calendar, Clock, Users, MoreVertical, Edit, Search, Video } from 'lucide-react';
 import AddToCalendarButton from '../../common/AddToCalendarButton';
+import Pagination from '../../common/Pagination';
+
+const ITEMS_PER_PAGE = 9;
 
 const STATUS_FILTERS = [
     { value: 'all', label: 'All' },
@@ -49,15 +52,27 @@ export default function MySessions({ sessions }) {
     const [statusFilter, setStatusFilter] = useState('all');
     const [modeFilter, setModeFilter] = useState('');
     const [searchInput, setSearchInput] = useState('');
+    const [page, setPage] = useState(1);
 
-    const filteredSessions = sessions.filter(session => {
+    const filteredSessions = useMemo(() => sessions.filter(session => {
         const matchesStatus = statusFilter === 'all'
             || (statusFilter === 'upcoming' && new Date(session.scheduledAt) > new Date())
             || (statusFilter === 'completed' && new Date(session.scheduledAt) <= new Date());
         const matchesMode = !modeFilter || session.mode === modeFilter;
         const matchesSearch = !searchInput.trim() || session.title?.toLowerCase().includes(searchInput.trim().toLowerCase());
         return matchesStatus && matchesMode && matchesSearch;
-    });
+    }), [sessions, statusFilter, modeFilter, searchInput]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredSessions.length / ITEMS_PER_PAGE));
+    const validPage = Math.min(page, totalPages);
+    const paginatedSessions = filteredSessions.slice(
+        (validPage - 1) * ITEMS_PER_PAGE,
+        validPage * ITEMS_PER_PAGE
+    );
+
+    useEffect(() => {
+        setPage(1);
+    }, [statusFilter, modeFilter, searchInput]);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -113,8 +128,8 @@ export default function MySessions({ sessions }) {
 
             {/* Sessions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSessions.length > 0 ? (
-                    filteredSessions.map((session) => {
+                {paginatedSessions.length > 0 ? (
+                    paginatedSessions.map((session) => {
                         const now = new Date();
                         const start = new Date(session.scheduledAt);
                         const end = new Date(start.getTime() + (session.duration || 0) * 60000);
@@ -264,6 +279,15 @@ export default function MySessions({ sessions }) {
                     </div>
                 )}
             </div>
+
+            <Pagination
+                currentPage={validPage}
+                totalPages={totalPages}
+                onPageChange={(p) => {
+                    setPage(p);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+            />
         </div>
     );
 }

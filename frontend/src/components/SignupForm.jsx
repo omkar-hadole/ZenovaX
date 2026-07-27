@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { register } from '../utils/api';
 
@@ -208,9 +208,9 @@ export default function SignupForm({ onToggle, showToast }) {
           />
           <span className="ml-2 text-sm">
             I agree to the{' '}
-            <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-normal">
+            <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-normal">
               Terms & Conditions
-            </a>
+            </Link>
           </span>
         </label>
 
