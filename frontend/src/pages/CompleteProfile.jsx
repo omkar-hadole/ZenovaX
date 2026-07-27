@@ -249,7 +249,38 @@ export default function CompleteProfile() {
     const isFirstStep = effectiveStep <= 1;
 
     return (
-        <div className="h-dvh bg-bg flex flex-col lg:flex-row">
+        <div className="h-dvh flex flex-col lg:flex-row relative">
+            {/* Full-screen background image */}
+            <div className="fixed inset-0 pointer-events-none"
+                style={{
+                    backgroundImage: `url(${bgImage})`,
+                    backgroundSize: '100% 100%',
+                    backgroundPosition: 'center center',
+                    backgroundRepeat: 'no-repeat',
+                    opacity: 0.9,
+                }}
+            />
+            <div className="fixed inset-0 pointer-events-none"
+                style={{
+                    background: `
+                        radial-gradient(
+                            ellipse at top left,
+                            rgba(8, 20, 40, 0.65) 0%,
+                            rgba(8, 20, 40, 0.35) 18%,
+                            rgba(8, 20, 40, 0.12) 32%,
+                            transparent 48%
+                        ),
+                        radial-gradient(
+                            ellipse at bottom left,
+                            rgba(8, 20, 40, 0.65) 0%,
+                            rgba(8, 20, 40, 0.35) 18%,
+                            rgba(8, 20, 40, 0.12) 32%,
+                            transparent 48%
+                        )
+                    `
+                }}
+            />
+
             {/* OVERLAYS */}
             {submitting && !completed && (
                 <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
@@ -326,7 +357,7 @@ export default function CompleteProfile() {
             )}
 
             {/* ===== LEFT BRAND PANEL ===== */}
-            <aside className="hidden lg:flex lg:w-[32%] shrink-0 flex-col relative overflow-hidden" style={{ background: 'linear-gradient(to right, #6F66FF, #E0F3FF)' }}>
+            <aside className="hidden lg:flex w-2/5 shrink-0 flex-col relative overflow-hidden bg-transparent">
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-0 right-0 w-[400px] h-[400px] opacity-[0.04]">
                         <svg viewBox="0 0 400 400" fill="none">
@@ -341,11 +372,13 @@ export default function CompleteProfile() {
                 <div className="relative z-10 flex flex-col h-full px-10 xl:px-12 py-10">
                     {/* Logo */}
                     <div className="mb-14">
-                        <img
-                            src={logoLight}
-                            alt="ZenovaX"
-                            className="h-6 object-contain brightness-0 invert"
-                        />
+                        <button onClick={() => navigate('/')} className="block">
+                            <img
+                                src={logoLight}
+                                alt="ZenovaX"
+                                className="h-6 object-contain brightness-0 invert"
+                            />
+                        </button>
                     </div>
 
                     {/* Step progress with connecting line */}
@@ -368,9 +401,12 @@ export default function CompleteProfile() {
                                             )}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className={`text-sm font-semibold leading-tight transition-all duration-300 ${
-                                                isActive ? 'text-white' : isDone ? 'text-white/70' : 'text-white/40'
-                                            }`}>
+                                            <p className="text-sm leading-tight transition-all duration-300"
+                                                style={{
+                                                    color: '#FFFFFF',
+                                                    fontWeight: 600,
+                                                    textShadow: '0 2px 10px rgba(0,0,0,0.35)'
+                                                }}>
                                                 {m.label}
                                             </p>
                                         </div>
@@ -382,14 +418,16 @@ export default function CompleteProfile() {
 
                     {/* Messaging */}
                     <div className="mt-auto">
-                        <p className="text-white/90 text-lg font-bold leading-snug mb-1.5">
+                        <p className="text-lg font-bold leading-snug mb-1.5"
+                            style={{ color: '#F8FAFC', textShadow: '0 2px 8px rgba(15,23,42,0.55)' }}>
                             {effectiveStep === 1
                                 ? 'Start your journey'
                                 : effectiveStep === totalSteps
                                     ? 'Almost there'
                                     : 'Tell us about yourself'}
                         </p>
-                        <p className="text-white/55 text-sm leading-relaxed">
+                        <p className="text-sm leading-relaxed"
+                            style={{ color: '#F8FAFC', textShadow: '0 2px 8px rgba(15,23,42,0.55)' }}>
                             {effectiveStep === 1
                                 ? 'Choose how you want to use ZenovaX.'
                                 : effectiveStep === totalSteps
@@ -397,7 +435,8 @@ export default function CompleteProfile() {
                                     : 'Help others find and connect with you.'}
                         </p>
                         {effectiveStep === 1 && (
-                            <div className="flex items-center gap-2 mt-4 text-white/35 text-xs font-medium">
+                            <div className="flex items-center gap-2 mt-4 text-xs font-medium"
+                                style={{ color: '#F8FAFC', textShadow: '0 2px 8px rgba(15,23,42,0.55)' }}>
                                 <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none">
                                     <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
                                     <path d="M7 4V7.5L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -410,16 +449,10 @@ export default function CompleteProfile() {
             </aside>
 
             {/* ===== RIGHT CONTENT PANEL ===== */}
-            <main className="flex-1 flex flex-col min-w-0 relative bg-bg">
+            <main className="flex-1 flex flex-col min-w-0 relative">
                 {/* Navbar */}
-                <header className="h-12 shrink-0 flex items-center justify-between px-5 lg:px-10 border-b border-white/20 bg-white/50 backdrop-blur-xl">
-                    <button
-                        onClick={handleBackToZenovaX}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text transition-colors"
-                    >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        Back to ZenovaX
-                    </button>
+                <header className="h-12 shrink-0 flex items-center justify-between px-5 lg:px-10 bg-transparent">
+                    <div />
 
                     <div className="flex items-center gap-1.5">
                         {[1, 2, 3].map((s) => {
@@ -447,16 +480,6 @@ export default function CompleteProfile() {
 
                 {/* Content area — centered form with navigation at bottom */}
                 <div className="flex-1 flex flex-col min-h-0 overflow-y-auto relative">
-                    <div className="absolute inset-0 pointer-events-none"
-                        style={{
-                            backgroundImage: `url(${bgImage})`,
-                            backgroundSize: 'contain',
-                            backgroundPosition: 'center center',
-                            backgroundRepeat: 'no-repeat',
-                            opacity: 0.9,
-                        }}
-                    />
-                    <div className="absolute inset-0 bg-white/40 pointer-events-none" />
                     <div className="relative z-10 flex flex-col flex-1">
                         {!completed && (
                             <div className="flex-1 flex items-center py-6 lg:py-8">
