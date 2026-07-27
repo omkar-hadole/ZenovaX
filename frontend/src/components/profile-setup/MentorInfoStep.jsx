@@ -49,20 +49,13 @@ export default function MentorInfoStep({ mentorInfo, setMentorInfo, toggleSkill,
                 </div>
 
                 <div className="flex mt-3">
-                    <div className="flex items-center flex-1 rounded-[14px] focus-within:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus-within:border-[#4A9FE5] transition-all"
-                        style={{
-                            background: 'rgba(255,255,255,0.58)',
-                            backdropFilter: 'blur(12px)',
-                            border: '1px solid rgba(255,255,255,0.8)',
-                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
-                        }}
-                    >
+                    <div className="flex items-center flex-1 rounded-xl border border-white/30 bg-white/20 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_12px_rgba(0,0,0,0.04)] hover:bg-white/30 hover:border-white/40 focus-within:bg-white/25 focus-within:border-white/50 focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)] transition-all">
                         <input
                             type="text"
                             value={customSkill}
                             onChange={(e) => setCustomSkill(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            className="flex-1 bg-transparent text-[#183B55] px-3.5 py-2.5 text-sm focus:outline-none placeholder:text-[#183B55]/40"
+                            className="flex-1 bg-transparent text-[#1F2F43] px-3.5 py-2.5 text-sm focus:outline-none placeholder:text-[#1F2F43]/40"
                             placeholder="Add a custom skill"
                         />
                         <button
@@ -84,7 +77,7 @@ export default function MentorInfoStep({ mentorInfo, setMentorInfo, toggleSkill,
                             <span
                                 key={skill}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-sm font-medium"
-                                style={{ background: '#287FC4' }}
+                                style={{ background: '#7674E9' }}
                             >
                                 {skill}
                                 <button
@@ -103,26 +96,20 @@ export default function MentorInfoStep({ mentorInfo, setMentorInfo, toggleSkill,
 
             <FieldGroup label="Phone number" required>
                 <div
-                    className={`flex items-center gap-3 rounded-[14px] px-3.5 py-2.5 transition-all ${
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all border border-white/30 bg-white/20 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_12px_rgba(0,0,0,0.04)] hover:bg-white/30 hover:border-white/40 ${
                         mentorInfo.phone.length === 0
-                            ? 'focus-within:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus-within:border-[#4A9FE5]'
+                            ? 'focus-within:bg-white/25 focus-within:border-white/50 focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)]'
                             : isPhoneValid
-                                ? 'focus-within:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus-within:border-[#4A9FE5]'
+                                ? 'focus-within:bg-white/25 focus-within:border-white/50 focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)]'
                                 : 'border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10'
                     }`}
-                    style={{
-                        background: 'rgba(255,255,255,0.58)',
-                        backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255,255,255,0.8)',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
-                    }}
                 >
                     <Phone className={`w-4 h-4 shrink-0 ${isPhoneValid && mentorInfo.phone.length > 0 ? 'text-green-500' : 'text-text-subtle'}`} />
                     <input
                         type="tel"
                         value={mentorInfo.phone}
                         onChange={(e) => setMentorInfo((prev) => ({ ...prev, phone: e.target.value }))}
-                        className="flex-1 bg-transparent text-[#183B55] focus:outline-none font-medium placeholder:text-[#183B55]/40 text-sm"
+                        className="flex-1 bg-transparent text-[#1F2F43] focus:outline-none font-medium placeholder:text-[#1F2F43]/40 text-sm"
                         placeholder="+91 9876543210"
                     />
                     {isPhoneValid && mentorInfo.phone.length > 0 && (
@@ -136,26 +123,20 @@ export default function MentorInfoStep({ mentorInfo, setMentorInfo, toggleSkill,
 
             <FieldGroup label="LinkedIn URL" required={false}>
                 <div
-                    className={`flex items-center gap-3 rounded-[14px] px-3.5 py-2.5 transition-all ${
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all border border-white/30 bg-white/20 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_12px_rgba(0,0,0,0.04)] hover:bg-white/30 hover:border-white/40 ${
                         mentorInfo.linkedin.length === 0
-                            ? 'focus-within:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus-within:border-[#4A9FE5]'
+                            ? 'focus-within:bg-white/25 focus-within:border-white/50 focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)]'
                             : isLinkedInValid
-                                ? 'focus-within:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus-within:border-[#4A9FE5]'
+                                ? 'focus-within:bg-white/25 focus-within:border-white/50 focus-within:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)]'
                                 : 'border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10'
                     }`}
-                    style={{
-                        background: 'rgba(255,255,255,0.58)',
-                        backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255,255,255,0.8)',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
-                    }}
                 >
                     <Linkedin className={`w-4 h-4 shrink-0 ${isLinkedInValid && mentorInfo.linkedin.length > 0 ? 'text-green-500' : 'text-text-subtle'}`} />
                     <input
                         type="url"
                         value={mentorInfo.linkedin}
                         onChange={(e) => setMentorInfo((prev) => ({ ...prev, linkedin: e.target.value }))}
-                        className="flex-1 bg-transparent text-[#183B55] focus:outline-none font-medium placeholder:text-[#183B55]/40 text-sm"
+                        className="flex-1 bg-transparent text-[#1F2F43] focus:outline-none font-medium placeholder:text-[#1F2F43]/40 text-sm"
                         placeholder="https://linkedin.com/in/your-handle"
                     />
                     {isLinkedInValid && mentorInfo.linkedin.length > 0 && (

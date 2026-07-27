@@ -257,7 +257,7 @@ export default function CompleteProfile() {
                     backgroundSize: '100% 100%',
                     backgroundPosition: 'center center',
                     backgroundRepeat: 'no-repeat',
-                    opacity: 0.9,
+                    opacity: 0.95,
                 }}
             />
             <div className="fixed inset-0 pointer-events-none"
@@ -372,7 +372,7 @@ export default function CompleteProfile() {
                 <div className="relative z-10 flex flex-col h-full px-10 xl:px-12 py-10">
                     {/* Logo */}
                     <div className="mb-14">
-                        <button onClick={() => navigate('/')} className="block">
+                        <button onClick={() => navigate('/')} className="block cursor-pointer">
                             <img
                                 src={logoLight}
                                 alt="ZenovaX"
@@ -471,7 +471,7 @@ export default function CompleteProfile() {
                     <button
                         onClick={() => setShowLogoutConfirm(true)}
                         disabled={completed}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-red-500 disabled:opacity-0 disabled:pointer-events-none transition-colors"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-red-500 disabled:opacity-0 disabled:pointer-events-none transition-colors cursor-pointer"
                     >
                         <LogOut className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Sign Out</span>
@@ -484,12 +484,8 @@ export default function CompleteProfile() {
                         {!completed && (
                             <div className="flex-1 flex items-center py-6 lg:py-8">
                                 <div className="w-full max-w-[520px] mx-auto px-5 lg:px-8">
-                                    <div className="mb-6">
-                                        <p className="text-[10px] uppercase tracking-[0.15em] font-semibold mb-1.5"
-                                            style={{ color: '#163B5C' }}>
-                                            Step {effectiveStep} of {totalSteps}
-                                        </p>
-                                        <h1 className="text-xl lg:text-2xl font-bold leading-tight tracking-[-0.02em]"
+                                        <div className="mb-6">
+                                            <h1 className="text-xl lg:text-2xl font-bold leading-tight tracking-[-0.02em]"
                                             style={{ color: '#163B5C' }}>
                                             {meta?.q}
                                         </h1>
@@ -533,7 +529,7 @@ export default function CompleteProfile() {
                                         className={`flex items-center gap-2 px-4 py-2.5 rounded-[14px] text-sm font-semibold transition-all duration-200 ${
                                             isFirstStep
                                                 ? 'opacity-0 pointer-events-none'
-                                                : 'hover:bg-[rgba(255,255,255,0.48)] hover:border-[rgba(74,130,175,0.22)] hover:text-[#315D7D] hover:backdrop-blur-[10px] active:bg-[rgba(225,240,250,0.72)] active:scale-[0.985] text-text-muted'
+                                                : 'hover:bg-[rgba(255,255,255,0.48)] hover:border-[rgba(74,130,175,0.22)] hover:text-[#315D7D] hover:backdrop-blur-[10px] active:bg-[rgba(225,240,250,0.72)] active:scale-[0.985] text-text-muted cursor-pointer'
                                         }`}
                                         style={{
                                             border: '1px solid transparent',
@@ -551,7 +547,7 @@ export default function CompleteProfile() {
                                         className={`flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-[14px] text-sm font-bold transition-all duration-200 ${
                                             !canProceed || submitting
                                                 ? 'cursor-not-allowed'
-                                                : 'text-white'
+                                                : 'text-white cursor-pointer'
                                         }`}
                                         style={!canProceed || submitting ? {
                                             background: 'rgba(255,255,255,0.48)',
@@ -560,10 +556,10 @@ export default function CompleteProfile() {
                                             backdropFilter: 'blur(10px)',
                                             opacity: 0.6,
                                         } : canProceed && !submitting ? {
-                                            background: 'linear-gradient(135deg, #928CFF 0%, #8078FF 55%, #726AF5 100%)',
+                                            background: '#7674E9',
                                             color: '#fff',
                                             border: '1px solid rgba(255,255,255,0.30)',
-                                            boxShadow: '0 8px 22px rgba(111,102,255,0.28)',
+                                            boxShadow: '0 8px 22px rgba(118,116,233,0.28)',
                                             transition: 'transform 180ms ease, box-shadow 180ms ease, filter 180ms ease',
                                             transform: 'translateY(0)',
                                         } : {}}
@@ -571,27 +567,27 @@ export default function CompleteProfile() {
                                             if (canProceed && !submitting) {
                                                 e.currentTarget.style.transform = 'translateY(-2px)';
                                                 e.currentTarget.style.filter = 'brightness(1.04)';
-                                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(111,102,255,0.36)';
+                                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(118,116,233,0.36)';
                                             }
                                         }}
                                         onMouseLeave={(e) => {
                                             if (canProceed && !submitting) {
                                                 e.currentTarget.style.transform = 'translateY(0)';
                                                 e.currentTarget.style.filter = 'none';
-                                                e.currentTarget.style.boxShadow = '0 8px 22px rgba(111,102,255,0.28)';
+                                                e.currentTarget.style.boxShadow = '0 8px 22px rgba(118,116,233,0.28)';
                                             }
                                         }}
                                         onMouseDown={(e) => {
                                             if (canProceed && !submitting) {
                                                 e.currentTarget.style.transform = 'translateY(0) scale(0.98)';
-                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(111,102,255,0.24)';
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(118,116,233,0.24)';
                                             }
                                         }}
                                         onMouseUp={(e) => {
                                             if (canProceed && !submitting) {
                                                 e.currentTarget.style.transform = 'translateY(-2px)';
                                                 e.currentTarget.style.filter = 'brightness(1.04)';
-                                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(111,102,255,0.36)';
+                                                e.currentTarget.style.boxShadow = '0 12px 28px rgba(118,116,233,0.36)';
                                             }
                                         }}
                                     >

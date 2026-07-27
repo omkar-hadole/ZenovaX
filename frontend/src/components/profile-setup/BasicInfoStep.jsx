@@ -21,15 +21,9 @@ function Select({ value, onChange, options, placeholder }) {
             <select
                 value={value}
                 onChange={onChange}
-                className={`w-full rounded-[14px] border px-3.5 py-2.5 text-sm font-medium transition-all appearance-none cursor-pointer focus:outline-none text-[#183B55] focus:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus:border-[#4A9FE5] ${
-                    hasValue ? 'text-[#183B55]' : 'text-[#183B55]/40'
+                className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all appearance-none cursor-pointer focus:outline-none text-[#1F2F43] border border-white/30 bg-white/20 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_12px_rgba(0,0,0,0.04)] hover:bg-white/30 hover:border-white/40 focus:bg-white/25 focus:border-white/50 focus:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)] ${
+                    hasValue ? 'text-[#1F2F43]' : 'text-[#1F2F43]/40'
                 }`}
-                style={{
-                    background: 'rgba(255,255,255,0.58)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255,255,255,0.8)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
-                }}
             >
                 <option value="" disabled>{placeholder}</option>
                 {options.map((opt) => (
@@ -89,32 +83,34 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                     <p className="text-xs text-text-muted mb-2.5">
                         {preview
                             ? 'Tap to change or pick an avatar'
-                            : 'Upload a photo or choose an avatar below'}
+                            : role === 'mentor'
+                                ? 'Upload a professional photo'
+                                : 'Upload a photo or choose an avatar below'}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
-                        {PREDEFINED_AVATARS.map((avatar, idx) => {
+                        {role !== 'mentor' && PREDEFINED_AVATARS.map((avatar, idx) => {
                             const active = basicInfo.profilePicture?.avatarUrl === avatar;
                             return (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => handleSelectPredefinedAvatar(avatar)}
-                                    className={`w-9 h-9 rounded-lg overflow-hidden transition-all duration-200 ${
-                                        active
-                                            ? 'ring-2 ring-[#6F66FF] ring-offset-2 ring-offset-bg scale-105'
-                                            : 'ring-1 ring-border hover:ring-[#6F66FF]/40 hover:scale-105'
-                                    }`}
-                                >
-                                    <img src={avatar} className="w-full h-full object-cover" alt="" />
-                                </button>
+                                 <button
+                                     key={idx}
+                                     type="button"
+                                     onClick={() => handleSelectPredefinedAvatar(avatar)}
+                                     className={`w-9 h-9 rounded-lg overflow-hidden transition-all duration-200 cursor-pointer ${
+                                         active
+                                             ? 'ring-2 ring-[#6F66FF] ring-offset-2 ring-offset-bg scale-105'
+                                             : 'hover:ring-2 hover:ring-[#6F66FF]/40 hover:scale-105'
+                                     }`}
+                                 >
+                                     <img src={avatar} className="w-full h-full object-cover" alt="" />
+                                 </button>
                             );
                         })}
                         {preview && (
-                            <button
-                                type="button"
-                                onClick={() => document.getElementById('profile-picture-input')?.click()}
-                                className="w-9 h-9 rounded-lg border border-dashed border-border flex items-center justify-center text-text-subtle hover:border-[#6F66FF]/40 hover:text-[#6F66FF] transition-all"
-                            >
+                             <button
+                                 type="button"
+                                 onClick={() => document.getElementById('profile-picture-input')?.click()}
+                                 className="w-9 h-9 rounded-lg flex items-center justify-center text-text-subtle hover:text-[#6F66FF] transition-all cursor-pointer"
+                             >
                                 <UploadCloud className="w-3.5 h-3.5" />
                             </button>
                         )}
@@ -151,13 +147,7 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                         maxLength={150}
                         value={basicInfo.bio}
                         onChange={(e) => setBasicInfo((prev) => ({ ...prev, bio: e.target.value }))}
-                        className="w-full rounded-[14px] px-3.5 py-2.5 text-sm text-[#183B55] focus:outline-none focus:shadow-[0_0_0_3px_rgba(74,159,229,0.12)] focus:border-[#4A9FE5] transition-all resize-none placeholder:text-[#183B55]/40"
-                        style={{
-                            background: 'rgba(255,255,255,0.58)',
-                            backdropFilter: 'blur(12px)',
-                            border: '1px solid rgba(255,255,255,0.8)',
-                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 4px 14px rgba(42,105,155,0.08)',
-                        }}
+                        className="w-full rounded-xl px-3.5 py-2.5 text-sm text-[#1F2F43] border border-white/30 bg-white/20 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_12px_rgba(0,0,0,0.04)] hover:bg-white/30 hover:border-white/40 focus:bg-white/25 focus:border-white/50 focus:outline-none focus:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)] transition-all resize-none placeholder:text-[#1F2F43]/40"
                         placeholder="I'm excited to learn about..."
                     />
                     <span className={`absolute bottom-2.5 right-3 text-[10px] font-medium transition-colors ${
