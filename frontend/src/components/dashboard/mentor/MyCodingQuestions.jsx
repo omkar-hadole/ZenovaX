@@ -161,7 +161,7 @@ export default function MyCodingQuestions() {
 
                             <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/60 px-2.5 py-1.5 rounded-lg w-fit mb-6">
                                 <Users size={14} className="text-[#A9C1F7]" />
-                                {q.submissionCount} submission{q.submissionCount === 1 ? '' : 's'}
+                                {q.submissionCount} student{q.submissionCount === 1 ? '' : 's'}
                             </div>
 
                             <div className="flex flex-wrap gap-2 mt-auto">

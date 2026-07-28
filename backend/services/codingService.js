@@ -212,11 +212,26 @@ exports.getCodingQuestionsByCreator = async (prisma, userId) => {
         orderBy: { createdAt: 'desc' },
         include: {
             session: { select: { id: true, title: true } },
-            _count: { select: { submissions: true } }
         }
     });
 
-    return questions.map(({ _count, ...q }) => ({ ...q, submissionCount: _count.submissions }));
+    const questionIds = questions.map(q => q.id);
+    const distinctPairs = questionIds.length > 0
+        ? await prisma.codingSubmission.groupBy({
+            by: ['codingQuestionId', 'userId'],
+            where: { codingQuestionId: { in: questionIds } },
+        })
+        : [];
+
+    const uniqueUserCount = {};
+    distinctPairs.forEach(s => {
+        uniqueUserCount[s.codingQuestionId] = (uniqueUserCount[s.codingQuestionId] || 0) + 1;
+    });
+
+    return questions.map(q => ({
+        ...q,
+        submissionCount: uniqueUserCount[q.id] || 0,
+    }));
 };
 
 exports.updateCodingQuestion = async (prisma, userId, id, payload) => {
