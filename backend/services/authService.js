@@ -13,17 +13,19 @@ const config = require("../config");
 const { BadRequestError, ConflictError, UnauthorizedError, ForbiddenError, NotFoundError } = require("../utils/errors");
 
 exports.register = async (prisma, { name, email, password } = {}) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
     if (!isValidName(name)) {
         throw new BadRequestError("Name must be at least 2 characters");
     }
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(normalizedEmail)) {
         throw new BadRequestError("Only @nst.rishihood.edu.in email addresses are allowed to register.");
     }
     if (!isValidPassword(password)) {
         throw new BadRequestError("Password must be at least 8 characters and contain at least one number or special character.");
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
         throw new ConflictError("Email already registered");
     }
@@ -36,7 +38,7 @@ exports.register = async (prisma, { name, email, password } = {}) => {
     const newUser = await prisma.user.create({
         data: {
             name: sanitizeString(name),
-            email: email.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
             isEmailVerified: false,
             verificationToken: hashToken(verificationToken),
@@ -59,14 +61,16 @@ exports.register = async (prisma, { name, email, password } = {}) => {
 };
 
 exports.login = async (prisma, { email, password, rememberMe, userAgent } = {}) => {
-    if (!isValidEmail(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
         throw new BadRequestError("Invalid email or domain");
     }
     if (!isValidPassword(password)) {
         throw new BadRequestError("Invalid credentials");
     }
 
-    const userRecord = await prisma.user.findUnique({ where: { email } });
+    const userRecord = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!userRecord) {
         throw new UnauthorizedError("Invalid credentials");
     }
@@ -144,11 +148,13 @@ exports.verifyEmail = async (prisma, token) => {
 };
 
 exports.resendVerification = async (prisma, email) => {
-    if (!isValidEmail(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
         throw new BadRequestError("Invalid email");
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     if (!user || user.isEmailVerified) {
         // Always return success to prevent email enumeration
