@@ -1,14 +1,13 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
+let _csrfToken = null;
+
+export const setCsrfToken = (token) => {
+  _csrfToken = token;
 };
 
 export const getCsrfToken = () => {
-  return getCookie('csrfToken');
+  return _csrfToken;
 };
 
 let isRefreshing = false;
@@ -35,6 +34,10 @@ export const login = async (email, password, rememberMe = false) => {
     throw error;
   }
 
+  if (data.csrfToken) {
+    _csrfToken = data.csrfToken;
+  }
+
   return data;
 };
 
@@ -59,7 +62,7 @@ export const register = async (name, email, password) => {
 
 export const logout = async () => {
   try {
-    const csrfToken = getCsrfToken();
+    const csrfToken = _csrfToken;
     const headers = {};
     if (csrfToken) {
       headers['X-CSRF-Token'] = csrfToken;
@@ -106,10 +109,9 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
     headers['Content-Type'] = 'application/json';
   }
 
-  let csrfToken = getCsrfToken();
   const method = (options.method || 'GET').toUpperCase();
-  if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-    headers['X-CSRF-Token'] = csrfToken;
+  if (_csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    headers['X-CSRF-Token'] = _csrfToken;
   }
 
   let body = options.body;
@@ -155,7 +157,7 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
+          ...(_csrfToken && { 'X-CSRF-Token': _csrfToken })
         },
         credentials: 'include',
       });
@@ -163,15 +165,15 @@ export const apiCall = async (endpoint, methodOrOptions = {}, bodyData = null) =
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json().catch(() => ({}));
         if (refreshData.csrfToken) {
-          csrfToken = refreshData.csrfToken;
+          _csrfToken = refreshData.csrfToken;
         }
 
         processQueue(null);
 
         // Retry the original request once with potentially updated CSRF
         const retryHeaders = { ...headers };
-        if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-          retryHeaders['X-CSRF-Token'] = csrfToken;
+        if (_csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+          retryHeaders['X-CSRF-Token'] = _csrfToken;
         }
 
         response = await fetch(`${API_URL}${endpoint}`, {

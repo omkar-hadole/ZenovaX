@@ -59,6 +59,7 @@ const AdminPushNotification = lazy(() => import('./pages/admin/AdminPushNotifica
 const MentorSessionDetailsPage = lazy(() => import('./pages/mentor/MentorSessionDetailsPage'));
 
 import CommandBar from './components/CommandBar';
+import { setCsrfToken } from './utils/api';
 
 function App() {
     const { user } = useAuth();
@@ -66,6 +67,8 @@ function App() {
     useEffect(() => {
         fetch(`${import.meta.env.VITE_API_URL}/auth/csrf`, {
             credentials: 'include'
+        }).then(r => r.json()).then(d => {
+            if (d.csrfToken) setCsrfToken(d.csrfToken);
         }).catch(() => {});
     }, []);
 
