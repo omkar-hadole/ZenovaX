@@ -61,6 +61,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://zenova-x.vercel.app',
   'https://zenova-x-server.vercel.app',
+  'https://zenovax.avnoma.in',
   ...(process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
     : []),
@@ -70,10 +71,12 @@ app.use(cors({
     if (!origin) return callback(null, true);
 
     const isAllowed = allowedOrigins.some(a => origin === a) ||
-      /^https:\/\/[a-z0-9-]+\.amplifyapp\.com$/.test(origin);
+      /^https:\/\/[a-z0-9-]+\.amplifyapp\.com$/.test(origin) ||
+      /^https:\/\/[a-z0-9-]+\.avnoma\.in$/.test(origin);
     if (isAllowed) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   // chatgpt-account-id and X-OpenAI-Fedramp are sent by @openai-oauth/react's
   // openaiAuthHeaders() alongside the Authorization header for the Zen
