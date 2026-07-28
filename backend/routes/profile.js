@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const { protect } = require("../middleware/auth");
+const { protect, requireProfileComplete } = require("../middleware/auth");
 const profileController = require("../controllers/profileController");
 const { BadRequestError } = require("../utils/errors");
 
@@ -28,19 +28,20 @@ router.post(
     profileController.completeProfile
 );
 
-router.get("/me", protect, profileController.getMe);
+router.use(protect, requireProfileComplete);
+
+router.get("/me", profileController.getMe);
 
 router.put(
     "/update",
-    protect,
     upload.single("profileImage"),
     profileController.updateProfile
 );
 
-router.delete("/me", protect, profileController.deactivateAccount);
+router.delete("/me", profileController.deactivateAccount);
 
-router.get("/mentors", protect, profileController.getMentors);
+router.get("/mentors", profileController.getMentors);
 
-router.get("/:id", protect, profileController.getProfileById);
+router.get("/:id", profileController.getProfileById);
 
 module.exports = router;
