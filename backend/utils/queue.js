@@ -14,7 +14,7 @@ if (config.redisUrl && config.redisUrl.trim()) {
             maxRetriesPerRequest: null,
             connectTimeout: 5000,
             lazyConnect: true,
-            retryStrategy(times) {
+            retryStrategy(_times) {
                 return null;
             }
         });
