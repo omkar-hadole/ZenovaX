@@ -3,6 +3,8 @@ const codeRunner = require('./codeRunner');
 const { validateFunctionSignature } = require('./questionTypeEngine');
 const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = require('../utils/errors');
 
+const LOCAL_STORAGE_KEY_PREFIX = 'lk:';
+
 // A test case is "hidden" (its input/output shouldn't be shipped to a
 // non-creator before they submit) if it's explicitly flagged `isHidden`, or
 // — for older rows created before that flag existed — if it falls outside
@@ -342,7 +344,7 @@ exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {
     }));
 };
 
-exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, language }) => {
+exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, language, storageKey }) => {
     if (!code || typeof code !== 'string') {
         throw new BadRequestError('Code is required');
     }
@@ -354,6 +356,7 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
 
     const isStructured = question.questionType === 'structured';
 
+    let submission;
     if (isStructured) {
         const structuredTestCases = parseTestCases(question.structuredTestCases);
         if (structuredTestCases.length === 0) {
@@ -374,17 +377,17 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
             ? 'PASSED'
             : 'FAILED';
 
-        const submission = await prisma.codingSubmission.create({
+        submission = await prisma.codingSubmission.create({
             data: {
                 userId,
                 codingQuestionId: id,
-                code,
+                code: storageKey ? `${LOCAL_STORAGE_KEY_PREFIX}${storageKey}` : code,
                 language,
                 status
             }
         });
 
-        return { submission, results: redactHiddenStructuredResults(results, structuredTestCases, isPrivileged), error };
+        return { submission: { ...submission, code: null }, results: redactHiddenStructuredResults(results, structuredTestCases, isPrivileged), error };
     }
 
     const testCases = parseTestCases(question.testCases);
@@ -392,28 +395,22 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
         throw new BadRequestError('This question has no test cases configured');
     }
 
-    // The server re-runs every test case itself here, against the real
-    // (never-redacted) test cases it just fetched, and decides pass/fail —
-    // any `status`/`results` the client sends is ignored, so a submission
-    // can't be faked by simply POSTing status: "PASSED". The client no longer
-    // pre-verifies its own code before calling this endpoint, since doing so
-    // against the redacted hidden test cases would just fail every time.
     const { results, error } = await codeRunner.runTestCases(language, code, testCases);
     const status = !error && results && results.length > 0 && results.every(r => r.passed)
         ? 'PASSED'
         : 'FAILED';
 
-    const submission = await prisma.codingSubmission.create({
+    submission = await prisma.codingSubmission.create({
         data: {
             userId,
             codingQuestionId: id,
-            code,
+            code: storageKey ? `${LOCAL_STORAGE_KEY_PREFIX}${storageKey}` : code,
             language,
             status
         }
     });
 
-    return { submission, results: redactHiddenResults(results, testCases, isPrivileged), error };
+    return { submission: { ...submission, code: null }, results: redactHiddenResults(results, testCases, isPrivileged), error };
 };
 
 exports.getMySubmissions = async (prisma, userId, userRole, id) => {

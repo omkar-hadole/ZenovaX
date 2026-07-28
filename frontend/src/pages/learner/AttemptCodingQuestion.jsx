@@ -327,10 +327,12 @@ class Solution {
         // redacted "Hidden" placeholders here would give a wrong answer (or
         // throw, e.g. `JSON.parse("Hidden")`) for every hidden test case.
         if (mode === 'submit' && !previewMode) {
+            const storageKey = `code_sub_${id}_${Date.now()}`;
             try {
+                localStorage.setItem(storageKey, code);
                 const { submission, results: submitResults, error: submitError } = await apiCall(`/coding-questions/${id}/submit`, {
                     method: 'POST',
-                    body: JSON.stringify({ code, language })
+                    body: JSON.stringify({ code, language, storageKey })
                 });
 
                 if (submitError) {
@@ -966,7 +968,16 @@ class Solution {
                                                         </div>
                                                     </div>
                                                     <button
-                                                        onClick={() => { setLanguage(sub.language); setCode(sub.code); setActiveTab('tests'); }}
+                                                        onClick={() => {
+                                                            let restoredCode = sub.code;
+                                                            if (sub.code && sub.code.startsWith('lk:')) {
+                                                                const key = sub.code.slice(3);
+                                                                restoredCode = localStorage.getItem(key) || '// Code not found in local storage';
+                                                            }
+                                                            setLanguage(sub.language);
+                                                            setCode(restoredCode);
+                                                            setActiveTab('tests');
+                                                        }}
                                                         className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
                                                     >
                                                         Load into Editor
