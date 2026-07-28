@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -195,6 +195,33 @@ export default function CodeDebuggerPanel({ question, code, language, isOpen, on
     const bottomRef   = useRef(null);
     const isDragging  = useRef(false);
     const panelRef    = useRef(null);
+    const thinkingTimerRef = useRef(null);
+
+    const [thinkingSeconds, setThinkingSeconds] = useState(0);
+
+    const getThinkingMessage = useMemo(() => (seconds) => {
+        if (seconds < 3) return 'Zen is thinking';
+        if (seconds < 6) return 'Seeing your code...';
+        if (seconds < 10) return 'Understanding the problem...';
+        if (seconds < 15) return 'Working on it...';
+        if (seconds < 20) return 'Almost done...';
+        return 'Just a little longer...';
+    }, []);
+
+    useEffect(() => {
+        if (loading) {
+            setThinkingSeconds(0);
+            thinkingTimerRef.current = setInterval(() => {
+                setThinkingSeconds(prev => prev + 1);
+            }, 1000);
+        } else {
+            if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+            setThinkingSeconds(0);
+        }
+        return () => {
+            if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current);
+        };
+    }, [loading]);
 
     // Same hook, same default (no custom sessionStore/redirectUri) as
     // Zen.jsx — that means it reads/writes the exact same underlying
@@ -583,7 +610,7 @@ User's request: ${userQuestion}`;
                                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                                 <div className="flex items-center gap-2">
                                     <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                                    <span className="text-[12px] text-gray-500">Thinking…</span>
+                                    <span className="text-[12px] text-gray-500">{getThinkingMessage(thinkingSeconds)}</span>
                                 </div>
                             </div>
                         </div>
