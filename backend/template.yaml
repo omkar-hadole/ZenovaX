@@ -11,6 +11,7 @@ Description: >
 # ---------------------------------------------------------------------------
 Parameters:
   DatabaseUrl:        { Type: String, NoEcho: true }
+  DirectUrl:          { Type: String, NoEcho: true }
   JwtSecret:          { Type: String, NoEcho: true }
   CsrfSecret:         { Type: String, NoEcho: true }
   RedisUrl:           { Type: String, NoEcho: true, Default: "" }
@@ -37,6 +38,7 @@ Globals:
       Variables:
         NODE_ENV: production
         DATABASE_URL: !Ref DatabaseUrl
+        DIRECT_URL: !Ref DirectUrl
         JWT_SECRET: !Ref JwtSecret
         CSRF_SECRET: !Ref CsrfSecret
         REDIS_URL: !Ref RedisUrl

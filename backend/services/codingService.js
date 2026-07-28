@@ -354,6 +354,7 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
 
     const isStructured = question.questionType === 'structured';
 
+    let submission;
     if (isStructured) {
         const structuredTestCases = parseTestCases(question.structuredTestCases);
         if (structuredTestCases.length === 0) {
@@ -374,11 +375,10 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
             ? 'PASSED'
             : 'FAILED';
 
-        const submission = await prisma.codingSubmission.create({
+        submission = await prisma.codingSubmission.create({
             data: {
                 userId,
                 codingQuestionId: id,
-                code,
                 language,
                 status
             }
@@ -392,22 +392,15 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
         throw new BadRequestError('This question has no test cases configured');
     }
 
-    // The server re-runs every test case itself here, against the real
-    // (never-redacted) test cases it just fetched, and decides pass/fail —
-    // any `status`/`results` the client sends is ignored, so a submission
-    // can't be faked by simply POSTing status: "PASSED". The client no longer
-    // pre-verifies its own code before calling this endpoint, since doing so
-    // against the redacted hidden test cases would just fail every time.
     const { results, error } = await codeRunner.runTestCases(language, code, testCases);
     const status = !error && results && results.length > 0 && results.every(r => r.passed)
         ? 'PASSED'
         : 'FAILED';
 
-    const submission = await prisma.codingSubmission.create({
+    submission = await prisma.codingSubmission.create({
         data: {
             userId,
             codingQuestionId: id,
-            code,
             language,
             status
         }
@@ -424,7 +417,7 @@ exports.getMySubmissions = async (prisma, userId, userRole, id) => {
     return await prisma.codingSubmission.findMany({
         where: { userId, codingQuestionId: id },
         orderBy: { createdAt: 'desc' },
-        select: { id: true, code: true, language: true, status: true, createdAt: true }
+        select: { id: true, language: true, status: true, createdAt: true }
     });
 };
 

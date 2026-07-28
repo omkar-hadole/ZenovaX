@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, requireProfileComplete } = require('../middleware/auth');
 const notificationService = require('../services/notificationService');
 
-router.get('/', protect, async (req, res, next) => {
+router.use(protect, requireProfileComplete);
+
+router.get('/', async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = Math.min(parseInt(req.query.limit) || 20, 50);
@@ -16,7 +18,7 @@ router.get('/', protect, async (req, res, next) => {
     }
 });
 
-router.get('/unread-count', protect, async (req, res, next) => {
+router.get('/unread-count', async (req, res, next) => {
     try {
         const result = await notificationService.getUnreadCount(req.prisma, req.user.id);
         res.json(result);
@@ -25,7 +27,7 @@ router.get('/unread-count', protect, async (req, res, next) => {
     }
 });
 
-router.put('/read-all', protect, async (req, res, next) => {
+router.put('/read-all', async (req, res, next) => {
     try {
         const result = await notificationService.markAllAsRead(req.prisma, req.user.id);
         res.json(result);
@@ -34,7 +36,7 @@ router.put('/read-all', protect, async (req, res, next) => {
     }
 });
 
-router.put('/:id/read', protect, async (req, res, next) => {
+router.put('/:id/read', async (req, res, next) => {
     try {
         const notification = await notificationService.markAsRead(req.prisma, req.user.id, req.params.id);
         res.json({ notification });
@@ -43,7 +45,7 @@ router.put('/:id/read', protect, async (req, res, next) => {
     }
 });
 
-router.post('/register-device', protect, async (req, res, next) => {
+router.post('/register-device', async (req, res, next) => {
     try {
         const result = await notificationService.registerDeviceToken(req.prisma, req.user.id, req.body.token);
         res.json(result);

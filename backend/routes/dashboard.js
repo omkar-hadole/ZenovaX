@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, requireProfileComplete } = require('../middleware/auth');
 const { getDashboardData } = require('../controllers/dashboardController');
 
+router.use(protect, requireProfileComplete);
+
 // GET /api/dashboard - Fetch all dashboard datasets
-router.get('/', protect, getDashboardData);
+router.get('/', getDashboardData);
 
 module.exports = router;

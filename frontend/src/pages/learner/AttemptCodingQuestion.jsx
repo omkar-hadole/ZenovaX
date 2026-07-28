@@ -327,32 +327,26 @@ class Solution {
         // redacted "Hidden" placeholders here would give a wrong answer (or
         // throw, e.g. `JSON.parse("Hidden")`) for every hidden test case.
         if (mode === 'submit' && !previewMode) {
-            try {
-                const { submission, results: submitResults, error: submitError } = await apiCall(`/coding-questions/${id}/submit`, {
-                    method: 'POST',
-                    body: JSON.stringify({ code, language })
-                });
+            const { submission, results: submitResults, error: submitError } = await apiCall(`/coding-questions/${id}/submit`, {
+                method: 'POST',
+                body: JSON.stringify({ code, language })
+            });
 
-                if (submitError) {
-                    setOutput(prev => [...prev, { type: 'error', text: `Execution Error: ${submitError}` }]);
-                    setActiveTab('console');
-                } else {
-                    setResults(submitResults);
-                    setActiveTab('tests');
-                    if (submission.status === 'PASSED') {
-                        setQuestion(prev => ({ ...prev, isSolved: true }));
-                        setShowSuccessPopup(true);
-                    } else {
-                        setToast({ message: 'Some test cases failed — check Test Results.', type: 'error' });
-                    }
-                }
-                fetchSubmissions();
-            } catch (err) {
-                setOutput(prev => [...prev, { type: 'error', text: `Network Error: ${err.message}` }]);
+            if (submitError) {
+                setOutput(prev => [...prev, { type: 'error', text: `Execution Error: ${submitError}` }]);
                 setActiveTab('console');
-            } finally {
-                setIsRunning(false);
+            } else {
+                setResults(submitResults);
+                setActiveTab('tests');
+                if (submission.status === 'PASSED') {
+                    setQuestion(prev => ({ ...prev, isSolved: true }));
+                    setShowSuccessPopup(true);
+                } else {
+                    setToast({ message: 'Some test cases failed — check Test Results.', type: 'error' });
+                }
             }
+            fetchSubmissions();
+            setIsRunning(false);
             return;
         }
 
@@ -965,12 +959,6 @@ class Solution {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        onClick={() => { setLanguage(sub.language); setCode(sub.code); setActiveTab('tests'); }}
-                                                        className="px-3 py-1.5 text-xs font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
-                                                    >
-                                                        Load into Editor
-                                                    </button>
                                                 </div>
                                             ))}
                                         </div>

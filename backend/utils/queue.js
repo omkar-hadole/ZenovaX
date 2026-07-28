@@ -4,6 +4,7 @@ const cache = require("./cache");
 const config = require("../config");
 const badgeService = require("../services/badgeService");
 const mentorWalletService = require("../services/mentorWalletService");
+const { cleanupOldNotifications, cleanupExpiredRefreshTokens } = require("./storageCleanup");
 
 let myQueue;
 let redisAvailable = false;
@@ -140,6 +141,9 @@ function startQueueWorker(prisma) {
         } catch (err) {
             logger.error(`Pending-booking sweep error: ${err.message}`);
         }
+
+        await cleanupOldNotifications(prisma);
+        await cleanupExpiredRefreshTokens(prisma);
     }, 60000);
 }
 

@@ -138,6 +138,14 @@
   box-sizing: border-box;
 }
 
+button:not(:disabled),
+a:not([tabindex="-1"]),
+[role="button"]:not(:disabled),
+label,
+summary {
+  cursor: pointer;
+}
+
 /* NOTE: no `scroll-behavior: smooth` here — Lenis provides smooth scrolling.
    The CSS property must stay off: ScrollTrigger snapshots the computed value
    at init and force-restores it INLINE on <html> after every refresh(), and

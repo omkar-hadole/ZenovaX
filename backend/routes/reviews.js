@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, requireProfileComplete } = require('../middleware/auth');
 const { sanitizeString } = require('../utils/validation');
 const logger = require('../utils/logger');
 const { addJob } = require('../utils/queue');
 
-router.post('/create', protect, async (req, res, next) => {
+router.post('/create', protect, requireProfileComplete, async (req, res, next) => {
     const { sessionId, rating, comment, isAnonymous } = req.body;
     const userId = req.user.id;
 
@@ -190,7 +190,7 @@ router.get('/mentor/:mentorId', async (req, res, next) => {
     }
 });
 
-router.get('/my-reviews', protect, async (req, res, next) => {
+router.get('/my-reviews', protect, requireProfileComplete, async (req, res, next) => {
     try {
         const reviews = await req.prisma.review.findMany({
             where: { mentorId: req.user.id },
@@ -229,7 +229,7 @@ router.get('/my-reviews', protect, async (req, res, next) => {
     }
 });
 
-router.get('/stats', protect, async (req, res) => {
+router.get('/stats', protect, requireProfileComplete, async (req, res) => {
     try {
         const userId = req.user.id;
 

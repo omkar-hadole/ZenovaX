@@ -1,10 +1,12 @@
 const express = require("express");
-const { protect } = require("../middleware/auth");
+const { protect, requireProfileComplete } = require("../middleware/auth");
 
 const router = express.Router();
 const { addJob } = require("../utils/queue");
 
-router.post("/follow/:id", protect, async (req, res, next) => {
+router.use(protect, requireProfileComplete);
+
+router.post("/follow/:id", async (req, res, next) => {
     try {
         const { id: followingId } = req.params;
         const followerId = req.user.id;
@@ -36,7 +38,7 @@ router.post("/follow/:id", protect, async (req, res, next) => {
     }
 });
 
-router.delete("/follow/:id", protect, async (req, res, next) => {
+router.delete("/follow/:id", async (req, res, next) => {
     try {
         const { id: followingId } = req.params;
         const followerId = req.user.id;
@@ -64,7 +66,7 @@ router.delete("/follow/:id", protect, async (req, res, next) => {
     }
 });
 
-router.post("/like/:id", protect, async (req, res, next) => {
+router.post("/like/:id", async (req, res, next) => {
     try {
         const { id: mentorId } = req.params;
         const userId = req.user.id;
@@ -96,7 +98,7 @@ router.post("/like/:id", protect, async (req, res, next) => {
     }
 });
 
-router.delete("/like/:id", protect, async (req, res, next) => {
+router.delete("/like/:id", async (req, res, next) => {
     try {
         const { id: mentorId } = req.params;
         const userId = req.user.id;

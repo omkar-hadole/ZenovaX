@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require("../middleware/auth");
+const { protect, authorize, requireProfileComplete } = require("../middleware/auth");
 const logger = require("../utils/logger");
 const { validateCreateQuiz, validateEditQuiz, validateSubmitQuiz } = require("../utils/quizValidation");
 
-router.post("/create", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
+router.use(protect, requireProfileComplete);
+
+router.post("/create", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const validation = validateCreateQuiz(req.body);
         if (!validation.valid) {
@@ -59,7 +61,7 @@ router.post("/create", protect, authorize('MENTOR', 'BOTH'), async (req, res, ne
     }
 });
 
-router.put("/:id/edit", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
+router.put("/:id/edit", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const validation = validateEditQuiz(req.body);
         if (!validation.valid) {
@@ -133,7 +135,7 @@ router.put("/:id/edit", protect, authorize('MENTOR', 'BOTH'), async (req, res, n
     }
 });
 
-router.delete("/:id", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
+router.delete("/:id", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { id } = req.params;
         const quiz = await req.prisma.quiz.findUnique({
@@ -164,7 +166,7 @@ router.delete("/:id", protect, authorize('MENTOR', 'BOTH'), async (req, res, nex
     }
 });
 
-router.post("/:id/launch", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
+router.post("/:id/launch", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -221,7 +223,7 @@ router.post("/:id/launch", protect, authorize('MENTOR', 'BOTH'), async (req, res
     }
 });
 
-router.post("/:id/close", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
+router.post("/:id/close", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -254,7 +256,7 @@ router.post("/:id/close", protect, authorize('MENTOR', 'BOTH'), async (req, res,
     }
 });
 
-router.get("/session/:sessionId", protect, async (req, res, next) => {
+router.get("/session/:sessionId", async (req, res, next) => {
     try {
         const { sessionId } = req.params;
 
@@ -275,7 +277,7 @@ router.get("/session/:sessionId", protect, async (req, res, next) => {
     }
 });
 
-router.get("/:id", protect, async (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -309,7 +311,7 @@ router.get("/:id", protect, async (req, res, next) => {
     }
 });
 
-router.get("/:id/attempt", protect, async (req, res, next) => {
+router.get("/:id/attempt", async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -416,7 +418,7 @@ router.get("/:id/attempt", protect, async (req, res, next) => {
     }
 });
 
-router.post("/:id/submit", protect, async (req, res, next) => {
+router.post("/:id/submit", async (req, res, next) => {
     try {
         const validation = validateSubmitQuiz(req.body);
         if (!validation.valid) {
@@ -547,7 +549,7 @@ router.post("/:id/submit", protect, async (req, res, next) => {
     }
 });
 
-router.get("/:id/results", protect, authorize('MENTOR', 'BOTH'), async (req, res, next) => {
+router.get("/:id/results", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const { id } = req.params;
 

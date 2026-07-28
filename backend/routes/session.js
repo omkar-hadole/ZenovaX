@@ -1,34 +1,36 @@
 const express = require("express");
-const { protect, authorize } = require("../middleware/auth");
+const { protect, authorize, requireProfileComplete } = require("../middleware/auth");
 const sessionController = require("../controllers/sessionController");
 
 const router = express.Router();
 
-router.post("/request", protect, authorize('MENTOR', 'BOTH'), sessionController.createSessionRequest);
+router.use(protect, requireProfileComplete);
 
-router.get("/request/:id", protect, authorize('MENTOR', 'BOTH', 'ADMIN'), sessionController.getSessionRequestById);
+router.post("/request", authorize('MENTOR', 'BOTH'), sessionController.createSessionRequest);
 
-router.put("/request/:id", protect, authorize('MENTOR', 'BOTH', 'ADMIN'), sessionController.updateSessionRequest);
+router.get("/request/:id", authorize('MENTOR', 'BOTH', 'ADMIN'), sessionController.getSessionRequestById);
 
-router.get("/my-requests", protect, authorize('MENTOR', 'BOTH'), sessionController.getMyRequests);
+router.put("/request/:id", authorize('MENTOR', 'BOTH', 'ADMIN'), sessionController.updateSessionRequest);
 
-router.get("/stats", protect, authorize('MENTOR', 'BOTH'), sessionController.getMentorStats);
+router.get("/my-requests", authorize('MENTOR', 'BOTH'), sessionController.getMyRequests);
 
-router.get("/activity", protect, authorize('MENTOR', 'BOTH'), sessionController.getRecentActivity);
+router.get("/stats", authorize('MENTOR', 'BOTH'), sessionController.getMentorStats);
 
-router.get("/my-sessions", protect, authorize('MENTOR', 'BOTH'), sessionController.getMySessions);
+router.get("/activity", authorize('MENTOR', 'BOTH'), sessionController.getRecentActivity);
 
-router.post("/book/:id", protect, sessionController.bookSession);
-router.post("/verify-payment", protect, sessionController.verifyPayment);
-router.get("/booking-status/:id", protect, sessionController.getBookingStatus);
-router.get("/my-bookings", protect, sessionController.getMyBookings);
+router.get("/my-sessions", authorize('MENTOR', 'BOTH'), sessionController.getMySessions);
 
-router.get("/all", protect, sessionController.getAllSessions);
+router.post("/book/:id", sessionController.bookSession);
+router.post("/verify-payment", sessionController.verifyPayment);
+router.get("/booking-status/:id", sessionController.getBookingStatus);
+router.get("/my-bookings", sessionController.getMyBookings);
 
-router.post("/verify-attendance", protect, authorize('MENTOR', 'BOTH'), sessionController.verifyAttendance);
+router.get("/all", sessionController.getAllSessions);
 
-router.get("/:id/live-access", protect, sessionController.getLiveAccess);
+router.post("/verify-attendance", authorize('MENTOR', 'BOTH'), sessionController.verifyAttendance);
 
-router.get("/:id", protect, sessionController.getSessionById);
+router.get("/:id/live-access", sessionController.getLiveAccess);
+
+router.get("/:id", sessionController.getSessionById);
 
 module.exports = router;
