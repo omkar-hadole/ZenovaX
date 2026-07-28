@@ -1,7 +1,7 @@
 {
   "name": "zenovax-backend",
   "version": "1.0.0",
-  "description": "Authentication backend with Express, Prisma, MySQL",
+  "description": "ZenovaX backend — Express, Prisma, Supabase PostgreSQL",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
