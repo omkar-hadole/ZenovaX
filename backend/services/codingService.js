@@ -3,8 +3,6 @@ const codeRunner = require('./codeRunner');
 const { validateFunctionSignature } = require('./questionTypeEngine');
 const { BadRequestError, NotFoundError, ForbiddenError, ConflictError } = require('../utils/errors');
 
-const LOCAL_STORAGE_KEY_PREFIX = 'lk:';
-
 // A test case is "hidden" (its input/output shouldn't be shipped to a
 // non-creator before they submit) if it's explicitly flagged `isHidden`, or
 // — for older rows created before that flag existed — if it falls outside
@@ -344,7 +342,7 @@ exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {
     }));
 };
 
-exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, language, storageKey }) => {
+exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, language }) => {
     if (!code || typeof code !== 'string') {
         throw new BadRequestError('Code is required');
     }
@@ -381,13 +379,12 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
             data: {
                 userId,
                 codingQuestionId: id,
-                code: storageKey ? `${LOCAL_STORAGE_KEY_PREFIX}${storageKey}` : code,
                 language,
                 status
             }
         });
 
-        return { submission: { ...submission, code: null }, results: redactHiddenStructuredResults(results, structuredTestCases, isPrivileged), error };
+        return { submission, results: redactHiddenStructuredResults(results, structuredTestCases, isPrivileged), error };
     }
 
     const testCases = parseTestCases(question.testCases);
@@ -404,13 +401,12 @@ exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, lang
         data: {
             userId,
             codingQuestionId: id,
-            code: storageKey ? `${LOCAL_STORAGE_KEY_PREFIX}${storageKey}` : code,
             language,
             status
         }
     });
 
-    return { submission: { ...submission, code: null }, results: redactHiddenResults(results, testCases, isPrivileged), error };
+    return { submission, results: redactHiddenResults(results, testCases, isPrivileged), error };
 };
 
 exports.getMySubmissions = async (prisma, userId, userRole, id) => {
@@ -421,7 +417,7 @@ exports.getMySubmissions = async (prisma, userId, userRole, id) => {
     return await prisma.codingSubmission.findMany({
         where: { userId, codingQuestionId: id },
         orderBy: { createdAt: 'desc' },
-        select: { id: true, code: true, language: true, status: true, createdAt: true }
+        select: { id: true, language: true, status: true, createdAt: true }
     });
 };
 

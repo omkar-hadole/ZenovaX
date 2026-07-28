@@ -861,7 +861,6 @@ model CodingSubmission {
   codingQuestion   CodingQuestion @relation(fields: [codingQuestionId], references: [id], onDelete: Cascade)
   
   // Submission details
-  code             String         @db.Text
   language         String
   status           String         // PASSED, FAILED
   
