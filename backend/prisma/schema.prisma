@@ -32,7 +32,6 @@ model User {
   password          String
   name              String
   phoneNumber       String?   @unique
-  collegeName       String?
   department        String?
   year              Int?      // Year of study (1-4)
   bio               String?   @db.Text
@@ -57,7 +56,6 @@ model User {
   
   // Gamification (for mentors)
   totalSessions     Int       @default(0)
-  totalRating       Float     @default(0)
   averageRating     Float     @default(0)
   badgeLevel        BadgeLevel?
   points            Int       @default(0)
@@ -80,7 +78,6 @@ model User {
   quizzes           Quiz[]
   codingQuestions   CodingQuestion[]
   quizAttempts      QuizAttempt[]
-  achievements      UserAchievement[]
   transactions      Transaction[]
   notifications     Notification[]
   codingSubmissions CodingSubmission[]
@@ -90,7 +87,6 @@ model User {
   
   @@index([email])
   @@index([phoneNumber])
-  @@index([collegeName])
   @@index([department])
   @@index([role])
   @@index([averageRating])
@@ -536,57 +532,6 @@ model Answer {
   @@map("answers")
 }
 
-// GAMIFICATION & ACHIEVEMENTS
-
-enum AchievementType {
-  SESSIONS_COMPLETED
-  HIGH_RATING
-  LEARNERS_HELPED
-  PERFECT_ATTENDANCE
-  EARLY_ADOPTER
-  RESOURCE_CONTRIBUTOR
-  QUIZ_MASTER
-  FIRST_SESSION
-}
-
-model Achievement {
-  id              String              @id @default(uuid())
-  name            String              @unique
-  description     String              @db.Text
-  type            AchievementType
-  requirement     Int                 // Threshold to unlock
-  badgeIcon       String?             // Icon URL
-  points          Int                 @default(0)
-  
-  // Timestamps
-  createdAt       DateTime            @default(now())
-  
-  // Relations
-  userAchievements UserAchievement[]
-  
-  @@index([type])
-  @@map("achievements")
-}
-
-model UserAchievement {
-  id              String       @id @default(uuid())
-  
-  // References
-  userId          String
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  achievementId   String
-  achievement     Achievement  @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-  
-  // Achievement details
-  unlockedAt      DateTime     @default(now())
-  progress        Int          @default(0)
-  
-  @@unique([userId, achievementId])
-  @@index([userId])
-  @@index([achievementId])
-  @@map("user_achievements")
-}
-
 // PAYMENTS & TRANSACTIONS
 
 enum TransactionStatus {
@@ -927,21 +872,6 @@ model CodingSubmission {
   @@index([codingQuestionId])
   @@index([userId, codingQuestionId])
   @@map("coding_submissions")
-}
-
-model Job {
-  id          String   @id @default(uuid())
-  type        String
-  payload     String   @db.Text
-  status      String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
-  attempts    Int      @default(0)
-  maxAttempts Int      @default(3)
-  error       String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([status])
-  @@map("jobs")
 }
 
 model RefreshToken {
