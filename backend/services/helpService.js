@@ -207,29 +207,43 @@ Rules for the generated JSON:
 
 6. difficulty must reflect actual complexity. functionName must be a valid camelCase identifier.`;
 
-exports.generateCodingQuestion = async (prisma, cache, user, { prompt } = {}) => {
+exports.generateCodingQuestion = async ({ prompt } = {}, requestHeaders = {}) => {
     if (!prompt) {
         throw new BadRequestError("Prompt is required");
     }
 
-    if (!model) {
-        if (!process.env.GEMINI_API_KEY) {
-            logger.warn("GEMINI_API_KEY is not set.");
-            return { error: "AI assistant is not configured. Please set GEMINI_API_KEY." };
-        }
-        model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-flash-latest" });
+    const { createOpenAIOAuth, openaiCredentials, generateText } = await loadOpenAIOAuthModules();
+
+    let auth;
+    try {
+        auth = openaiCredentials(new Headers(requestHeaders));
+    } catch (error) {
+        return { error: "ChatGPT sign-in required — connect your ChatGPT account first." };
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     try {
-        const chat = model.startChat({ generationConfig: { temperature: 0.2, maxOutputTokens: 4096 } });
-        const response = (await chat.sendMessage(`${CODING_QUESTION_GENERATION_PROMPT}\n\nUser request: ${prompt}`)).response;
-        const text = response.text();
+        const provider = createOpenAIOAuth(auth);
+        const result = await generateText({
+            model: provider('gpt-5.4-mini'),
+            prompt: `${CODING_QUESTION_GENERATION_PROMPT}\n\nUser request: ${prompt}`,
+            abortSignal: controller.signal,
+        });
+        const text = result.text;
         const cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').trim();
         const parsed = JSON.parse(cleaned);
         return { question: parsed };
     } catch (error) {
         logger.error("Generate Coding Question Error:", { message: error.message });
-        return { error: "Failed to generate question. Try being more specific in your description." };
+
+        if (/timeout|abort/i.test(error.message || '')) {
+            return { error: "Your ChatGPT account is taking too long to respond. Please try again in a moment." };
+        }
+
+        return { error: "Failed to generate question via ChatGPT. Try being more specific in your description." };
+    } finally {
+        clearTimeout(timeoutId);
     }
 };
 

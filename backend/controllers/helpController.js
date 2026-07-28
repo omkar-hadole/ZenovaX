@@ -20,7 +20,7 @@ exports.askAIWithChatGPT = async (req, res, next) => {
 
 exports.generateCodingQuestion = async (req, res, next) => {
   try {
-    const result = await helpService.generateCodingQuestion(req.prisma, req.cache, req.user, req.body);
+    const result = await helpService.generateCodingQuestion(req.body, req.headers);
     return res.json(result);
   } catch (error) {
     return next(error);
