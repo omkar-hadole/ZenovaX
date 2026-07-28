@@ -153,7 +153,7 @@ app.use((err, req, res, _next) => {
   const message = err.statusCode ? err.message : 'Something went wrong!';
   res.status(statusCode).json({
     error: message,
-    details: config.nodeEnv === 'development' ? err.message : undefined
+    details: err.message
   });
 });
 

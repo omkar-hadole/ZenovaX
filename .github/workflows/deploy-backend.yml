@@ -66,8 +66,8 @@ jobs:
             node_modules/empathic
           find node_modules/@prisma/client/runtime -type f \
             -name '*wasm-base64*' -delete 2>/dev/null || true
-          find node_modules -type f -name 'libquery_engine-*.node' \
-            ! -name '*linux-arm64*' -delete
+          # Keep all query engines (arm64 Lambda can use its target; CI runner's native
+          # engine is harmless dead weight but ensures we don't accidentally strip it)
           echo "Remaining engines:"
           find node_modules -name 'libquery_engine-*.node'
 
