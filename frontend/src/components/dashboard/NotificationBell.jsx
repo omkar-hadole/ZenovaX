@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Loader2 } from 'lucide-react';
 import { apiCall } from '../../utils/api';
@@ -9,11 +10,23 @@ const POLL_INTERVAL_MS = 45_000;
 export default function NotificationBell() {
     const navigate = useNavigate();
     const containerRef = useRef(null);
+    const buttonRef = useRef(null);
     const [open, setOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [markingAll, setMarkingAll] = useState(false);
+    const [dropdownStyle, setDropdownStyle] = useState({});
+
+    const updateDropdownPosition = useCallback(() => {
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownStyle({
+                top: rect.bottom + 12,
+                right: window.innerWidth - rect.right,
+            });
+        }
+    }, []);
 
     const fetchUnreadCount = useCallback(async () => {
         try {
@@ -39,13 +52,20 @@ export default function NotificationBell() {
         const onEscape = (e) => {
             if (e.key === 'Escape') setOpen(false);
         };
+        const onScroll = () => {
+            if (open) updateDropdownPosition();
+        };
         document.addEventListener('mousedown', onClickOutside);
         document.addEventListener('keydown', onEscape);
+        document.addEventListener('scroll', onScroll, true);
+        window.addEventListener('resize', onScroll);
         return () => {
             document.removeEventListener('mousedown', onClickOutside);
             document.removeEventListener('keydown', onEscape);
+            document.removeEventListener('scroll', onScroll, true);
+            window.removeEventListener('resize', onScroll);
         };
-    }, []);
+    }, [open, updateDropdownPosition]);
 
     const fetchNotifications = useCallback(async () => {
         setLoading(true);
@@ -64,6 +84,7 @@ export default function NotificationBell() {
         const next = !open;
         setOpen(next);
         if (next) {
+            updateDropdownPosition();
             fetchNotifications();
         }
     };
@@ -103,6 +124,7 @@ export default function NotificationBell() {
     return (
         <div ref={containerRef} className="relative">
             <button
+                ref={buttonRef}
                 onClick={handleToggle}
                 aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
                 aria-expanded={open}
@@ -116,8 +138,11 @@ export default function NotificationBell() {
                 )}
             </button>
 
-            {open && (
-                <div className="absolute right-0 mt-3 w-96 max-w-[90vw] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-[60]">
+            {open && createPortal(
+                <div
+                    style={{ position: 'fixed', top: dropdownStyle.top, right: dropdownStyle.right }}
+                    className="w-96 max-w-[90vw] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-[9999]"
+                >
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
                         <h3 className="font-bold text-gray-800 dark:text-gray-100">Notifications</h3>
                         {unreadCount > 0 && (
@@ -156,7 +181,8 @@ export default function NotificationBell() {
                             </ul>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
