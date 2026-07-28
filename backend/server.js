@@ -69,15 +69,11 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    // Strict equality check — prefix matching (startsWith) allows subdomain spoofing attacks
-    const isAllowed = allowedOrigins.some(allowedOrigin => origin === allowedOrigin);
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    const isAllowed = allowedOrigins.some(a => origin === a) ||
+      /^https:\/\/[a-z0-9-]+\.amplifyapp\.com$/.test(origin);
+    if (isAllowed) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
   },
-  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   // chatgpt-account-id and X-OpenAI-Fedramp are sent by @openai-oauth/react's
   // openaiAuthHeaders() alongside the Authorization header for the Zen
