@@ -11,6 +11,7 @@ export default function NotificationBell() {
     const navigate = useNavigate();
     const containerRef = useRef(null);
     const buttonRef = useRef(null);
+    const portalRef = useRef(null);
     const [open, setOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
@@ -45,7 +46,9 @@ export default function NotificationBell() {
 
     useEffect(() => {
         const onClickOutside = (e) => {
-            if (containerRef.current && !containerRef.current.contains(e.target)) {
+            const inContainer = containerRef.current && containerRef.current.contains(e.target);
+            const inPortal = portalRef.current && portalRef.current.contains(e.target);
+            if (!inContainer && !inPortal) {
                 setOpen(false);
             }
         };
@@ -140,6 +143,7 @@ export default function NotificationBell() {
 
             {open && createPortal(
                 <div
+                    ref={portalRef}
                     style={{ position: 'fixed', top: dropdownStyle.top, right: dropdownStyle.right }}
                     className="w-96 max-w-[90vw] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-[9999]"
                 >
