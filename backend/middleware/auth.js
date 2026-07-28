@@ -98,11 +98,23 @@ async function requireProfileComplete(req, res, next) {
 }
 
 const authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Forbidden' });
+  return async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
-    next();
+    try {
+      const user = await req.prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { role: true }
+      });
+      if (!user || !roles.includes(user.role)) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      req.user.role = user.role;
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 };
 
