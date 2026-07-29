@@ -144,16 +144,16 @@ export default function BasicInfoStep({ basicInfo, setBasicInfo, handleImageUplo
                 <div className="relative">
                     <textarea
                         rows={3}
-                        maxLength={150}
+                        maxLength={250}
                         value={basicInfo.bio}
                         onChange={(e) => setBasicInfo((prev) => ({ ...prev, bio: e.target.value }))}
                         className="w-full rounded-xl px-3.5 py-2.5 text-sm text-[#1F2F43] border border-white/30 bg-white/20 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_12px_rgba(0,0,0,0.04)] hover:bg-white/30 hover:border-white/40 focus:bg-white/25 focus:border-white/50 focus:outline-none focus:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_0_0_3px_rgba(111,102,255,0.12),0_4px_12px_rgba(0,0,0,0.04)] transition-all resize-none placeholder:text-[#1F2F43]/40"
                         placeholder="I'm excited to learn about..."
                     />
                     <span className={`absolute bottom-2.5 right-3 text-[10px] font-medium transition-colors ${
-                        basicInfo.bio.length > 130 ? 'text-amber-500' : 'text-text-subtle'
+                        basicInfo.bio.length > 230 ? 'text-amber-500' : 'text-text-subtle'
                     }`}>
-                        {basicInfo.bio.length}/150
+                        {basicInfo.bio.length}/250
                     </span>
                 </div>
             </FieldGroup>
