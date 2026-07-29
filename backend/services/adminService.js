@@ -90,7 +90,7 @@ exports.approveSession = async (prisma, cache, { requestId }) => {
                 type: 'SESSION_REQUEST_APPROVED',
                 title: 'Session Approved',
                 message: `Your session request "${sessionRequest.title}" has been approved.`,
-                link: `/sessions/${newSession.id}`
+                link: `/mentor/session/${newSession.id}`
             }
         });
 
@@ -136,6 +136,7 @@ exports.rejectSession = async (prisma, { requestId }) => {
                 type: 'SESSION_REQUEST_REJECTED',
                 title: 'Session Rejected',
                 message: `Your session request "${sessionRequest.title}" has been rejected.`,
+                link: '/mentor/sessions'
             }
         })
     ]);

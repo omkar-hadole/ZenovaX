@@ -71,7 +71,8 @@ exports.calculateAndAwardBadges = async (prisma, cache, userId) => {
                     userId: userId,
                     type: 'ACHIEVEMENT_UNLOCKED',
                     title: badge,
-                    message: `Congratulations! You have unlocked the "${badge}" badge.`
+                    message: `Congratulations! You have unlocked the "${badge}" badge.`,
+                    link: '/profile'
                 }))
             });
             logger.info(`User ${userId} unlocked new badges: ${newBadges.join(', ')}`);
