@@ -30,6 +30,12 @@ const STEP_META = {
 export default function CompleteProfile() {
     const navigate = useNavigate();
     const { updateUser, logout, user } = useAuth();
+
+    useEffect(() => {
+        if (user?.isProfileComplete) {
+            navigate('/', { replace: true });
+        }
+    }, [user, navigate]);
     const [currentStep, setCurrentStep] = useState(1);
     const [role, setRole] = useState('');
     const [basicInfo, setBasicInfo] = useState({
