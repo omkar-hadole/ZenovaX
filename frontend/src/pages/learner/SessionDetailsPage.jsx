@@ -6,6 +6,7 @@ import SessionDetailsSkeleton from '../../components/dashboard/learner/SessionDe
 import InlineError from '../../components/InlineError';
 import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/Toast';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { openRazorpayCheckout } from '../../utils/razorpay';
 
 export default function SessionDetailsPage() {
@@ -17,6 +18,7 @@ export default function SessionDetailsPage() {
     const { user } = useAuth();
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const fetchSessionDetails = async () => {
         setIsLoading(true);
@@ -109,11 +111,23 @@ export default function SessionDetailsPage() {
             <SessionDetailsView
                 session={session}
                 onBack={() => navigate(-1)}
-                onRegister={handleRegister}
+                onRegister={() => setShowConfirm(true)}
                 isRegistering={isRegistering}
                 user={user || {}}
             />
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <ConfirmModal
+                isOpen={showConfirm}
+                title="Confirm Registration"
+                message={`You are about to register for "${session.title}". Would you like to proceed?`}
+                confirmText="Register"
+                type="default"
+                onConfirm={() => {
+                    setShowConfirm(false);
+                    handleRegister();
+                }}
+                onCancel={() => setShowConfirm(false)}
+            />
         </>
     );
 }
