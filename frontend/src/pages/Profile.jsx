@@ -20,6 +20,7 @@ import { apiCall } from '../utils/api';
 import ProfileSkeleton from '../components/profile/ProfileSkeleton';
 import Toast from '../components/Toast';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
+import AchievementGallery from '../components/profile/AchievementGallery';
 
 const PREDEFINED_AVATARS = [
   '/avatars/Boy_1.png',
@@ -29,42 +30,6 @@ const PREDEFINED_AVATARS = [
   '/avatars/Girl_2.png',
   '/avatars/Girl_3.png',
 ];
-
-const BADGE_FILE_NAMES = {
-  "First Step": "Fisrt_Step",
-  "Session Pro": "Session_Pro",
-  "Veteran": "Veteran",
-  "Elite Mentor": "Elite_Mentor",
-  "Master Mentor": "Master_Mentor",
-  "Guide": "Guide",
-  "Pathfinder": "Path_Finder",
-  "Game Changer": "Game_Changer",
-  "Impact Maker": "Impact_Maker",
-  "Well Rated": "Well_Rated",
-  "Top Rated": "Top_Rated",
-  "Exceptional": "Exceptional",
-  "Loved": "Loved",
-  "Popular": "Popular",
-  "Favorite": "Favorite"
-};
-
-const BADGE_INFO = {
-  "First Step": { description: "Completed their first mentoring session" },
-  "Session Pro": { description: "Completed 5+ mentoring sessions" },
-  "Veteran": { description: "Completed 10+ mentoring sessions" },
-  "Elite Mentor": { description: "Completed 25+ mentoring sessions" },
-  "Master Mentor": { description: "Completed 50+ mentoring sessions" },
-  "Guide": { description: "Helped 10+ unique learners" },
-  "Pathfinder": { description: "Helped 50+ unique learners" },
-  "Game Changer": { description: "Helped 100+ unique learners" },
-  "Impact Maker": { description: "Helped 250+ unique learners" },
-  "Well Rated": { description: "Maintained a 4.0+ average rating" },
-  "Top Rated": { description: "Maintained a 4.5+ average rating" },
-  "Exceptional": { description: "Maintained a 4.8+ rating with 20+ reviews" },
-  "Loved": { description: "Received 50+ likes" },
-  "Popular": { description: "Accumulated 50+ followers" },
-  "Favorite": { description: "Reached 25+ followers and 50+ likes" }
-};
 
 const ReviewsSection = ({ userId }) => {
   const [reviews, setReviews] = useState([]);
@@ -187,7 +152,6 @@ export default function Profile() {
   const [followersCount, setFollowersCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
-  const [badgeImages, setBadgeImages] = useState({});
   const [toast, setToast] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -200,27 +164,6 @@ export default function Profile() {
   useEffect(() => {
     fetchProfile();
   }, [id]);
-
-  useEffect(() => {
-    if (profile && profile.role === 'MENTOR' && profile.badges && profile.badges.length > 0) {
-      const loadBadgeImages = async () => {
-        const loaded = {};
-        for (const badgeName of profile.badges) {
-          try {
-            const fileName = BADGE_FILE_NAMES[badgeName];
-            if (fileName) {
-              const module = await import(`../assets/Badges/${fileName}.webp`);
-              loaded[badgeName] = module.default;
-            }
-          } catch (err) {
-            console.error(`Failed to load badge image for ${badgeName}`, err);
-          }
-        }
-        setBadgeImages(loaded);
-      };
-      loadBadgeImages();
-    }
-  }, [profile]);
 
   const fetchProfile = async () => {
     try {
@@ -726,52 +669,82 @@ export default function Profile() {
               </div>
 
               {profile.role === 'MENTOR' && (
-                <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-                    <Award className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                    Achievements
-                  </h3>
-
-                  <div className="flex flex-wrap gap-4">
+                isOwnProfile ? (
+                  <AchievementGallery
+                    stats={{
+                      totalSessions: profile.totalSessions ?? 0,
+                      uniqueLearners: profile.uniqueLearners ?? 0,
+                      averageRating: profile.averageRating ?? 0,
+                      totalReviews: profile.totalReviews ?? 0,
+                      followersCount: followersCount,
+                      likesCount: likesCount,
+                    }}
+                    earnedBadges={profile.badges || []}
+                  />
+                ) : (
+                  <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                      <Award className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                      Achievements
+                    </h3>
                     {profile.badges && profile.badges.length > 0 ? (
-                      profile.badges.map((badgeName, i) => (
-                        <div key={i} className="group relative">
-                          {/* Badge Image */}
-                          <div className="w-22 h-22 transition-transform hover:scale-110 cursor-pointer">
-                            {badgeImages[badgeName] ? (
-                              <img
-                                src={badgeImages[badgeName]}
-                                width={88}
-                                height={88}
-                                loading="lazy"
-                                alt={badgeName || "Achievement badge icon"}
-                                className="w-full h-full object-contain drop-shadow-sm"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-full animate-pulse" />
-                            )}
-                          </div>
-
-                          {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-                            <div className="bg-gray-900 dark:bg-neutral-100 text-white dark:text-gray-950 text-xs rounded-lg py-2.5 px-3 shadow-xl relative text-center border border-black/5 dark:border-white/10">
-                              <div className="font-bold mb-1 border-b border-white/10 dark:border-black/10 pb-1">{badgeName}</div>
-                              <div className="text-gray-300 dark:text-gray-600 leading-snug font-medium">
-                                {BADGE_INFO[badgeName]?.description || "Achievement unlocked!"}
+                      <div className="flex flex-wrap gap-4">
+                        {profile.badges.map((badgeName, i) => {
+                          const fileName = {
+                            "First Step": "Fisrt_Step", "Session Pro": "Session_Pro", "Veteran": "Veteran",
+                            "Elite Mentor": "Elite_Mentor", "Master Mentor": "Master_Mentor",
+                            "Guide": "Guide", "Pathfinder": "Path_Finder", "Game Changer": "Game_Changer",
+                            "Impact Maker": "Impact_Maker", "Well Rated": "Well_Rated", "Top Rated": "Top_Rated",
+                            "Exceptional": "Exceptional", "Loved": "Loved", "Popular": "Popular", "Favorite": "Favorite"
+                          }[badgeName];
+                          return (
+                            <div key={i} className="group relative">
+                              <div className="w-22 h-22 transition-transform hover:scale-110 cursor-pointer">
+                                {fileName ? (
+                                  <img
+                                    src={new URL(`../assets/Badges/${fileName}.webp`, import.meta.url).href}
+                                    width={88} height={88}
+                                    loading="lazy"
+                                    alt={badgeName}
+                                    className="w-full h-full object-contain drop-shadow-sm"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-100 dark:bg-gray-800 rounded-full animate-pulse" />
+                                )}
                               </div>
-                              {/* Tooltip Arrow */}
-                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                                <div className="bg-gray-900 dark:bg-neutral-100 text-white dark:text-gray-950 text-xs rounded-lg py-2.5 px-3 shadow-xl text-center border border-black/5 dark:border-white/10">
+                                  <div className="font-bold mb-1 border-b border-white/10 dark:border-black/10 pb-1">{badgeName}</div>
+                                  <div className="text-gray-300 dark:text-gray-600 leading-snug font-medium">
+                                    {{
+                                      "First Step": "Completed their first mentoring session",
+                                      "Session Pro": "Completed 5+ mentoring sessions",
+                                      "Veteran": "Completed 10+ mentoring sessions",
+                                      "Elite Mentor": "Completed 25+ mentoring sessions",
+                                      "Master Mentor": "Completed 50+ mentoring sessions",
+                                      "Guide": "Helped 10+ unique learners",
+                                      "Pathfinder": "Helped 50+ unique learners",
+                                      "Game Changer": "Helped 100+ unique learners",
+                                      "Impact Maker": "Helped 250+ unique learners",
+                                      "Well Rated": "Maintained a 4.0+ average rating",
+                                      "Top Rated": "Maintained a 4.5+ average rating",
+                                      "Exceptional": "Maintained a 4.8+ rating with 20+ reviews",
+                                      "Loved": "Received 50+ likes",
+                                      "Popular": "Accumulated 50+ followers",
+                                      "Favorite": "Reached 25+ followers and 50+ likes"
+                                    }[badgeName] || "Achievement unlocked!"}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-gray-400 dark:text-gray-500 text-sm">
-                        No badges unlocked yet.
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <div className="text-gray-400 dark:text-gray-500 text-sm">No badges unlocked yet.</div>
                     )}
                   </div>
-                </div>
+                )
               )}
 
             </div>
