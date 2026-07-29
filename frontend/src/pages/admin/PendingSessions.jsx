@@ -5,6 +5,7 @@ import { Check, X, Clock, Pencil } from 'lucide-react';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import Toast from '../../components/Toast';
 import { stripMarkdown } from '../../utils/descriptionFormatter';
+import SessionPreviewModal from '../../components/dashboard/mentor/SessionPreviewModal';
 
 export default function PendingSessions() {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function PendingSessions() {
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+    const [previewRequest, setPreviewRequest] = useState(null);
 
     const fetchRequests = async () => {
         try {
@@ -102,7 +104,10 @@ export default function PendingSessions() {
                         </div>
 
                         <div className="mb-6 flex-1">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            <h3
+                                onClick={() => setPreviewRequest(request)}
+                                className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors cursor-pointer"
+                            >
                                 {request.title}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 leading-relaxed">
@@ -186,6 +191,43 @@ export default function PendingSessions() {
                 onConfirm={confirmModal.onConfirm}
                 onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             />
+            {previewRequest && (() => {
+                const date = new Date(previewRequest.proposedDate);
+                const formData = {
+                    title: previewRequest.title,
+                    description: previewRequest.description || '',
+                    subject: previewRequest.subject,
+                    department: previewRequest.department,
+                    topics: Array.isArray(previewRequest.topics)
+                        ? previewRequest.topics.join(', ')
+                        : (() => {
+                            try { return JSON.parse(previewRequest.topics).join(', '); }
+                            catch { return previewRequest.topics || ''; }
+                        })(),
+                    mode: previewRequest.mode,
+                    venue: previewRequest.venue || '',
+                    meetingLink: previewRequest.meetingLink || '',
+                    proposedDate: date.toISOString().split('T')[0],
+                    time: date.toTimeString().slice(0, 5),
+                    duration: previewRequest.duration,
+                    priceType: previewRequest.priceType,
+                    price: previewRequest.price,
+                    maxSeats: previewRequest.maxSeats
+                };
+                const mentorUser = {
+                    id: previewRequest.mentor?.id,
+                    name: previewRequest.mentor?.name,
+                    profilePicture: previewRequest.mentor?.profilePicture,
+                    department: previewRequest.department,
+                };
+                return (
+                    <SessionPreviewModal
+                        formData={formData}
+                        user={mentorUser}
+                        onClose={() => setPreviewRequest(null)}
+                    />
+                );
+            })()}
         </div>
     );
 }
