@@ -105,11 +105,10 @@ export default function BrowseSessionsView({
                                             </div>
                                             <button
                                                 onClick={() => setSelectedSession(session)}
-                                                disabled={!session.isBooked && isSessionEnded}
                                                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all transform hover:-translate-y-0.5 ${session.isBooked
                                                     ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-500/20'
                                                     : isSessionEnded
-                                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed hover:translate-y-0'
+                                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
                                                         : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 hover:shadow-lg'
                                                     }`}
                                             >
