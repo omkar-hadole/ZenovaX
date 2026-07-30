@@ -122,11 +122,6 @@ exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
         }
     });
 
-    if (cache) {
-        await cache.del('dashboard_upcoming_sessions');
-        await cache.del('dashboard_top_mentors');
-    }
-
     return sessionRequest;
 };
 
@@ -259,14 +254,13 @@ exports.updateSessionRequest = async (prisma, cache, userId, userRole, id, data)
                 }
             });
             logger.debug("Linked session updated successfully");
+            if (cache) {
+                await cache.del('dashboard_upcoming_sessions');
+                await cache.del('dashboard_top_mentors');
+            }
         } catch (sessionError) {
             logger.error("Failed to update linked session:", sessionError);
         }
-    }
-
-    if (cache) {
-        await cache.del('dashboard_upcoming_sessions');
-        await cache.del('dashboard_top_mentors');
     }
 
     return updatedRequest;
@@ -627,15 +621,7 @@ exports.getBookingStatus = async (prisma, cache, userId, sessionId) => {
         return { status: 'CONFIRMED', booking };
     }
 
-    // 2. Check if a failed or pending status is in cache
-    if (cache) {
-        const cachedResult = await cache.get(`booking_result:${userId}:${sessionId}`);
-        if (cachedResult) {
-            return cachedResult;
-        }
-    }
-
-    // 3. Otherwise, still in progress
+    // 2. Otherwise, still in progress
     return { status: 'PROCESSING', message: 'Booking is in progress' };
 };
 
@@ -759,9 +745,10 @@ exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
 
     let cachedData;
 
-    if (cache && await cache.has(cacheKey)) {
+    if (cache) {
         cachedData = await cache.get(cacheKey);
-    } else {
+    }
+    if (!cachedData) {
         let whereClause = {};
 
         // A search query looks for a specific session by name, so it should
@@ -865,7 +852,7 @@ exports.getAllSessions = async (prisma, cache, userId, queryParams) => {
         };
 
         if (cache) {
-            await cache.set(cacheKey, cachedData, 300);
+            await cache.set(cacheKey, cachedData, 900);
         }
     }
 
@@ -961,9 +948,9 @@ exports.getSessionById = async (prisma, userId, id) => {
 exports.getMentorStats = async (prisma, cache, mentorId) => {
     const cacheKey = `mentor_stats_${mentorId}`;
 
-    if (cache && await cache.has(cacheKey)) {
+    if (cache) {
         const cached = await cache.get(cacheKey);
-        return cached.stats;
+        if (cached) return cached.stats;
     }
 
     const [totalSessions, totalLearners, sessionStats, mentor] = await Promise.all([
@@ -989,7 +976,7 @@ exports.getMentorStats = async (prisma, cache, mentorId) => {
     };
 
     if (cache) {
-        await cache.set(cacheKey, { stats }, 300);
+        await cache.set(cacheKey, { stats }, 900);
     }
 
     return stats;

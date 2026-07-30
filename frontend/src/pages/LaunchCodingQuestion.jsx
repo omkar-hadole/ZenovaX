@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { useSignInWithChatGPT } from '@openai-oauth/react';
+import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkMath from 'remark-math';
@@ -446,7 +446,11 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
     setAiGenerating(true);
     setAiFilled(false);
     try {
-      const data = await apiCall('/help/generate-question', 'POST', { prompt: aiPrompt });
+      const data = await apiCall('/help/generate-question', {
+        method: 'POST',
+        headers: await openaiAuthHeaders(),
+        body: { prompt: aiPrompt },
+      });
       if (data.error) {
         setToast({ message: data.error, type: 'error' });
         return;

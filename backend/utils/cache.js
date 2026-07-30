@@ -35,7 +35,32 @@ if (redisUrl && redisUrl.trim()) {
     }
 }
 
-const fallbackCache = new NodeCache({ stdTTL: 600 });
+const fallbackCache = new NodeCache({ stdTTL: 900 });
+
+const counters = {
+  get: 0,
+  set: 0,
+  del: 0,
+  hit: 0,
+  miss: 0,
+  pattern: 0,
+};
+
+const logStats = () => {
+  const total = counters.get + counters.set + counters.del + counters.pattern;
+  const hitRate = total > 0 ? ((counters.hit / (counters.hit + counters.miss)) * 100).toFixed(1) : 'N/A';
+  logger.info(`[Cache Stats] GET:${counters.get} SET:${counters.set} DEL:${counters.del} PATTERN:${counters.pattern} HIT:${counters.hit} MISS:${counters.miss} HIT_RATE:${hitRate}%`);
+  counters.get = 0;
+  counters.set = 0;
+  counters.del = 0;
+  counters.hit = 0;
+  counters.miss = 0;
+  counters.pattern = 0;
+};
+
+if (!isProduction) {
+  setInterval(logStats, 300000);
+}
 
 const cache = {
     isRedisAvailable() {
@@ -43,20 +68,30 @@ const cache = {
     },
 
     async get(key) {
+        if (!isProduction) counters.get++;
         if (this.isRedisAvailable()) {
             try {
                 const data = await redisClient.get(key);
+                if (!isProduction) {
+                  if (data !== null) counters.hit++; else counters.miss++;
+                }
                 return data ? JSON.parse(data) : undefined;
             } catch (err) {
                 logger.error(`Redis get error for key ${key}: ${err.message}`);
+                if (!isProduction) counters.miss++;
                 if (isProduction) return undefined;
             }
         }
         if (isProduction) return undefined;
-        return fallbackCache.get(key);
+        const val = fallbackCache.get(key);
+        if (!isProduction) {
+          if (val !== undefined) counters.hit++; else counters.miss++;
+        }
+        return val;
     },
 
-    async set(key, value, ttlSeconds = 600) {
+    async set(key, value, ttlSeconds = 900) {
+        if (!isProduction) counters.set++;
         if (this.isRedisAvailable()) {
             try {
                 const data = JSON.stringify(value);
@@ -76,6 +111,7 @@ const cache = {
     },
 
     async del(key) {
+        if (!isProduction) counters.del++;
         if (this.isRedisAvailable()) {
             try {
                 await redisClient.del(key);
@@ -90,6 +126,7 @@ const cache = {
     },
 
     async has(key) {
+        if (!isProduction) counters.get++;
         if (this.isRedisAvailable()) {
             try {
                 const exists = await redisClient.exists(key);
@@ -104,6 +141,7 @@ const cache = {
     },
 
     async delPattern(pattern) {
+        if (!isProduction) counters.pattern++;
         if (this.isRedisAvailable()) {
             try {
                 const stream = redisClient.scanStream({
@@ -147,7 +185,6 @@ const cache = {
         }
         if (isProduction) return false;
 
-        // Fallback pattern matching
         const keys = fallbackCache.keys();
         const matches = keys.filter(k => k.includes(pattern.replace('*', '')));
         for (const k of matches) {

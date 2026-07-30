@@ -66,7 +66,39 @@ const serializeArgs = (functionName, params, inputs, language) => {
 };
 
 const buildStructuredDriverCode = (language, userCode, functionName, params, testCases) => {
-  if (language === 'javascript') return null;
+  if (language === 'javascript') {
+    const jsCalls = testCases.map(function(tc) {
+      var argStr = (params || []).map(function(p) { return serializeValue(tc.inputs[p.name], p.type, 'javascript'); }).join(', ');
+      return `
+    try {
+        var __res = ${functionName}(${argStr});
+        __results.push(__res === undefined ? 'undefined' : JSON.stringify(__res));
+    } catch (__e) {
+        __results.push(JSON.stringify({__error__: __e.message}));
+    }`;
+    }).join('\n');
+
+    return `
+${userCode}
+
+var __logs = [];
+var __cap = function() {
+    var __args = Array.prototype.slice.call(arguments);
+    __logs.push(__args.map(function(a) { return typeof a === 'string' ? a : JSON.stringify(a); }).join(' '));
+};
+var __orig = {};
+var __methods = ['log', 'error', 'warn'];
+__methods.forEach(function(m) { __orig[m] = console[m]; console[m] = __cap; });
+
+var __results = [];
+${jsCalls}
+
+__methods.forEach(function(m) { console[m] = __orig[m]; });
+process.stdout.write(__logs.join('\\n'));
+console.log("===LOGS_DONE===");
+__results.forEach(function(__r) { console.log("PASS:" + __r); });
+`;
+  }
 
   const testCasesJson = JSON.stringify(testCases.map(tc => ({ inputs: tc.inputs, expected: tc.expected })));
 

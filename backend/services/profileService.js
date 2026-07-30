@@ -248,8 +248,8 @@ exports.getMe = async (prisma, cache, userId) => {
             }, uniqueLearners)
             : [];
 
-        if (cache) {
-            await cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
+                    if (cache) {
+            await cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 900);
         }
     }
 
@@ -403,9 +403,10 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
     const cacheKey = `mentor_list_${page}_${limit}`;
     let cachedData;
 
-    if (cache && await cache.has(cacheKey)) {
+    if (cache) {
         cachedData = await cache.get(cacheKey);
-    } else {
+    }
+    if (!cachedData) {
         // 1. Query total count and paginate + sort the mentors at database level
         const [mentors, total] = await Promise.all([
             prisma.user.findMany({
@@ -500,7 +501,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
         };
 
         if (cache) {
-            await cache.set(cacheKey, cachedData, 300);
+            await cache.set(cacheKey, cachedData, 900);
         }
     }
 
@@ -688,7 +689,7 @@ exports.getProfileById = async (prisma, cache, userId, viewerRole, id) => {
             : [];
 
         if (cache) {
-            await cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 300);
+            await cache.set(cacheKey, { uniqueLearners, finishedSessionsCount, badges }, 900);
         }
     }
 

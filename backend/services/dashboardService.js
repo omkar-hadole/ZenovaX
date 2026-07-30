@@ -8,9 +8,10 @@ exports.getDashboardData = async (prisma, cache, userId) => {
     const upcomingSessionsCacheKey = "dashboard_upcoming_sessions";
     let cachedUpcomingSessions;
 
-    if (cache && await cache.has(upcomingSessionsCacheKey)) {
+    if (cache) {
         cachedUpcomingSessions = await cache.get(upcomingSessionsCacheKey);
-    } else {
+    }
+    if (!cachedUpcomingSessions) {
         cachedUpcomingSessions = await prisma.session.findMany({
             where: {
                 status: 'UPCOMING',
@@ -32,7 +33,7 @@ exports.getDashboardData = async (prisma, cache, userId) => {
         });
 
         if (cache) {
-            await cache.set(upcomingSessionsCacheKey, cachedUpcomingSessions, 300); // 5 minutes TTL
+            await cache.set(upcomingSessionsCacheKey, cachedUpcomingSessions, 900);
         }
     }
 
@@ -40,9 +41,10 @@ exports.getDashboardData = async (prisma, cache, userId) => {
     const topMentorsCacheKey = "dashboard_top_mentors";
     let cachedTopMentors;
 
-    if (cache && await cache.has(topMentorsCacheKey)) {
+    if (cache) {
         cachedTopMentors = await cache.get(topMentorsCacheKey);
-    } else {
+    }
+    if (!cachedTopMentors) {
         const topMentors = await prisma.user.findMany({
             where: {
                 role: 'MENTOR',
@@ -105,7 +107,7 @@ exports.getDashboardData = async (prisma, cache, userId) => {
         }));
 
         if (cache) {
-            await cache.set(topMentorsCacheKey, cachedTopMentors, 300); // 5 minutes TTL
+            await cache.set(topMentorsCacheKey, cachedTopMentors, 900);
         }
     }
 

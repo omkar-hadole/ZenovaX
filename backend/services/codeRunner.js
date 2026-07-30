@@ -1,5 +1,5 @@
 const axios = require('axios');
-const vm = require('vm');
+const { spawn } = require('child_process');
 const logger = require('../utils/logger');
 const pyodideRunner = require('./pyodideRunner');
 const { buildStructuredDriverCode, serializeArgs, typedCompare } = require('./questionTypeEngine');
@@ -8,7 +8,7 @@ const { AppError, BadRequestError } = require('../utils/errors');
 const MAX_CODE_LENGTH = 10000;
 const MAX_TEST_CASES = 10;
 const MAX_INPUT_LENGTH = 500;
-const JS_TIMEOUT_MS = 3000;
+const JAVASCRIPT_TIMEOUT_MS = 5000;
 
 const getDriverCode = (language, userCode, testCases) => {
     if (language === 'python') {
@@ -89,6 +89,47 @@ ${userCode}
 `;
     }
 
+    if (language === 'javascript') {
+        const inputs = testCases.map(tc => tc.input);
+        return `
+${userCode}
+
+const __logs = [];
+const __cap = function() {
+    var __args = Array.prototype.slice.call(arguments);
+    __logs.push(__args.map(function(a) { return typeof a === 'string' ? a : JSON.stringify(a); }).join(' '));
+};
+var __orig = {};
+var __methods = ['log', 'error', 'warn'];
+__methods.forEach(function(m) { __orig[m] = console[m]; console[m] = __cap; });
+
+var __inputs = ${JSON.stringify(inputs)};
+var __results = [];
+
+for (var __i = 0; __i < __inputs.length; __i++) {
+    __methods.forEach(function(m) { console[m] = __cap; });
+    try {
+        if (typeof solve !== 'function') {
+            __methods.forEach(function(m) { console[m] = __orig[m]; });
+            __results.push("Error: Function 'solve' not found");
+            continue;
+        }
+        var __res = solve(__inputs[__i]);
+        __methods.forEach(function(m) { console[m] = __orig[m]; });
+        __results.push(__res === undefined ? 'undefined' : String(__res));
+    } catch (__e) {
+        __methods.forEach(function(m) { console[m] = __orig[m]; });
+        __results.push("Error: " + __e.message);
+    }
+}
+
+__methods.forEach(function(m) { console[m] = __orig[m]; });
+process.stdout.write(__logs.join('\\n'));
+console.log("===LOGS_DONE===");
+console.log(__results.join("|||"));
+`;
+    }
+
     return userCode;
 };
 
@@ -121,76 +162,29 @@ const executePiston = async (language, sourceCode) => {
         throw new AppError('Code execution service unavailable', 503);
     }
 };
-
-// Runs student JavaScript in-process via Node's `vm` module with a hard
-// timeout, so a submit-time infinite loop can't hang the server. Note: `vm`
-// bounds synchronous runtime, it is not a hardened security sandbox against
-// a deliberately malicious escape attempt — adequate for catching accidental
-// infinite loops / runtime errors in student solutions, not for running
-// fully untrusted adversarial code.
-const runJavaScriptTestCases = (userCode, testCases) => {
-    const logs = [];
-    const captureLog = (...args) => {
-        logs.push(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
-    };
-    const sandbox = { console: { log: captureLog, error: captureLog, warn: captureLog } };
-    const context = vm.createContext(sandbox);
-
-    try {
-        vm.runInContext(userCode, context, { timeout: JS_TIMEOUT_MS, displayErrors: true });
-    } catch (e) {
-        return { error: `Error: ${e.message}` };
-    }
-
-    if (typeof sandbox.solve !== 'function') {
-        return { error: "Error: Function 'solve' not found" };
-    }
-
-    const outputs = testCases.map((tc) => {
-        sandbox.__input__ = tc.input;
-        try {
-            const result = vm.runInContext('solve(__input__)', context, { timeout: JS_TIMEOUT_MS });
-            return result === undefined ? 'undefined' : String(result);
-        } catch (e) {
-            return `Error: ${e.message}`;
-        }
+const executeJavaScriptLocally = (sourceCode) => {
+    return new Promise((resolve) => {
+        const child = spawn('node', [], {
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+        let stdout = '';
+        let stderr = '';
+        const timer = setTimeout(() => { child.kill('SIGTERM'); }, JAVASCRIPT_TIMEOUT_MS);
+        child.stdout.on('data', (data) => { stdout += data.toString(); });
+        child.stderr.on('data', (data) => { stderr += data.toString(); });
+        child.on('close', (code) => {
+            clearTimeout(timer);
+            resolve({ stdout, stderr, exitCode: code });
+        });
+        child.on('error', () => {
+            clearTimeout(timer);
+            resolve({ stdout, stderr, exitCode: 1 });
+        });
+        child.stdin.write(sourceCode);
+        child.stdin.end();
     });
-
-    return { outputs, logs: logs.join('\n') };
 };
 
-const runStructuredJavaScriptTestCases = (userCode, testCases, functionName, parameters) => {
-    const logs = [];
-    const captureLog = (...args) => {
-        logs.push(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
-    };
-    const sandbox = { console: { log: captureLog, error: captureLog, warn: captureLog } };
-    const context = vm.createContext(sandbox);
-
-    try {
-        vm.runInContext(userCode, context, { timeout: JS_TIMEOUT_MS, displayErrors: true });
-    } catch (e) {
-        return { error: `Error: ${e.message}` };
-    }
-
-    if (typeof sandbox[functionName] !== 'function') {
-        return { error: `Error: Function '${functionName}' not found` };
-    }
-
-    const outputs = testCases.map((tc) => {
-        const inputsObj = {};
-        parameters.forEach(p => { inputsObj[p.name] = tc.inputs[p.name]; });
-        try {
-            const callStr = serializeArgs(functionName, parameters, inputsObj, 'javascript');
-            const result = vm.runInContext(callStr, context, { timeout: JS_TIMEOUT_MS });
-            return result === undefined ? 'undefined' : { status: 'ok', value: result };
-        } catch (e) {
-            return { status: 'error', message: e.message };
-        }
-    });
-
-    return { outputs, logs: logs.join('\n') };
-};
 
 const validateRunInput = (language, code, testCases) => {
     if (!code || typeof code !== 'string') {
@@ -220,18 +214,41 @@ const runTestCases = async (language, code, testCases) => {
     let rawOutputs;
     let logs = '';
 
-    if (language === 'javascript') {
-        const { outputs, logs: jsLogs, error } = runJavaScriptTestCases(code, testCases);
-        if (error) return { error };
-        rawOutputs = outputs;
-        logs = jsLogs;
-    } else if (language === 'python' || language === 'java') {
+    if (language === 'python') {
         const sourceContent = getDriverCode(language, code, testCases);
-        // Python runs locally via Pyodide (bundled WASM interpreter, no
-        // third-party service); Java still depends on the public Piston API.
-        const run = language === 'python'
-            ? await pyodideRunner.executePython(sourceContent)
-            : await executePiston(language, sourceContent);
+        const run = await pyodideRunner.executePython(sourceContent);
+
+        if (run.stderr) {
+            return { error: run.stderr };
+        }
+
+        const rawOutput = run.stdout;
+        let resultsOutput = rawOutput;
+        if (rawOutput.includes('===LOGS_DONE===')) {
+            const parts = rawOutput.split('===LOGS_DONE===');
+            logs = parts[0].trim();
+            resultsOutput = parts[1].trim();
+        }
+        rawOutputs = resultsOutput.split('|||');
+    } else if (language === 'javascript') {
+        const sourceContent = getDriverCode(language, code, testCases);
+        const run = await executeJavaScriptLocally(sourceContent);
+
+        if (run.stderr) {
+            return { error: run.stderr };
+        }
+
+        const rawOutput = run.stdout;
+        let resultsOutput = rawOutput;
+        if (rawOutput.includes('===LOGS_DONE===')) {
+            const parts = rawOutput.split('===LOGS_DONE===');
+            logs = parts[0].trim();
+            resultsOutput = parts[1].trim();
+        }
+        rawOutputs = resultsOutput.split('|||');
+    } else if (language === 'java') {
+        const sourceContent = getDriverCode(language, code, testCases);
+        const run = await executePiston(language, sourceContent);
 
         if (run.stderr) {
             return { error: run.stderr };
@@ -250,7 +267,7 @@ const runTestCases = async (language, code, testCases) => {
     }
 
     const results = testCases.map((tc, index) => {
-        const actual = rawOutputs[index] !== undefined ? rawOutputs[index].replace(/\n/g, '') : 'No Output';
+        const actual = rawOutputs[index] !== undefined ? rawOutputs[index] : 'No Output';
         return {
             input: tc.input,
             expected: tc.output,
@@ -292,17 +309,61 @@ const runStructuredTestCases = async (language, code, testCases, functionName, p
     let rawOutputs;
     let logs = '';
 
-    if (language === 'javascript') {
-        const { outputs, logs: jsLogs, error } = runStructuredJavaScriptTestCases(code, testCases, functionName, parameters);
-        if (error) return { error };
-        rawOutputs = outputs;
-        logs = jsLogs;
-    } else if (language === 'python' || language === 'java') {
+    if (language === 'python') {
         const sourceContent = buildStructuredDriverCode(language, code, functionName, parameters, testCases);
+        const run = await pyodideRunner.executePython(sourceContent);
 
-        const run = language === 'python'
-            ? await pyodideRunner.executePython(sourceContent)
-            : await executePiston(language, sourceContent);
+        if (run.stderr) {
+            return { error: run.stderr };
+        }
+
+        const rawOutput = run.stdout;
+        let resultsOutput = rawOutput;
+        if (rawOutput.includes('===LOGS_DONE===')) {
+            const parts = rawOutput.split('===LOGS_DONE===');
+            logs = parts[0].trim();
+            resultsOutput = parts[1];
+        }
+
+        const lines = resultsOutput.trim().split('\n');
+        rawOutputs = lines.map((line, _idx) => {
+            if (line.startsWith('PASS')) {
+                const val = line.replace('PASS:', '');
+                try { return { status: 'ok', value: JSON.parse(val) }; } catch { return { status: 'ok', value: val }; }
+            } else if (line.startsWith('FAIL:')) {
+                return { status: 'error', message: line.replace('FAIL:', '') };
+            }
+            return { status: 'error', message: line };
+        });
+    } else if (language === 'javascript') {
+        const sourceContent = buildStructuredDriverCode(language, code, functionName, parameters, testCases);
+        const run = await executeJavaScriptLocally(sourceContent);
+
+        if (run.stderr) {
+            return { error: run.stderr };
+        }
+
+        const rawOutput = run.stdout;
+        let resultsOutput = rawOutput;
+        if (rawOutput.includes('===LOGS_DONE===')) {
+            const parts = rawOutput.split('===LOGS_DONE===');
+            logs = parts[0].trim();
+            resultsOutput = parts[1];
+        }
+
+        const lines = resultsOutput.trim().split('\n');
+        rawOutputs = lines.map((line, _idx) => {
+            if (line.startsWith('PASS')) {
+                const val = line.replace('PASS:', '');
+                try { return { status: 'ok', value: JSON.parse(val) }; } catch { return { status: 'ok', value: val }; }
+            } else if (line.startsWith('FAIL:')) {
+                return { status: 'error', message: line.replace('FAIL:', '') };
+            }
+            return { status: 'error', message: line };
+        });
+    } else if (language === 'java') {
+        const sourceContent = buildStructuredDriverCode(language, code, functionName, parameters, testCases);
+        const run = await executePiston(language, sourceContent);
 
         if (run.stderr) {
             return { error: run.stderr };
@@ -360,10 +421,9 @@ const runStructuredTestCases = async (language, code, testCases, functionName, p
 module.exports = {
     getDriverCode,
     executePiston,
-    runJavaScriptTestCases,
+    executeJavaScriptLocally,
     runTestCases,
     runStructuredTestCases,
-    runStructuredJavaScriptTestCases,
     validateRunInput,
     MAX_CODE_LENGTH,
     MAX_TEST_CASES,
