@@ -265,8 +265,8 @@ export default function MyBookingsView({
 
             {/* Ticket Modal */}
             {showTicket && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                <div onClick={() => setShowTicket(null)} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-3xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
 
                         {/* Download Button (Top Left) */}
                         <button

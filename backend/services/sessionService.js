@@ -54,12 +54,13 @@ exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
         throw new BadRequestError("Venue is required for offline sessions");
     }
 
-    if (mode === "ONLINE" && !meetingLink) {
-        throw new BadRequestError("Meeting link is required for online sessions");
-    }
-
-    if (meetingLink && !isHttpsUrl(meetingLink)) {
-        throw new BadRequestError("meetingLink must be a valid https:// URL");
+    if (mode === "ONLINE") {
+        if (!meetingLink) {
+            throw new BadRequestError("Meeting link is required for online sessions");
+        }
+        if (!isHttpsUrl(meetingLink)) {
+            throw new BadRequestError("meetingLink must be a valid https:// URL");
+        }
     }
 
     const sessionDate = new Date(proposedDate);
@@ -189,7 +190,8 @@ exports.updateSessionRequest = async (prisma, cache, userId, userRole, id, data)
         }
     }
 
-    if (meetingLink !== undefined && !isHttpsUrl(meetingLink)) {
+    const effectiveMode = mode || request.mode;
+    if (effectiveMode === 'ONLINE' && meetingLink !== undefined && meetingLink && !isHttpsUrl(meetingLink)) {
         throw new BadRequestError("meetingLink must be a valid https:// URL");
     }
 
