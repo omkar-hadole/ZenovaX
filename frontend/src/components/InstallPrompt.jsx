@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Smartphone, Download } from 'lucide-react';
+import { X, Smartphone, Download, Share } from 'lucide-react';
 
 const isMobile = () => {
   return (
@@ -15,6 +15,14 @@ const isStandalone = () => {
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: minimal-ui)').matches ||
     window.navigator.standalone === true
+  );
+};
+
+const isIOS = () => {
+  return (
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 0 && navigator.userAgent.includes('Macintosh')))
   );
 };
 
@@ -98,28 +106,48 @@ export default function InstallPrompt() {
           </div>
         </div>
 
-        <div className="flex gap-3 px-5 pb-5">
-          <button
-            onClick={handleInstall}
-            disabled={installing}
-            className="flex-1 h-11 rounded-xl bg-[#C9C7F5] text-[#5a59b5] font-bold text-sm hover:bg-[#b8b6e5] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-          >
-            {installing ? (
-              'Installing...'
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Install App
-              </>
+        {isIOS() ? (
+          <div className="px-5 pb-5 text-sm text-gray-600 dark:text-gray-400">
+            <p className="flex items-center gap-2 font-semibold text-gray-800 dark:text-gray-200">
+              <Share className="w-4 h-4 text-[#5a59b5] dark:text-[#b3b1f0]" />
+              How to install on iOS Safari:
+            </p>
+            <ol className="list-decimal list-inside mt-2 space-y-1 text-xs">
+              <li>Tap the <strong>Share</strong> button in Safari.</li>
+              <li>Scroll down and select <strong>Add to Home Screen</strong>.</li>
+            </ol>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 px-5 pb-5">
+            <div className="flex gap-3">
+              <button
+                onClick={handleInstall}
+                disabled={installing}
+                className="flex-1 h-11 rounded-xl bg-[#C9C7F5] text-[#5a59b5] font-bold text-sm hover:bg-[#b8b6e5] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {installing ? (
+                  'Installing...'
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Install App
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleDismiss}
+                className="h-11 px-5 rounded-xl text-gray-500 dark:text-gray-400 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Not now
+              </button>
+            </div>
+            {!deferredPrompt && (
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-1">
+                Tip: You can also install via your browser menu (e.g. three dots &rarr; Install app).
+              </p>
             )}
-          </button>
-          <button
-            onClick={handleDismiss}
-            className="h-11 px-5 rounded-xl text-gray-500 dark:text-gray-400 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            Not now
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
