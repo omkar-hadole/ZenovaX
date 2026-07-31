@@ -78,7 +78,7 @@ const WriteReview = ({ sessionId, onReviewSubmit, onShowToast }) => {
                     className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/20 outline-none transition-all resize-none h-32"
                 />
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-3">
                     <label className="flex items-center gap-2 cursor-pointer group">
                         <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAnonymous ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 group-hover:border-indigo-400'}`}>
                             {isAnonymous && <CheckCircle size={12} className="text-white" />}
@@ -189,7 +189,7 @@ const ReviewsSection = ({ session, onReviewSubmit, onShowToast }) => {
                         <>
                             {reviews.map((review) => (
                                 <div key={review.id} className="border-b border-gray-100 dark:border-gray-800 pb-6 last:border-0 last:pb-0">
-                                    <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                                                 {review.author.profilePicture ? (
