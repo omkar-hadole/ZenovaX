@@ -13,6 +13,7 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
+      manifestFilename: 'manifest.json',
       includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'ZenovaX — Peer Mentoring',
