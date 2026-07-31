@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Smartphone, Download, Share2 } from 'lucide-react';
+import { X, Smartphone, Download } from 'lucide-react';
 
 const isMobile = () => {
   return (
@@ -18,13 +18,6 @@ const isStandalone = () => {
   );
 };
 
-const isIOS = () => {
-  return (
-    typeof navigator !== 'undefined' &&
-    /iPhone|iPad|iPod/i.test(navigator.userAgent)
-  );
-};
-
 // Capture beforeinstallprompt at module scope immediately so it can't be
 // missed if the event fires before the component mounts its listeners.
 let deferredPrompt = null;
@@ -40,7 +33,6 @@ export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
-  const [showIOSHelp, setShowIOSHelp] = useState(false);
 
   useEffect(() => {
     if (dismissed) return;
@@ -69,12 +61,6 @@ export default function InstallPrompt() {
         deferredPrompt = null;
         setInstalling(false);
       }
-    } else if (isIOS()) {
-      // iOS Safari has no beforeinstallprompt — guide via Share -> Add to Home Screen.
-      setShowIOSHelp(true);
-    } else {
-      // Unsupported browser — point them at the guidance.
-      setShowIOSHelp(true);
     }
   };
 
@@ -106,9 +92,7 @@ export default function InstallPrompt() {
               Install ZenovaX
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-              {showIOSHelp
-                ? 'Tap the Share button in your browser, then select "Add to Home Screen".'
-                : 'Add to your home screen for faster access and a full-screen app experience.'}
+              Add to your home screen for faster access and a full-screen app experience.
             </p>
           </div>
         </div>
@@ -119,12 +103,7 @@ export default function InstallPrompt() {
             disabled={installing}
             className="flex-1 h-11 rounded-xl bg-[#C9C7F5] text-[#5a59b5] font-bold text-sm hover:bg-[#b8b6e5] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {showIOSHelp ? (
-              <>
-                <Share2 className="w-4 h-4" />
-                How to install
-              </>
-            ) : installing ? (
+            {installing ? (
               'Installing...'
             ) : (
               <>
