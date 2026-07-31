@@ -334,10 +334,10 @@ body {
 
 @keyframes float-soft {
   0%, 100% {
-    transform: translateY(0) rotate(-0.5deg);
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-9px) rotate(0.5deg);
+    transform: translateY(-3px);
   }
 }
 
@@ -363,7 +363,7 @@ body {
   animation-delay: 0.3s;
 }
 .anim-float {
-  animation: float-soft 5.5s ease-in-out infinite;
+  animation: float-soft 9s ease-in-out infinite;
   will-change: transform;
 }
 .anim-blob {
