@@ -293,6 +293,14 @@ body {
   .marquee-track {
     animation: none;
   }
+  .drawer-enter,
+  .drawer-exit,
+  .drawer-overlay-enter,
+  .drawer-overlay-exit,
+  .popup-enter,
+  .popup-exit {
+    animation: none;
+  }
 }
 
 /* LiveSession reaction overlay animations */
@@ -323,6 +331,71 @@ body {
     transform: translate3d(-50%, 0, 0) scale(1);
     opacity: 1;
   }
+}
+
+/* ----------------------------------------------------------------
+   Mobile sidebar drawer — enter/exit animations. Keyframe-based so
+   the enter animation always plays on mount (no starting-state paint
+   timing to rely on). `both` fill keeps the end state applied.
+   ---------------------------------------------------------------- */
+@keyframes drawer-slide-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes drawer-slide-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+@keyframes drawer-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes drawer-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.drawer-enter {
+  animation: drawer-slide-in 0.2s ease-out both;
+}
+.drawer-exit {
+  animation: drawer-slide-out 0.2s ease-out both;
+}
+.drawer-overlay-enter {
+  animation: drawer-fade-in 0.2s ease-out both;
+}
+.drawer-overlay-exit {
+  animation: drawer-fade-out 0.2s ease-out both;
+}
+
+/* ----------------------------------------------------------------
+   Install prompt popup — slide up from the bottom + fade on enter,
+   reverse on exit.
+   ---------------------------------------------------------------- */
+@keyframes popup-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes popup-slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+.popup-enter {
+  animation: popup-slide-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.popup-exit {
+  animation: popup-slide-out 0.2s ease-out both;
 }
 
 /* ----------------------------------------------------------------

@@ -43,6 +43,8 @@ export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     if (dismissed) return;
@@ -54,6 +56,22 @@ export default function InstallPrompt() {
 
     return () => clearTimeout(timer);
   }, [dismissed]);
+
+  // Keep the popup mounted while its exit animation plays, then unmount.
+  useEffect(() => {
+    let timer;
+    if (visible) {
+      setClosing(false);
+      setMounted(true);
+    } else if (mounted) {
+      setClosing(true);
+      timer = setTimeout(() => {
+        setMounted(false);
+        setClosing(false);
+      }, 200);
+    }
+    return () => clearTimeout(timer);
+  }, [visible]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -78,10 +96,10 @@ export default function InstallPrompt() {
     setDismissed(true);
   };
 
-  if (!visible) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[380px] z-[80] animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className={`fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[380px] z-[80] ${closing ? 'popup-exit' : 'popup-enter'}`}>
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
         <button
           onClick={handleDismiss}

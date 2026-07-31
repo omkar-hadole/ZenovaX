@@ -19,6 +19,10 @@ export default function DailySchedule({ bookings = [] }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentTime, setCurrentTime] = useState(new Date());
     const [hoveredDate, setHoveredDate] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(null);
+
+    // Touch devices have no hover, so taps must pin the tooltip instead.
+    const isTouch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -90,6 +94,7 @@ export default function DailySchedule({ bookings = [] }) {
                                 onMouseLeave={() => setHoveredDate(null)}
                             >
                                 <button
+                                    onClick={() => isTouch && hasEvent && setSelectedDate(selectedDate === day ? null : day)}
                                     className={`
                                         w-8 h-8 flex flex-col items-center justify-center rounded-full text-[10px] font-medium transition-all duration-300 relative
                                         ${!isCurrentMonth ? 'text-gray-200 dark:text-gray-700' : 'text-gray-600 dark:text-gray-400'}
@@ -104,7 +109,12 @@ export default function DailySchedule({ bookings = [] }) {
                                 </button>
 
                                 {hasEvent && (
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-black/5 dark:border-white/5 p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 pointer-events-none transform translate-y-2 group-hover:translate-y-0">
+                                    <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-black/5 dark:border-white/5 p-3 z-50 pointer-events-none transform transition-all duration-300 ${isTouch
+                                        ? selectedDate === day
+                                            ? 'opacity-100 visible translate-y-0'
+                                            : 'opacity-0 invisible translate-y-2'
+                                        : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0'
+                                        }`}>
                                         <div className="text-[10px] font-bold text-gray-900 dark:text-gray-100 mb-2 pb-2 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                                             <span>{format(day, 'MMMM d')}</span>
                                             <span className="bg-[#F5F6FA] dark:bg-gray-800/60 px-1.5 py-0.5 rounded-full text-[9px] text-gray-500 dark:text-gray-400">{dayBookings.length} classes</span>

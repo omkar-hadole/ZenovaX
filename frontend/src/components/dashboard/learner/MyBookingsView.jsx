@@ -200,7 +200,7 @@ export default function MyBookingsView({
                     </div>
 
                     {totalPages > 1 && (
-                        <div className="flex justify-center gap-2">
+                        <div className="flex justify-center gap-2 overflow-x-auto pb-1">
                             <button
                                 onClick={() => onPageChange(currentPage - 1)}
                                 disabled={currentPage === 1}

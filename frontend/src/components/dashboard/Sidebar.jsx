@@ -6,6 +6,8 @@ import { getOptimizedImageUrl } from '../../utils/cloudinary';
 export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain", open, onClose }) {
     const navigate = useNavigate();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [drawerMounted, setDrawerMounted] = useState(false);
+    const [drawerClosing, setDrawerClosing] = useState(false);
 
     useEffect(() => {
         if (!open) return;
@@ -15,6 +17,34 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
         document.addEventListener('keydown', handleKey);
         return () => document.removeEventListener('keydown', handleKey);
     }, [open, onClose]);
+
+    // Keep the drawer mounted while it plays its exit animation, then unmount.
+    // Enter/exit are keyframe animations (see index.css) so both always play.
+    useEffect(() => {
+        let timer;
+        if (open) {
+            setDrawerClosing(false);
+            setDrawerMounted(true);
+        } else if (drawerMounted) {
+            setDrawerClosing(true);
+            timer = setTimeout(() => {
+                setDrawerMounted(false);
+                setDrawerClosing(false);
+            }, 200);
+        }
+        return () => clearTimeout(timer);
+    }, [open]);
+
+    // Lock body scroll while the mobile drawer is open.
+    useEffect(() => {
+        if (open) {
+            const original = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = original;
+            };
+        }
+    }, [open]);
 
     const handleLogoutClick = () => {
         setShowLogoutConfirm(true);
@@ -116,13 +146,13 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
             </aside>
 
             {/* Mobile drawer */}
-            {open && (
+            {drawerMounted && (
                 <div className="lg:hidden fixed inset-0 z-[80]">
                     <div
-                        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-in fade-in duration-300"
+                        className={`absolute inset-0 bg-black/30 backdrop-blur-sm ${drawerClosing ? 'drawer-overlay-exit' : 'drawer-overlay-enter'}`}
                         onClick={onClose}
                     />
-                    <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex flex-col h-full shadow-2xl animate-in slide-in-from-left-4 duration-300">
+                    <aside className={`absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex flex-col h-full shadow-2xl ${drawerClosing ? 'drawer-exit' : 'drawer-enter'}`}>
                         {renderContent()}
                     </aside>
                 </div>
