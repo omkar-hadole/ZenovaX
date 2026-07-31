@@ -162,7 +162,7 @@ export default function AdminPayments() {
     ];
 
     return (
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
             <header className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Payments & Payouts</h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-1">Verify mentor payout accounts and release withdrawals</p>
@@ -274,7 +274,7 @@ function PayoutList({ payouts, onMarkPaid, onMarkFailed }) {
     }
     return (
         <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
                         <tr>
@@ -312,6 +312,33 @@ function PayoutList({ payouts, onMarkPaid, onMarkFailed }) {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
+                {payouts.map((p) => (
+                    <div key={p.id} className="p-5">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="min-w-0">
+                                <p className="font-bold text-gray-900 dark:text-gray-100 truncate">{p.mentor?.name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.mentor?.email}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${PAYOUT_BADGE[p.status]}`}>{p.status}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm mb-3">
+                            <span className="font-bold text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</span>
+                            <span className="text-gray-500 dark:text-gray-400">Requested {new Date(p.requestedAt).toLocaleDateString()}</span>
+                        </div>
+                        {p.status === 'FAILED' && p.failureReason && <p className="text-xs text-red-500 dark:text-red-400 mb-3">{p.failureReason}</p>}
+                        {(p.status === 'PENDING' || p.status === 'PROCESSING') ? (
+                            <div className="flex gap-2">
+                                <button onClick={() => onMarkPaid(p)} className="flex-1 bg-gray-900 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-800">Mark Paid</button>
+                                <button onClick={() => onMarkFailed(p)} className="flex-1 bg-white dark:bg-gray-900 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-500/20 px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-50 dark:hover:bg-red-500/10">Fail</button>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-gray-400 dark:text-gray-500 text-right">{p.processedAt ? `Processed ${new Date(p.processedAt).toLocaleDateString()}` : '—'}</p>
+                        )}
+                    </div>
+                ))}
             </div>
         </div>
     );

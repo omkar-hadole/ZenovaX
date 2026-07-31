@@ -334,35 +334,57 @@ export default function EarningsView() {
                         <p className="text-gray-500 dark:text-gray-400">Requested payouts will show up here.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto md:overflow-visible">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
-                                <tr>
-                                    <th className="px-8 py-4">Amount</th>
-                                    <th className="px-6 py-4">Requested</th>
-                                    <th className="px-6 py-4">Processed</th>
-                                    <th className="px-6 py-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                                {payouts.map((payout) => (
-                                    <tr key={payout.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors">
-                                        <td className="px-8 py-4 font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payout.amount)}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(payout.requestedAt).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{payout.processedAt ? new Date(payout.processedAt).toLocaleDateString() : '—'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${PAYOUT_STATUS_BADGES[payout.status]}`}>
-                                                {payout.status}
-                                            </span>
-                                            {payout.status === 'FAILED' && payout.failureReason && (
-                                                <p className="text-xs text-red-500 dark:text-red-400 mt-1">{payout.failureReason}</p>
-                                            )}
-                                        </td>
+                    <>
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50/50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
+                                    <tr>
+                                        <th className="px-8 py-4">Amount</th>
+                                        <th className="px-6 py-4">Requested</th>
+                                        <th className="px-6 py-4">Processed</th>
+                                        <th className="px-6 py-4">Status</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+                                    {payouts.map((payout) => (
+                                        <tr key={payout.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors">
+                                            <td className="px-8 py-4 font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payout.amount)}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(payout.requestedAt).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{payout.processedAt ? new Date(payout.processedAt).toLocaleDateString() : '—'}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${PAYOUT_STATUS_BADGES[payout.status]}`}>
+                                                    {payout.status}
+                                                </span>
+                                                {payout.status === 'FAILED' && payout.failureReason && (
+                                                    <p className="text-xs text-red-500 dark:text-red-400 mt-1">{payout.failureReason}</p>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
+                            {payouts.map((payout) => (
+                                <div key={payout.id} className="px-6 py-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payout.amount)}</span>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${PAYOUT_STATUS_BADGES[payout.status]}`}>
+                                            {payout.status}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                                        <span>Requested {new Date(payout.requestedAt).toLocaleDateString()}</span>
+                                        <span>{payout.processedAt ? `Processed ${new Date(payout.processedAt).toLocaleDateString()}` : 'Not yet processed'}</span>
+                                    </div>
+                                    {payout.status === 'FAILED' && payout.failureReason && (
+                                        <p className="text-xs text-red-500 dark:text-red-400 mt-1">{payout.failureReason}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 

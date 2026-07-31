@@ -13,6 +13,7 @@ export default function MentorLayout() {
     const { user } = useAuth();
     const location = useLocation();
     const isZenPage = location.pathname === '/mentor/zen';
+    const noWrapperPadding = isZenPage || location.pathname === '/mentor/settings';
 
     const [mySessions, setMySessions] = useState([]);
     const [sessionRequests, setSessionRequests] = useState([]);
@@ -26,6 +27,7 @@ export default function MentorLayout() {
 
     const [loading, setLoading] = useState(true);
     const [showScanner, setShowScanner] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toast, setToast] = useState(null);
     const [errors, setErrors] = useState({
         sessions: null,
@@ -96,12 +98,12 @@ export default function MentorLayout() {
                 </div>
 
                 <div className="relative z-10 flex h-full w-full">
-                    <MentorSidebar />
+                    <MentorSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                    <main className="flex-1 overflow-y-auto">
-                        <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search mentors" />
+                    <main className="flex-1 overflow-y-auto overflow-x-hidden">
+                        <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} searchPlaceholder="Search mentors" onMenuClick={() => setSidebarOpen(true)} />
 
-                        <div className={isZenPage ? '' : 'p-8'}>
+                        <div className={noWrapperPadding ? '' : 'p-4 sm:p-8'}>
                             <ErrorBoundary>
                                 <Outlet context={{
                                     mySessions,

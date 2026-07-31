@@ -28,6 +28,7 @@ export default function LaunchQuiz() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [toast, setToast] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isEditMode = !!quizId;
 
   const [quizData, setQuizData] = useState({
@@ -61,7 +62,7 @@ export default function LaunchQuiz() {
       const data = await apiCall(`/quiz/${quizId}`);
       const quiz = data.quiz;
       const mySessions = await apiCall('/sessions/all');
-      setSessions(mySessions.sessions.filter(s => s.mentorId === user?.id && s.status !== 'COMPLETED'));
+      setSessions(mySessions.sessions.filter(s => s.mentorId === user?.id));
 
       setSelectedSessionId(quiz.sessionId);
       setQuizData({
@@ -236,12 +237,12 @@ export default function LaunchQuiz() {
       </div>
 
       <div className="relative z-10 flex h-full w-full">
-        <MentorSidebar activeTab="Launch Code" />
+        <MentorSidebar activeTab="Launch Code" open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="flex-1 overflow-y-auto relative">
-          <Header user={user || {}} title={isEditMode ? 'Edit Quiz' : 'Launch Quiz'} />
+          <Header user={user || {}} title={isEditMode ? 'Edit Quiz' : 'Launch Quiz'} onMenuClick={() => setSidebarOpen(true)} />
 
-          <div className="p-8 max-w-6xl mx-auto space-y-8">
+          <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors">

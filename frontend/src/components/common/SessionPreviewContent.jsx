@@ -34,9 +34,9 @@ export default function SessionPreviewContent({ session, isPreview, children, on
   const bookingId = session.bookingId || (session.bookings && session.bookings.length > 0 ? session.bookings[0].id : null);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <div className="lg:col-span-8 space-y-8">
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
+      <div className="lg:col-span-8 space-y-4 sm:space-y-8">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
 
           <div className="relative z-10">
@@ -87,7 +87,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             About this Session
@@ -97,7 +97,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             What You'll Learn
@@ -121,7 +121,7 @@ export default function SessionPreviewContent({ session, isPreview, children, on
 
       <div className="lg:col-span-4 space-y-6">
         <div className="sticky top-24 space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-800">
             <div className="flex items-start justify-between mb-6">
               <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Instructor</h3>
               <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-500/10 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-500/20">
@@ -161,11 +161,11 @@ export default function SessionPreviewContent({ session, isPreview, children, on
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 dark:shadow-black/30 border border-white/50 dark:border-gray-800">
+          <div className="bg-white dark:bg-gray-900 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl shadow-gray-200/50 dark:shadow-black/30 border border-white/50 dark:border-gray-800">
             <div className="mb-8">
               <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest mb-3">Registration Fee</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                <span className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                   {session.priceType === 'FREE' ? 'Free' : `₹${session.price}`}
                 </span>
                 {session.priceType === 'PAID' && <span className="text-gray-400 dark:text-gray-500 text-sm font-medium">per person</span>}

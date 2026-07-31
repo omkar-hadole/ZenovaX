@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
-import { Trash2, Edit, Flag, CheckCircle, Search, Filter } from 'lucide-react';
+import { Trash2, Edit, Flag, CheckCircle, Search, Filter, User, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
 import ConfirmModal from '../../components/common/ConfirmModal';
@@ -105,7 +105,7 @@ export default function Reports() {
     );
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="p-4 sm:p-8 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reports Management</h1>
@@ -129,7 +129,7 @@ export default function Reports() {
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
-                <div className="overflow-x-auto md:overflow-visible">
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50/50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold border-b border-gray-100 dark:border-gray-800">
                             <tr>
@@ -228,6 +228,62 @@ export default function Reports() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
+                    {filteredReports.length > 0 ? (
+                        filteredReports.map((report) => (
+                            <div key={report.id} className="p-5">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                    <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">
+                                        {report.session?.title || <span className="text-red-400 italic">Deleted Session</span>}
+                                    </p>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${getStatusColor(report.status)}`}>
+                                        {report.status}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{report.reason}</p>
+                                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                    <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {report.reporter?.name}</span>
+                                    <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(report.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex items-center justify-end gap-2 mt-3">
+                                    {report.status === 'PENDING' && (
+                                        <>
+                                            <button
+                                                onClick={() => handleAction(report.id, 'RESOLVE')}
+                                                className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 rounded-lg transition-colors"
+                                                title="Resolve"
+                                            >
+                                                <CheckCircle size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(report.session?.requestId)}
+                                                className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                title="Edit Session"
+                                                disabled={!report.session?.requestId}
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleAction(report.id, 'DELETE_SESSION')}
+                                                className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                                                title="Delete Session"
+                                                disabled={!report.session}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </>
+                                    )}
+                                    {report.status !== 'PENDING' && (
+                                        <span className="text-xs text-gray-400 dark:text-gray-500 italic">No actions</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-8 py-12 text-center text-gray-500 dark:text-gray-400">No reports found.</div>
+                    )}
                 </div>
             </div>
             <Pagination

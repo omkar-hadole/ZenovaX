@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { useNavigate, NavLink, Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
-export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain" }) {
+export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain", open, onClose }) {
     const navigate = useNavigate();
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+    useEffect(() => {
+        if (!open) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape') onClose && onClose();
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => document.removeEventListener('keydown', handleKey);
+    }, [open, onClose]);
 
     const handleLogoutClick = () => {
         setShowLogoutConfirm(true);
@@ -16,89 +25,108 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
         onLogout();
     };
 
+    const renderContent = () => (
+        <>
+            <div className="p-8">
+                <Link to="/" className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 w-fit hover:opacity-80 transition-opacity">
+                    {logo ? (
+                        <img
+                            src={getOptimizedImageUrl(logo)}
+                            width={190}
+                            height={32}
+                            fetchPriority="high"
+                            alt={title || "ZenovaX Logo"}
+                            className={logoClassName}
+                        />
+                    ) : (
+                        <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white text-lg">Z</span>
+                    )}
+                    {title}
+                </Link>
+                {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
+            </div>
+
+            <nav className="flex-1 px-6 space-y-2">
+                {items.map((item, index) => {
+                    if (item.path) {
+                        return (
+                            <NavLink
+                                key={index}
+                                to={item.path}
+                                onClick={() => { onClose && onClose(); item.onClick && item.onClick(); }}
+                                className={({ isActive }) => `w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 group ${isActive
+                                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg shadow-gray-200 dark:shadow-black/30 scale-[1.02]'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm hover:translate-x-1'
+                                    }`}
+                            >
+                                {({ isActive }) => (
+                                    <>
+                                        <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`} strokeWidth={1.5} />
+                                        {item.label}
+                                        {(item.label === 'Notifications' && item.badge) && (
+                                            <span className="ml-auto bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </>
+                                )}
+                            </NavLink>
+                        );
+                    } else {
+                        return (
+                            <button
+                                key={index}
+                                onClick={() => { onClose && onClose(); item.onClick && item.onClick(); }}
+                                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 group ${item.active
+                                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg shadow-gray-200 dark:shadow-black/30 scale-[1.02]'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm hover:translate-x-1'
+                                    }`}
+                            >
+                                <item.icon className={`w-5 h-5 transition-colors ${item.active ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`} strokeWidth={1.5} />
+                                {item.label}
+                                {(item.label === 'Notifications' && item.badge) && (
+                                    <span className="ml-auto bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    }
+                })}
+            </nav>
+
+            <div className="p-6">
+                {children}
+            </div>
+
+            <button
+                onClick={handleLogoutClick}
+                className="mx-6 mb-8 flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300 hover:translate-x-1"
+            >
+                <LogOut className="w-5 h-5" strokeWidth={1.5} />
+                Logout
+            </button>
+        </>
+    );
+
     return (
         <>
-            <aside className="w-64 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex flex-col h-full shadow-sm transition-all duration-300">
-                <div className="p-8">
-                    <Link to="/" className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 w-fit hover:opacity-80 transition-opacity">
-                        {logo ? (
-                            <img
-                                src={getOptimizedImageUrl(logo)}
-                                width={190}
-                                height={32}
-                                fetchPriority="high"
-                                alt={title || "ZenovaX Logo"}
-                                className={logoClassName}
-                            />
-                        ) : (
-                            <span className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white text-lg">Z</span>
-                        )}
-                        {title}
-                    </Link>
-                    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
-                </div>
-
-                <nav className="flex-1 px-6 space-y-2">
-                    {items.map((item, index) => {
-                        if (item.path) {
-                            return (
-                                <NavLink
-                                    key={index}
-                                    to={item.path}
-                                    onClick={item.onClick}
-                                    className={({ isActive }) => `w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 group ${isActive
-                                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg shadow-gray-200 dark:shadow-black/30 scale-[1.02]'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm hover:translate-x-1'
-                                        }`}
-                                >
-                                    {({ isActive }) => (
-                                        <>
-                                            <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`} strokeWidth={1.5} />
-                                            {item.label}
-                                            {(item.label === 'Notifications' && item.badge) && (
-                                                <span className="ml-auto bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
-                                                    {item.badge}
-                                                </span>
-                                            )}
-                                        </>
-                                    )}
-                                </NavLink>
-                            );
-                        } else {
-                            return (
-                                <button
-                                    key={index}
-                                    onClick={item.onClick}
-                                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 group ${item.active
-                                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg shadow-gray-200 dark:shadow-black/30 scale-[1.02]'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm hover:translate-x-1'
-                                        }`}
-                                >
-                                    <item.icon className={`w-5 h-5 transition-colors ${item.active ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`} strokeWidth={1.5} />
-                                    {item.label}
-                                    {(item.label === 'Notifications' && item.badge) && (
-                                        <span className="ml-auto bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-full">
-                                            {item.badge}
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        }
-                    })}
-                </nav>
-
-                <div className="p-6">
-                    {children}
-                </div>
-
-                <button
-                    onClick={handleLogoutClick}
-                    className="mx-6 mb-8 flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300 hover:translate-x-1"
-                >
-                    <LogOut className="w-5 h-5" strokeWidth={1.5} />
-                    Logout
-                </button>
+            <aside className="hidden lg:flex w-64 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex-col h-full shadow-sm transition-all duration-300">
+                {renderContent()}
             </aside>
+
+            {/* Mobile drawer */}
+            {open && (
+                <div className="lg:hidden fixed inset-0 z-[80]">
+                    <div
+                        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={onClose}
+                    />
+                    <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex flex-col h-full shadow-2xl animate-in slide-in-from-left-4 duration-300">
+                        {renderContent()}
+                    </aside>
+                </div>
+            )}
 
             {/* Logout Confirmation Modal */}
             {showLogoutConfirm && (

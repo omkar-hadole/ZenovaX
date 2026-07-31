@@ -26,6 +26,7 @@ export default function CreateSession() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -187,6 +188,8 @@ export default function CreateSession() {
             ]}
             activeTab="Pending Sessions"
             setActiveTab={() => { }}
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
             onLogout={async () => {
               try {
                 await logout();
@@ -199,13 +202,13 @@ export default function CreateSession() {
             {/* Admin specific sidebar children if any */}
           </Sidebar>
         ) : (
-          <MentorSidebar />
+          <MentorSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         )}
 
         <main className="flex-1 overflow-y-auto">
-          <Header user={user || {}} title={isEditing ? "Edit Session Request" : "Create New Session"} />
+          <Header user={user || {}} title={isEditing ? "Edit Session Request" : "Create New Session"} onMenuClick={() => setSidebarOpen(true)} />
 
-          <div className="p-8 max-w-6xl mx-auto">
+          <div className="p-4 sm:p-8 max-w-6xl mx-auto">
             <div className="flex items-center gap-4 mb-8">
               <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors">
                 <ArrowLeft className="text-gray-600 dark:text-gray-400" />

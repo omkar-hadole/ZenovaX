@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, BookOpen, User as UserIcon, Sparkles } from 'lucide-react';
+import { Menu, Search, Loader2, BookOpen, User as UserIcon, Sparkles } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 import NotificationBell from './NotificationBell';
 
-export default function Header({ user, title, searchPlaceholder = "Search..." }) {
+export default function Header({ user, title, searchPlaceholder = "Search...", onMenuClick }) {
     const navigate = useNavigate();
     const location = useLocation();
     const searchRef = useRef(null);
@@ -92,11 +92,22 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
     return (
         // Near-opaque bg instead of backdrop-blur: blurring the content scrolling
         // under a sticky header forces a repaint every frame and causes scroll lag.
-        <header className="px-8 py-6 flex items-center justify-between sticky top-0 z-50 bg-[#F5F6FA]/95 dark:bg-gray-950/95">
-            <h2 className="text-3xl font-light text-gray-800 dark:text-gray-100 tracking-tight">{title}</h2>
+        <header className="px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between gap-3 sm:gap-6 sticky top-0 z-50 bg-[#F5F6FA]/95 dark:bg-gray-950/95">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                {onMenuClick && (
+                    <button
+                        onClick={onMenuClick}
+                        className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors shrink-0"
+                        aria-label="Open menu"
+                    >
+                        <Menu size={22} />
+                    </button>
+                )}
+                <h2 className="hidden md:block text-3xl font-light text-gray-800 dark:text-gray-100 tracking-tight truncate">{title}</h2>
+            </div>
 
-            <div className="flex items-center gap-6">
-                <div className="relative group" ref={searchRef}>
+            <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 sm:flex-none justify-end">
+                <div className="relative group flex-1 sm:flex-none min-w-0" ref={searchRef}>
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-gray-600 dark:group-focus-within:text-gray-300 transition-colors" />
                     <input
                         type="text"
@@ -104,11 +115,11 @@ export default function Header({ user, title, searchPlaceholder = "Search..." })
                         onChange={(e) => setQuery(e.target.value)}
                         onFocus={() => { if (query.trim().length >= 2) setIsOpen(true); }}
                         placeholder={searchPlaceholder}
-                        className="pl-11 pr-6 py-2.5 bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 border-none shadow-sm rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 w-64 md:w-80 transition-all hover:shadow-md"
+                        className="pl-11 pr-6 py-2.5 bg-white dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 border-none shadow-sm rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 w-full sm:w-64 md:w-80 transition-all hover:shadow-md"
                     />
 
                     {isOpen && (
-                        <div className="absolute top-full mt-2 left-0 w-full min-w-[22rem] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50">
+                        <div className="absolute top-full mt-2 left-0 w-full min-w-[16rem] sm:min-w-[22rem] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50">
                             {isLoading ? (
                                 <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500 dark:text-gray-400">
                                     <Loader2 className="w-4 h-4 animate-spin" /> Searching...

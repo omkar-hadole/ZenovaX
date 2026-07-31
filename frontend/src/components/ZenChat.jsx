@@ -241,7 +241,7 @@ const ChatMessageItem = React.memo(({ m, i, isCopied, onCopy }) => {
     return (
         <div className={`group flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
             <div
-                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed ${
+                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-5 py-3 text-[15px] leading-relaxed [overflow-wrap:anywhere] ${
                     isUser
                         ? 'text-white rounded-tr-sm shadow-md shadow-indigo-500/10'
                         : 'bg-white/80 dark:bg-gray-800/80 border border-slate-100 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-tl-sm shadow-sm'
@@ -507,7 +507,7 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
     }, []);
 
     return (
-        <div className="h-[calc(100vh-6rem)] bg-white dark:bg-gray-950 flex flex-col relative font-outfit overflow-hidden">
+        <div className="h-[calc(100dvh-5rem)] sm:h-[calc(100vh-6rem)] bg-white dark:bg-gray-950 flex flex-col relative font-outfit overflow-hidden">
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-100/40 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-100/40 dark:bg-blue-500/10 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2"></div>
 
@@ -521,7 +521,7 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
                 </button>
             )}
 
-            <div className="flex-1 w-full overflow-y-auto relative z-10 flex flex-col items-center custom-scrollbar [contain:content]">
+            <div className="flex-1 w-full overflow-y-auto overflow-x-hidden relative z-10 flex flex-col items-center custom-scrollbar [contain:content]">
                 <div className="w-full max-w-[900px] flex flex-col items-center my-auto p-4 pb-4">
 
                     <div className="text-center w-full mb-8">
@@ -531,10 +531,10 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
 
                         {chat.length === 0 && (
                             <div className="space-y-2">
-                                <h1 className="text-[2.5rem] font-semibold text-[#1F1F1F] dark:text-gray-100 tracking-[-0.02em]">
+                                <h1 className="text-3xl sm:text-[2.5rem] font-semibold text-[#1F1F1F] dark:text-gray-100 tracking-[-0.02em]">
                                     {getGreeting()}, {user?.name || fallbackName}
                                 </h1>
-                                <h2 className="text-[2.5rem] font-semibold text-[#1F1F1F] dark:text-gray-100 tracking-[-0.02em]">
+                                <h2 className="text-3xl sm:text-[2.5rem] font-semibold text-[#1F1F1F] dark:text-gray-100 tracking-[-0.02em]">
                                     How Can I <span style={{ color: BRAND_COLOR }} className="">Assist You Today?</span>
                                 </h2>
                             </div>
@@ -571,11 +571,11 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
                 </div>
             </div>
 
-            <div className="w-full flex justify-center p-6 pt-2 z-50 bg-white/0">
+            <div className="w-full flex justify-center pt-2 px-3 pb-3 sm:p-6 sm:pt-2 z-50 bg-white/0">
                 <div className="w-full max-w-[850px]">
 
                     {showQuotaSuggestion && (
-                        <div className="mb-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-between gap-3 text-sm">
+                        <div className="mb-3 px-4 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-sm">
                             <span className="text-indigo-700 dark:text-indigo-300">
                                 Zen's default assistant is busy right now. Connect your own ChatGPT account to keep chatting.
                             </span>
@@ -597,7 +597,7 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
                         </div>
                     )}
 
-                    <div className="mb-2 flex items-center gap-2 px-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
                         <button
                             onClick={() => setProvider('gemini')}
                             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${provider === 'gemini' || !chatGptConnected

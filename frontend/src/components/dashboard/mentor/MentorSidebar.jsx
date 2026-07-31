@@ -43,7 +43,7 @@ const BASE_ITEMS = [
 // layout (e.g. session details, create session) where there's no matching
 // route for NavLink to auto-highlight. When omitted (the normal case, inside
 // MentorLayout), items use real paths and NavLink handles active state itself.
-export default function MentorSidebar({ activeTab }) {
+export default function MentorSidebar({ activeTab, open, onClose }) {
     const navigate = useNavigate();
     const { logout } = useAuth();
     const { theme } = useTheme();
@@ -71,6 +71,8 @@ export default function MentorSidebar({ activeTab }) {
             logoClassName="w-56 h-auto"
             items={items}
             onLogout={handleLogout}
+            open={open}
+            onClose={onClose}
         >
             <EarningsTeaserCard />
         </Sidebar>

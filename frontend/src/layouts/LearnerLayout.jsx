@@ -22,6 +22,7 @@ export default function LearnerLayout() {
     const { user, logout } = useAuth();
     const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState('Dashboard');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleLogout = async () => {
         try {
@@ -50,6 +51,8 @@ export default function LearnerLayout() {
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     onLogout={handleLogout}
+                    open={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
                 >
                     <div className="bg-[#1C1C1E] rounded-[2rem] p-6 text-white relative overflow-hidden text-center mx-2 mb-4">
                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
@@ -67,8 +70,8 @@ export default function LearnerLayout() {
                     </div>
                 </Sidebar>
 
-                <main className="flex-1 overflow-y-auto">
-                    <Header user={user || {}} title={`Welcome back ${user?.name || 'Learner'}`} searchPlaceholder="Search mentors" />
+                <main className="flex-1 overflow-y-auto overflow-x-hidden">
+                    <Header user={user || {}} title={`Welcome back ${user?.name || 'Learner'}`} searchPlaceholder="Search mentors" onMenuClick={() => setSidebarOpen(true)} />
                     <ErrorBoundary>
                         <Outlet />
                     </ErrorBoundary>

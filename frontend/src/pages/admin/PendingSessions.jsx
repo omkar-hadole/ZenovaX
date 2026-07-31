@@ -84,7 +84,7 @@ export default function PendingSessions() {
     }
 
     return (
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
             <header className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Pending Approvals</h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-1">Review and manage session requests from mentors</p>

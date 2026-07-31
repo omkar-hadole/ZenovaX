@@ -322,16 +322,16 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                     userId={user?.id}
                 >
                     {(S.isBooked || user?.role === 'MENTOR' || user?.role === 'BOTH') && (
-                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
                                 <Download className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                                 Course Materials
                             </h3>
 
-                            <div className="flex gap-4 mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                            <div className="flex gap-2 sm:gap-4 mb-6 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-full sm:w-fit overflow-x-auto">
                                 <button
                                     onClick={() => { setShowResources(true); setShowQuizzes(false); setShowCoding(false); }}
-                                    className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${showResources ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                    className={`flex items-center justify-center gap-2 px-2 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all flex-1 sm:flex-none ${showResources ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                 >
                                     {S.resources && S.resources.length > 0 && (
                                         <span className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold ${showResources ? 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
@@ -342,7 +342,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                 </button>
                                 <button
                                     onClick={() => { setShowResources(false); setShowQuizzes(true); setShowCoding(false); }}
-                                    className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${showQuizzes ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                    className={`flex items-center justify-center gap-2 px-2 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all flex-1 sm:flex-none ${showQuizzes ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                 >
                                     {S.quizzes && S.quizzes.length > 0 && (
                                         <span className={`min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-bold ${showQuizzes ? 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
@@ -353,7 +353,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                 </button>
                                 <button
                                     onClick={() => { setShowResources(false); setShowQuizzes(false); setShowCoding(true); }}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${showCoding ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                    className={`flex items-center justify-center gap-2 px-2 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all flex-1 sm:flex-none ${showCoding ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                 >
                                     Coding
                                     {S.codingQuestions && S.codingQuestions.length > 0 && (
@@ -374,16 +374,16 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                             rel="noopener noreferrer"
                                             className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-md hover:shadow-indigo-500/5 transition-all group bg-white dark:bg-gray-900"
                                         >
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-4 min-w-0 flex-1">
                                                 <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                                                     <FileText size={20} />
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{file.title}</h4>
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{file.title}</h4>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">{file.fileType}</p>
                                                 </div>
                                             </div>
-                                            <div className="p-2 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                            <div className="p-2 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex-shrink-0">
                                                 <Download size={18} />
                                             </div>
                                         </a>
@@ -392,14 +392,14 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
                                 {showQuizzes && (
                                     S.quizzes && S.quizzes.length > 0 ? S.quizzes.map((q) => (
-                                        <div key={q.id} className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-purple-200 dark:hover:border-purple-500/30 hover:shadow-md hover:shadow-purple-500/5 transition-all group bg-white dark:bg-gray-900"
+                                        <div key={q.id} className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-purple-200 dark:hover:border-purple-500/30 hover:shadow-md hover:shadow-purple-500/5 transition-all group bg-white dark:bg-gray-900"
                                         >
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-4 min-w-0">
                                                 <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
                                                     <HelpCircle size={20} />
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{q.title}</h4>
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">{q.title}</h4>
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${q.status === 'LIVE' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400' : q.status === 'CLOSED' ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400' : 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400'}`}>
                                                             {q.status}
@@ -409,11 +409,11 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                 </div>
                                             </div>
                                             {user?.role === 'MENTOR' || user?.role === 'BOTH' ? (
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-none">
                                                     {q.status === 'DRAFT' && (
                                                         <button
                                                             onClick={() => navigate(`/mentor/quiz/${q.id}/edit`)}
-                                                            className="px-4 py-2 bg-yellow-500 text-white text-sm font-bold rounded-xl hover:bg-yellow-600 transition-colors shadow-sm flex items-center gap-1.5"
+                                                            className="px-4 py-2 bg-yellow-500 text-white text-sm font-bold rounded-xl hover:bg-yellow-600 transition-colors shadow-sm flex-1 sm:flex-none items-center gap-1.5 justify-center flex"
                                                         >
                                                             Edit
                                                         </button>
@@ -421,7 +421,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                     {(q.status === 'LIVE' || q.status === 'CLOSED') && (
                                                         <button
                                                             onClick={() => navigate(`/mentor/quiz/${q.id}/results`)}
-                                                            className="px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm flex items-center gap-1.5"
+                                                            className="px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm flex-1 sm:flex-none items-center gap-1.5 justify-center flex"
                                                         >
                                                             <BarChart3 size={14} /> Results
                                                         </button>
@@ -430,17 +430,17 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                             ) : (
                                                 <>
                                                     {q.status === 'LIVE' && (
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-none">
                                                             <button
                                                                 onClick={() => navigate(`/quiz/${q.id}/attempt?from=${encodeURIComponent(window.location.pathname)}`)}
-                                                                className="px-5 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 dark:shadow-purple-950/50 flex items-center gap-2"
+                                                                className="px-5 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 dark:shadow-purple-950/50 flex-1 sm:flex-none items-center justify-center gap-2 flex"
                                                             >
                                                                 <PlayCircle size={16} /> Start
                                                             </button>
                                                             <button
                                                                 onClick={() => window.open(`/quiz/${q.id}/attempt?from=${encodeURIComponent(window.location.pathname)}`, '_blank')}
                                                                 title="Open in new tab"
-                                                                className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-xl transition-colors"
+                                                                className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-xl transition-colors flex-shrink-0"
                                                             >
                                                                 <ExternalLink size={16} />
                                                             </button>
@@ -457,13 +457,13 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
 
                                 {showCoding && (
                                     S.codingQuestions && S.codingQuestions.length > 0 ? S.codingQuestions.map((q) => (
-                                        <div key={q.id} className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-500/30 hover:shadow-md hover:shadow-blue-500/5 transition-all group bg-white dark:bg-gray-900">
-                                            <div className="flex items-center gap-4">
+                                        <div key={q.id} className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-500/30 hover:shadow-md hover:shadow-blue-500/5 transition-all group bg-white dark:bg-gray-900">
+                                            <div className="flex items-center gap-4 min-w-0">
                                                 <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
                                                     <Code size={20} />
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{q.title}</h4>
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{q.title}</h4>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${q.difficulty === 'HARD' ? 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400' :
                                                             q.difficulty === 'MEDIUM' ? 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400' :
@@ -479,10 +479,10 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-none">
                                                 <button
                                                     onClick={() => navigate(`/coding/${q.id}/attempt`)}
-                                                    className={`px-5 py-2.5 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex items-center gap-2 ${q.isSolved
+                                                    className={`px-5 py-2.5 text-white text-sm font-bold rounded-xl transition-colors shadow-lg flex-1 sm:flex-none items-center justify-center gap-2 flex ${q.isSolved
                                                         ? 'bg-green-600 hover:bg-green-700 shadow-green-200 dark:shadow-green-950/50'
                                                         : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 dark:shadow-blue-950/50'
                                                         }`}
@@ -493,7 +493,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                                                 <button
                                                     onClick={() => window.open(`/coding/${q.id}/attempt`, '_blank')}
                                                     title="Open in new tab"
-                                                    className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors"
+                                                    className="p-2.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors flex-shrink-0"
                                                 >
                                                     <ExternalLink size={16} />
                                                 </button>
@@ -505,7 +505,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                         </div>
                     )}
 
-                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                         <ReviewsSection session={S} onReviewSubmit={handleReviewSubmit} onShowToast={setToast} />
                     </div>
                 </SessionPreviewContent>

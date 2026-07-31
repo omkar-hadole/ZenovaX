@@ -23,6 +23,7 @@ export default function AdminLayout() {
     const { user, logout } = useAuth();
     const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState('Dashboard');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleLogout = async () => {
         try {
@@ -54,10 +55,12 @@ export default function AdminLayout() {
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     onLogout={handleLogout}
+                    open={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
                 />
 
                 <main className="flex-1 overflow-y-auto">
-                    <Header user={user || {}} title="Admin Dashboard" searchPlaceholder="Search admin..." />
+                    <Header user={user || {}} title="Admin Dashboard" searchPlaceholder="Search admin..." onMenuClick={() => setSidebarOpen(true)} />
                     <ErrorBoundary>
                         <Outlet />
                     </ErrorBoundary>

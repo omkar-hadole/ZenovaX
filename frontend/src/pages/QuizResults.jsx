@@ -26,6 +26,7 @@ export default function QuizResults() {
   const [toast, setToast] = useState(null);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [sortBy, setSortBy] = useState('submittedAt');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchResults();
@@ -93,12 +94,12 @@ export default function QuizResults() {
   return (
     <div className="flex h-screen bg-[#F4F4F9] dark:bg-gray-950">
       <div className="relative z-10 flex h-full w-full">
-        <MentorSidebar activeTab="Launch Code" />
+        <MentorSidebar activeTab="Launch Code" open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <main className="flex-1 overflow-y-auto">
-          <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} />
+          <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} onMenuClick={() => setSidebarOpen(true)} />
 
-          <div className="p-8 max-w-7xl mx-auto space-y-8">
+          <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">{quiz.title}</h2>
@@ -192,72 +193,116 @@ export default function QuizResults() {
                   <p className="text-gray-300 dark:text-gray-600 text-sm mt-1">Results will appear here once learners submit the quiz</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50/50 dark:bg-gray-800/30">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Score</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Percentage</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Time</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                      {sortedAttempts.map((attempt) => (
-                        <tr key={attempt.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                                style={{ backgroundColor: '#7B74F1' }}
-                              >
-                                {attempt.user?.name?.charAt(0) || '?'}
-                              </div>
-                              <p className="font-medium text-gray-700 dark:text-gray-200 text-sm">{attempt.user?.name || 'Unknown'}</p>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="font-semibold text-gray-700 dark:text-gray-200">{attempt.score}/{attempt.totalMarks}</span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-14 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all"
-                                  style={{
-                                    width: `${attempt.percentage}%`,
-                                    backgroundColor: attempt.percentage >= 60 ? '#22c55e' : attempt.percentage >= 40 ? '#eab308' : '#ef4444'
-                                  }}
-                                />
-                              </div>
-                              <span className="text-sm text-gray-500">{attempt.percentage}%</span>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium ${attempt.isPassed
-                              ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400'
-                              : 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400'
-                              }`}>
-                              {attempt.isPassed ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                              {attempt.isPassed ? 'Passed' : 'Failed'}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-1.5 text-sm text-gray-400">
-                              <Timer className="w-3.5 h-3.5" />
-                              {formatTimeTaken(attempt.timeTaken)}
-                            </div>
-                          </td>
-                          <td className="px-5 py-3 text-sm text-gray-400">
-                            {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString() : 'N/A'}
-                          </td>
+                <>
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50/50 dark:bg-gray-800/30">
+                          <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student</th>
+                          <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Score</th>
+                          <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Percentage</th>
+                          <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                          <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Time</th>
+                          <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                        {sortedAttempts.map((attempt) => (
+                          <tr key={attempt.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-2.5">
+                                <div
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                                  style={{ backgroundColor: '#7B74F1' }}
+                                >
+                                  {attempt.user?.name?.charAt(0) || '?'}
+                                </div>
+                                <p className="font-medium text-gray-700 dark:text-gray-200 text-sm">{attempt.user?.name || 'Unknown'}</p>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className="font-semibold text-gray-700 dark:text-gray-200">{attempt.score}/{attempt.totalMarks}</span>
+                            </td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-14 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{
+                                      width: `${attempt.percentage}%`,
+                                      backgroundColor: attempt.percentage >= 60 ? '#22c55e' : attempt.percentage >= 40 ? '#eab308' : '#ef4444'
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-sm text-gray-500">{attempt.percentage}%</span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium ${attempt.isPassed
+                                ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400'
+                                : 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400'
+                                }`}>
+                                {attempt.isPassed ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                {attempt.isPassed ? 'Passed' : 'Failed'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                                <Timer className="w-3.5 h-3.5" />
+                                {formatTimeTaken(attempt.timeTaken)}
+                              </div>
+                            </td>
+                            <td className="px-5 py-3 text-sm text-gray-400">
+                              {attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString() : 'N/A'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800/50">
+                    {sortedAttempts.map((attempt) => (
+                      <div key={attempt.id} className="px-5 py-4">
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0"
+                              style={{ backgroundColor: '#7B74F1' }}
+                            >
+                              {attempt.user?.name?.charAt(0) || '?'}
+                            </div>
+                            <p className="font-medium text-gray-700 dark:text-gray-200 text-sm truncate">{attempt.user?.name || 'Unknown'}</p>
+                          </div>
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium shrink-0 ${attempt.isPassed
+                            ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400'
+                            : 'bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400'
+                            }`}>
+                            {attempt.isPassed ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                            {attempt.isPassed ? 'Passed' : 'Failed'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span className="font-semibold text-gray-700 dark:text-gray-200">{attempt.score}/{attempt.totalMarks}</span>
+                          <span className="text-sm text-gray-500">{attempt.percentage}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-2">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${attempt.percentage}%`,
+                              backgroundColor: attempt.percentage >= 60 ? '#22c55e' : attempt.percentage >= 40 ? '#eab308' : '#ef4444'
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-400">
+                          <span className="flex items-center gap-1"><Timer className="w-3.5 h-3.5" /> {formatTimeTaken(attempt.timeTaken)}</span>
+                          <span>{attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 

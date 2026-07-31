@@ -22,9 +22,11 @@ export default function NotificationBell() {
     const updateDropdownPosition = useCallback(() => {
         if (buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
+            const isMobile = window.innerWidth < 768;
             setDropdownStyle({
                 top: rect.bottom + 12,
-                right: window.innerWidth - rect.right,
+                right: isMobile ? 12 : window.innerWidth - rect.right,
+                width: isMobile ? 'calc(100vw - 24px)' : undefined,
             });
         }
     }, []);
@@ -144,7 +146,7 @@ export default function NotificationBell() {
             {open && createPortal(
                 <div
                     ref={portalRef}
-                    style={{ position: 'fixed', top: dropdownStyle.top, right: dropdownStyle.right }}
+                    style={{ position: 'fixed', top: dropdownStyle.top, right: dropdownStyle.right, width: dropdownStyle.width }}
                     className="w-96 max-w-[90vw] bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-[9999]"
                 >
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">

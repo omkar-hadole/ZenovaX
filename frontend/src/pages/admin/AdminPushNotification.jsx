@@ -365,7 +365,7 @@ export default function AdminPushNotification() {
                         </div>
                     ) : (
                         <>
-                            <div className="overflow-x-auto">
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -395,6 +395,22 @@ export default function AdminPushNotification() {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+                                {history.map((log) => (
+                                    <div key={log.id} className="py-3.5">
+                                        <div className="flex items-start justify-between gap-3 mb-1">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{log.title}</p>
+                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+                                                {log.audienceType.replace(/_/g, ' ')}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{log.message}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            {log.totalSent} sent · {new Date(log.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                             {historyTotalPages > 1 && (
                                 <div className="flex items-center justify-center gap-2 mt-4">

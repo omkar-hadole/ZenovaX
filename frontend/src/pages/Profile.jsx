@@ -376,7 +376,7 @@ export default function Profile() {
 
           <div className="lg:col-span-8 space-y-8">
 
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-700" />
 
               <div className="relative z-10">
@@ -504,7 +504,7 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
               <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                 About
@@ -526,7 +526,7 @@ export default function Profile() {
             </div>
 
             {(profile.role === 'MENTOR' || isEditing) && (
-              <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                   Skills & Expertise
@@ -559,7 +559,7 @@ export default function Profile() {
             )}
 
             {profile.role === 'MENTOR' && (
-              <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                 <ReviewsSection userId={profile.id} />
               </div>
             )}
@@ -682,7 +682,7 @@ export default function Profile() {
                     earnedBadges={profile.badges || []}
                   />
                 ) : (
-                  <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800">
+                  <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
                       <Award className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                       Achievements

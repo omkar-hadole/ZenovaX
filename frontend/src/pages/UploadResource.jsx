@@ -20,6 +20,7 @@ export default function UploadResource() {
         sessionId: ''
     });
     const [toast, setToast] = useState(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         fetchSessions();
@@ -73,12 +74,12 @@ export default function UploadResource() {
             </div>
 
             <div className="relative z-10 flex h-full w-full">
-                <MentorSidebar activeTab="Dashboard" />
+                <MentorSidebar activeTab="Dashboard" open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                 <main className="flex-1 overflow-y-auto">
-                    <Header user={user || {}} title="Upload Resource" />
+                    <Header user={user || {}} title="Upload Resource" onMenuClick={() => setSidebarOpen(true)} />
 
-                    <div className="p-8 max-w-6xl mx-auto">
+                    <div className="p-4 sm:p-8 max-w-6xl mx-auto">
                         <div className="flex items-center gap-4 mb-8">
                             <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors">
                                 <ArrowLeft className="text-gray-600 dark:text-gray-300" />

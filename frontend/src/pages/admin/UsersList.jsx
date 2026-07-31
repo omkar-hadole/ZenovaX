@@ -52,14 +52,14 @@ export default function UsersList() {
         });
     };
 
-    if (loading) return <div className="p-8">Loading users...</div>;
+    if (loading) return <div className="p-4 sm:p-8">Loading users...</div>;
 
     return (
-        <div className="p-8">
+        <div className="p-4 sm:p-8">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">All Users</h1>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-gray-800/60">
                             <tr>
@@ -115,6 +115,46 @@ export default function UsersList() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+                    {users.map((user) => (
+                        <div key={user.id} className="p-4">
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 shrink-0">
+                                        <User className="w-4 h-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.name}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</div>
+                                    </div>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold shrink-0 ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' :
+                                        user.role === 'MENTOR' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
+                                            'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
+                                    }`}>
+                                    {user.role}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <span>{user.department || '-'}</span>
+                                <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex justify-end mt-2">
+                                <button
+                                    onClick={() => handleDelete(user.id)}
+                                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                    title="Delete User"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {users.length === 0 && (
+                        <div className="px-4 py-12 text-center text-gray-500 dark:text-gray-400">No users found.</div>
+                    )}
                 </div>
             </div>
             <Pagination

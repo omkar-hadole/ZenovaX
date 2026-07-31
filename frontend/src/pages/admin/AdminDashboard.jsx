@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
-import { Users, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import { Users, BookOpen, Clock, AlertCircle, Calendar, User } from 'lucide-react';
 import InlineError from '../../components/InlineError';
 
 export default function AdminDashboard() {
@@ -32,11 +32,11 @@ export default function AdminDashboard() {
         fetchStats();
     }, []);
 
-    if (loading) return <div className="p-8">Loading stats...</div>;
+    if (loading) return <div className="p-4 sm:p-8">Loading stats...</div>;
 
     if (error) {
         return (
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
                 <InlineError message={error} onRetry={fetchStats} />
             </div>
         );
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     );
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-4 sm:p-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Total Sessions"
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Recently Added Sessions</h2>
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-gray-100 dark:border-gray-800">
@@ -122,6 +122,29 @@ export default function AdminDashboard() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
+                    {stats.recentSessions.map((session) => (
+                        <div key={session.id} className="py-4">
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{session.title}</p>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium shrink-0 ${session.status === 'UPCOMING' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
+                                        session.status === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
+                                            'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                    }`}>
+                                    {session.status}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {session.mentor?.name}</span>
+                                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(session.scheduledAt).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    ))}
+                    {stats.recentSessions.length === 0 && (
+                        <div className="py-8 text-center text-gray-500 dark:text-gray-400">No recent sessions found.</div>
+                    )}
                 </div>
             </div>
         </div>
