@@ -1,13 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LogOut } from 'lucide-react';
-import { useNavigate, NavLink, Link } from 'react-router-dom';
+import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 export default function Sidebar({ title, subtitle, items, activeTab, setActiveTab, onLogout, children, logo, logoClassName = "h-8 object-contain", open, onClose }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const prevPath = useRef(location.pathname);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [drawerMounted, setDrawerMounted] = useState(false);
     const [drawerClosing, setDrawerClosing] = useState(false);
+
+    // Auto-close the mobile drawer on any route change while it's open. This
+    // covers links that navigate without calling onClose (e.g. the sidebar
+    // children like "Chat with Zen" and "View Earnings").
+    useEffect(() => {
+        if (prevPath.current !== location.pathname) {
+            prevPath.current = location.pathname;
+            if (open && onClose) onClose();
+        }
+    }, [location.pathname, open, onClose]);
 
     useEffect(() => {
         if (!open) return;

@@ -285,6 +285,31 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
         setToast({ message: "Review submitted successfully!", type: "success" });
     };
 
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/sessions/${session.id}`;
+        const shareData = {
+            title: 'ZenovaX Session',
+            text: `Check out "${session.title}" and book your spot on ZenovaX!`,
+            url: shareUrl,
+        };
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                setToast({ message: 'Link copied to clipboard!', type: 'success' });
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError') return;
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                setToast({ message: 'Link copied to clipboard!', type: 'success' });
+            } catch (copyErr) {
+                setToast({ message: 'Could not share this session.', type: 'error' });
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#F8F9FC] dark:bg-gray-950">
             <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
@@ -301,7 +326,7 @@ export default function SessionDetailsView({ session, onBack, onRegister, isRegi
                         </button>
 
                         <div className="flex items-center gap-3">
-                            <button className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all">
+                            <button onClick={handleShare} className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-all">
                                 <Share2 size={20} />
                             </button>
                             <button className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full transition-all">
