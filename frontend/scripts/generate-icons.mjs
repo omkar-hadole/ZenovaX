@@ -6,7 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const publicDir = join(root, 'public');
 const iconsDir = join(publicDir, 'icons');
-const source = join(publicDir, 'favicon.png');
+const source = join(iconsDir, 'icon-512.png');
 
 const brandBg = { r: 201, g: 199, b: 245 };
 
