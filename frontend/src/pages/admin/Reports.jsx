@@ -112,12 +112,12 @@ export default function Reports() {
                     <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage and resolve reported sessions</p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="flex items-center gap-3 bg-white dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm w-full md:w-auto overflow-x-auto">
                     {['ALL', 'PENDING', 'RESOLVED', 'IGNORED'].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === status
+                            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === status
                                 ? 'bg-black text-white shadow-md'
                                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
@@ -235,15 +235,15 @@ export default function Reports() {
                         filteredReports.map((report) => (
                             <div key={report.id} className="p-5">
                                 <div className="flex items-start justify-between gap-3 mb-3">
-                                    <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">
+                                    <p className="font-bold text-gray-800 dark:text-gray-200 text-sm min-w-0 break-words">
                                         {report.session?.title || <span className="text-red-400 italic">Deleted Session</span>}
                                     </p>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${getStatusColor(report.status)}`}>
                                         {report.status}
                                     </span>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{report.reason}</p>
-                                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2 break-words">{report.reason}</p>
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
                                     <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {report.reporter?.name}</span>
                                     <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(report.createdAt).toLocaleDateString()}</span>
                                 </div>

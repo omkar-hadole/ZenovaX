@@ -135,8 +135,8 @@ export default function AllSessions() {
                                 </span>
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                                <div className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {session.mentor?.name}</div>
-                                <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(session.scheduledAt).toLocaleString()}</div>
+                                <div className="flex flex-wrap items-center gap-1.5 min-w-0"><Users className="w-3.5 h-3.5 shrink-0" /> <span className="min-w-0">{session.mentor?.name}</span></div>
+                                <div className="flex flex-wrap items-center gap-1.5 min-w-0"><Calendar className="w-3.5 h-3.5 shrink-0" /> <span className="min-w-0">{new Date(session.scheduledAt).toLocaleString()}</span></div>
                             </div>
                             <div className="flex items-center justify-between mt-2">
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{session.price > 0 ? `₹${session.price}` : 'Free'}</span>
