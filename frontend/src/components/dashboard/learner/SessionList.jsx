@@ -20,19 +20,21 @@ export default function SessionList({ title, sessions, type = 'course', onViewAl
                         <div
                             key={session.id}
                             onClick={() => onSessionClick && onSessionClick(session.id)}
-                            className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-5 flex items-center gap-5 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
+                            className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group cursor-pointer"
                         >
-                            <div className={`w-14 h-14 ${session.color.replace('bg-blue-100', 'bg-[#C9C7F5]/20').replace('bg-yellow-100', 'bg-[#F6D483]/20').replace('bg-orange-100', 'bg-[#F6D483]/20')} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                                <BookOpen className={`w-6 h-6 ${session.color.includes('blue') ? 'text-[#5B8DEF]' : 'text-[#D4A017]'}`} strokeWidth={1.5} />
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="font-bold text-gray-900 dark:text-gray-100 text-base mb-1 group-hover:text-blue-600 transition-colors">{session.title}</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                    {type === 'course' ? `By ${session.mentor}` : session.instructor}
-                                </p>
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                                <div className={`w-14 h-14 shrink-0 ${session.color.replace('bg-blue-100', 'bg-[#C9C7F5]/20').replace('bg-yellow-100', 'bg-[#F6D483]/20').replace('bg-orange-100', 'bg-[#F6D483]/20')} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                                    <BookOpen className={`w-6 h-6 ${session.color.includes('blue') ? 'text-[#5B8DEF]' : 'text-[#D4A017]'}`} strokeWidth={1.5} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-gray-900 dark:text-gray-100 text-base mb-1 group-hover:text-blue-600 transition-colors truncate">{session.title}</h4>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
+                                        {type === 'course' ? `By ${session.mentor}` : session.instructor}
+                                    </p>
+                                </div>
                             </div>
                             {type === 'course' ? (
-                                <>
+                                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 shrink-0">
                                     <div className="text-right">
                                         <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Duration</p>
                                         <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{session.date}</p>
@@ -46,9 +48,9 @@ export default function SessionList({ title, sessions, type = 'course', onViewAl
                                     >
                                         View Session
                                     </button>
-                                </>
+                                </div>
                             ) : (
-                                <button className="bg-[#F6D483] text-black px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#FFE5A5] transition-all shadow-sm hover:shadow-md">
+                                <button className="bg-[#F6D483] text-black px-5 py-2 rounded-xl text-xs font-bold hover:bg-[#FFE5A5] transition-all shadow-sm hover:shadow-md shrink-0">
                                     {session.status}
                                 </button>
                             )}

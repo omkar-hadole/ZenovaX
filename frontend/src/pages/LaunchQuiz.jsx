@@ -243,7 +243,7 @@ export default function LaunchQuiz() {
           <Header user={user || {}} title={isEditMode ? 'Edit Quiz' : 'Launch Quiz'} onMenuClick={() => setSidebarOpen(true)} />
 
           <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
                 <button onClick={() => navigate('/mentor/dashboard')} className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-colors">
                   <ArrowLeft className="text-gray-600 dark:text-gray-300" />
@@ -253,11 +253,11 @@ export default function LaunchQuiz() {
                   <p className="text-gray-500 dark:text-gray-400">Assess your learners' knowledge</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
                   onClick={isEditMode ? () => submitQuiz(false) : handleLaunchClick}
                   disabled={submitting}
-                  className={`px-6 py-3 font-bold rounded-[1rem] transition-all flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-1 ${isEditMode
+                  className={`flex-1 sm:flex-none px-6 py-3 font-bold rounded-[1rem] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-1 ${isEditMode
                     ? 'bg-[#A9C1F7] text-[#4a7ac7] hover:bg-[#98b0e5]'
                     : 'bg-[#C9C7F5] text-[#5a59b5] hover:bg-[#b8b6e5]'
                     }`}
@@ -399,7 +399,7 @@ export default function LaunchQuiz() {
                     <div key={qIndex} className="bg-white dark:bg-gray-900 rounded-[1.5rem] p-8 shadow-sm border border-[#F7D483]/20 dark:border-gray-800 relative group hover:shadow-md transition-all">
                       <button
                         onClick={() => removeQuestion(qIndex)}
-                        className="absolute top-6 right-6 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute top-6 right-6 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-100 sm:opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>

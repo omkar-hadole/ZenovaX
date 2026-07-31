@@ -25,14 +25,14 @@ export default function BrowseSessionsView({
 
     return (
         <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">Browse Sessions</h2>
 
-                <div className="flex items-center gap-4">
-                    <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl flex items-center">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
+                    <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl flex items-center w-full sm:w-auto">
                         <button
                             onClick={() => setFilterType('upcoming')}
-                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'upcoming'
+                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'upcoming'
                                 ? 'bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                 }`}
@@ -41,7 +41,7 @@ export default function BrowseSessionsView({
                         </button>
                         <button
                             onClick={() => setFilterType('past')}
-                            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'past'
+                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'past'
                                 ? 'bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                 }`}
@@ -50,11 +50,11 @@ export default function BrowseSessionsView({
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 flex-1 sm:flex-none">
                         <select
                             value={filters?.mode || ''}
                             onChange={(e) => handleFilterChange('mode', e.target.value)}
-                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center min-w-[100px]"
+                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center flex-1 sm:flex-none min-w-0 sm:min-w-[110px]"
                             style={{ backgroundImage: 'none' }}
                         >
                             <option value="">All Modes</option>
@@ -65,7 +65,7 @@ export default function BrowseSessionsView({
                         <select
                             value={filters?.priceType || ''}
                             onChange={(e) => handleFilterChange('priceType', e.target.value)}
-                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center min-w-[100px]"
+                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black/5 appearance-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center flex-1 sm:flex-none min-w-0 sm:min-w-[110px]"
                             style={{ backgroundImage: 'none' }}
                         >
                             <option value="">All Prices</option>

@@ -625,7 +625,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
               </div>
             </div>
             {chatGptConnected ? (
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -667,7 +667,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
               </div>
             ) : (
               <div className="bg-gray-50 dark:bg-gray-800/60 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-5">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-[#8B84FF]/10 dark:bg-[#8B84FF]/10 flex items-center justify-center flex-shrink-0">
                     <Link2 className="w-4 h-4 text-[#8B84FF]" />
                   </div>
@@ -676,7 +676,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Connect once — works across Zen chat and coding question generation</p>
                   </div>
                   {needsChatGptExtension ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => window.open(chatGptInstallUrl, '_blank', 'noopener,noreferrer')}
@@ -696,7 +696,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                     <button
                       type="button"
                       onClick={connectChatGPT}
-                      className="flex items-center gap-1.5 px-4 py-2.5 bg-[#8B84FF] text-white rounded-xl font-medium hover:bg-[#7B74F0] transition-all text-sm shadow-sm hover:shadow-md whitespace-nowrap"
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-[#8B84FF] text-white rounded-xl font-medium hover:bg-[#7B74F0] transition-all text-sm shadow-sm hover:shadow-md whitespace-nowrap shrink-0 sm:self-start"
                     >
                       <Link2 className="w-3.5 h-3.5" /> Connect ChatGPT
                     </button>
@@ -924,27 +924,29 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
                 </div>
                 <div className={`space-y-2.5 ${animatingFields.parameters ? 'ai-fill-target' : ''}`}>
                   {structuredData.parameters.map((param, idx) => (
-                    <div key={idx} className="flex gap-2.5 items-center group">
-                      <GripVertical className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                      <input
-                        type="text"
-                        value={param.name}
-                        onChange={(e) => handleParameterChange(idx, 'name', e.target.value)}
-                        className="flex-1 min-w-0 p-2.5 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-[#C9C7F5] focus:border-transparent transition-all font-mono text-sm"
-                        placeholder="param name"
-                      />
-                      <select
-                        value={param.type}
-                        onChange={(e) => handleParameterChange(idx, 'type', e.target.value)}
-                        className="p-2.5 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-[#C9C7F5] focus:border-transparent transition-all text-sm w-32"
-                      >
-                        {SUPPORTED_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                    <div key={idx} className="flex flex-col sm:flex-row gap-2.5 sm:items-center group">
+                      <GripVertical className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 hidden sm:block" />
+                      <div className="flex gap-2.5 items-center flex-1 min-w-0">
+                        <input
+                          type="text"
+                          value={param.name}
+                          onChange={(e) => handleParameterChange(idx, 'name', e.target.value)}
+                          className="flex-1 min-w-0 p-2.5 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-[#C9C7F5] focus:border-transparent transition-all font-mono text-sm"
+                          placeholder="param name"
+                        />
+                        <select
+                          value={param.type}
+                          onChange={(e) => handleParameterChange(idx, 'type', e.target.value)}
+                          className="p-2.5 bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:ring-2 focus:ring-[#C9C7F5] focus:border-transparent transition-all text-sm w-32 flex-shrink-0"
+                        >
+                          {SUPPORTED_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
                       {structuredData.parameters.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveParameter(idx)}
-                          className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors self-end sm:self-auto"
                           aria-label={`Remove parameter ${idx + 1}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1232,12 +1234,12 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
 
       {/* ─── STICKY FOOTER ─── */}
       <div className="sticky bottom-0 z-40 mt-8 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[#F4F4F9]/95 dark:bg-gray-950/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto flex items-center justify-end gap-3">
+        <div className="max-w-4xl mx-auto flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
           {isEditingLive ? (
             <button
               onClick={() => handleSubmit(false)}
               disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-black text-white rounded-xl font-medium hover:bg-gray-900 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-black text-white rounded-xl font-medium hover:bg-gray-900 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 active:scale-[0.98]"
             >
               {loading ? (
                 <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</span>
@@ -1250,14 +1252,14 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
               <button
                 onClick={() => handleSubmit(false)}
                 disabled={loading}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all disabled:opacity-50 active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all disabled:opacity-50 active:scale-[0.98]"
               >
                 <Save className="w-4 h-4" /> Save Draft
               </button>
               <button
                 onClick={() => handleSubmit(true)}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-black text-white rounded-xl font-medium hover:bg-gray-900 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-black text-white rounded-xl font-medium hover:bg-gray-900 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 active:scale-[0.98]"
               >
                 {loading ? (
                   <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Processing...</span>

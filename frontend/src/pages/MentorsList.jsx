@@ -59,23 +59,23 @@ export default function MentorsList() {
                     <p className="text-gray-500 dark:text-gray-400">Connect with experienced professionals to guide your journey</p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-1 sm:flex-none">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                         <input
                             type="text"
                             placeholder="Search mentors..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 outline-none w-64 transition-all"
+                            className="pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 outline-none w-full sm:w-64 transition-all"
                         />
                     </div>
-                    <div className="relative">
+                    <div className="relative flex-1 sm:flex-none">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                         <select
                             value={filterDepartment}
                             onChange={(e) => setFilterDepartment(e.target.value)}
-                            className="pl-10 pr-8 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 outline-none appearance-none bg-white dark:bg-gray-800 dark:text-gray-100 cursor-pointer transition-all"
+                            className="pl-10 pr-8 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-500/30 outline-none appearance-none bg-white dark:bg-gray-800 dark:text-gray-100 cursor-pointer transition-all w-full sm:w-auto"
                         >
                             {departments.map(dept => (
                                 <option key={dept} value={dept}>{dept}</option>
