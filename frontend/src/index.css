@@ -13,6 +13,13 @@
    same attribute — one toggle, one selector, no drift between the two. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* ============================================================
    DESIGN TOKENS
    ------------------------------------------------------------

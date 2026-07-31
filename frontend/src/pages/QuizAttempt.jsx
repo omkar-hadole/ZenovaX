@@ -148,7 +148,7 @@ function ResultScreen({ quiz, result, from, navigate }) {
             <div className="w-px h-6 bg-[#E6E7EA] dark:bg-[#2A2E39] mx-3 sm:mx-4" />
 
             <div className="min-w-0">
-              <h1 className="font-semibold text-sm sm:text-[15px] truncate">
+              <h1 className="font-semibold text-sm sm:text-[15px] truncate max-w-[160px] xs:max-w-[240px] sm:max-w-[500px]">
                 {quiz?.title}
               </h1>
 
@@ -171,23 +171,23 @@ function ResultScreen({ quiz, result, from, navigate }) {
         {/* Result Hero */}
         <section className="bg-white dark:bg-[#12151C] border border-[#E7E8EC] dark:border-[#252936] rounded-3xl overflow-hidden">
           <div className="p-6 sm:p-8 lg:p-10">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="flex items-start gap-5">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
+              <div className="flex items-start gap-4 sm:gap-5">
                 <div
-                  className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-2xl flex items-center justify-center ${
+                  className={`w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-2xl flex items-center justify-center ${
                     isPassed
                       ? 'bg-emerald-50 dark:bg-emerald-500/10'
                       : 'bg-red-50 dark:bg-red-500/10'
                   }`}
                 >
                   {isPassed ? (
-                    <Trophy className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
+                    <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-500 dark:text-emerald-400" />
                   ) : (
-                    <XCircle className="w-7 h-7 text-red-500" />
+                    <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-red-500" />
                   )}
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <div
                     className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
                       isPassed
@@ -204,7 +204,7 @@ function ResultScreen({ quiz, result, from, navigate }) {
                     {isPassed ? 'Passed' : 'Not passed'}
                   </div>
 
-                  <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-[-0.035em]">
+                  <h2 className="mt-3 text-xl sm:text-3xl font-bold tracking-[-0.035em] leading-tight">
                     {percentage >= 90 ? 'Outstanding!' : percentage >= 70 ? 'Great work!' : percentage >= passingMarks ? 'Good effort!' : 'Keep practicing'}
                   </h2>
 
@@ -215,7 +215,18 @@ function ResultScreen({ quiz, result, from, navigate }) {
                 </div>
               </div>
 
-              <div className="flex items-end lg:items-center gap-3">
+              <div className="lg:hidden">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-4xl sm:text-5xl font-bold tracking-[-0.06em]">
+                    {percentage}
+                  </span>
+                  <span className="text-lg text-[#9A9EAA] font-medium">
+                    %
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden lg:flex items-center gap-3">
                 <span className="text-5xl sm:text-6xl font-bold tracking-[-0.06em]">
                   {percentage}
                 </span>
@@ -236,6 +247,7 @@ function ResultScreen({ quiz, result, from, navigate }) {
             <ResultStat
               label="Correct"
               value={`${correctCount}/${totalQuestions}`}
+              mobileNoBorder
             />
 
             <ResultStat
@@ -279,11 +291,11 @@ function ResultScreen({ quiz, result, from, navigate }) {
               return (
                 <article
                   key={question.id}
-                  className="p-5 sm:p-7 lg:p-8"
+                  className="p-4 sm:p-7 lg:p-8"
                 >
-                  <div className="flex gap-4">
+                  <div className="flex gap-3 sm:gap-4">
                     <div
-                      className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${
+                      className={`hidden sm:flex w-8 h-8 rounded-xl flex-shrink-0 items-center justify-center ${
                         isCorrect
                           ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 dark:text-emerald-400'
                           : 'bg-red-50 dark:bg-red-500/10 text-red-400'
@@ -377,14 +389,18 @@ function ResultScreen({ quiz, result, from, navigate }) {
                               </span>
 
                               {isCorrectOption && (
-                                <span className="hidden sm:inline-flex text-[11px] font-semibold text-emerald-500 dark:text-emerald-300">
-                                  Correct answer
+                                <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-500 dark:text-emerald-300">
+                                  <Check className="w-3 h-3 sm:hidden" />
+                                  <span className="sm:inline">Correct</span>
+                                  <span className="hidden sm:inline">answer</span>
                                 </span>
                               )}
 
                               {isSelected && !isCorrectOption && (
-                                <span className="hidden sm:inline-flex text-[11px] font-semibold text-red-500 dark:text-red-300">
-                                  Your answer
+                                <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-red-500 dark:text-red-300">
+                                  <X className="w-3 h-3 sm:hidden" />
+                                  <span className="sm:inline">Your</span>
+                                  <span className="hidden sm:inline">answer</span>
                                 </span>
                               )}
                             </div>
@@ -413,11 +429,15 @@ function ResultScreen({ quiz, result, from, navigate }) {
   );
 }
 
-function ResultStat({ label, value, last = false }) {
+function ResultStat({ label, value, last = false, mobileNoBorder = false }) {
   return (
     <div
-      className={`px-5 sm:px-7 py-5 ${
-        !last ? 'border-r border-[#ECEDEF] dark:border-[#252936]' : ''
+      className={`px-4 sm:px-7 py-5 ${
+        !last
+          ? `border-r border-[#ECEDEF] dark:border-[#252936] ${
+              mobileNoBorder ? 'md:border-r' : ''
+            }`
+          : ''
       }`}
     >
       <p className="text-[11px] sm:text-xs font-medium text-[#9297A3]">
@@ -669,7 +689,7 @@ export default function QuizAttempt() {
             <div className="w-px h-6 bg-[#E5E7EB] dark:bg-[#292D37] mx-3 sm:mx-4" />
 
             <div className="min-w-0">
-              <h1 className="text-sm sm:text-[15px] font-semibold tracking-[-0.01em] truncate max-w-[180px] sm:max-w-[400px]">
+              <h1 className="text-sm sm:text-[15px] font-semibold tracking-[-0.01em] truncate max-w-[150px] xs:max-w-[220px] sm:max-w-[400px]">
                 {quiz.title}
               </h1>
 
@@ -725,6 +745,41 @@ export default function QuizAttempt() {
           />
         </div>
       </header>
+
+      {/* Mobile question navigator */}
+      <div className="lg:hidden sticky top-[71px] z-30 bg-white/95 dark:bg-[#0F1117]/95 backdrop-blur-xl border-b border-[#E6E8EC] dark:border-[#232731] px-3 py-2.5">
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1">
+            {questions.map((item, index) => {
+              const isCurrent = index === currentQuestionIndex;
+              const isAnswered =
+                answers[item.id] !== '' &&
+                answers[item.id] !== null &&
+                answers[item.id] !== undefined;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => goToQuestion(index)}
+                  aria-label={`Go to question ${index + 1}`}
+                  className={`flex-shrink-0 w-9 h-9 rounded-lg text-xs font-semibold border transition ${
+                    isCurrent
+                      ? 'bg-[#C9C7F5] border-[#C9C7F5] text-[#5a59b5]'
+                      : isAnswered
+                        ? 'bg-[#F4F4FF] dark:bg-[#6264D9]/10 border-[#D7D9FA] dark:border-[#6264D9]/25 text-[#7B74F1]'
+                        : 'bg-white dark:bg-[#12151C] border-[#E2E4E8] dark:border-[#292D37] text-[#858A95]'
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
+          <span className="flex-shrink-0 text-[11px] font-semibold text-[#8A8F99] tabular-nums">
+            {currentQuestionIndex + 1}/{totalQuestions}
+          </span>
+        </div>
+      </div>
 
       {/* Main layout */}
       <main className="max-w-[1280px] mx-auto px-4 sm:px-6 py-5 sm:py-7 lg:py-8">
@@ -900,6 +955,7 @@ export default function QuizAttempt() {
                       : 'text-[#606570] hover:bg-white hover:shadow-sm'
                   }`}
                 >
+                  <ArrowLeft className="w-4 h-4 sm:hidden" />
                   <span className="hidden sm:inline">Previous</span>
                 </button>
 

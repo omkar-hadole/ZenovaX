@@ -13,6 +13,26 @@ export default function QRScanner({ onClose, onCameraError }) {
     const html5QrCodeRef = useRef(null);
     const isScanningRef = useRef(false);
     const lastScannedCodeRef = useRef(null);
+    const startTimerRef = useRef(null);
+
+    // Force-release the camera stream immediately by stopping every track
+    // synchronously. Relying only on the library's async stop() can leave the
+    // camera light on after the modal unmounts.
+    const forceStopCamera = () => {
+        try {
+            const readerEl = document.getElementById('reader');
+            const videoEl = readerEl && readerEl.querySelector('video');
+            const stream = videoEl && videoEl.srcObject;
+            if (stream && typeof stream.getTracks === 'function') {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (videoEl) {
+                videoEl.srcObject = null;
+            }
+        } catch (err) {
+            console.error("Failed to force-stop camera", err);
+        }
+    };
 
     useEffect(() => {
         const startScanner = async () => {
@@ -50,15 +70,28 @@ export default function QRScanner({ onClose, onCameraError }) {
         };
 
         // Small delay to ensure DOM is ready
-        setTimeout(startScanner, 100);
+        startTimerRef.current = setTimeout(startScanner, 100);
 
         return () => {
-            // Cleanup function
-            if (html5QrCodeRef.current && isScanningRef.current) {
-                html5QrCodeRef.current.stop().then(() => {
-                    html5QrCodeRef.current.clear();
-                    isScanningRef.current = false;
-                }).catch(err => console.error("Failed to stop scanner", err));
+            // Cancel pending start so the camera is never opened after unmount
+            if (startTimerRef.current) {
+                clearTimeout(startTimerRef.current);
+                startTimerRef.current = null;
+            }
+
+            forceStopCamera();
+
+            const html5QrCode = html5QrCodeRef.current;
+            if (html5QrCode) {
+                try {
+                    html5QrCode.stop().then(() => {
+                        html5QrCode.clear();
+                        isScanningRef.current = false;
+                    }).catch(err => console.error("Failed to stop scanner", err));
+                } catch (err) {
+                    console.error("Failed to stop scanner", err);
+                }
+                html5QrCodeRef.current = null;
             }
         };
     }, []);
