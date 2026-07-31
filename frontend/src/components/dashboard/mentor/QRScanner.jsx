@@ -229,22 +229,6 @@ export default function QRScanner({ onClose, onCameraError }) {
                                 className={`w-full relative rounded-xl overflow-hidden bg-black shadow-inner ${scanResult ? 'hidden' : 'block'}`}
                             >
                                 <div id="reader" className="w-full h-full"></div>
-
-                                {/* Scan-frame corner brackets */}
-                                <div className="absolute inset-6 pointer-events-none">
-                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-indigo-400 rounded-tl-lg" />
-                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-indigo-400 rounded-tr-lg" />
-                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-indigo-400 rounded-bl-lg" />
-                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-indigo-400 rounded-br-lg" />
-                                </div>
-
-                                {/* Live scanning indicator */}
-                                {!isVerifying && (
-                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                        <span className="text-white text-xs font-semibold">Scanning</span>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Verification Result */}
