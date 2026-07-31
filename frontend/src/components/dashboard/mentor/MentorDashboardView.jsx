@@ -40,20 +40,20 @@ export default function MentorDashboardView({
             {errors.stats ? (
                 <InlineError message={errors.stats} onRetry={onRetryStats} className="mb-8" />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
                     {[
                         { icon: Calendar, label: 'Total Sessions', value: stats.totalSessions, bg: 'bg-[#C9C7F5]', text: 'text-[#5a59b5]', border: 'border-[#b8b6e5]' },
                         { icon: Users, label: 'Learners Helped', value: stats.totalLearners, bg: 'bg-[#A9C1F7]', text: 'text-[#4a7ac7]', border: 'border-[#98b0e5]' },
                         { icon: Clock, label: 'Total Hours', value: `${stats.totalHours}h`, bg: 'bg-[#F7D483]', text: 'text-[#b59a5a]', border: 'border-[#e5c372]' },
                         { icon: Star, label: 'Average Rating', value: stats.averageRating?.toFixed(1) || '0.0', bg: 'bg-[#C9C7F5]', text: 'text-[#5a59b5]', border: 'border-[#b8b6e5]' }
                     ].map((stat, index) => (
-                        <div key={index} className={`rounded-2xl p-6 shadow-sm border ${stat.bg}/20 ${stat.border} flex items-center gap-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1`}>
-                            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center text-white shadow-sm`}>
-                                <stat.icon size={24} />
+                        <div key={index} className={`rounded-2xl p-4 sm:p-6 shadow-sm border ${stat.bg}/20 ${stat.border} flex items-center gap-3 sm:gap-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1`}>
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${stat.bg} flex items-center justify-center text-white shadow-sm shrink-0`}>
+                                <stat.icon size={20} className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">{stat.label}</p>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</h3>
+                            <div className="min-w-0">
+                                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium truncate">{stat.label}</p>
+                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</h3>
                             </div>
                         </div>
                     ))}
