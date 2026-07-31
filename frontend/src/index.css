@@ -317,3 +317,67 @@ body {
     opacity: 1;
   }
 }
+
+/* ----------------------------------------------------------------
+   DesktopOnlyGuard (coding playground) — entrance & ambient motion
+   ---------------------------------------------------------------- */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float-soft {
+  0%, 100% {
+    transform: translateY(0) rotate(-0.5deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(0.5deg);
+  }
+}
+
+@keyframes blob-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(16px, -20px, 0) scale(1.1);
+  }
+}
+
+.anim-rise {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-rise-delay-1 {
+  animation-delay: 0.1s;
+}
+.anim-rise-delay-2 {
+  animation-delay: 0.2s;
+}
+.anim-rise-delay-3 {
+  animation-delay: 0.3s;
+}
+.anim-float {
+  animation: float-soft 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+.anim-blob {
+  animation: blob-drift 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise,
+  .anim-rise-delay-1,
+  .anim-rise-delay-2,
+  .anim-rise-delay-3,
+  .anim-float,
+  .anim-blob {
+    animation: none;
+  }
+}
