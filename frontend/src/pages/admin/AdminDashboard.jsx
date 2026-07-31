@@ -43,20 +43,20 @@ export default function AdminDashboard() {
     }
 
     const StatCard = ({ title, value, icon: Icon, color }) => (
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
-                <Icon className="w-6 h-6 text-white" />
+        <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3 sm:gap-4">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{title}</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</h3>
+            <div className="min-w-0">
+                <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium truncate">{title}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</h3>
             </div>
         </div>
     );
 
     return (
         <div className="p-4 sm:p-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <StatCard
                     title="Total Sessions"
                     value={stats.totalSessions}
