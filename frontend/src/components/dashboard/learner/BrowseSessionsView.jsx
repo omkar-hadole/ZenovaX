@@ -24,7 +24,7 @@ export default function BrowseSessionsView({
     };
 
     return (
-        <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="p-4 sm:p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">Browse Sessions</h2>
 

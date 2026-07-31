@@ -52,7 +52,7 @@ export default function MentorsList() {
     }, [searchTerm, filterDepartment]);
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Find a Mentor</h1>

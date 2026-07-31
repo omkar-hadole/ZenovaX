@@ -68,7 +68,7 @@ export default function BookingsPage() {
 
     if (error) {
         return (
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
                 <InlineError message={error} onRetry={() => fetchMyBookings(page)} />
             </div>
         );

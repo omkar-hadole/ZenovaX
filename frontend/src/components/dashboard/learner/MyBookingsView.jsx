@@ -79,7 +79,7 @@ export default function MyBookingsView({
     };
 
     return (
-        <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+        <div className="p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
             <div className="mx-auto">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 whitespace-nowrap">My Bookings</h2>
