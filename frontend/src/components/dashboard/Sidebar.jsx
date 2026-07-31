@@ -141,7 +141,7 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
 
     return (
         <>
-            <aside className="hidden lg:flex w-64 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex-col h-full shadow-sm transition-all duration-300">
+            <aside className="hidden lg:flex w-64 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex-col h-full shadow-sm transition-all duration-300 overflow-y-auto overscroll-contain">
                 {renderContent()}
             </aside>
 
@@ -152,7 +152,7 @@ export default function Sidebar({ title, subtitle, items, activeTab, setActiveTa
                         className={`absolute inset-0 bg-black/30 backdrop-blur-sm ${drawerClosing ? 'drawer-overlay-exit' : 'drawer-overlay-enter'}`}
                         onClick={onClose}
                     />
-                    <aside className={`absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex flex-col h-full shadow-2xl ${drawerClosing ? 'drawer-exit' : 'drawer-enter'}`}>
+                    <aside className={`absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-r border-black/5 dark:border-white/5 flex flex-col h-full shadow-2xl overflow-y-auto overscroll-contain ${drawerClosing ? 'drawer-exit' : 'drawer-enter'}`}>
                         {renderContent()}
                     </aside>
                 </div>
