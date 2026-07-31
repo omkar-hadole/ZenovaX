@@ -59,6 +59,7 @@ const AdminPushNotification = lazy(() => import('./pages/admin/AdminPushNotifica
 const MentorSessionDetailsPage = lazy(() => import('./pages/mentor/MentorSessionDetailsPage'));
 
 import CommandBar from './components/CommandBar';
+import InstallPrompt from './components/InstallPrompt';
 import { setCsrfToken } from './utils/api';
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
     return (
         <BrowserRouter>
             <CommandBar />
+            <InstallPrompt />
             <Suspense fallback={
                 <div className="flex justify-center items-center h-screen bg-[#F5F6FA]">
                     <div className="flex flex-col items-center gap-4">
