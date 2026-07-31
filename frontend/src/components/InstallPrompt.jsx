@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Smartphone, Download } from 'lucide-react';
+import { X, Smartphone, Download, Share2 } from 'lucide-react';
 
 const isMobile = () => {
   return (
@@ -25,32 +25,25 @@ const isIOS = () => {
   );
 };
 
+// Capture beforeinstallprompt at module scope immediately so it can't be
+// missed if the event fires before the component mounts its listeners.
+let deferredPrompt = null;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+  window.addEventListener('appinstalled', () => {
+    localStorage.setItem('zenovax-install-dismissed', '1');
+  });
+}
+
 export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [installing, setInstalling] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    const handleAppInstalled = () => {
-      setVisible(false);
-      setDismissed(true);
-      localStorage.setItem('zenovax-install-dismissed', '1');
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
+  const [showIOSHelp, setShowIOSHelp] = useState(false);
 
   useEffect(() => {
     if (dismissed || localStorage.getItem('zenovax-install-dismissed') === '1') return;
@@ -58,7 +51,7 @@ export default function InstallPrompt() {
     const timer = setTimeout(() => {
       if (!isMobile() || isStandalone()) return;
       setVisible(true);
-    }, 15000);
+    }, 9000);
 
     return () => clearTimeout(timer);
   }, [dismissed]);
@@ -77,12 +70,15 @@ export default function InstallPrompt() {
       } catch (err) {
         console.error('Install prompt failed', err);
       } finally {
-        setDeferredPrompt(null);
+        deferredPrompt = null;
         setInstalling(false);
       }
     } else if (isIOS()) {
-      // iOS Safari has no beforeinstallprompt — instruct via Share -> Add to Home Screen.
-      setVisible(false);
+      // iOS Safari has no beforeinstallprompt — guide via Share -> Add to Home Screen.
+      setShowIOSHelp(true);
+    } else {
+      // Unsupported browser — point them at the guidance.
+      setShowIOSHelp(true);
     }
   };
 
@@ -115,8 +111,8 @@ export default function InstallPrompt() {
               Install ZenovaX
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-              {isIOS() && !deferredPrompt
-                ? 'Tap Share then "Add to Home Screen" for the full app experience.'
+              {showIOSHelp
+                ? 'Tap the Share button in your browser, then select "Add to Home Screen".'
                 : 'Add to your home screen for faster access and a full-screen app experience.'}
             </p>
           </div>
@@ -128,8 +124,19 @@ export default function InstallPrompt() {
             disabled={installing}
             className="flex-1 h-11 rounded-xl bg-[#C9C7F5] text-[#5a59b5] font-bold text-sm hover:bg-[#b8b6e5] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            <Download className="w-4 h-4" />
-            {installing ? 'Installing...' : 'Install App'}
+            {showIOSHelp ? (
+              <>
+                <Share2 className="w-4 h-4" />
+                How to install
+              </>
+            ) : installing ? (
+              'Installing...'
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Install App
+              </>
+            )}
           </button>
           <button
             onClick={handleDismiss}
