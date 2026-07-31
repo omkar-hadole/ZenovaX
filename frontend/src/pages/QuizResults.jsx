@@ -100,9 +100,9 @@ export default function QuizResults() {
           <Header user={user || {}} title={`Hello, ${user?.name || 'Mentor'}!`} onMenuClick={() => setSidebarOpen(true)} />
 
           <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">{quiz.title}</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 dark:text-gray-200 truncate">{quiz.title}</h2>
                 <p className="text-sm text-gray-400">
                   Passing: {quiz.passingMarks}/{quiz.totalMarks} &middot; {quiz.status}
                 </p>
@@ -118,14 +118,14 @@ export default function QuizResults() {
                       setToast({ message: err.message, type: 'error' });
                     }
                   }}
-                  className="px-5 py-2.5 bg-red-400 hover:bg-red-500 text-white text-sm font-semibold rounded-xl transition-colors"
+                  className="px-5 py-2.5 bg-red-400 hover:bg-red-500 text-white text-sm font-semibold rounded-xl transition-colors self-start sm:self-auto"
                 >
                   Close Quiz
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
               <div className="bg-white dark:bg-gray-900 rounded-xl px-5 py-4 border border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-1.5 rounded-lg" style={{ backgroundColor: '#7B74F1', color: 'white' }}>
@@ -168,7 +168,7 @@ export default function QuizResults() {
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h3 className="text-base font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-2">
                   <Award className="w-4 h-4" style={{ color: '#7B74F1' }} />
                   Student Results
@@ -176,7 +176,7 @@ export default function QuizResults() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-medium text-gray-600 dark:text-gray-400 focus:ring-2 transition-all"
+                  className="px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border-none text-sm font-medium text-gray-600 dark:text-gray-400 focus:ring-2 transition-all w-full sm:w-auto"
                   style={{ focusRingColor: '#7B74F1' }}
                 >
                   <option value="submittedAt">Latest First</option>
@@ -307,7 +307,7 @@ export default function QuizResults() {
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-gray-800">
                 <h3 className="text-base font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" style={{ color: '#7B74F1' }} />
                   Question-Level Analytics
@@ -320,25 +320,25 @@ export default function QuizResults() {
                   <p className="text-gray-400">No question data available</p>
                 </div>
               ) : (
-                <div className="p-5 space-y-3">
+                <div className="p-4 sm:p-5 space-y-3">
                   {questionStats.map((qs, index) => (
                     <div
                       key={qs.questionId}
                       className="border border-gray-100 dark:border-gray-800 rounded-lg p-4 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-all cursor-pointer"
                       onClick={() => setSelectedQuestion(selectedQuestion === qs.questionId ? null : qs.questionId)}
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">
                             <span
-                              className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-medium text-white"
+                              className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-medium text-white shrink-0"
                               style={{ backgroundColor: '#7B74F1' }}
                             >
                               {index + 1}
                             </span>
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{qs.questionText}</p>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
                             <span>{qs.marks} marks</span>
                             <span>{qs.totalResponses} responses</span>
                             <span className={qs.successRate >= 60 ? 'text-green-500' : qs.successRate >= 40 ? 'text-yellow-500' : 'text-red-500'}>
@@ -346,7 +346,7 @@ export default function QuizResults() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 ml-3 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0 sm:ml-3">
                           <div className="text-center px-2.5 py-1 bg-green-50 dark:bg-green-500/10 rounded-lg">
                             <p className="text-xs text-green-500 font-medium">{qs.correctCount}</p>
                             <p className="text-[10px] text-green-400">Correct</p>
@@ -369,11 +369,11 @@ export default function QuizResults() {
                               return (
                                 <div key={option} className="flex items-center gap-2">
                                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isCorrect ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                                  <span className={`text-xs flex-1 ${isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : 'text-gray-500'}`}>
+                                  <span className={`text-xs flex-1 min-w-0 truncate ${isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : 'text-gray-500'}`}>
                                     {option} {isCorrect && <span className="text-[10px] text-green-500 ml-1">(correct)</span>}
                                   </span>
-                                  <div className="flex items-center gap-1.5">
-                                    <div className="w-16 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                                    <div className="w-14 sm:w-16 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                                       <div
                                         className="h-full rounded-full"
                                         style={{ width: `${pct}%`, backgroundColor: isCorrect ? '#22c55e' : '#7B74F1' }}
