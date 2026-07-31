@@ -10,6 +10,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+      },
       includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'ZenovaX — Peer Mentoring',

@@ -20,12 +20,16 @@ const isStandalone = () => {
 
 // Capture beforeinstallprompt at module scope immediately so it can't be
 // missed if the event fires before the component mounts its listeners.
+// Like BhoomiGuard, we only advertise the install button once the browser
+// signals the app is actually installable.
 let deferredPrompt = null;
+const installListeners = new Set();
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
+    installListeners.forEach((fn) => fn());
   });
 }
 
@@ -33,9 +37,16 @@ export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [installable, setInstallable] = useState(() => !!deferredPrompt);
 
   useEffect(() => {
-    if (dismissed) return;
+    const handler = () => setInstallable(true);
+    installListeners.add(handler);
+    return () => installListeners.delete(handler);
+  }, []);
+
+  useEffect(() => {
+    if (dismissed || !installable) return;
 
     const timer = setTimeout(() => {
       if (!isMobile() || isStandalone()) return;
@@ -43,24 +54,23 @@ export default function InstallPrompt() {
     }, 9000);
 
     return () => clearTimeout(timer);
-  }, [dismissed]);
+  }, [dismissed, installable]);
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      setInstalling(true);
-      try {
-        deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
-        if (choice.outcome === 'accepted') {
-          setVisible(false);
-          setDismissed(true);
-        }
-      } catch (err) {
-        console.error('Install prompt failed', err);
-      } finally {
-        deferredPrompt = null;
-        setInstalling(false);
+    if (!deferredPrompt) return;
+    setInstalling(true);
+    try {
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setVisible(false);
+        setDismissed(true);
       }
+    } catch (err) {
+      console.error('Install prompt failed', err);
+    } finally {
+      deferredPrompt = null;
+      setInstalling(false);
     }
   };
 
