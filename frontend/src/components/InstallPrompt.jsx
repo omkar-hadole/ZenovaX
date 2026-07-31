@@ -34,9 +34,6 @@ if (typeof window !== 'undefined') {
     e.preventDefault();
     deferredPrompt = e;
   });
-  window.addEventListener('appinstalled', () => {
-    localStorage.setItem('zenovax-install-dismissed', '1');
-  });
 }
 
 export default function InstallPrompt() {
@@ -46,7 +43,7 @@ export default function InstallPrompt() {
   const [showIOSHelp, setShowIOSHelp] = useState(false);
 
   useEffect(() => {
-    if (dismissed || localStorage.getItem('zenovax-install-dismissed') === '1') return;
+    if (dismissed) return;
 
     const timer = setTimeout(() => {
       if (!isMobile() || isStandalone()) return;
@@ -65,7 +62,6 @@ export default function InstallPrompt() {
         if (choice.outcome === 'accepted') {
           setVisible(false);
           setDismissed(true);
-          localStorage.setItem('zenovax-install-dismissed', '1');
         }
       } catch (err) {
         console.error('Install prompt failed', err);
@@ -85,7 +81,6 @@ export default function InstallPrompt() {
   const handleDismiss = () => {
     setVisible(false);
     setDismissed(true);
-    localStorage.setItem('zenovax-install-dismissed', '1');
   };
 
   if (!visible) return null;
