@@ -61,8 +61,11 @@ export default function LaunchQuiz() {
     try {
       const data = await apiCall(`/quiz/${quizId}`);
       const quiz = data.quiz;
-      const mySessions = await apiCall('/sessions/all');
-      setSessions(mySessions.sessions.filter(s => s.mentorId === user?.id));
+      const [upcoming, past] = await Promise.all([
+        apiCall('/sessions/all?type=upcoming&limit=50'),
+        apiCall('/sessions/all?type=past&limit=50')
+      ]);
+      setSessions([...upcoming.sessions, ...past.sessions].filter(s => s.mentorId === user?.id));
 
       setSelectedSessionId(quiz.sessionId);
       setQuizData({
@@ -87,8 +90,12 @@ export default function LaunchQuiz() {
 
   const fetchSessions = async () => {
     try {
-      const data = await apiCall('/sessions/all');
-      const mySessions = data.sessions.filter(s => s.mentorId === user?.id && s.status !== 'COMPLETED');
+      const [upcoming, past] = await Promise.all([
+        apiCall('/sessions/all?type=upcoming&limit=50'),
+        apiCall('/sessions/all?type=past&limit=50')
+      ]);
+      const mySessions = [...upcoming.sessions, ...past.sessions]
+        .filter(s => s.mentorId === user?.id);
       setSessions(mySessions);
     } catch (error) {
       console.error('Failed to fetch sessions', error);

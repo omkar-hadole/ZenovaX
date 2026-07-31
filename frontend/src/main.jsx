@@ -31,6 +31,12 @@ const RootErrorFallback = () => (
   </div>
 );
 
+document.addEventListener('wheel', (e) => {
+  if (e.target instanceof HTMLInputElement && e.target.type === 'number') {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     {/* Outside the error boundary so the theme attribute is set on <html>
