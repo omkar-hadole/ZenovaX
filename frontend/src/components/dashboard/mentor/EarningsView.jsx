@@ -39,7 +39,7 @@ const LEDGER_META = {
     REVERSAL: { label: 'Reversal', className: 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800', Icon: Undo2, sign: '' },
 };
 
-const EMPTY_ACCOUNT_FORM = { accountHolderName: '', bankAccountNumber: '', ifscCode: '', upiId: '' };
+const EMPTY_ACCOUNT_FORM = { accountHolderName: '', upiId: '' };
 
 export default function EarningsView() {
     const [loading, setLoading] = useState(true);
@@ -82,8 +82,6 @@ export default function EarningsView() {
         if (payoutAccount && !isEditingAccount) {
             setAccountForm({
                 accountHolderName: payoutAccount.accountHolderName || '',
-                bankAccountNumber: payoutAccount.bankAccountNumber || '',
-                ifscCode: payoutAccount.ifscCode || '',
                 upiId: payoutAccount.upiId || '',
             });
         }
@@ -229,33 +227,14 @@ export default function EarningsView() {
                                     className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
                                 />
                             </FieldGroup>
-                            <div className="grid grid-cols-2 gap-4">
-                                <FieldGroup label="Bank account number">
-                                    <input
-                                        type="text"
-                                        name="bankAccountNumber"
-                                        value={accountForm.bankAccountNumber}
-                                        onChange={handleAccountFieldChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
-                                    />
-                                </FieldGroup>
-                                <FieldGroup label="IFSC code">
-                                    <input
-                                        type="text"
-                                        name="ifscCode"
-                                        value={accountForm.ifscCode}
-                                        onChange={handleAccountFieldChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
-                                    />
-                                </FieldGroup>
-                            </div>
-                            <FieldGroup label="UPI ID" description="Provide either a bank account or a UPI ID">
+                            <FieldGroup label="UPI ID" required description="You'll receive payouts directly to this UPI ID">
                                 <input
                                     type="text"
                                     name="upiId"
                                     value={accountForm.upiId}
                                     onChange={handleAccountFieldChange}
                                     placeholder="you@upi"
+                                    required
                                     className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#C9C7F5] outline-none"
                                 />
                             </FieldGroup>
@@ -285,12 +264,6 @@ export default function EarningsView() {
                                 <span className="text-gray-500 dark:text-gray-400">Holder name</span>
                                 <span className="font-bold text-gray-800 dark:text-gray-100">{payoutAccount.accountHolderName}</span>
                             </div>
-                            {payoutAccount.bankAccountNumber && (
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500 dark:text-gray-400">Bank account</span>
-                                    <span className="font-bold text-gray-800 dark:text-gray-100">••••{payoutAccount.bankAccountNumber.slice(-4)}</span>
-                                </div>
-                            )}
                             {payoutAccount.upiId && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500 dark:text-gray-400">UPI ID</span>

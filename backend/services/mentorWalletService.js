@@ -120,13 +120,10 @@ exports.getPayoutAccount = async (prisma, mentorId) => {
 };
 
 exports.upsertPayoutAccount = async (prisma, mentorId, data) => {
-    const { accountHolderName, bankAccountNumber, ifscCode, upiId } = data;
+    const { accountHolderName, upiId } = data;
 
-    if (!accountHolderName || (!bankAccountNumber && !upiId)) {
-        throw new BadRequestError("Provide an account holder name and either bank account details or a UPI ID");
-    }
-    if (bankAccountNumber && !ifscCode) {
-        throw new BadRequestError("IFSC code is required with a bank account number");
+    if (!accountHolderName || !upiId) {
+        throw new BadRequestError("Provide an account holder name and a UPI ID");
     }
 
     // Resubmitting resets KYC status — a real integration would re-verify via the gateway here.
@@ -135,17 +132,13 @@ exports.upsertPayoutAccount = async (prisma, mentorId, data) => {
         create: {
             mentorId,
             accountHolderName,
-            bankAccountNumber: bankAccountNumber || null,
-            ifscCode: ifscCode || null,
-            upiId: upiId || null,
+            upiId,
             kycStatus: 'PENDING',
             submittedAt: new Date()
         },
         update: {
             accountHolderName,
-            bankAccountNumber: bankAccountNumber || null,
-            ifscCode: ifscCode || null,
-            upiId: upiId || null,
+            upiId,
             kycStatus: 'PENDING',
             submittedAt: new Date(),
             verifiedAt: null,

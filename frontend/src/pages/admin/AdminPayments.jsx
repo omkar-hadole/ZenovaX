@@ -227,7 +227,7 @@ export default function AdminPayments() {
 
 function KycList({ accounts, onVerify, onReject }) {
     if (accounts.length === 0) {
-        return <EmptyState icon={ShieldCheck} title="No payout accounts" subtitle="Mentors haven't submitted any bank/UPI details yet." />;
+        return <EmptyState icon={ShieldCheck} title="No payout accounts" subtitle="Mentors haven't submitted any UPI details yet." />;
     }
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -242,8 +242,6 @@ function KycList({ accounts, onVerify, onReject }) {
                     </div>
                     <div className="space-y-2 text-sm bg-gray-50 dark:bg-gray-800/60 rounded-2xl p-4 mb-4">
                         <Row label="Holder" value={acc.accountHolderName || '—'} />
-                        {acc.bankAccountNumber && <Row label="Bank A/C" value={acc.bankAccountNumber} />}
-                        {acc.ifscCode && <Row label="IFSC" value={acc.ifscCode} />}
                         {acc.upiId && <Row label="UPI" value={acc.upiId} />}
                     </div>
                     {acc.kycStatus === 'REJECTED' && acc.rejectionReason && (
