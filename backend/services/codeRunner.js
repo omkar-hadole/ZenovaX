@@ -2,7 +2,7 @@ const axios = require('axios');
 const { spawn } = require('child_process');
 const logger = require('../utils/logger');
 const pyodideRunner = require('./pyodideRunner');
-const { buildStructuredDriverCode, serializeArgs, typedCompare } = require('./questionTypeEngine');
+const { buildStructuredDriverCode, typedCompare } = require('./questionTypeEngine');
 const { AppError, BadRequestError } = require('../utils/errors');
 
 const MAX_CODE_LENGTH = 10000;
