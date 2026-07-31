@@ -20,16 +20,14 @@ const isStandalone = () => {
 
 // Capture beforeinstallprompt at module scope immediately so it can't be
 // missed if the event fires before the component mounts its listeners.
-// Like BhoomiGuard, we only advertise the install button once the browser
-// signals the app is actually installable.
+// The popup always shows after the delay; the captured event just makes the
+// Install button actually trigger the browser's native install flow.
 let deferredPrompt = null;
-const installListeners = new Set();
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installListeners.forEach((fn) => fn());
   });
 }
 
@@ -37,16 +35,9 @@ export default function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
-  const [installable, setInstallable] = useState(() => !!deferredPrompt);
 
   useEffect(() => {
-    const handler = () => setInstallable(true);
-    installListeners.add(handler);
-    return () => installListeners.delete(handler);
-  }, []);
-
-  useEffect(() => {
-    if (dismissed || !installable) return;
+    if (dismissed) return;
 
     const timer = setTimeout(() => {
       if (!isMobile() || isStandalone()) return;
@@ -54,7 +45,7 @@ export default function InstallPrompt() {
     }, 9000);
 
     return () => clearTimeout(timer);
-  }, [dismissed, installable]);
+  }, [dismissed]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
