@@ -150,7 +150,7 @@ export default function AdminPushNotification() {
     };
 
     return (
-        <div className="p-8 max-w-4xl mx-auto space-y-6">
+        <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-2">
                 <Megaphone className="w-7 h-7 text-[#5a59b5]" />
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Push Notification</h1>
