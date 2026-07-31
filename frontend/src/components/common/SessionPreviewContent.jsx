@@ -77,6 +77,12 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                   {scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} • {session.duration || 0} min
                 </span>
               </div>
+              {session.mode === 'OFFLINE' && session.venue && (
+                <div className="flex items-center gap-2.5 bg-gray-50 dark:bg-gray-800/60 px-4 py-2 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <MapPin className="text-orange-500 dark:text-orange-400" size={18} />
+                  <span className="font-medium text-sm">{session.venue}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -178,7 +184,9 @@ export default function SessionPreviewContent({ session, isPreview, children, on
                 />
               </div>
               <p className="text-xs text-center text-gray-400 dark:text-gray-500 font-medium">
-                {session.availableSeats < 5 ? '🔥 Selling out fast!' : 'Book your spot now'}
+                {session.isBooked
+                  ? 'You\'ve booked a spot'
+                  : session.availableSeats < 5 ? '🔥 Selling out fast!' : 'Book your spot now'}
               </p>
             </div>
 
