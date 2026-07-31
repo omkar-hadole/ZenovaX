@@ -156,6 +156,9 @@ export default function LaunchQuiz() {
       if (validOptions.length < 2) {
         return `Question ${i + 1}: At least 2 options are required`;
       }
+      if ((parseInt(q.marks) || 0) < 0) {
+        return `Question ${i + 1}: Marks cannot be negative`;
+      }
       if (!q.correctAnswer) {
         return `Question ${i + 1}: Please select a correct answer`;
       }
@@ -342,8 +345,9 @@ export default function LaunchQuiz() {
                         <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <input
                           type="number"
+                          min="1"
                           value={quizData.duration}
-                          onChange={(e) => setQuizData({ ...quizData, duration: e.target.value })}
+                          onChange={(e) => setQuizData({ ...quizData, duration: Math.max(1, parseInt(e.target.value) || 1) })}
                           className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#A9C1F7] transition-all"
                         />
                       </div>
@@ -368,8 +372,9 @@ export default function LaunchQuiz() {
                         <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <input
                           type="number"
+                          min="0"
                           value={quizData.passingMarks}
-                          onChange={(e) => setQuizData({ ...quizData, passingMarks: parseInt(e.target.value) || 0 })}
+                          onChange={(e) => setQuizData({ ...quizData, passingMarks: Math.max(0, parseInt(e.target.value) || 0) })}
                           className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 border-none focus:ring-2 focus:ring-[#A9C1F7] transition-all"
                           placeholder="e.g. 10"
                         />
@@ -459,8 +464,9 @@ export default function LaunchQuiz() {
                             <label className="text-sm font-semibold text-gray-500 dark:text-gray-400">Marks</label>
                             <input
                               type="number"
+                              min="0"
                               value={question.marks}
-                              onChange={(e) => handleQuestionChange(qIndex, 'marks', e.target.value)}
+                              onChange={(e) => handleQuestionChange(qIndex, 'marks', Math.max(0, e.target.value))}
                               className="w-16 bg-transparent border-none text-center font-bold text-gray-800 dark:text-gray-100 focus:ring-0 p-0"
                             />
                           </div>
