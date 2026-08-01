@@ -254,6 +254,272 @@ body {
   border-color: rgba(122, 121, 230, 0.6);
 }
 
+/* ============================================================
+   Mobile-only "liquid glass" card for the /auth screen
+   ------------------------------------------------------------
+   Apple iOS 26 / macOS Tahoe-style liquid glass: a physical sheet
+   of polished glass floating over the interface. Every rule is
+   scoped to <768px so the desktop auth layout is never touched.
+   Layers, top to bottom:
+     content (z:2) -> cursor light + grain (z:1) -> ::before
+     corner/edge reflections -> ::after breathing sheen -> the
+     glass body (blur + tint) -> backdrop image. */
+@media (max-width: 767px) {
+  /* Neutralise the outer .glass shell so only the card below is
+     visible against the mobile background image. */
+  .auth-shell-flat {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .liquid-glass {
+    --gx: 22%;
+    --gy: -25%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 2rem;
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.05) 34%,
+      rgba(255, 255, 255, 0.10) 62%,
+      rgba(255, 255, 255, 0.06)
+    );
+    backdrop-filter: blur(42px) saturate(180%);
+    -webkit-backdrop-filter: blur(42px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+      inset 0 12px 28px -18px rgba(255, 255, 255, 0.22);
+    transform-origin: 50% 50%;
+    animation: liquid-glass-in 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    transition:
+      background 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [data-theme="dark"] .liquid-glass {
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.03) 34%,
+      rgba(255, 255, 255, 0.08) 62%,
+      rgba(255, 255, 255, 0.04)
+    );
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  }
+
+  /* Interaction: glass clears up, border brightens, card lifts. */
+  .liquid-glass:hover {
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.07) 34%,
+      rgba(255, 255, 255, 0.14) 62%,
+      rgba(255, 255, 255, 0.08)
+    );
+    border-color: rgba(255, 255, 255, 0.32);
+    transform: translateY(-8px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 12px 28px -18px rgba(255, 255, 255, 0.26);
+  }
+
+  .liquid-glass > *:not(.liquid-glass-grain):not(.liquid-glass-light) {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Corner + edge reflections (corners catch more light than the
+     centre) and a soft inner highlight along the top edge. */
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(70% 60% at 8% 0%, rgba(255, 255, 255, 0.2), transparent 55%),
+      radial-gradient(60% 55% at 92% 6%, rgba(255, 255, 255, 0.12), transparent 55%),
+      radial-gradient(55% 50% at 4% 96%, rgba(255, 255, 255, 0.1), transparent 55%),
+      radial-gradient(60% 50% at 96% 94%, rgba(255, 255, 255, 0.14), transparent 55%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 26%);
+    opacity: 0.6;
+  }
+
+  /* Very subtle breathing sheen across the glass. */
+  .liquid-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(80% 70% at 24% -30%, rgba(255, 255, 255, 0.14), transparent 55%);
+    opacity: 0.5;
+    animation: liquid-glass-breathe 7s ease-in-out infinite;
+  }
+
+  .liquid-glass-grain,
+  .liquid-glass-light {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Specular highlight that follows the cursor (lerped in JS). */
+  .liquid-glass-light {
+    background: radial-gradient(
+      130% 100% at var(--gx, 22%) var(--gy, -25%),
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.04) 42%,
+      transparent 62%
+    );
+    opacity: 0.9;
+  }
+
+  /* Film grain to stop the surface reading as a flat gradient. */
+  .liquid-glass-grain {
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  /* Mobile-only text palette for the auth card — Apple-inspired,
+     high-contrast on the dark glass. Scoped to .liquid-glass so the
+     desktop theme is never touched. */
+  .liquid-glass h2 {
+    color: #f8fafc; /* Primary heading */
+  }
+
+  .liquid-glass p {
+    color: #cbd5e1; /* Secondary text */
+  }
+
+  .liquid-glass .text-xs {
+    color: #b8c2d1; /* Helper / supporting text */
+  }
+
+  .liquid-glass label {
+    color: #cbd5e1; /* Secondary text (remember me, terms) */
+  }
+
+  .liquid-glass input {
+    color: #f8fafc; /* Input text */
+    caret-color: #60a5fa;
+  }
+
+  .liquid-glass input::placeholder {
+    color: #cbd5e1; /* Placeholder text */
+    opacity: 1;
+  }
+
+  .liquid-glass button.absolute {
+    color: #d1d5db; /* Input icons (eye) */
+  }
+
+  .liquid-glass button.absolute:hover {
+    color: #e2e8f0;
+  }
+
+  .liquid-glass p button {
+    color: #60a5fa; /* Links (Log in / Sign up) */
+  }
+
+  .liquid-glass p button:hover {
+    color: #93c5fd;
+  }
+
+  .liquid-glass button.text-gray-500 {
+    color: #60a5fa; /* Back to login link */
+  }
+
+  .liquid-glass button.text-gray-500:hover {
+    color: #93c5fd;
+  }
+
+  .liquid-glass a {
+    color: #60a5fa; /* Links (Forgot password, Terms) */
+  }
+
+  .liquid-glass a:hover {
+    color: #93c5fd;
+  }
+
+  /* Mobile-only circular back button with the same liquid glass
+     material as the card. */
+  .liquid-glass-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.05)
+    );
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow:
+      0 8px 24px -8px rgba(2, 8, 40, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    color: #e2e8f0;
+    transition:
+      transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      background 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [data-theme="dark"] .liquid-glass-back {
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.03)
+    );
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .liquid-glass-back:active {
+    transform: scale(0.94);
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.07)
+    );
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+}
+
+@keyframes liquid-glass-in {
+  from { opacity: 0; transform: scale(0.94) translateY(14px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes liquid-glass-breathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+
 /* Slow gradient pan across the hero's accent phrase. Rides on top of
    .text-gradient (which supplies the background + clip). */
 .text-shimmer {
