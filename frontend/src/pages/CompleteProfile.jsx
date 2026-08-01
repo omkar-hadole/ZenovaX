@@ -261,15 +261,15 @@ export default function CompleteProfile() {
     return (
         <div className="h-dvh flex flex-col lg:flex-row relative">
             {/* Full-screen background image */}
-            <div className="fixed inset-0 pointer-events-none"
-                style={{
-                    backgroundImage: `url(${bgImage})`,
-                    backgroundSize: '100% 100%',
-                    backgroundPosition: 'center center',
-                    backgroundRepeat: 'no-repeat',
-                    opacity: 1,
-                }}
-            />
+                <div className="fixed inset-0 pointer-events-none"
+                    style={{
+                        backgroundImage: `url(${bgImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center center',
+                        backgroundRepeat: 'no-repeat',
+                        opacity: 1,
+                    }}
+                />
             <div className="fixed inset-0 pointer-events-none"
                 style={{
                     background: `
