@@ -60,40 +60,40 @@ export default function ReportsView() {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-red-100 dark:border-red-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-red-100 dark:border-red-500/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 dark:bg-red-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Total Reports</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Total Reports</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{reports.length}</span>
-                            <div className="flex items-center mb-2 px-2 py-1 bg-red-100 dark:bg-red-500/10 rounded-lg text-red-500 dark:text-red-400">
+                            <span className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100">{reports.length}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-red-100 dark:bg-red-500/10 rounded-lg text-red-500 dark:text-red-400 shrink-0">
                                 <AlertTriangle className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Pending Review</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Pending Review</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-4xl font-bold text-yellow-600 dark:text-yellow-400">{pendingCount}</span>
-                            <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
+                            <span className="text-3xl sm:text-4xl font-bold text-yellow-600 dark:text-yellow-400">{pendingCount}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a] shrink-0">
                                 <Clock className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-green-100 dark:border-green-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-green-100 dark:border-green-500/20 relative overflow-hidden group hover:shadow-md transition-all col-span-2 md:col-span-1">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 dark:bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Resolved</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Resolved</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-4xl font-bold text-green-600 dark:text-green-400">{resolvedCount}</span>
-                            <div className="flex items-center mb-2 px-2 py-1 bg-green-100 dark:bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
+                            <span className="text-3xl sm:text-4xl font-bold text-green-600 dark:text-green-400">{resolvedCount}</span>
+                            <div className="flex items-center mb-2 px-2 py-1 bg-green-100 dark:bg-green-500/10 rounded-lg text-green-600 dark:text-green-400 shrink-0">
                                 <CheckCircle2 className="w-4 h-4" />
                             </div>
                         </div>
@@ -103,18 +103,18 @@ export default function ReportsView() {
 
             {/* Reports List */}
             <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
-                <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="p-4 sm:p-8 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Issue Reports</h2>
                         <p className="text-gray-500 dark:text-gray-400 text-sm">Feedback and issues reported by learners</p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="bg-gray-50 dark:bg-gray-800/60 p-1 rounded-xl flex items-center">
+                        <div className="bg-gray-50 dark:bg-gray-800/60 p-1 rounded-xl flex items-center overflow-x-auto max-w-full">
                             {STATUS_FILTERS.map((status) => (
                                 <button
                                     key={status}
                                     onClick={() => setFilter(status)}
-                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === status
+                                    className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === status
                                         ? 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 shadow-sm'
                                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                         }`}
@@ -153,8 +153,9 @@ export default function ReportsView() {
                         <p className="text-gray-500 dark:text-gray-400">Try a different filter or search term.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto md:overflow-visible">
-                        <table className="w-full text-left">
+                    <>
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left">
                             <thead className="bg-gray-50/50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-bold">
                                 <tr>
                                     <th className="px-8 py-4">Session</th>
@@ -208,7 +209,38 @@ export default function ReportsView() {
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                        </div>
+
+                        <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
+                            {filteredReports.map((report) => (
+                                <div key={report.id} className="p-4">
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                        <p className="font-bold text-gray-800 dark:text-gray-100 text-sm min-w-0 break-words">
+                                            {report.session?.title || 'Unknown Session'}
+                                        </p>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${getStatusColor(report.status)}`}>
+                                            {report.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2 break-words">{report.reason}</p>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            {new Date(report.createdAt).toLocaleDateString()}
+                                        </div>
+                                        {report.sessionId && (
+                                            <button
+                                                onClick={() => navigate(`/mentor/session/${report.sessionId}`)}
+                                                className="text-[#5a59b5] text-sm font-bold hover:underline"
+                                            >
+                                                View
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
         </div>

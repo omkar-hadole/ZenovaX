@@ -141,53 +141,53 @@ export default function EarningsView() {
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             {/* Balance Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-green-100 dark:border-green-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-green-100 dark:border-green-500/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 dark:bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Available Balance</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Available Balance</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.balanceAvailable)}</span>
-                            <div className="flex items-center mb-1 px-2 py-1 bg-green-100 dark:bg-green-500/10 rounded-lg text-green-600 dark:text-green-400">
+                            <span className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.balanceAvailable)}</span>
+                            <div className="flex items-center mb-1 px-2 py-1 bg-green-100 dark:bg-green-500/10 rounded-lg text-green-600 dark:text-green-400 shrink-0">
                                 <Wallet className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/30 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Pending (held)</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Pending (held)</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.balancePending)}</span>
-                            <div className="flex items-center mb-1 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
+                            <span className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.balancePending)}</span>
+                            <div className="flex items-center mb-1 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a] shrink-0">
                                 <Clock className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/40 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/40 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Total Earned</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Total Earned</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.totalEarned)}</span>
-                            <div className="flex items-center mb-1 px-2 py-1 bg-[#C9C7F5]/20 rounded-lg text-[#5a59b5]">
+                            <span className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.totalEarned)}</span>
+                            <div className="flex items-center mb-1 px-2 py-1 bg-[#C9C7F5]/20 rounded-lg text-[#5a59b5] shrink-0">
                                 <TrendingUp className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 dark:bg-gray-800/60 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <div className="relative z-10">
-                        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2">Total Paid Out</h3>
+                        <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 truncate">Total Paid Out</h3>
                         <div className="flex items-end gap-3">
-                            <span className="text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.totalPaidOut)}</span>
-                            <div className="flex items-center mb-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
+                            <span className="text-xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(wallet?.totalPaidOut)}</span>
+                            <div className="flex items-center mb-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400 shrink-0">
                                 <Landmark className="w-4 h-4" />
                             </div>
                         </div>
@@ -197,7 +197,7 @@ export default function EarningsView() {
 
             {/* Payout account + request payout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+                <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 p-4 sm:p-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Payout Account</h2>
@@ -281,7 +281,7 @@ export default function EarningsView() {
                     )}
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 p-8">
+                <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800 p-4 sm:p-8">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-1">Request a Payout</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
                         {formatCurrency(wallet?.balanceAvailable)} available to withdraw
@@ -321,7 +321,7 @@ export default function EarningsView() {
 
             {/* Payout History */}
             <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
-                <div className="p-8 border-b border-gray-100 dark:border-gray-800">
+                <div className="p-4 sm:p-8 border-b border-gray-100 dark:border-gray-800">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Payout History</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Withdrawals you've requested</p>
                 </div>
@@ -367,14 +367,14 @@ export default function EarningsView() {
 
                         <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
                             {payouts.map((payout) => (
-                                <div key={payout.id} className="px-6 py-4">
+                                <div key={payout.id} className="p-4">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(payout.amount)}</span>
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${PAYOUT_STATUS_BADGES[payout.status]}`}>
                                             {payout.status}
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="flex flex-wrap items-center justify-between gap-1 text-sm text-gray-500 dark:text-gray-400">
                                         <span>Requested {new Date(payout.requestedAt).toLocaleDateString()}</span>
                                         <span>{payout.processedAt ? `Processed ${new Date(payout.processedAt).toLocaleDateString()}` : 'Not yet processed'}</span>
                                     </div>
@@ -390,7 +390,7 @@ export default function EarningsView() {
 
             {/* Ledger / recent activity */}
             <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800">
-                <div className="p-8 border-b border-gray-100 dark:border-gray-800">
+                <div className="p-4 sm:p-8 border-b border-gray-100 dark:border-gray-800">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Recent Activity</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Every credit and debit on your wallet</p>
                 </div>
@@ -411,7 +411,7 @@ export default function EarningsView() {
                                 ? `${meta.label} · ${new Date(entry.createdAt).toLocaleString()}`
                                 : new Date(entry.createdAt).toLocaleString();
                             return (
-                                <div key={entry.id} className="px-8 py-4 flex items-center gap-4">
+                                <div key={entry.id} className="px-4 sm:px-8 py-4 flex items-center gap-3 sm:gap-4">
                                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${meta.className}`}>
                                         <meta.Icon className="w-4 h-4" />
                                     </div>

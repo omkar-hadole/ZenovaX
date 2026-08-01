@@ -78,37 +78,37 @@ export default function ReviewsReceived() {
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">See what your learners are saying about your sessions</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-[#C9C7F5]/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#C9C7F5]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-                    <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 relative z-10">Average Rating</h3>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 relative z-10 truncate">Average Rating</h3>
                     <div className="flex items-end gap-3 relative z-10">
-                        <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{stats.averageRating.toFixed(1)}</span>
-                        <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg">
+                        <span className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100">{stats.averageRating.toFixed(1)}</span>
+                        <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg shrink-0">
                             <Star className="w-4 h-4 text-[#b59a5a] fill-current" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-[#A9C1F7]/20 relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#A9C1F7]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-                    <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 relative z-10">Total Reviews</h3>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 relative z-10 truncate">Total Reviews</h3>
                     <div className="flex items-end gap-3 relative z-10">
-                        <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">{reviews.length}</span>
-                        <div className="flex items-center mb-2 px-2 py-1 bg-[#A9C1F7]/20 rounded-lg text-[#4a7ac7]">
+                        <span className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100">{reviews.length}</span>
+                        <div className="flex items-center mb-2 px-2 py-1 bg-[#A9C1F7]/20 rounded-lg text-[#4a7ac7] shrink-0">
                             <MessageSquare className="w-4 h-4" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-900 p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/20 relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-[1.5rem] shadow-sm border border-[#F7D483]/20 relative overflow-hidden group hover:shadow-md transition-all col-span-2 md:col-span-1">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#F7D483]/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-                    <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 relative z-10">Positive Feedback</h3>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium mb-2 relative z-10 truncate">Positive Feedback</h3>
                     <div className="flex items-end gap-3 relative z-10">
-                        <span className="text-4xl font-bold text-gray-800 dark:text-gray-100">
+                        <span className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100">
                             {reviews.length > 0 ? Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100) : 0}%
                         </span>
-                        <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a]">
+                        <div className="flex items-center mb-2 px-2 py-1 bg-[#F7D483]/20 rounded-lg text-[#b59a5a] shrink-0">
                             <ThumbsUp className="w-4 h-4" />
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export default function ReviewsReceived() {
             </div>
 
             <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">Recent Reviews</h3>
                     <select
                         value={sortBy}
@@ -140,8 +140,8 @@ export default function ReviewsReceived() {
                         </div>
                     ) : (
                         sortedReviews.map((review) => (
-                            <div key={review.id} className="p-6 hover:bg-[#F4F4F9]/50 dark:hover:bg-gray-800/40 transition-colors group">
-                                <div className="flex items-start gap-4">
+                            <div key={review.id} className="p-4 sm:p-6 hover:bg-[#F4F4F9]/50 dark:hover:bg-gray-800/40 transition-colors group">
+                                <div className="flex items-start gap-3 sm:gap-4">
                                     {review.author.profilePicture ? (
                                         <img
                                             src={getOptimizedImageUrl(review.author.profilePicture, { width: 96, height: 96 })}
@@ -166,7 +166,7 @@ export default function ReviewsReceived() {
                                             </span>
                                         </div>
 
-                                        <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex flex-wrap items-center gap-2 mb-3">
                                             <div className="flex gap-0.5">
                                                 {[...Array(5)].map((_, i) => (
                                                     <Star
