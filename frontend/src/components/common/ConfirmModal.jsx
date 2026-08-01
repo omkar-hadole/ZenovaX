@@ -27,7 +27,7 @@ export default function ConfirmModal({
   const isDanger = type === 'danger';
   const Icon = isDanger ? AlertTriangle : HelpCircle;
   const confirmBtnBg = isDanger 
-    ? 'bg-red-500 hover:bg-red-600 focus:ring-red-500/30' 
+    ? 'bg-red-400 hover:bg-red-500 focus:ring-red-500/30' 
     : 'bg-[#7A79E6] hover:bg-[#6c6bd6] focus:ring-indigo-500/30';
 
   return (
@@ -39,7 +39,7 @@ export default function ConfirmModal({
       />
       
       {/* Modal Card */}
-      <div className="relative bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-gray-150 dark:border-gray-800 animate-zoom-in">
+      <div className="relative bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-zoom-in">
         <div className="flex items-start gap-4">
           <div className={`p-3 rounded-xl ${isDanger ? 'bg-red-50 dark:bg-red-950/35 text-red-500' : 'bg-indigo-50 dark:bg-indigo-950/35 text-[#7A79E6]'}`}>
             <Icon className="w-6 h-6" />

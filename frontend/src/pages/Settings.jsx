@@ -5,6 +5,7 @@ import { apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/common/ConfirmModal';
 
 const CARD = "bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-100 dark:border-gray-800";
 
@@ -63,6 +64,7 @@ export default function Settings() {
     const [sessionsLoading, setSessionsLoading] = useState(true);
     const [revokingId, setRevokingId] = useState(null);
     const [revokingAll, setRevokingAll] = useState(false);
+    const [sessionToRevoke, setSessionToRevoke] = useState(null);
 
     const fetchSessions = useCallback(async () => {
         try {
@@ -413,7 +415,7 @@ export default function Settings() {
                                     </p>
                                 </div>
                                 <button
-                                    onClick={() => handleRevoke(session.id)}
+                                    onClick={() => setSessionToRevoke(session)}
                                     disabled={revokingId === session.id}
                                     className="flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
                                     aria-label="Revoke session"
@@ -509,6 +511,20 @@ export default function Settings() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={!!sessionToRevoke}
+                title={sessionToRevoke?.isCurrent ? 'Log out of this device?' : 'Revoke this session?'}
+                message={sessionToRevoke?.isCurrent
+                    ? "You'll be signed out of this device and redirected to the login page."
+                    : "This session will be signed out immediately. That device will need to log in again."}
+                confirmText={sessionToRevoke?.isCurrent ? 'Log Out' : 'Revoke'}
+                onConfirm={() => {
+                    if (sessionToRevoke) handleRevoke(sessionToRevoke.id);
+                    setSessionToRevoke(null);
+                }}
+                onCancel={() => setSessionToRevoke(null)}
+            />
         </div>
     );
 }
