@@ -278,8 +278,9 @@ export default function Unauthorized() {
     const PADDLE_SPEED = 8;
     let paddleX = W / 2 - PADDLE_W / 2;
     const BALL_R = 5;
-    let ball = { x: W / 2, y: 0, dx: 0, dy: 0 };
+    let balls = [];
     const ballSpeed = 3.6;
+    let powerups = [];
     let lives = 3;
     let broken = 0;
     let state = 'idle';
@@ -294,19 +295,46 @@ export default function Unauthorized() {
     updateHud();
 
     const paddleY = () => H - 54;
+    const makeBall = (x, y, dx, dy) => ({ x, y, dx, dy });
     const resetBallOnPaddle = () => {
-      ball.x = paddleX + PADDLE_W / 2;
-      ball.y = paddleY() - BALL_R - 1;
-      ball.dx = 0;
-      ball.dy = 0;
+      balls = [makeBall(paddleX + PADDLE_W / 2, paddleY() - BALL_R - 1, 0, 0)];
     };
 
     const launchBall = () => {
+      if (state === 'won' || state === 'lost') resetGame();
       if (state !== 'idle') return;
       const angle = ((-70 + Math.random() * 40) * Math.PI) / 180;
-      ball.dx = ballSpeed * Math.cos(angle);
-      ball.dy = -Math.abs(ballSpeed * Math.sin(angle));
+      balls[0].dx = ballSpeed * Math.cos(angle);
+      balls[0].dy = -Math.abs(ballSpeed * Math.sin(angle));
       state = 'playing';
+    };
+
+    const maybeDropPowerup = (brick) => {
+      if (Math.random() > 0.07) return;
+      const size = 24;
+      powerups.push({
+        x: brick.x + brick.w / 2 - size / 2,
+        y: brick.y + brick.h / 2 - 10,
+        w: size,
+        h: 18,
+        vy: 2.4,
+        type: Math.random() < 0.6 ? '2X' : '3X',
+      });
+    };
+
+    const activatePowerup = (type) => {
+      const want = type === '3X' ? 3 : 2;
+      while (balls.length < want && balls.length < 3) {
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        balls.push(
+          makeBall(
+            paddleX + PADDLE_W / 2,
+            paddleY() - BALL_R - 2,
+            dir * ballSpeed * (0.35 + Math.random() * 0.35),
+            -(ballSpeed * (0.65 + Math.random() * 0.35))
+          )
+        );
+      }
     };
 
     const loseLife = () => {
@@ -326,6 +354,7 @@ export default function Unauthorized() {
 
     const resetGame = () => {
       buildBricks();
+      powerups.length = 0;
       lives = 3;
       broken = 0;
       state = 'idle';
@@ -377,61 +406,87 @@ export default function Unauthorized() {
       }
       if (state !== 'playing') return;
 
-      ball.x += ball.dx;
-      ball.y += ball.dy;
-
-      if (ball.x - BALL_R < 0) {
-        ball.x = BALL_R;
-        ball.dx *= -1;
-      }
-      if (ball.x + BALL_R > W) {
-        ball.x = W - BALL_R;
-        ball.dx *= -1;
-      }
-      if (ball.y - BALL_R < 0) {
-        ball.y = BALL_R;
-        ball.dy *= -1;
-      }
-
       const pY = paddleY();
-      if (
-        ball.dy > 0 &&
-        ball.y + BALL_R >= pY &&
-        ball.y + BALL_R <= pY + PADDLE_H + 6 &&
-        ball.x >= paddleX &&
-        ball.x <= paddleX + PADDLE_W
-      ) {
-        const hit = (ball.x - (paddleX + PADDLE_W / 2)) / (PADDLE_W / 2);
-        const angle = hit * (Math.PI / 3);
-        ball.dx = ballSpeed * Math.sin(angle);
-        ball.dy = -Math.abs(ballSpeed * Math.cos(angle));
-        ball.y = pY - BALL_R;
-      }
 
-      for (const b of bricks) {
-        if (!b.alive) continue;
+      for (const b of balls) {
+        b.x += b.dx;
+        b.y += b.dy;
+
+        if (b.x - BALL_R < 0) {
+          b.x = BALL_R;
+          b.dx = Math.abs(b.dx);
+        }
+        if (b.x + BALL_R > W) {
+          b.x = W - BALL_R;
+          b.dx = -Math.abs(b.dx);
+        }
+        if (b.y - BALL_R < 0) {
+          b.y = BALL_R;
+          b.dy = Math.abs(b.dy);
+        }
+
         if (
-          ball.x + BALL_R > b.x &&
-          ball.x - BALL_R < b.x + b.w &&
-          ball.y + BALL_R > b.y &&
-          ball.y - BALL_R < b.y + b.h
+          b.dy > 0 &&
+          b.y + BALL_R >= pY &&
+          b.y + BALL_R <= pY + PADDLE_H + 6 &&
+          b.x >= paddleX &&
+          b.x <= paddleX + PADDLE_W
         ) {
-          b.alive = false;
-          broken++;
-          updateHud();
-          const overlapLeft = ball.x + BALL_R - b.x;
-          const overlapRight = b.x + b.w - (ball.x - BALL_R);
-          const overlapTop = ball.y + BALL_R - b.y;
-          const overlapBottom = b.y + b.h - (ball.y - BALL_R);
-          const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-          if (minOverlap === overlapTop || minOverlap === overlapBottom) ball.dy *= -1;
-          else ball.dx *= -1;
-          if (broken >= totalBricks) winGame();
-          break;
+          const hit = (b.x - (paddleX + PADDLE_W / 2)) / (PADDLE_W / 2);
+          const angle = hit * (Math.PI / 3);
+          b.dx = ballSpeed * Math.sin(angle);
+          b.dy = -Math.abs(ballSpeed * Math.cos(angle));
+          b.y = pY - BALL_R;
+        }
+
+        for (const br of bricks) {
+          if (!br.alive) continue;
+          if (
+            b.x + BALL_R > br.x &&
+            b.x - BALL_R < br.x + br.w &&
+            b.y + BALL_R > br.y &&
+            b.y - BALL_R < br.y + br.h
+          ) {
+            br.alive = false;
+            broken++;
+            updateHud();
+            maybeDropPowerup(br);
+            const overlapLeft = b.x + BALL_R - br.x;
+            const overlapRight = br.x + br.w - (b.x - BALL_R);
+            const overlapTop = b.y + BALL_R - br.y;
+            const overlapBottom = br.y + br.h - (b.y - BALL_R);
+            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+            if (minOverlap === overlapTop || minOverlap === overlapBottom) b.dy *= -1;
+            else b.dx *= -1;
+            if (broken >= totalBricks) winGame();
+            break;
+          }
         }
       }
 
-      if (ball.y - BALL_R > H) loseLife();
+      balls = balls.filter((b) => b.y - BALL_R <= H);
+      if (balls.length === 0) {
+        loseLife();
+        return;
+      }
+
+      const held = [];
+      for (const p of powerups) {
+        p.y += p.vy;
+        if (
+          p.y + p.h >= pY &&
+          p.y <= pY + PADDLE_H &&
+          p.x + p.w >= paddleX &&
+          p.x <= paddleX + PADDLE_W
+        ) {
+          activatePowerup(p.type);
+          continue;
+        }
+        if (p.y > H) continue;
+        held.push(p);
+      }
+      powerups.length = 0;
+      powerups.push(...held);
     };
 
     const drawBricks = () => {
@@ -444,11 +499,26 @@ export default function Unauthorized() {
       ctx.roundRect(paddleX, paddleY(), PADDLE_W, PADDLE_H, PADDLE_H / 2);
       ctx.fill();
     };
-    const drawBall = () => {
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
-      ctx.fillStyle = state === 'playing' ? BRAND : INK;
-      ctx.fill();
+    const drawBalls = () => {
+      for (const b of balls) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, BALL_R, 0, Math.PI * 2);
+        ctx.fillStyle = state === 'playing' ? BRAND : INK;
+        ctx.fill();
+      }
+    };
+    const drawPowerups = () => {
+      for (const p of powerups) {
+        ctx.fillStyle = BRAND;
+        ctx.beginPath();
+        ctx.roundRect(p.x, p.y, p.w, p.h, 5);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = "bold 11px 'Space Grotesk', sans-serif";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.type, p.x + p.w / 2, p.y + p.h / 2);
+      }
     };
     const drawOverlay = () => {
       if (state === 'won' || state === 'lost') {
@@ -463,7 +533,7 @@ export default function Unauthorized() {
         ctx.fillText('click or press SPACE to play again', W / 2, H / 2 + 18);
       }
       if (state === 'idle') {
-        ctx.font = "16px 'Space Grotesk', sans-serif";
+        ctx.font = "22px 'Space Grotesk', sans-serif";
         ctx.textAlign = 'center';
         ctx.fillStyle = BRAND;
         ctx.fillText('click to play', W / 2, 470);
@@ -475,7 +545,8 @@ export default function Unauthorized() {
       ctx.fillRect(0, 0, W, H);
       drawBricks();
       drawPaddle();
-      drawBall();
+      drawPowerups();
+      drawBalls();
       drawOverlay();
     };
 
@@ -499,7 +570,7 @@ export default function Unauthorized() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-between py-20 px-4"
+      className="min-h-screen flex flex-col items-center justify-between py-24 px-4"
       style={{ background: COLORS.bg, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif" }}
     >
       <div
