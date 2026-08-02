@@ -1,43 +1,49 @@
 import { useLayoutEffect, useRef } from 'react';
-import { Users, Code2, Lock, QrCode, Bot, Trophy } from 'lucide-react';
+import { Users, BookOpenCheck, Tag, Bot, Code2, Star, Wallet } from 'lucide-react';
 import { gsap, ScrollTrigger } from '../../utils/gsapSetup';
 
 const features = [
   {
-    icon: Code2,
-    kicker: 'Practice, not playback',
-    title: 'In-browser code sandbox',
-    body: 'A Monaco-powered playground with resizable panels and run shortcuts. JavaScript executes instantly in your browser; Python and Java run in isolated sandbox containers.',
+    icon: Users,
+    kicker: 'Learn from peers, not just professors',
+    title: 'An instructor like you',
+    body: 'Book a session with a senior or classmate who’s already mastered the topic — someone your age, who explains it the way you’d actually understand it.',
   },
   {
-    icon: Lock,
-    kicker: 'Transaction-safe',
-    title: 'Double-booking safe seats',
-    body: 'Seat reservations flow through a BullMQ queue guarded by a Redis distributed lock, so high-demand sessions never overbook — even under a rush.',
+    icon: BookOpenCheck,
+    kicker: 'Sessions built for real doubts',
+    title: 'Resources, quizzes & coding',
+    body: 'Every session comes with resources, a quiz, and coding questions attached — so you’re not just watching, you’re actually testing what you know.',
   },
   {
-    icon: QrCode,
-    kicker: 'Online meets offline',
-    title: 'QR ticket attendance',
-    body: 'Offline meetups generate secure QR entry tickets. Mentors scan them with a phone camera and attendance updates in real time.',
+    icon: Tag,
+    kicker: 'Free or affordable, your choice',
+    title: 'Priced for students',
+    body: 'Mentors set their own price — many sessions are free, and paid ones are priced for students, not against them.',
   },
   {
     icon: Bot,
-    kicker: 'Deterministic by design',
-    title: 'Zen, the AI help desk',
-    body: 'A Gemini-powered assistant constrained strictly to platform documentation, so answers about policies and bookings stay accurate — never hallucinated.',
+    kicker: 'Zen AI, on standby',
+    title: 'Help knows your progress',
+    body: 'Stuck at 1 AM before an exam? Hit Cmd+K and ask Zen AI — it knows your sessions, your progress, and can help with anything else on your mind too.',
   },
   {
-    icon: Users,
-    kicker: 'Human, focused',
-    title: 'Topic-wise peer sessions',
-    body: 'Sessions like \u201CAdvanced React Patterns\u201D or \u201CReverse a Linked List\u201D, led by peers who recently mastered them. Free or paid, online or on campus.',
+    icon: Code2,
+    kicker: 'Code, get instant feedback',
+    title: 'Live sandbox, instant feedback',
+    body: 'Solve real coding questions in a live sandbox with test cases, XP, and an AI that already knows what you’re working on — no separate tab, no context switching.',
   },
   {
-    icon: Trophy,
-    kicker: 'Earn your status',
-    title: 'Gamified mentorship',
-    body: 'Ratings, points, and badges from Bronze to Verified turn teaching into a public, verifiable portfolio of achievements.',
+    icon: Star,
+    kicker: 'Ratings you can trust',
+    title: 'Honest, anonymous reviews',
+    body: 'Every mentor is rated by real students — with an option to review anonymously, so feedback stays honest.',
+  },
+  {
+    icon: Wallet,
+    kicker: 'Built for mentors too',
+    title: 'Teaching pays, literally',
+    body: 'Mentors earn from every session, track their earnings, and build a reputation with badges and followers as they go.',
   },
 ];
 
@@ -112,7 +118,18 @@ export default function FeaturesSection() {
 
       ScrollTrigger.refresh();
     }, scope);
-    return () => ctx.revert();
+
+    // The horizontal scroll distance depends on the rendered track width,
+    // which can grow once webfonts and images load. Re-measure then, so the
+    // pinned scroll reaches the very last feature card.
+    const refresh = () => ScrollTrigger.refresh();
+    document.fonts?.ready?.then(refresh);
+    window.addEventListener('load', refresh);
+
+    return () => {
+      ctx.revert();
+      window.removeEventListener('load', refresh);
+    };
   }, []);
 
   return (

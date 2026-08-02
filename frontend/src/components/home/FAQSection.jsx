@@ -4,24 +4,32 @@ import { motion } from 'framer-motion';
 
 const faqs = [
   {
-    q: 'Are sessions free or paid?',
-    a: 'Both. Mentors choose whether a session is free or paid when they propose it, and every session is reviewed by an admin before it appears in the public catalog.',
+    q: 'Is ZenovaX only for coding subjects?',
+    a: 'No — any subject where a student can teach another student works. Coding just has extra tooling (a live code editor, test cases, and AI help) because it benefits from it most.',
   },
   {
-    q: 'How does the code sandbox run Python or Java safely?',
-    a: 'Your code is forwarded to an isolated, short-lived sandbox container. It is wrapped server-side to capture output and trace exceptions, keeping execution fully secure. JavaScript runs instantly inside a sandboxed wrapper in your own browser.',
+    q: 'Do I have to pay for sessions?',
+    a: 'Not always. Mentors choose whether their session is free or paid, and you can filter by price when browsing.',
   },
   {
-    q: 'Can I book the same session twice?',
-    a: 'No. The booking system enforces a unique constraint per user and session, and a distributed lock queue prevents double-booking races even during high-demand seat rushes.',
+    q: 'Who can become a mentor?',
+    a: 'Any student confident enough in a topic to teach it. You’ll set up a mentor profile with your skills, department, and year before your first session.',
   },
   {
-    q: 'How does attendance work for offline meetups?',
-    a: 'Confirmed bookings generate a printable entry ticket with a unique QR code. At the venue, the mentor scans it with their phone camera and your attendance is marked instantly.',
+    q: 'What if a mentor doesn’t show up, or a session isn’t what I expected?',
+    a: 'Every session has a “Report an issue” option, and our support team reviews it — plus you can leave an honest (even anonymous) review afterward.',
   },
   {
-    q: 'When can I review a mentor?',
-    a: 'Reviews unlock after the session has ended and your attendance has been marked, which keeps ratings honest and tied to real participation.',
+    q: 'How do mentors get paid?',
+    a: 'Earnings from paid sessions go into your ZenovaX balance once the session is marked complete, and you can withdraw to your UPI account anytime after verification.',
+  },
+  {
+    q: 'What is Zen AI?',
+    a: 'Your personal assistant inside ZenovaX — accessible anywhere with Cmd+K. It knows your sessions and progress, and can also just answer general questions when you’re stuck on something.',
+  },
+  {
+    q: 'Is my information safe?',
+    a: 'Yes. You control what’s visible on your profile — including whether your phone number is shown to other students — from your privacy settings.',
   },
 ];
 

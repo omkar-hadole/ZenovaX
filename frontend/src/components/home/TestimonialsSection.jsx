@@ -6,22 +6,22 @@ const roles = [
     icon: GraduationCap,
     role: 'For learners',
     title: 'Answers at peer speed',
-    body: 'Rapid access to focused human explanations at a fraction of the cost of professional tutoring, reinforced immediately in the coding playground.',
-    points: ['Topic-wise micro sessions', 'Affordable or free seats', 'Practice right after learning'],
+    body: 'Rapid access to focused, human explanations at a fraction of the cost of professional tutoring — reinforced right after each session with quizzes and coding challenges.',
+    points: ['One-to-many topic sessions', 'Free or paid seats', 'Practice right after learning'],
   },
   {
     icon: Lightbulb,
     role: 'For mentors',
     title: 'Teach, earn, get verified',
-    body: 'Turn knowledge into income while building a public portfolio. Ratings and completed sessions unlock badges from Bronze to Verified.',
-    points: ['Monetize your skills', 'Launch live quizzes and challenges', 'Build teaching credentials'],
+    body: 'Turn knowledge into income. Paid seats pool into your wallet and pay out over UPI, while ratings, reviews and XP unlock achievement badges that make your portfolio trustworthy.',
+    points: ['Earn per paid seat, pay out via UPI', 'Launch live quizzes and coding challenges', 'Unlock verifiable achievement badges'],
   },
   {
     icon: Building2,
     role: 'For communities',
     title: 'A self-sustaining network',
-    body: 'Campus communities get a peer support network that eases the load on teaching assistants, with admin moderation keeping quality high.',
-    points: ['Admin-audited sessions', 'Moderation and reporting tools', 'QR-verified offline meetups'],
+    body: 'Campus communities get a peer support network that eases the load on teachers, with admin approval and QR-verified offline meetups keeping quality high.',
+    points: ['Admin-approved sessions', 'Moderation and reporting tools', 'QR-verified offline meetups'],
   },
 ];
 

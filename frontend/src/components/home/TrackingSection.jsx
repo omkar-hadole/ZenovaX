@@ -1,37 +1,27 @@
 import { useLayoutEffect, useRef } from 'react';
-import { Search, Ticket, QrCode, Presentation, Code2, Star } from 'lucide-react';
+import { UserPlus, Search, Lightbulb, Star } from 'lucide-react';
 import { gsap } from '../../utils/gsapSetup';
 
 const steps = [
   {
+    icon: UserPlus,
+    title: 'Create your account',
+    body: 'Sign up, verify your email, and tell us if you’re here to learn or here to teach.',
+  },
+  {
     icon: Search,
-    title: 'Browse and filter',
-    body: 'Find sessions by topic, level, price, or mentor on your dashboard.',
+    title: 'Find your session',
+    body: 'Browse by topic, department, price, or mode — online or in person — and pick what fits.',
   },
   {
-    icon: Ticket,
-    title: 'Reserve your seat',
-    body: 'A queued, lock-protected transaction confirms your booking instantly, with no double-booking races.',
-  },
-  {
-    icon: QrCode,
-    title: 'Get your QR ticket',
-    body: 'Offline meetups generate a downloadable entry pass with a secure QR code.',
-  },
-  {
-    icon: Presentation,
-    title: 'Attend the session',
-    body: 'Join live online or show your ticket on campus. Mentors verify entry with a quick scan.',
-  },
-  {
-    icon: Code2,
-    title: 'Practice immediately',
-    body: 'Reinforce concepts with quizzes and coding challenges in the built-in Monaco sandbox.',
+    icon: Lightbulb,
+    title: 'Learn, solve, and ask',
+    body: 'Attend the session, work through the attached quiz or coding challenge, and ask Zen AI whenever you’re stuck.',
   },
   {
     icon: Star,
-    title: 'Rate and grow',
-    body: 'Review your mentor after attending. Great mentors earn points and unlock verified badges.',
+    title: 'Rate and come back',
+    body: 'Leave a review, follow mentors you liked, and keep building your own learning streak.',
   },
 ];
 
@@ -85,41 +75,52 @@ export default function TrackingSection() {
       <div className="relative max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div className="lg:sticky lg:top-32 self-start">
           <p className="text-sm font-semibold tracking-widest uppercase text-accent">
-            The learner journey
+            How it works
           </p>
           <h2 className="mt-4 text-4xl md:text-5xl font-semibold tracking-tight text-text">
-            From stuck to solved,
-            <span className="text-text-subtle"> in six steps.</span>
+            From first sign-up
+            <span className="text-text-subtle"> to your next aha.</span>
           </h2>
           <p className="mt-5 text-lg text-text-muted leading-relaxed max-w-md">
-            Every booking flows through a transaction-safe pipeline, from
-            discovery to attendance to hands-on practice, so you can focus on
-            learning instead of logistics.
+            Four steps stand between you and finally getting it — no formality,
+            no front, just learning from people who’ve been in your seat.
           </p>
         </div>
 
-        <ol className="relative list-none space-y-10">
-          <div
-            aria-hidden="true"
-            data-journey-line
-            className="absolute left-[22px] top-2 bottom-2 w-px"
-            style={{ background: 'linear-gradient(to bottom, var(--color-accent), var(--color-accent-soft), transparent)' }}
-          />
-          {steps.map(({ icon: Icon, title, body }, i) => (
-            <li key={title} data-step className="relative flex gap-6">
-              <div className="relative z-10 flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-full bg-surface border border-border-accent shadow-[var(--shadow-sm)]">
-                <Icon className="w-5 h-5 text-accent" aria-hidden="true" />
-              </div>
-              <div className="pt-1">
-                <h3 className="text-lg font-semibold text-text">
-                  <span className="text-text-subtle font-mono text-sm mr-2">0{i + 1}</span>
-                  {title}
-                </h3>
-                <p className="mt-2 text-text-muted leading-relaxed">{body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <div>
+          <ol className="relative list-none space-y-10">
+            <div
+              aria-hidden="true"
+              data-journey-line
+              className="absolute left-[14px] top-2 bottom-2 w-px"
+              style={{ background: 'linear-gradient(to bottom, var(--color-accent), var(--color-accent-soft), transparent)' }}
+            />
+            {steps.map(({ icon: Icon, title, body }, i) => (
+              <li key={title} data-step className="relative flex gap-6">
+                <div className="relative z-10 flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-surface border border-border-accent shadow-[var(--shadow-sm)]">
+                  <Icon className="w-4 h-4 text-accent" aria-hidden="true" />
+                </div>
+                <div className="pt-1">
+                  <h3 className="text-lg font-semibold text-text">
+                    <span className="text-text-subtle font-mono text-sm mr-2">0{i + 1}</span>
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-text-muted leading-relaxed">{body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <p
+            data-step
+            className="mt-10 rounded-2xl border border-border-soft bg-accent-tint p-5 text-sm text-text leading-relaxed"
+          >
+            <span className="font-semibold text-text">Mentor?</span> You take
+            the same first two steps — then create a session, set your price,
+            and go live. You get paid directly to your UPI once the session
+            wraps up.
+          </p>
+        </div>
       </div>
     </section>
   );

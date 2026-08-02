@@ -1,5 +1,5 @@
 import { lazy, Suspense, useLayoutEffect, useRef } from 'react';
-import { Sparkles, PlayCircle, ArrowRight, ShieldCheck, Code2, QrCode } from 'lucide-react';
+import { Sparkles, PlayCircle, ArrowRight, Users, Code2, Bot } from 'lucide-react';
 import dashboard from '../../assets/dashboard-mockup.webp';
 import dashboardMobile from '../../assets/dashboard-mockup-800w.webp';
 import { gsap } from '../../utils/gsapSetup';
@@ -8,9 +8,9 @@ import { gsap } from '../../utils/gsapSetup';
 const HeroCanvas = lazy(() => import('./HeroCanvas'));
 
 const proofChips = [
-  { icon: ShieldCheck, label: 'Double-booking safe reservations' },
-  { icon: Code2, label: 'In-browser code sandbox' },
-  { icon: QrCode, label: 'QR ticket entry for meetups' },
+  { icon: Users, label: 'Learn from peers' },
+  { icon: Code2, label: 'Code, quizzes & resources' },
+  { icon: Bot, label: 'Zen AI via Cmd+K' },
 ];
 
 // Headline words, split so each can rise out of its own overflow-hidden mask.
@@ -158,7 +158,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border-strong bg-surface backdrop-blur text-xs font-semibold tracking-wide text-text-subtle uppercase shadow-[var(--shadow-sm)]"
           >
             <Sparkles className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
-            Peer-to-peer learning, engineered for speed
+             Peer-to-peer learning, engineered for speed
           </span>
 
           <h1
@@ -185,9 +185,10 @@ export default function HeroSection({ handlePrimaryCTA }) {
             data-hero-stagger
             className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-text-muted leading-relaxed"
           >
-            ZenovaX connects you with student mentors for focused, topic-wise
-            sessions, free or paid. Reserve a seat, practice in a live code
-            sandbox, and walk into campus meetups with a QR entry ticket.
+             ZenovaX is a peer-to-peer learning platform where students who
+  understand a topic teach it — and students who don’t, finally get
+  it. No fear, no formality, just people who’ve been in your seat.
+
           </p>
 
           <div data-hero-stagger className="mt-10 flex flex-wrap justify-center gap-4">

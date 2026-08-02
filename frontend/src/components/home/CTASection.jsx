@@ -18,21 +18,22 @@ export default function CTASection({ handlePrimaryCTA }) {
             style={{ background: 'var(--color-glow)' }}
           />
           <div className="relative">
-            <h2 className="text-4xl md:text-6xl font-semibold tracking-tight text-text-on-invert leading-tight">
-              Stop watching.
+<h2 className="text-4xl md:text-6xl font-semibold tracking-tight text-text-on-invert leading-tight">
+              Stop watching tutorials.
               <br />
               <span className="text-gradient">Start solving with peers.</span>
             </h2>
             <p className="mt-6 max-w-xl mx-auto text-lg text-text-on-invert/70">
-              Book a focused session, practice in the sandbox, and turn the
-              concepts you struggle with into the ones you teach next.
+              Your next <span className="italic">aha</span> moment is one session
+              away — and it might come from someone who sits three rows behind
+              you in class.
             </p>
             <div className="mt-10 flex justify-center">
               <button
                 onClick={handlePrimaryCTA}
                 className="group inline-flex items-center gap-2 px-9 py-4 rounded-full bg-gradient-accent text-text-on-accent font-semibold text-lg shadow-[var(--shadow-accent)] hover:-translate-y-0.5 hover:brightness-105 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                Get started for free
+                Get Started Free
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
               </button>
             </div>
