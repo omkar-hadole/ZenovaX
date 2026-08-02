@@ -25,6 +25,582 @@ const navBtn = {
   border: 0,
 };
 
+// ---- Breakout constants (game space, independent of CSS pixels) ----
+const GAME_W = 920;
+const GAME_H = 640;
+const PIXEL_SCALE = 3;
+
+const DIGIT_4 = [
+  [0, 0, 0, 1, 0],
+  [0, 0, 1, 1, 0],
+  [0, 1, 0, 1, 0],
+  [1, 0, 0, 1, 0],
+  [1, 1, 1, 1, 1],
+  [0, 0, 0, 1, 0],
+  [0, 0, 0, 1, 0],
+];
+const DIGIT_0 = [
+  [0, 1, 1, 1, 0],
+  [1, 0, 0, 0, 1],
+  [1, 0, 0, 1, 1],
+  [1, 0, 1, 0, 1],
+  [1, 1, 0, 0, 1],
+  [1, 0, 0, 0, 1],
+  [0, 1, 1, 1, 0],
+];
+const DIGIT_3 = [
+  [0, 1, 1, 1, 0],
+  [1, 0, 0, 0, 1],
+  [0, 0, 0, 0, 1],
+  [0, 0, 1, 1, 0],
+  [0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 1],
+  [0, 1, 1, 1, 0],
+];
+const ROWS = 7;
+const COLS = 17;
+
+// Tiny 5x7 bitmap font so "ACCESS DENIED" can be destructible bricks too.
+const FONT = {
+  A: [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+  ],
+  C: [
+    [0, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 1],
+    [0, 1, 1, 1, 0],
+  ],
+  D: [
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+  ],
+  E: [
+    [1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1],
+  ],
+  N: [
+    [1, 0, 0, 0, 1],
+    [1, 1, 0, 0, 1],
+    [1, 0, 1, 0, 1],
+    [1, 0, 0, 1, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1],
+  ],
+  I: [
+    [1, 1, 1, 1, 1],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 1, 0, 0],
+    [1, 1, 1, 1, 1],
+  ],
+  S: [
+    [0, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 0],
+  ],
+  ' ': [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+};
+
+const buildTextGrid = (text) => {
+  const cols = text.length * 6 - 1;
+  const out = [];
+  for (let r = 0; r < 7; r++) {
+    const row = new Array(cols).fill(0);
+    let col = 0;
+    for (const ch of text) {
+      const glyph = FONT[ch] || FONT[' '];
+      for (let c = 0; c < 5; c++) row[col++] = glyph[r][c];
+      col++;
+    }
+    out.push(row);
+  }
+  return out;
+};
+
+// roundRect may be missing on older browsers; fall back to manual path.
+const roundRectSupported =
+  typeof CanvasRenderingContext2D !== 'undefined' &&
+  typeof CanvasRenderingContext2D.prototype.roundRect === 'function';
+
+const drawRoundRect = (ctx, x, y, w, h, r) => {
+  ctx.beginPath();
+  if (roundRectSupported) {
+    ctx.roundRect(x, y, w, h, r);
+    return;
+  }
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
+};
+
+const createBreakoutGame = (canvas, hudLives, hudScore) => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  // Canvas doesn't resolve CSS variables, so read the computed theme colors.
+  const cs = getComputedStyle(document.documentElement);
+  const resolve = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
+  const BG = resolve('--color-bg', '#f7f7fb');
+  const INK = resolve('--color-text', '#14141f');
+  const BRAND = '#7A79E6';
+  const SURFACE = resolve('--color-surface', 'rgba(255,255,255,0)');
+
+  const grid = [];
+  for (let r = 0; r < ROWS; r++) {
+    const row = [];
+    for (let c = 0; c < COLS; c++) {
+      let on = 0;
+      if (c < 5) on = DIGIT_4[r][c];
+      else if (c === 5) on = 0;
+      else if (c < 11) on = DIGIT_0[r][c - 6];
+      else if (c === 11) on = 0;
+      else on = DIGIT_3[r][c - 12];
+      row.push(on);
+    }
+    grid.push(row);
+  }
+  const textGrid = buildTextGrid('ACCESS DENIED');
+
+  const BRICK_W = 42;
+  const BRICK_H = 32;
+  const GAP = 8;
+  const gridW = COLS * BRICK_W + (COLS - 1) * GAP;
+  const offsetX = (GAME_W - gridW) / 2;
+  const offsetY = 104;
+  const INNER_GAP = 2;
+  const fineW = (BRICK_W - (PIXEL_SCALE - 1) * INNER_GAP) / PIXEL_SCALE;
+  const fineH = (BRICK_H - (PIXEL_SCALE - 1) * INNER_GAP) / PIXEL_SCALE;
+
+  const PADDLE_W = 140;
+  const PADDLE_H = 18;
+  const PADDLE_SPEED = 8;
+  const PADDLE_Y = GAME_H - 54;
+  const BALL_R = 5;
+  const ballSpeed = 3.6;
+
+  let bricks = [];
+  let totalBricks = 0;
+  let paddleX = GAME_W / 2 - PADDLE_W / 2;
+  let balls = [];
+  let powerups = [];
+  let lives = 3;
+  let broken = 0;
+  let state = 'idle';
+  let pointerTarget = null;
+  const keys = {};
+  let raf = 0;
+
+  const updateHud = () => {
+    hudLives.textContent = 'HEART ' + Math.max(0, lives);
+    hudScore.textContent = 'CLEARED ' + Math.round((broken / totalBricks) * 100) + '%';
+  };
+
+  const makeBall = (x, y, dx, dy) => ({ x, y, dx, dy });
+
+  const addTextBricks = () => {
+    const subW = 5;
+    const subGap = 1;
+    const scale = 2;
+    const cellW = scale * subW + (scale - 1) * subGap;
+    const colGap = 0;
+    const cols = textGrid[0].length;
+    const tW = cols * cellW + (cols - 1) * colGap;
+    const ox = (GAME_W - tW) / 2;
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (textGrid[r][c] !== 1) continue;
+        const baseX = ox + c * (cellW + colGap);
+        const baseY = 1 + r * (cellW + colGap);
+        for (let sr = 0; sr < scale; sr++) {
+          for (let sc = 0; sc < scale; sc++) {
+            bricks.push({
+              x: baseX + sc * (subW + subGap),
+              y: baseY + sr * (subW + subGap),
+              w: subW,
+              h: subW,
+              alive: true,
+            });
+            totalBricks++;
+          }
+        }
+      }
+    }
+  };
+
+  const buildBricks = () => {
+    bricks = [];
+    totalBricks = 0;
+    addTextBricks();
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (grid[r][c] !== 1) continue;
+        const baseX = offsetX + c * (BRICK_W + GAP);
+        const baseY = offsetY + r * (BRICK_H + GAP);
+        for (let sr = 0; sr < PIXEL_SCALE; sr++) {
+          for (let sc = 0; sc < PIXEL_SCALE; sc++) {
+            bricks.push({
+              x: baseX + sc * (fineW + INNER_GAP),
+              y: baseY + sr * (fineH + INNER_GAP),
+              w: fineW,
+              h: fineH,
+              alive: true,
+            });
+            totalBricks++;
+          }
+        }
+      }
+    }
+  };
+
+  const resetBallOnPaddle = () => {
+    balls = [makeBall(paddleX + PADDLE_W / 2, PADDLE_Y - BALL_R - 1, 0, 0)];
+  };
+
+  const launchBall = () => {
+    if (state === 'won' || state === 'lost') resetGame();
+    if (state !== 'idle') return;
+    const angle = ((-70 + Math.random() * 40) * Math.PI) / 180;
+    balls[0].dx = ballSpeed * Math.cos(angle);
+    balls[0].dy = -Math.abs(ballSpeed * Math.sin(angle));
+    state = 'playing';
+  };
+
+  const maybeDropPowerup = (brick) => {
+    if (Math.random() > 0.07) return;
+    const size = 24;
+    powerups.push({
+      x: brick.x + brick.w / 2 - size / 2,
+      y: brick.y + brick.h / 2 - 10,
+      w: size,
+      h: 18,
+      vy: 2.4,
+      type: Math.random() < 0.6 ? '2X' : '3X',
+    });
+  };
+
+  const activatePowerup = (type) => {
+    const want = type === '3X' ? 3 : 2;
+    while (balls.length < want && balls.length < 3) {
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      balls.push(
+        makeBall(
+          paddleX + PADDLE_W / 2,
+          PADDLE_Y - BALL_R - 2,
+          dir * ballSpeed * (0.35 + Math.random() * 0.35),
+          -(ballSpeed * (0.65 + Math.random() * 0.35))
+        )
+      );
+    }
+  };
+
+  const loseLife = () => {
+    lives--;
+    updateHud();
+    if (lives <= 0) {
+      state = 'lost';
+    } else {
+      state = 'idle';
+      resetBallOnPaddle();
+    }
+  };
+
+  const winGame = () => {
+    state = 'won';
+  };
+
+  const resetGame = () => {
+    buildBricks();
+    powerups.length = 0;
+    lives = 3;
+    broken = 0;
+    state = 'idle';
+    paddleX = GAME_W / 2 - PADDLE_W / 2;
+    resetBallOnPaddle();
+    updateHud();
+  };
+
+  const handleCollision = () => {
+    for (const b of balls) {
+      b.x += b.dx;
+      b.y += b.dy;
+
+      if (b.x - BALL_R < 0) {
+        b.x = BALL_R;
+        b.dx = Math.abs(b.dx);
+      } else if (b.x + BALL_R > GAME_W) {
+        b.x = GAME_W - BALL_R;
+        b.dx = -Math.abs(b.dx);
+      }
+      if (b.y - BALL_R < 0) {
+        b.y = BALL_R;
+        b.dy = Math.abs(b.dy);
+      }
+
+      if (
+        b.dy > 0 &&
+        b.y + BALL_R >= PADDLE_Y &&
+        b.y + BALL_R <= PADDLE_Y + PADDLE_H + 6 &&
+        b.x >= paddleX &&
+        b.x <= paddleX + PADDLE_W
+      ) {
+        const hit = (b.x - (paddleX + PADDLE_W / 2)) / (PADDLE_W / 2);
+        const angle = hit * (Math.PI / 3);
+        b.dx = ballSpeed * Math.sin(angle);
+        b.dy = -Math.abs(ballSpeed * Math.cos(angle));
+        b.y = PADDLE_Y - BALL_R;
+      }
+
+      for (const br of bricks) {
+        if (!br.alive) continue;
+        if (
+          b.x + BALL_R > br.x &&
+          b.x - BALL_R < br.x + br.w &&
+          b.y + BALL_R > br.y &&
+          b.y - BALL_R < br.y + br.h
+        ) {
+          br.alive = false;
+          broken++;
+          updateHud();
+          maybeDropPowerup(br);
+          const overlapLeft = b.x + BALL_R - br.x;
+          const overlapRight = br.x + br.w - (b.x - BALL_R);
+          const overlapTop = b.y + BALL_R - br.y;
+          const overlapBottom = br.y + br.h - (b.y - BALL_R);
+          const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+          if (minOverlap === overlapTop || minOverlap === overlapBottom) b.dy *= -1;
+          else b.dx *= -1;
+          if (broken >= totalBricks) winGame();
+          break;
+        }
+      }
+    }
+
+    // Drop balls that fell past the bottom (in place, no allocation).
+    let write = 0;
+    for (let i = 0; i < balls.length; i++) {
+      if (balls[i].y - BALL_R <= GAME_H) balls[write++] = balls[i];
+    }
+    balls.length = write;
+  };
+
+  const updatePowerups = () => {
+    // Move and catch/expire falling power-ups (in place, no allocation).
+    let write = 0;
+    for (let i = 0; i < powerups.length; i++) {
+      const p = powerups[i];
+      p.y += p.vy;
+      if (
+        p.y + p.h >= PADDLE_Y &&
+        p.y <= PADDLE_Y + PADDLE_H &&
+        p.x + p.w >= paddleX &&
+        p.x <= paddleX + PADDLE_W
+      ) {
+        activatePowerup(p.type);
+        continue;
+      }
+      if (p.y > GAME_H) continue;
+      powerups[write++] = p;
+    }
+    powerups.length = write;
+  };
+
+  const update = () => {
+    if (pointerTarget != null && !keys['ArrowLeft'] && !keys['ArrowRight']) {
+      paddleX += (pointerTarget - paddleX) * 0.35;
+    }
+    if (keys['ArrowLeft']) paddleX -= PADDLE_SPEED;
+    if (keys['ArrowRight']) paddleX += PADDLE_SPEED;
+    paddleX = Math.min(GAME_W - PADDLE_W, Math.max(0, paddleX));
+
+    if (state === 'idle') {
+      resetBallOnPaddle();
+      return;
+    }
+    if (state !== 'playing') return;
+
+    handleCollision();
+    if (balls.length === 0) {
+      loseLife();
+      return;
+    }
+    updatePowerups();
+  };
+
+  const drawBricks = () => {
+    ctx.fillStyle = BRAND;
+    for (const b of bricks) if (b.alive) ctx.fillRect(b.x, b.y, b.w, b.h);
+  };
+
+  const drawPaddle = () => {
+    ctx.fillStyle = INK;
+    drawRoundRect(ctx, paddleX, PADDLE_Y, PADDLE_W, PADDLE_H, PADDLE_H / 2);
+    ctx.fill();
+  };
+
+  const drawBalls = () => {
+    for (const b of balls) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, BALL_R, 0, Math.PI * 2);
+      ctx.fillStyle = state === 'playing' ? BRAND : INK;
+      ctx.fill();
+    }
+  };
+
+  const drawPowerups = () => {
+    for (const p of powerups) {
+      ctx.fillStyle = BRAND;
+      drawRoundRect(ctx, p.x, p.y, p.w, p.h, 5);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = "bold 11px 'Space Grotesk', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.type, p.x + p.w / 2, p.y + p.h / 2);
+    }
+  };
+
+  const drawOverlay = () => {
+    if (state === 'won' || state === 'lost') {
+      ctx.fillStyle = SURFACE;
+      ctx.fillRect(0, 0, GAME_W, GAME_H);
+      ctx.fillStyle = INK;
+      ctx.font = "18px 'Space Grotesk', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.fillText(state === 'won' ? 'ALL BRICKS CLEARED' : 'OUT OF LIVES', GAME_W / 2, GAME_H / 2 - 10);
+      ctx.font = "12px 'Space Grotesk', sans-serif";
+      ctx.fillStyle = BRAND;
+      ctx.fillText('click or press SPACE to play again', GAME_W / 2, GAME_H / 2 + 18);
+    }
+    if (state === 'idle') {
+      ctx.font = "22px 'Space Grotesk', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.fillStyle = BRAND;
+      ctx.fillText('click to play', GAME_W / 2, 470);
+    }
+  };
+
+  const render = () => {
+    ctx.clearRect(0, 0, GAME_W, GAME_H);
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, GAME_W, GAME_H);
+    drawBricks();
+    drawPaddle();
+    drawPowerups();
+    drawBalls();
+    drawOverlay();
+  };
+
+  const loop = () => {
+    update();
+    render();
+    raf = requestAnimationFrame(loop);
+  };
+
+  // ---- Canvas sizing / devicePixelRatio ----
+  const setupCanvas = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = GAME_W * dpr;
+    canvas.height = GAME_H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  setupCanvas();
+
+  // ---- Keyboard controls ----
+  const onKeyDown = (e) => {
+    if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+    keys[e.key] = true;
+    if (e.key === ' ') launchBall();
+    if (e.key.toLowerCase() === 'r') resetGame();
+  };
+  const onKeyUp = (e) => {
+    keys[e.key] = false;
+  };
+
+  // ---- Pointer controls ----
+  const onPointerMove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * GAME_W;
+    pointerTarget = Math.min(GAME_W - PADDLE_W, Math.max(0, x - PADDLE_W / 2));
+  };
+  const onPointerDown = (e) => {
+    e.preventDefault();
+    launchBall();
+  };
+  const onPointerLeave = () => {
+    pointerTarget = null;
+  };
+  const onResize = () => {
+    setupCanvas();
+  };
+
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  window.addEventListener('resize', onResize);
+  canvas.addEventListener('pointermove', onPointerMove);
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointerleave', onPointerLeave);
+  canvas.addEventListener('pointercancel', onPointerLeave);
+
+  resetBallOnPaddle();
+  buildBricks();
+  updateHud();
+  loop();
+
+  return {
+    launch: launchBall,
+    reset: resetGame,
+    destroy: () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('resize', onResize);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointerleave', onPointerLeave);
+      canvas.removeEventListener('pointercancel', onPointerLeave);
+    },
+  };
+};
+
 export default function Unauthorized() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,6 +609,7 @@ export default function Unauthorized() {
   const canvasRef = useRef(null);
   const hudLivesRef = useRef(null);
   const hudScoreRef = useRef(null);
+  const gameControlsRef = useRef(null);
 
   const userRole = location.state?.userRole || user?.role;
   const from = location.state?.from?.pathname;
@@ -57,514 +634,19 @@ export default function Unauthorized() {
   // ---- Breakout mini-game ----
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width;
-    const H = canvas.height;
-    // Canvas doesn't resolve CSS variables, so read the computed theme colors.
-    const cs = getComputedStyle(document.documentElement);
-    const resolve = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
-    const BG = resolve('--color-bg', '#f7f7fb');
-    const INK = resolve('--color-text', '#14141f');
-    const BRAND = '#7A79E6';
-    const SURFACE = resolve('--color-surface', 'rgba(255,255,255,0)');
-
-    const PIXEL_SCALE = 3;
-
-    const DIGIT_4 = [
-      [0, 0, 0, 1, 0],
-      [0, 0, 1, 1, 0],
-      [0, 1, 0, 1, 0],
-      [1, 0, 0, 1, 0],
-      [1, 1, 1, 1, 1],
-      [0, 0, 0, 1, 0],
-      [0, 0, 0, 1, 0],
-    ];
-    const DIGIT_0 = [
-      [0, 1, 1, 1, 0],
-      [1, 0, 0, 0, 1],
-      [1, 0, 0, 1, 1],
-      [1, 0, 1, 0, 1],
-      [1, 1, 0, 0, 1],
-      [1, 0, 0, 0, 1],
-      [0, 1, 1, 1, 0],
-    ];
-    const DIGIT_3 = [
-      [0, 1, 1, 1, 0],
-      [1, 0, 0, 0, 1],
-      [0, 0, 0, 0, 1],
-      [0, 0, 1, 1, 0],
-      [0, 0, 0, 0, 1],
-      [1, 0, 0, 0, 1],
-      [0, 1, 1, 1, 0],
-    ];
-    const ROWS = 7;
-    const COLS = 17;
-    const grid = [];
-    for (let r = 0; r < ROWS; r++) {
-      const row = [];
-      for (let c = 0; c < COLS; c++) {
-        let on = 0;
-        if (c < 5) on = DIGIT_4[r][c];
-        else if (c === 5) on = 0;
-        else if (c < 11) on = DIGIT_0[r][c - 6];
-        else if (c === 11) on = 0;
-        else on = DIGIT_3[r][c - 12];
-        row.push(on);
-      }
-      grid.push(row);
-    }
-
-    // Tiny 5x7 bitmap font so "ACCESS DENIED" can be destructible bricks too.
-    const FONT = {
-      A: [
-        [0, 1, 1, 1, 0],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-      ],
-      C: [
-        [0, 1, 1, 1, 0],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 1],
-        [0, 1, 1, 1, 0],
-      ],
-      D: [
-        [1, 1, 1, 1, 0],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 1, 1, 1, 0],
-      ],
-      E: [
-        [1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1],
-      ],
-      N: [
-        [1, 0, 0, 0, 1],
-        [1, 1, 0, 0, 1],
-        [1, 0, 1, 0, 1],
-        [1, 0, 0, 1, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-        [1, 0, 0, 0, 1],
-      ],
-      I: [
-        [1, 1, 1, 1, 1],
-        [0, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0],
-        [1, 1, 1, 1, 1],
-      ],
-      S: [
-        [0, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0],
-        [0, 0, 0, 0, 1],
-        [0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 0],
-      ],
-      ' ': [
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-      ],
-    };
-    const buildTextGrid = (text) => {
-      const cols = text.length * 6 - 1;
-      const out = [];
-      for (let r = 0; r < 7; r++) {
-        const row = new Array(cols).fill(0);
-        let col = 0;
-        for (const ch of text) {
-          const glyph = FONT[ch] || FONT[' '];
-          for (let c = 0; c < 5; c++) row[col++] = glyph[r][c];
-          col++;
-        }
-        out.push(row);
-      }
-      return out;
-    };
-    const textGrid = buildTextGrid('ACCESS DENIED');
-
-    const BRICK_W = 42;
-    const BRICK_H = 32;
-    const GAP = 8;
-    const gridW = COLS * BRICK_W + (COLS - 1) * GAP;
-    const offsetX = (W - gridW) / 2;
-    const offsetY = 104;
-    const INNER_GAP = 2;
-    const fineW = (BRICK_W - (PIXEL_SCALE - 1) * INNER_GAP) / PIXEL_SCALE;
-    const fineH = (BRICK_H - (PIXEL_SCALE - 1) * INNER_GAP) / PIXEL_SCALE;
-
-    let bricks = [];
-    let totalBricks = 0;
-    const addTextBricks = () => {
-      const subW = 5;
-      const subGap = 1;
-      const scale = 2;
-      const cellW = scale * subW + (scale - 1) * subGap;
-      const colGap = 0;
-      const cols = textGrid[0].length;
-      const tW = cols * cellW + (cols - 1) * colGap;
-      const ox = (W - tW) / 2;
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (textGrid[r][c] !== 1) continue;
-          const baseX = ox + c * (cellW + colGap);
-          const baseY = 1 + r * (cellW + colGap);
-          for (let sr = 0; sr < scale; sr++) {
-            for (let sc = 0; sc < scale; sc++) {
-              bricks.push({
-                x: baseX + sc * (subW + subGap),
-                y: baseY + sr * (subW + subGap),
-                w: subW,
-                h: subW,
-                alive: true,
-              });
-              totalBricks++;
-            }
-          }
-        }
-      }
-    };
-    const buildBricks = () => {
-      bricks = [];
-      totalBricks = 0;
-      addTextBricks();
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          if (grid[r][c] !== 1) continue;
-          const baseX = offsetX + c * (BRICK_W + GAP);
-          const baseY = offsetY + r * (BRICK_H + GAP);
-          for (let sr = 0; sr < PIXEL_SCALE; sr++) {
-            for (let sc = 0; sc < PIXEL_SCALE; sc++) {
-              bricks.push({
-                x: baseX + sc * (fineW + INNER_GAP),
-                y: baseY + sr * (fineH + INNER_GAP),
-                w: fineW,
-                h: fineH,
-                alive: true,
-              });
-              totalBricks++;
-            }
-          }
-        }
-      }
-    };
-    buildBricks();
-
-    const PADDLE_W = 140;
-    const PADDLE_H = 18;
-    const PADDLE_SPEED = 8;
-    let paddleX = W / 2 - PADDLE_W / 2;
-    const BALL_R = 5;
-    let balls = [];
-    const ballSpeed = 3.6;
-    let powerups = [];
-    let lives = 3;
-    let broken = 0;
-    let state = 'idle';
-
     const hudLives = hudLivesRef.current;
     const hudScore = hudScoreRef.current;
+    if (!canvas || !hudLives || !hudScore) return undefined;
 
-    const updateHud = () => {
-      hudLives.textContent = 'HEART ' + Math.max(0, lives);
-      hudScore.textContent = 'CLEARED ' + Math.round((broken / totalBricks) * 100) + '%';
-    };
-    updateHud();
+    const game = createBreakoutGame(canvas, hudLives, hudScore);
+    if (!game) return undefined;
 
-    const paddleY = () => H - 54;
-    const makeBall = (x, y, dx, dy) => ({ x, y, dx, dy });
-    const resetBallOnPaddle = () => {
-      balls = [makeBall(paddleX + PADDLE_W / 2, paddleY() - BALL_R - 1, 0, 0)];
-    };
-
-    const launchBall = () => {
-      if (state === 'won' || state === 'lost') resetGame();
-      if (state !== 'idle') return;
-      const angle = ((-70 + Math.random() * 40) * Math.PI) / 180;
-      balls[0].dx = ballSpeed * Math.cos(angle);
-      balls[0].dy = -Math.abs(ballSpeed * Math.sin(angle));
-      state = 'playing';
-    };
-
-    const maybeDropPowerup = (brick) => {
-      if (Math.random() > 0.07) return;
-      const size = 24;
-      powerups.push({
-        x: brick.x + brick.w / 2 - size / 2,
-        y: brick.y + brick.h / 2 - 10,
-        w: size,
-        h: 18,
-        vy: 2.4,
-        type: Math.random() < 0.6 ? '2X' : '3X',
-      });
-    };
-
-    const activatePowerup = (type) => {
-      const want = type === '3X' ? 3 : 2;
-      while (balls.length < want && balls.length < 3) {
-        const dir = Math.random() < 0.5 ? -1 : 1;
-        balls.push(
-          makeBall(
-            paddleX + PADDLE_W / 2,
-            paddleY() - BALL_R - 2,
-            dir * ballSpeed * (0.35 + Math.random() * 0.35),
-            -(ballSpeed * (0.65 + Math.random() * 0.35))
-          )
-        );
-      }
-    };
-
-    const loseLife = () => {
-      lives--;
-      updateHud();
-      if (lives <= 0) {
-        state = 'lost';
-      } else {
-        state = 'idle';
-        resetBallOnPaddle();
-      }
-    };
-
-    const winGame = () => {
-      state = 'won';
-    };
-
-    const resetGame = () => {
-      buildBricks();
-      powerups.length = 0;
-      lives = 3;
-      broken = 0;
-      state = 'idle';
-      paddleX = W / 2 - PADDLE_W / 2;
-      resetBallOnPaddle();
-      updateHud();
-    };
-
-    // keyboard
-    const keys = {};
-    const onKeyDown = (e) => {
-      if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
-      keys[e.key] = true;
-      if (e.key === ' ') launchBall();
-      if (e.key.toLowerCase() === 'r') resetGame();
-    };
-    const onKeyUp = (e) => {
-      keys[e.key] = false;
-    };
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-
-    // Paddle follows the pointer so the game is playable with mouse/touch too.
-    let pointerTarget = null;
-    const onPointerMove = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * W;
-      pointerTarget = Math.min(W - PADDLE_W, Math.max(0, x - PADDLE_W / 2));
-    };
-    canvas.addEventListener('pointermove', onPointerMove);
-    // Click/tap the game to launch the ball.
-    const onPointerDown = (e) => {
-      e.preventDefault();
-      launchBall();
-    };
-    canvas.addEventListener('pointerdown', onPointerDown);
-
-    const update = () => {
-      if (pointerTarget != null && !keys['ArrowLeft'] && !keys['ArrowRight']) {
-        paddleX += (pointerTarget - paddleX) * 0.35;
-      }
-      if (keys['ArrowLeft']) paddleX -= PADDLE_SPEED;
-      if (keys['ArrowRight']) paddleX += PADDLE_SPEED;
-      paddleX = Math.min(W - PADDLE_W, Math.max(0, paddleX));
-
-      if (state === 'idle') {
-        resetBallOnPaddle();
-        return;
-      }
-      if (state !== 'playing') return;
-
-      const pY = paddleY();
-
-      for (const b of balls) {
-        b.x += b.dx;
-        b.y += b.dy;
-
-        if (b.x - BALL_R < 0) {
-          b.x = BALL_R;
-          b.dx = Math.abs(b.dx);
-        }
-        if (b.x + BALL_R > W) {
-          b.x = W - BALL_R;
-          b.dx = -Math.abs(b.dx);
-        }
-        if (b.y - BALL_R < 0) {
-          b.y = BALL_R;
-          b.dy = Math.abs(b.dy);
-        }
-
-        if (
-          b.dy > 0 &&
-          b.y + BALL_R >= pY &&
-          b.y + BALL_R <= pY + PADDLE_H + 6 &&
-          b.x >= paddleX &&
-          b.x <= paddleX + PADDLE_W
-        ) {
-          const hit = (b.x - (paddleX + PADDLE_W / 2)) / (PADDLE_W / 2);
-          const angle = hit * (Math.PI / 3);
-          b.dx = ballSpeed * Math.sin(angle);
-          b.dy = -Math.abs(ballSpeed * Math.cos(angle));
-          b.y = pY - BALL_R;
-        }
-
-        for (const br of bricks) {
-          if (!br.alive) continue;
-          if (
-            b.x + BALL_R > br.x &&
-            b.x - BALL_R < br.x + br.w &&
-            b.y + BALL_R > br.y &&
-            b.y - BALL_R < br.y + br.h
-          ) {
-            br.alive = false;
-            broken++;
-            updateHud();
-            maybeDropPowerup(br);
-            const overlapLeft = b.x + BALL_R - br.x;
-            const overlapRight = br.x + br.w - (b.x - BALL_R);
-            const overlapTop = b.y + BALL_R - br.y;
-            const overlapBottom = br.y + br.h - (b.y - BALL_R);
-            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-            if (minOverlap === overlapTop || minOverlap === overlapBottom) b.dy *= -1;
-            else b.dx *= -1;
-            if (broken >= totalBricks) winGame();
-            break;
-          }
-        }
-      }
-
-      balls = balls.filter((b) => b.y - BALL_R <= H);
-      if (balls.length === 0) {
-        loseLife();
-        return;
-      }
-
-      const held = [];
-      for (const p of powerups) {
-        p.y += p.vy;
-        if (
-          p.y + p.h >= pY &&
-          p.y <= pY + PADDLE_H &&
-          p.x + p.w >= paddleX &&
-          p.x <= paddleX + PADDLE_W
-        ) {
-          activatePowerup(p.type);
-          continue;
-        }
-        if (p.y > H) continue;
-        held.push(p);
-      }
-      powerups.length = 0;
-      powerups.push(...held);
-    };
-
-    const drawBricks = () => {
-      ctx.fillStyle = BRAND;
-      for (const b of bricks) if (b.alive) ctx.fillRect(b.x, b.y, b.w, b.h);
-    };
-    const drawPaddle = () => {
-      ctx.fillStyle = INK;
-      ctx.beginPath();
-      ctx.roundRect(paddleX, paddleY(), PADDLE_W, PADDLE_H, PADDLE_H / 2);
-      ctx.fill();
-    };
-    const drawBalls = () => {
-      for (const b of balls) {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, BALL_R, 0, Math.PI * 2);
-        ctx.fillStyle = state === 'playing' ? BRAND : INK;
-        ctx.fill();
-      }
-    };
-    const drawPowerups = () => {
-      for (const p of powerups) {
-        ctx.fillStyle = BRAND;
-        ctx.beginPath();
-        ctx.roundRect(p.x, p.y, p.w, p.h, 5);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = "bold 11px 'Space Grotesk', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(p.type, p.x + p.w / 2, p.y + p.h / 2);
-      }
-    };
-    const drawOverlay = () => {
-      if (state === 'won' || state === 'lost') {
-        ctx.fillStyle = SURFACE;
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = INK;
-        ctx.font = "18px 'Space Grotesk', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillText(state === 'won' ? 'ALL BRICKS CLEARED' : 'OUT OF LIVES', W / 2, H / 2 - 10);
-        ctx.font = "12px 'Space Grotesk', sans-serif";
-        ctx.fillStyle = BRAND;
-        ctx.fillText('click or press SPACE to play again', W / 2, H / 2 + 18);
-      }
-      if (state === 'idle') {
-        ctx.font = "22px 'Space Grotesk', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.fillStyle = BRAND;
-        ctx.fillText('click to play', W / 2, 470);
-      }
-    };
-    const render = () => {
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = BG;
-      ctx.fillRect(0, 0, W, H);
-      drawBricks();
-      drawPaddle();
-      drawPowerups();
-      drawBalls();
-      drawOverlay();
-    };
-
-    let raf;
-    const loop = () => {
-      update();
-      render();
-      raf = requestAnimationFrame(loop);
-    };
-    resetBallOnPaddle();
-    loop();
+    // Expose to React handlers (e.g. buttons) without synthetic keyboard events.
+    gameControlsRef.current = { launch: game.launch, reset: game.reset };
 
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      canvas.removeEventListener('pointermove', onPointerMove);
-      canvas.removeEventListener('pointerdown', onPointerDown);
+      gameControlsRef.current = null;
+      game.destroy();
     };
   }, []);
 
