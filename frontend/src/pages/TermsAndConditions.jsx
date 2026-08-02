@@ -448,7 +448,7 @@ export default function TermsAndConditions() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 py-10 px-4">
-            {/* Hidden measurement layer mirroring a real leaf's width */}
+            
             <div
                 aria-hidden="true"
                 ref={measureRootRef}
