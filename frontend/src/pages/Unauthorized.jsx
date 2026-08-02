@@ -499,7 +499,7 @@ export default function Unauthorized() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-2"
+      className="min-h-screen flex flex-col items-center justify-between py-20 px-4"
       style={{ background: COLORS.bg, color: COLORS.ink, fontFamily: "'Space Grotesk', sans-serif" }}
     >
       <div
