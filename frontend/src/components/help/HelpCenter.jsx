@@ -89,7 +89,7 @@ const HelpCenter = ({
             </header>
 
             {/* WhatsApp Hero */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#128C7E] to-[#075E54] rounded-[2rem] p-8 sm:p-10 text-white shadow-xl shadow-green-900/20 mb-6 group">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#128C7E] to-[#075E54] rounded-[2rem] p-8 text-white shadow-xl shadow-green-900/20 mb-6 group">
                 <div className="absolute top-0 right-0 w-72 h-72 bg-white/15 rounded-full -mr-20 -mt-20 blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-16 -mb-16 blur-2xl" />
 
@@ -125,7 +125,7 @@ const HelpCenter = ({
                         <a
                             key={contact.title}
                             href={contact.href}
-                            className="group relative overflow-hidden bg-white dark:bg-gray-900/70 rounded-2xl p-5 border border-border dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4 h-full"
+                            className="group relative overflow-hidden bg-white dark:bg-gray-900/70 rounded-2xl p-8 border border-border dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4 h-full"
                         >
                             <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                             <div className={`relative w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center ${contact.accent}`}>
@@ -151,7 +151,7 @@ const HelpCenter = ({
                 </div>
 
                 {/* Quick Tips */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-[#6361e0] via-[#7a79e6] to-[#9190f8] rounded-[2rem] p-7 sm:p-8 text-white group">
+                <div className="relative overflow-hidden bg-gradient-to-br from-[#6361e0] via-[#7a79e6] to-[#9190f8] rounded-[2rem] p-8 text-white group">
                     <div className="absolute top-0 right-0 w-56 h-56 bg-white/15 rounded-full blur-3xl -mr-24 -mt-24" />
                     <div className="relative">
                         <h3 className="font-bold text-lg mb-5 flex items-center gap-2.5">

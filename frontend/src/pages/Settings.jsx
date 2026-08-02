@@ -204,7 +204,7 @@ export default function Settings() {
     };
 
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="p-4 sm:p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             <div>
