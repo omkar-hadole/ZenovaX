@@ -7,7 +7,7 @@ export { TableSkeleton };
 
 export function AdminDashboardSkeleton() {
     return (
-        <div className="p-4 sm:p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {[1, 2, 3, 4].map(i => (
                     <div key={i} className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-3 sm:gap-4">
@@ -40,7 +40,7 @@ export function AdminDashboardSkeleton() {
 
 export function AdminListSkeleton({ rows = 5 }) {
     return (
-        <div className="p-4 sm:p-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 animate-in fade-in duration-500">
             <SkeletonBase className="w-40 h-8 mb-6" />
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                 <div className="hidden md:block">
@@ -79,7 +79,7 @@ export function AdminListSkeleton({ rows = 5 }) {
 
 export function AdminPendingSkeleton({ count = 6 }) {
     return (
-        <div className="p-4 sm:p-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 animate-in fade-in duration-500">
             <TitleSkeleton />
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                 {Array.from({ length: count }).map((_, i) => (
@@ -113,7 +113,7 @@ export function AdminPendingSkeleton({ count = 6 }) {
 
 export function AdminPaymentsSkeleton({ count = 4 }) {
     return (
-        <div className="p-4 sm:p-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 animate-in fade-in duration-500">
             <TitleSkeleton />
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {Array.from({ length: count }).map((_, i) => (
@@ -177,7 +177,7 @@ export function AdminCardGridSkeleton({ count = 6, cols = 'grid-cols-1 md:grid-c
 
 export function AdminReportManagementSkeleton() {
     return (
-        <div className="p-4 sm:p-8 space-y-6 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 space-y-6 animate-in fade-in duration-500">
             <TitleSkeleton sub="w-56 h-4" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[1, 2, 3].map(i => (

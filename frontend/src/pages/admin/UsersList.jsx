@@ -56,7 +56,7 @@ export default function UsersList() {
     if (loading) return <AdminListSkeleton />;
 
     return (
-        <div className="p-4 sm:p-8">
+        <div className="p-4 sm:p-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">All Users</h1>
 
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
