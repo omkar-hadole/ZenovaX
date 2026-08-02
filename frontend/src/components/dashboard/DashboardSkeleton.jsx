@@ -3,14 +3,14 @@ import { SkeletonBase } from '../common/Skeleton';
 
 export default function DashboardSkeleton() {
     return (
-        <div className="animate-in fade-in duration-500 space-y-8 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="animate-in fade-in duration-500 space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center gap-4">
-                        <SkeletonBase className="w-12 h-12 rounded-xl" />
-                        <div className="space-y-2">
-                            <SkeletonBase className="w-24 h-4" />
-                            <SkeletonBase className="w-16 h-8" />
+                    <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center gap-3 sm:gap-4">
+                        <SkeletonBase className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex-shrink-0" />
+                        <div className="space-y-2 min-w-0">
+                            <SkeletonBase className="w-20 sm:w-24 h-4" />
+                            <SkeletonBase className="w-14 sm:w-16 h-8" />
                         </div>
                     </div>
                 ))}

@@ -75,7 +75,7 @@ export default function DashboardPage() {
         if (tab === 'My Bookings') navigate('/bookings');
     };
 
-    if (isLoading) return <DashboardSkeleton />;
+    if (isLoading) return <div className="p-4 sm:p-6"><DashboardSkeleton /></div>;
 
     if (error) {
         return (
