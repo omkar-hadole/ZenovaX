@@ -52,10 +52,10 @@ export default function MentorsList() {
     }, [searchTerm, filterDepartment]);
 
     return (
-        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="p-4 sm:p-6 mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Find a Mentor</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Find a Mentor</h1>
                     <p className="text-gray-500 dark:text-gray-400">Connect with experienced professionals to guide your journey</p>
                 </div>
 

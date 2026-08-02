@@ -651,9 +651,9 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
                         )}
                     </div>
 
-                    <div className="w-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-700 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[22px] p-2 relative flex items-end gap-2 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
+                    <div className="w-full bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-700 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] rounded-[16px] p-2 relative flex items-center gap-2 transition-all focus-within:shadow-[0_20px_60px_-15px_rgba(122,121,230,0.15)] focus-within:border-[#7A79E6]/30">
 
-                        <div className="pb-2 pl-1.5">
+                        <div className="pl-1.5">
                             <Sparkles className="w-5 h-5 opacity-60" style={{ color: BRAND_COLOR }} />
                         </div>
 
@@ -670,7 +670,7 @@ export default function ZenChat({ fallbackName = 'Creator' }) {
                         <button
                             onClick={send}
                             disabled={!input.trim() || loading}
-                            className={`w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed mb-0.5 flex-shrink-0`}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed flex-shrink-0`}
                             style={{
                                 background: `linear-gradient(135deg, ${BRAND_COLOR} 0%, #908FE8 100%)`,
                                 boxShadow: 'none'
