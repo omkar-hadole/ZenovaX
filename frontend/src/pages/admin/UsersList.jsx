@@ -4,6 +4,7 @@ import { Trash2, User } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import Toast from '../../components/Toast';
+import { AdminListSkeleton } from '../../components/common/AdminSkeletons';
 
 export default function UsersList() {
     const [users, setUsers] = useState([]);
@@ -52,7 +53,7 @@ export default function UsersList() {
         });
     };
 
-    if (loading) return <div className="p-4 sm:p-8">Loading users...</div>;
+    if (loading) return <AdminListSkeleton />;
 
     return (
         <div className="p-4 sm:p-8">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { SkeletonBase } from '../common/Skeleton';
 
 export default function SessionSkeleton() {
     return (
@@ -6,37 +7,37 @@ export default function SessionSkeleton() {
             <div>
                 <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-gray-800" />
+                        <SkeletonBase className="w-12 h-12 rounded-2xl" />
                         <div className="space-y-2">
-                            <div className="w-32 h-5 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                            <div className="w-20 h-3 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
+                            <SkeletonBase className="w-32 h-5 rounded-full" />
+                            <SkeletonBase className="w-20 h-3 rounded-full" />
                         </div>
                     </div>
-                    <div className="w-20 h-6 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
+                    <SkeletonBase className="w-20 h-6 rounded-full" />
                 </div>
 
-                <div className="w-3/4 h-7 bg-gray-200 dark:bg-gray-800 rounded-full mb-3" />
+                <SkeletonBase className="w-3/4 h-7 rounded-full mb-3" />
                 <div className="space-y-2 mb-6">
-                    <div className="w-full h-4 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
-                    <div className="w-2/3 h-4 bg-gray-100 dark:bg-gray-800/60 rounded-full" />
+                    <SkeletonBase className="w-full h-4 rounded-full" />
+                    <SkeletonBase className="w-2/3 h-4 rounded-full" />
                 </div>
 
                 <div className="flex items-center gap-6 mb-6">
                     <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-gray-200 dark:bg-gray-800 rounded" />
-                        <div className="w-24 h-4 bg-gray-100 dark:bg-gray-800/60 rounded" />
+                        <SkeletonBase className="w-4 h-4 rounded" />
+                        <SkeletonBase className="w-24 h-4 rounded" />
                     </div>
                     <div className="w-px h-4 bg-gray-200 dark:bg-gray-800" />
                     <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-gray-200 dark:bg-gray-800 rounded" />
-                        <div className="w-20 h-4 bg-gray-100 dark:bg-gray-800/60 rounded" />
+                        <SkeletonBase className="w-4 h-4 rounded" />
+                        <SkeletonBase className="w-20 h-4 rounded" />
                     </div>
                 </div>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
-                <div className="w-16 h-5 bg-gray-200 dark:bg-gray-800 rounded" />
-                <div className="w-28 h-10 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+                <SkeletonBase className="w-16 h-5 rounded" />
+                <SkeletonBase className="w-28 h-10 rounded-xl" />
             </div>
         </div>
     );

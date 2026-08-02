@@ -5,6 +5,7 @@ import { apiCall } from '../../../utils/api';
 import Toast from '../../Toast';
 import ConfirmModal from '../../common/ConfirmModal';
 import Pagination from '../../common/Pagination';
+import { AdminCardGridSkeleton } from '../../common/AdminSkeletons';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -92,7 +93,7 @@ export default function MyCodingQuestions() {
     };
 
     if (loading) {
-        return <div className="p-12 text-center text-gray-500 dark:text-gray-400">Loading...</div>;
+        return <AdminCardGridSkeleton count={9} showSectionHeader />;
     }
 
     return (

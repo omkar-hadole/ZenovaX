@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiCall } from '../../utils/api';
 import { Users, BookOpen, Clock, AlertCircle, Calendar, User } from 'lucide-react';
 import InlineError from '../../components/InlineError';
+import { AdminDashboardSkeleton } from '../../components/common/AdminSkeletons';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -32,7 +33,7 @@ export default function AdminDashboard() {
         fetchStats();
     }, []);
 
-    if (loading) return <div className="p-4 sm:p-8">Loading stats...</div>;
+    if (loading) return <AdminDashboardSkeleton />;
 
     if (error) {
         return (

@@ -1,8 +1,5 @@
 import React from 'react';
-
-const SkeletonBase = ({ className }) => (
-    <div className={`bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl ${className}`} />
-);
+import { SkeletonBase } from '../common/Skeleton';
 
 export default function DashboardSkeleton() {
     return (

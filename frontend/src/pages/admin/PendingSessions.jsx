@@ -6,6 +6,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import Toast from '../../components/Toast';
 import { stripMarkdown } from '../../utils/descriptionFormatter';
 import SessionPreviewModal from '../../components/dashboard/mentor/SessionPreviewModal';
+import { AdminPendingSkeleton } from '../../components/common/AdminSkeletons';
 
 export default function PendingSessions() {
     const navigate = useNavigate();
@@ -76,11 +77,7 @@ export default function PendingSessions() {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-full p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            </div>
-        );
+        return <AdminPendingSkeleton />;
     }
 
     return (

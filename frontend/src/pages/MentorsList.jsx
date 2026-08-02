@@ -4,6 +4,7 @@ import { apiCall } from '../utils/api';
 import { Search, Filter, Star, MapPin, Briefcase, User } from 'lucide-react';
 import Pagination from '../components/common/Pagination';
 import InlineError from '../components/InlineError';
+import MentorCardSkeleton from '../components/common/MentorCardSkeleton';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
 
 export default function MentorsList() {
@@ -88,28 +89,7 @@ export default function MentorsList() {
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-gray-800 h-[22rem] flex flex-col items-center relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 dark:bg-gray-800/60 rounded-bl-full -mr-10 -mt-10" />
-
-                            <div className="w-24 h-24 rounded-2xl bg-gray-200 dark:bg-gray-800 mb-4 animate-pulse relative z-10" />
-
-                            <div className="h-7 w-40 bg-gray-200 dark:bg-gray-800 rounded-full mb-2 animate-pulse relative z-10" />
-                            <div className="h-4 w-24 bg-gray-100 dark:bg-gray-800 rounded-full mb-6 animate-pulse relative z-10" />
-
-                            <div className="flex gap-4 w-full justify-center mb-8 relative z-10">
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="h-5 w-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                                    <div className="h-3 w-12 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                                </div>
-                                <div className="w-px h-8 bg-gray-100 dark:bg-gray-800" />
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="h-5 w-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-                                    <div className="h-3 w-14 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                                </div>
-                            </div>
-
-                            <div className="w-full h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mt-auto relative z-10" />
-                        </div>
+                        <MentorCardSkeleton key={i} />
                     ))}
                 </div>
             ) : error ? (

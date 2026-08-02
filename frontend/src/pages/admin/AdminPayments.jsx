@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Toast from '../../components/Toast';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import { AdminPaymentsSkeleton } from '../../components/common/AdminSkeletons';
 
 const KYC_BADGE = {
     NOT_SUBMITTED: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
@@ -144,11 +145,7 @@ export default function AdminPayments() {
     });
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-full p-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
-            </div>
-        );
+        return <AdminPaymentsSkeleton />;
     }
 
     const pendingAccounts = accounts.filter(a => a.kycStatus === 'PENDING');

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import Toast from '../../components/Toast';
+import { AdminReportManagementSkeleton } from '../../components/common/AdminSkeletons';
 
 export default function Reports() {
     const navigate = useNavigate();
@@ -98,11 +99,7 @@ export default function Reports() {
 
     const filteredReports = filter === 'ALL' ? reports : reports.filter(r => r.status === filter);
 
-    if (loading) return (
-        <div className="flex items-center justify-center h-full">
-            <div className="w-8 h-8 border-4 border-[#5d5c9e] border-t-transparent rounded-full animate-spin" />
-        </div>
-    );
+    if (loading) return <AdminReportManagementSkeleton />;
 
     return (
         <div className="p-4 sm:p-8 space-y-6">
