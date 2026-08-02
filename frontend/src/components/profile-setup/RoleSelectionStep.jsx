@@ -5,13 +5,13 @@ const OPTIONS = [
         value: 'learner',
         label: 'Learner',
         icon: BookOpen,
-        description: 'Access curated lessons, book 1:1 mentor sessions, and track your progress.',
+        description: 'Learn from peers, join sessions with resources, quizzes & coding practice.',
     },
     {
         value: 'mentor',
         label: 'Mentor',
         icon: Users,
-        description: 'Guide learners, host sessions, share expertise, and earn rewards.',
+        description: 'Host sessions, share resources & quizzes, and earn rewards.',
     },
 ];
 
