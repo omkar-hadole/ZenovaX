@@ -164,11 +164,11 @@ function packLeaves(heights, contentH) {
 /* Paper page (one leaf/half)                                              */
 /* ---------------------------------------------------------------------- */
 
-function PaperLeaf({ side, pageNumber, children }) {
+function PaperLeaf({ side, pageNumber, children, full }) {
     const isLeft = side === 'left';
     return (
         <div
-            className={`relative bg-[#f4f4f1] dark:bg-gray-900 ${isLeft ? 'rounded-l-xl' : 'rounded-r-xl'} min-h-[calc(100dvh-13rem)] max-h-[calc(100dvh-13rem)] overflow-y-auto px-6 py-8 md:px-9 md:py-10 text-gray-600 dark:text-gray-300`}
+            className={`relative bg-[#f4f4f1] dark:bg-gray-900 ${full ? 'rounded-xl' : isLeft ? 'rounded-l-xl' : 'rounded-r-xl'} min-h-[calc(100dvh-13rem)] max-h-[calc(100dvh-13rem)] overflow-y-auto px-6 py-8 md:px-9 md:py-10 text-gray-600 dark:text-gray-300`}
         >
             <div
                 className="absolute inset-0 pointer-events-none opacity-[0.4] dark:opacity-[0.08]"
@@ -188,7 +188,7 @@ function PaperLeaf({ side, pageNumber, children }) {
             <div className="relative">{children}</div>
             {pageNumber != null && (
                 <div
-                    className={`absolute bottom-3 ${isLeft ? 'left-6' : 'right-6'} text-[11px] text-gray-300 dark:text-gray-600 tabular-nums`}
+                    className={`absolute bottom-3 ${full ? 'left-1/2 -translate-x-1/2' : isLeft ? 'left-6' : 'right-6'} text-[11px] text-gray-300 dark:text-gray-600 tabular-nums`}
                 >
                     {pageNumber}
                 </div>
@@ -232,7 +232,7 @@ function BookCover({ onOpen }) {
                 className="absolute -top-1 right-10 w-6 h-20 bg-gradient-to-b from-amber-400 to-amber-600 shadow-md"
                 style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%)' }}
             />
-            <div className="relative h-full flex flex-col items-center justify-center text-center px-8 py-20 gap-6">
+            <div className="relative h-full flex flex-col items-center justify-center text-center px-6 py-14 md:px-8 md:py-20 gap-6">
                 <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm flex items-center justify-center">
                     <FileText className="w-8 h-8 text-blue-100" />
                 </div>
@@ -241,7 +241,7 @@ function BookCover({ onOpen }) {
                         The ZenovaX Handbook
                     </p>
                     <h1
-                        className="font-serif text-4xl md:text-5xl text-blue-50 tracking-wide"
+                        className="font-serif text-3xl sm:text-4xl md:text-5xl text-blue-50 tracking-wide"
                         style={{ textShadow: '0 1px 0 rgba(255,255,255,0.12), 0 2px 10px rgba(0,0,0,0.45)' }}
                     >
                         Terms &amp; Conditions
@@ -304,8 +304,17 @@ export default function TermsAndConditions() {
     const [packed, setPacked] = useState(null);
     const [flipping, setFlipping] = useState(null); // { dir: 'next'|'prev', target }
     const [flipToken, setFlipToken] = useState(0); // bumped per flip so FlipPage remounts & re-animates
+    const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767.98px)').matches);
     const measureRootRef = useRef(null);
     const queueRef = useRef([]); // pending 'next'/'prev' directions
+
+    // Track the breakpoint so the book switches between a two-page spread (>=768px) and a single page (mobile).
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 767.98px)');
+        const onChange = () => setIsMobile(mq.matches);
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
+    }, []);
 
     // Refs mirror state so the flip handlers can read current values without stale closures.
     const spreadRef = useRef(spread);
@@ -318,7 +327,7 @@ export default function TermsAndConditions() {
     }, [flipping]);
 
     const totalLeaves = packed ? packed.leaves.length : 0;
-    const totalSpreads = Math.ceil(totalLeaves / 2);
+    const totalSpreads = isMobile ? totalLeaves : Math.ceil(totalLeaves / 2);
 
     // Measure every block at the real leaf width, then pack them into fixed-height leaves.
     const compute = useCallback(() => {
@@ -351,6 +360,14 @@ export default function TermsAndConditions() {
             window.removeEventListener('resize', onResize);
         };
     }, [compute]);
+
+    // Re-pack and reset to the front when the layout breakpoint changes.
+    useEffect(() => {
+        setSpread(0);
+        setFlipping(null);
+        queueRef.current = [];
+        compute();
+    }, [isMobile, compute]);
 
     const openBook = useCallback(() => {
         setOpened(true);
@@ -409,7 +426,7 @@ export default function TermsAndConditions() {
     const goTo = useCallback((sectionIndex) => {
         if (!packed) return;
         const leafIndex = packed.sectionLeaf[sectionIndex] ?? 0;
-        const target = Math.min(Math.max(Math.floor(leafIndex / 2), 0), totalSpreads - 1);
+        const target = Math.min(Math.max(isMobile ? leafIndex : Math.floor(leafIndex / 2), 0), totalSpreads - 1);
         const s = spreadRef.current;
         if (flippingRef.current || target === s) return;
         queueRef.current = [];
@@ -431,6 +448,9 @@ export default function TermsAndConditions() {
 
     const leafAt = (i) => (packed && i < totalLeaves ? packed.leaves[i] : null);
 
+    const renderPage = (leafIndex) =>
+        leafIndex === 0 ? <ContentsLeaf onGo={goTo} /> : renderLeafContent(leafAt(leafIndex));
+
     const renderSide = (s, side) => {
         if (side === 'left') {
             return s === 0 ? <ContentsLeaf onGo={goTo} /> : renderLeafContent(leafAt(s * 2));
@@ -447,7 +467,11 @@ export default function TermsAndConditions() {
         </div>
     );
 
-    const baseLeafs = flipping
+    const baseLeafs = isMobile ? (
+        <PaperLeaf side="left" full pageNumber={(flipping ? flipping.target : spread) + 1}>
+            {renderPage(flipping ? flipping.target : spread)}
+        </PaperLeaf>
+    ) : (flipping
         ? (flipping.dir === 'next'
             ? (
                 <>
@@ -469,7 +493,7 @@ export default function TermsAndConditions() {
                 {spineOverlay}
                 <PaperLeaf side="right" pageNumber={leafAt(spread * 2 + 1) ? spread * 2 + 2 : null}>{renderSide(spread, 'right')}</PaperLeaf>
             </>
-        );
+        ));
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 py-10 px-4">
@@ -480,8 +504,8 @@ export default function TermsAndConditions() {
                 className="pointer-events-none"
                 style={{ position: 'fixed', left: -10000, top: 0, width: '100%' }}
             >
-                <div className="max-w-5xl mx-auto">
-                    <div className="grid grid-cols-2">
+                    <div className="max-w-5xl mx-auto px-4 md:px-0">
+                        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
                         <div className="px-6 py-8 md:px-9 md:py-10 text-gray-600 dark:text-gray-300">
                             {ITEMS.map((item, i) => (
                                 <div key={item.id} data-item-idx={i}>{renderEntry(item)}</div>
@@ -535,6 +559,12 @@ export default function TermsAndConditions() {
                     .flip-under-prev { background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(15,23,42,0.16) 38%, rgba(15,23,42,0.32) 50%, rgba(0,0,0,0) 62%); animation: flipUnder 800ms cubic-bezier(.25,.8,.25,1) forwards; }
 
                     @keyframes flipUnder { 0%{opacity:0} 40%{opacity:0.7} 100%{opacity:0.22} }
+
+                    @media (max-width: 767.98px) {
+                        .flip-sheet { width: 100%; }
+                        .flip-sheet.flip-next { left: 0; }
+                        .flip-sheet.flip-prev { left: 0; }
+                    }
                 `}</style>
 
                 <div className="relative" style={{ perspective: '2200px' }}>
@@ -545,7 +575,7 @@ export default function TermsAndConditions() {
                         <BookCover onOpen={openBook} />
                     ) : (
                         <div className="relative" style={{ perspective: '2200px' }}>
-                            <div className="relative grid grid-cols-2 bg-[#f4f4f1] dark:bg-gray-900 rounded-r-xl rounded-l-md border border-gray-100 dark:border-gray-800 shadow-2xl">
+                            <div className={`relative grid ${isMobile ? 'grid-cols-1 rounded-xl' : 'grid-cols-2 rounded-r-xl rounded-l-md'} bg-[#f4f4f1] dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-2xl`}>
                                 {baseLeafs}
                             </div>
 
@@ -555,12 +585,16 @@ export default function TermsAndConditions() {
                                 <FlipPage
                                     key={flipToken}
                                     dir={flipping.dir}
-                                    front={flipping.dir === 'next'
-                                        ? <PaperLeaf side="right" pageNumber={spread * 2 + 2}>{renderSide(spread, 'right')}</PaperLeaf>
-                                        : <PaperLeaf side="left" pageNumber={spread * 2 + 1}>{renderSide(spread, 'left')}</PaperLeaf>}
-                                    back={flipping.dir === 'next'
-                                        ? <PaperLeaf side="left" pageNumber={flipping.target * 2 + 1}>{renderSide(flipping.target, 'left')}</PaperLeaf>
-                                        : <PaperLeaf side="right" pageNumber={leafAt(flipping.target * 2 + 1) ? flipping.target * 2 + 2 : null}>{renderSide(flipping.target, 'right')}</PaperLeaf>}
+                                    front={isMobile
+                                        ? <PaperLeaf side="left" full pageNumber={spread + 1}>{renderPage(spread)}</PaperLeaf>
+                                        : flipping.dir === 'next'
+                                            ? <PaperLeaf side="right" pageNumber={spread * 2 + 2}>{renderSide(spread, 'right')}</PaperLeaf>
+                                            : <PaperLeaf side="left" pageNumber={spread * 2 + 1}>{renderSide(spread, 'left')}</PaperLeaf>}
+                                    back={isMobile
+                                        ? <PaperLeaf side="left" full pageNumber={flipping.target + 1}>{renderPage(flipping.target)}</PaperLeaf>
+                                        : flipping.dir === 'next'
+                                            ? <PaperLeaf side="left" pageNumber={flipping.target * 2 + 1}>{renderSide(flipping.target, 'left')}</PaperLeaf>
+                                            : <PaperLeaf side="right" pageNumber={leafAt(flipping.target * 2 + 1) ? flipping.target * 2 + 2 : null}>{renderSide(flipping.target, 'right')}</PaperLeaf>}
                                     onDone={commitFlip}
                                 />
                             )}
@@ -594,10 +628,13 @@ export default function TermsAndConditions() {
 
                         <div className="text-center">
                             <span className="text-sm font-bold text-gray-700 dark:text-gray-200 tabular-nums">
-                                Pages {spread * 2 + 1}
-                                {leafAt(spread * 2 + 1) ? `\u2013${spread * 2 + 2}` : ''} of {totalLeaves}
+                                {isMobile
+                                    ? `Page ${spread + 1} of ${totalLeaves}`
+                                    : `Pages ${spread * 2 + 1}${leafAt(spread * 2 + 1) ? `\u2013${spread * 2 + 2}` : ''} of ${totalLeaves}`}
                             </span>
-                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Use ← → arrow keys to flip</p>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                                {isMobile ? 'Tap the left / right edge of the book to flip' : 'Use ← → arrow keys to flip'}
+                            </p>
                         </div>
 
                         <button
