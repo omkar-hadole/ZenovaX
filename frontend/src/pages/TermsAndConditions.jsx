@@ -303,7 +303,9 @@ export default function TermsAndConditions() {
     const [spread, setSpread] = useState(0);
     const [packed, setPacked] = useState(null);
     const [flipping, setFlipping] = useState(null); // { dir: 'next'|'prev', target }
+    const [flipToken, setFlipToken] = useState(0); // bumped per flip so FlipPage remounts & re-animates
     const measureRootRef = useRef(null);
+    const queueRef = useRef([]); // pending 'next'/'prev' directions
 
     // Refs mirror state so the flip handlers can read current values without stale closures.
     const spreadRef = useRef(spread);
@@ -354,13 +356,27 @@ export default function TermsAndConditions() {
         setOpened(true);
     }, []);
 
+    const beginFlip = useCallback((flip) => {
+        setFlipToken((t) => t + 1);
+        setFlipping(flip);
+    }, []);
+
+    // Called when a page turn finishes: commit the new spread, then start the next queued turn.
     const commitFlip = useCallback(() => {
         const f = flippingRef.current;
-        if (f) {
-            setSpread(f.target);
-            setFlipping(null);
+        if (!f) return;
+        spreadRef.current = f.target;
+        setSpread(f.target);
+        setFlipping(null);
+        const dir = queueRef.current.shift();
+        if (!dir) return;
+        const s = spreadRef.current;
+        if (dir === 'next' && s < totalSpreads - 1) {
+            beginFlip({ dir: 'next', target: s + 1 });
+        } else if (dir === 'prev' && s > 0) {
+            beginFlip({ dir: 'prev', target: s - 1 });
         }
-    }, []);
+    }, [totalSpreads, beginFlip]);
 
     // Safety net in case animationend never fires (hidden tab, etc.).
     useEffect(() => {
@@ -371,15 +387,23 @@ export default function TermsAndConditions() {
 
     const next = useCallback(() => {
         const s = spreadRef.current;
-        if (flippingRef.current || s >= totalSpreads - 1) return;
-        setFlipping({ dir: 'next', target: s + 1 });
-    }, [totalSpreads]);
+        if (s >= totalSpreads - 1) return;
+        if (flippingRef.current) {
+            if (queueRef.current.length < 10) queueRef.current.push('next');
+            return;
+        }
+        beginFlip({ dir: 'next', target: s + 1 });
+    }, [totalSpreads, beginFlip]);
 
     const prev = useCallback(() => {
         const s = spreadRef.current;
-        if (flippingRef.current || s <= 0) return;
-        setFlipping({ dir: 'prev', target: s - 1 });
-    }, []);
+        if (s <= 0) return;
+        if (flippingRef.current) {
+            if (queueRef.current.length < 10) queueRef.current.push('prev');
+            return;
+        }
+        beginFlip({ dir: 'prev', target: s - 1 });
+    }, [beginFlip]);
 
     // goTo takes a SECTION index and flips one page in the right direction toward that section.
     const goTo = useCallback((sectionIndex) => {
@@ -388,8 +412,9 @@ export default function TermsAndConditions() {
         const target = Math.min(Math.max(Math.floor(leafIndex / 2), 0), totalSpreads - 1);
         const s = spreadRef.current;
         if (flippingRef.current || target === s) return;
-        setFlipping({ dir: target > s ? 'next' : 'prev', target });
-    }, [packed, totalSpreads]);
+        queueRef.current = [];
+        beginFlip({ dir: target > s ? 'next' : 'prev', target });
+    }, [packed, totalSpreads, beginFlip]);
 
     useEffect(() => {
         const handler = (e) => {
@@ -524,10 +549,11 @@ export default function TermsAndConditions() {
                                 {baseLeafs}
                             </div>
 
-                            {flipping && <div className={`flip-undershadow flip-under-${flipping.dir}`} />}
+                            {flipping && <div key={`under-${flipToken}`} className={`flip-undershadow flip-under-${flipping.dir}`} />}
 
                             {flipping && (
                                 <FlipPage
+                                    key={flipToken}
                                     dir={flipping.dir}
                                     front={flipping.dir === 'next'
                                         ? <PaperLeaf side="right" pageNumber={spread * 2 + 2}>{renderSide(spread, 'right')}</PaperLeaf>
@@ -541,13 +567,13 @@ export default function TermsAndConditions() {
 
                             <button
                                 onClick={prev}
-                                disabled={!!flipping || spread === 0}
+                                disabled={spread === 0}
                                 aria-label="Previous spread"
                                 className="absolute left-0 top-0 bottom-0 w-10 cursor-pointer disabled:cursor-default focus:outline-none"
                             />
                             <button
                                 onClick={next}
-                                disabled={!!flipping || spread === totalSpreads - 1}
+                                disabled={spread === totalSpreads - 1}
                                 aria-label="Next spread"
                                 className="absolute right-0 top-0 bottom-0 w-10 cursor-pointer disabled:cursor-default focus:outline-none"
                             />
@@ -559,7 +585,7 @@ export default function TermsAndConditions() {
                     <div className="flex items-center justify-between mt-6">
                         <button
                             onClick={prev}
-                            disabled={!!flipping || spread === 0}
+                            disabled={spread === 0}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                             <ChevronLeft className="w-4 h-4" />
@@ -576,7 +602,7 @@ export default function TermsAndConditions() {
 
                         <button
                             onClick={next}
-                            disabled={!!flipping || spread === totalSpreads - 1}
+                            disabled={spread === totalSpreads - 1}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         >
                             Next
