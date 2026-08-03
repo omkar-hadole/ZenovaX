@@ -97,6 +97,9 @@ router.post('/create', protect, requireProfileComplete, async (req, res, next) =
     }
 });
 
+// All review reads require an authenticated, profile-complete user.
+router.use(protect, requireProfileComplete);
+
 router.get('/session/:sessionId', async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
