@@ -6,10 +6,19 @@ const { parentPort } = require('worker_threads');
 const { loadPyodide } = require('pyodide');
 
 let pyodideInstance = null;
-const getPyodide = async () => {
-    if (!pyodideInstance) pyodideInstance = await loadPyodide();
-    return pyodideInstance;
-};
+
+// Eagerly load the ~14MB Pyodide runtime at worker startup and tell the parent
+// when it's ready. The parent waits for this before starting the student's
+// per-execution timeout, so runtime startup is charged to a (generous) load
+// budget, never to the user's code.
+(async () => {
+    try {
+        pyodideInstance = await loadPyodide();
+        parentPort.postMessage({ type: 'ready' });
+    } catch (e) {
+        parentPort.postMessage({ type: 'load-error', stderr: e.message || 'Python runtime failed to load' });
+    }
+})();
 
 const cleanTraceback = (raw) => {
     if (!raw) return raw;
@@ -38,7 +47,8 @@ const cleanTraceback = (raw) => {
 
 parentPort.on('message', async ({ id, sourceCode }) => {
     try {
-        const pyodide = await getPyodide();
+        if (!pyodideInstance) throw new Error('Python runtime is still initializing, please retry');
+        const pyodide = pyodideInstance;
         const namespace = pyodide.globals.get('dict')();
         try {
             // The driver script (see codeRunner.js's getDriverCode) guards its
