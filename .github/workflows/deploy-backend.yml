@@ -100,10 +100,97 @@ jobs:
         # mirrors every variable from backend/template.yaml (the source of truth).
         # Keep the two in sync. EMAIL_* / FRONTEND_URL / PISTON_API_URL are what
         # make production emails and code execution actually work.
+        #
+        # The env map is serialized to JSON with jq and passed via file:// instead
+        # of AWS shorthand. The shorthand parser aborts with "Expected ',' received
+        # 'EOF'" on multiline secrets (JAAS_PRIVATE_KEY PEM) and on values with
+        # quotes/spaces (EMAIL_FROM). Mapping secrets through env: and reading them
+        # as $VAR also avoids shell expansion of $ in passwords.
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CSRF_SECRET: ${{ secrets.CSRF_SECRET }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          EMAIL_SERVICE: ${{ secrets.EMAIL_SERVICE }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          PISTON_API_URL: ${{ secrets.PISTON_API_URL }}
+          JAAS_APP_ID: ${{ secrets.JAAS_APP_ID }}
+          JAAS_API_KEY_ID: ${{ secrets.JAAS_API_KEY_ID }}
+          JAAS_PRIVATE_KEY: ${{ secrets.JAAS_PRIVATE_KEY }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
+          RAZORPAY_WEBHOOK_SECRET: ${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
+          PLATFORM_FEE_PERCENT: ${{ secrets.PLATFORM_FEE_PERCENT }}
+          BOOKING_HOLD_MINUTES: ${{ secrets.BOOKING_HOLD_MINUTES }}
         run: |
+          jq -n \
+            --arg NODE_ENV production \
+            --arg DATABASE_URL "$DATABASE_URL" \
+            --arg DIRECT_URL "$DIRECT_URL" \
+            --arg JWT_SECRET "$JWT_SECRET" \
+            --arg CSRF_SECRET "$CSRF_SECRET" \
+            --arg REDIS_URL "$REDIS_URL" \
+            --arg ALLOWED_ORIGINS "$ALLOWED_ORIGINS" \
+            --arg CLOUDINARY_CLOUD_NAME "$CLOUDINARY_CLOUD_NAME" \
+            --arg CLOUDINARY_API_KEY "$CLOUDINARY_API_KEY" \
+            --arg CLOUDINARY_API_SECRET "$CLOUDINARY_API_SECRET" \
+            --arg GEMINI_API_KEY "$GEMINI_API_KEY" \
+            --arg EMAIL_SERVICE "$EMAIL_SERVICE" \
+            --arg EMAIL_USER "$EMAIL_USER" \
+            --arg EMAIL_PASS "$EMAIL_PASS" \
+            --arg EMAIL_FROM "$EMAIL_FROM" \
+            --arg FRONTEND_URL "$FRONTEND_URL" \
+            --arg SENTRY_DSN "$SENTRY_DSN" \
+            --arg PISTON_API_URL "$PISTON_API_URL" \
+            --arg JAAS_APP_ID "$JAAS_APP_ID" \
+            --arg JAAS_API_KEY_ID "$JAAS_API_KEY_ID" \
+            --arg JAAS_PRIVATE_KEY "$JAAS_PRIVATE_KEY" \
+            --arg RAZORPAY_KEY_ID "$RAZORPAY_KEY_ID" \
+            --arg RAZORPAY_KEY_SECRET "$RAZORPAY_KEY_SECRET" \
+            --arg RAZORPAY_WEBHOOK_SECRET "$RAZORPAY_WEBHOOK_SECRET" \
+            --arg PLATFORM_FEE_PERCENT "$PLATFORM_FEE_PERCENT" \
+            --arg BOOKING_HOLD_MINUTES "$BOOKING_HOLD_MINUTES" \
+            '{Variables: {
+              NODE_ENV: $NODE_ENV,
+              DATABASE_URL: $DATABASE_URL,
+              DIRECT_URL: $DIRECT_URL,
+              JWT_SECRET: $JWT_SECRET,
+              CSRF_SECRET: $CSRF_SECRET,
+              REDIS_URL: $REDIS_URL,
+              ALLOWED_ORIGINS: $ALLOWED_ORIGINS,
+              CLOUDINARY_CLOUD_NAME: $CLOUDINARY_CLOUD_NAME,
+              CLOUDINARY_API_KEY: $CLOUDINARY_API_KEY,
+              CLOUDINARY_API_SECRET: $CLOUDINARY_API_SECRET,
+              GEMINI_API_KEY: $GEMINI_API_KEY,
+              EMAIL_SERVICE: $EMAIL_SERVICE,
+              EMAIL_USER: $EMAIL_USER,
+              EMAIL_PASS: $EMAIL_PASS,
+              EMAIL_FROM: $EMAIL_FROM,
+              FRONTEND_URL: $FRONTEND_URL,
+              SENTRY_DSN: $SENTRY_DSN,
+              PISTON_API_URL: $PISTON_API_URL,
+              JAAS_APP_ID: $JAAS_APP_ID,
+              JAAS_API_KEY_ID: $JAAS_API_KEY_ID,
+              JAAS_PRIVATE_KEY: $JAAS_PRIVATE_KEY,
+              RAZORPAY_KEY_ID: $RAZORPAY_KEY_ID,
+              RAZORPAY_KEY_SECRET: $RAZORPAY_KEY_SECRET,
+              RAZORPAY_WEBHOOK_SECRET: $RAZORPAY_WEBHOOK_SECRET,
+              PLATFORM_FEE_PERCENT: $PLATFORM_FEE_PERCENT,
+              BOOKING_HOLD_MINUTES: $BOOKING_HOLD_MINUTES
+            }}' > /tmp/backend-env.json
           aws lambda update-function-configuration \
             --function-name zenovax-backend \
-            --environment 'Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},DIRECT_URL=${{ secrets.DIRECT_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},CSRF_SECRET=${{ secrets.CSRF_SECRET }},REDIS_URL=${{ secrets.REDIS_URL }},ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }},CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }},CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }},CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},EMAIL_SERVICE=${{ secrets.EMAIL_SERVICE }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASS=${{ secrets.EMAIL_PASS }},EMAIL_FROM=${{ secrets.EMAIL_FROM }},FRONTEND_URL=${{ secrets.FRONTEND_URL }},SENTRY_DSN=${{ secrets.SENTRY_DSN }},PISTON_API_URL=${{ secrets.PISTON_API_URL }},JAAS_APP_ID=${{ secrets.JAAS_APP_ID }},JAAS_API_KEY_ID=${{ secrets.JAAS_API_KEY_ID }},JAAS_PRIVATE_KEY=${{ secrets.JAAS_PRIVATE_KEY }},RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }},RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }},RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }},PLATFORM_FEE_PERCENT=${{ secrets.PLATFORM_FEE_PERCENT }},BOOKING_HOLD_MINUTES=${{ secrets.BOOKING_HOLD_MINUTES }}}'
+            --environment file:///tmp/backend-env.json
 
       - name: Wait for update to complete
         run: aws lambda wait function-updated --function-name zenovax-backend
@@ -114,18 +201,17 @@ jobs:
         # just push code + env. The EventBridge schedule is created next step.
         run: |
           FN=zenovax-background-worker
-          ENV='Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},DIRECT_URL=${{ secrets.DIRECT_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},CSRF_SECRET=${{ secrets.CSRF_SECRET }},REDIS_URL=${{ secrets.REDIS_URL }},ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }},CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }},CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }},CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},EMAIL_SERVICE=${{ secrets.EMAIL_SERVICE }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASS=${{ secrets.EMAIL_PASS }},EMAIL_FROM=${{ secrets.EMAIL_FROM }},FRONTEND_URL=${{ secrets.FRONTEND_URL }},SENTRY_DSN=${{ secrets.SENTRY_DSN }},PISTON_API_URL=${{ secrets.PISTON_API_URL }},JAAS_APP_ID=${{ secrets.JAAS_APP_ID }},JAAS_API_KEY_ID=${{ secrets.JAAS_API_KEY_ID }},JAAS_PRIVATE_KEY=${{ secrets.JAAS_PRIVATE_KEY }},RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }},RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }},RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }},PLATFORM_FEE_PERCENT=${{ secrets.PLATFORM_FEE_PERCENT }},BOOKING_HOLD_MINUTES=${{ secrets.BOOKING_HOLD_MINUTES }}}'
           if aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
             aws lambda update-function-code --function-name "$FN" --zip-file fileb://function.zip
             aws lambda wait function-updated --function-name "$FN"
-            aws lambda update-function-configuration --function-name "$FN" --environment "$ENV"
+            aws lambda update-function-configuration --function-name "$FN" --environment file:///tmp/backend-env.json
           else
             aws lambda create-function --function-name "$FN" \
               --runtime nodejs20.x --handler lambda-worker.handler \
               --role "${{ secrets.AWS_LAMBDA_ROLE_ARN }}" \
               --zip-file fileb://function.zip \
               --memory-size 1024 --timeout 55 --architectures arm64 \
-              --environment "$ENV"
+              --environment file:///tmp/backend-env.json
           fi
 
       - name: Ensure worker runs on a schedule
