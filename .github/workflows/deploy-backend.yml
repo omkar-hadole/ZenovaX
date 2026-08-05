@@ -95,6 +95,12 @@ jobs:
             --function-name zenovax-backend \
             --zip-file fileb://function.zip
 
+      - name: Wait for code update to finish
+        # update-function-configuration cannot run while the code update is still
+        # InProgress ("ResourceConflictException: An update is in progress").
+        # Wait for LastUpdateStatus=Successful before touching configuration.
+        run: aws lambda wait function-updated --function-name zenovax-backend
+
       - name: Update Lambda function configuration (env + runtime)
         # update-function-configuration REPLACES the whole environment, so this
         # mirrors every variable from backend/template.yaml (the source of truth).
