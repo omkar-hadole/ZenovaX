@@ -21,7 +21,6 @@ const DashboardPage = lazy(() => import('./pages/learner/DashboardPage'));
 const SessionsPage = lazy(() => import('./pages/learner/SessionsPage'));
 const SessionDetailsPage = lazy(() => import('./pages/learner/SessionDetailsPage'));
 const BookingsPage = lazy(() => import('./pages/learner/BookingsPage'));
-const ComingSoonPage = lazy(() => import('./pages/learner/ComingSoonPage'));
 const Settings = lazy(() => import('./pages/Settings'));
 const HelpCenter = lazy(() => import('./pages/learner/HelpCenter'));
 const Zen = lazy(() => import('./pages/learner/Zen'));

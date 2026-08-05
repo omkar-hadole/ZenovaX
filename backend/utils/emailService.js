@@ -5,17 +5,19 @@ const escapeHtml = (str) => {
   if (typeof str !== 'string') return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 };
-// import logo from 
-// Configure transporter
-// In production, these should be env variables. 
-// For dev, if not provided, it will log to console or fallback to ethereal if we wanted, 
-// but here we'll try to use provided creds or warn.
+
+// SMTP credentials. The canonical names are EMAIL_USER / EMAIL_PASS, but we
+// also accept the legacy GMAIL_USER / GMAIL_APP_PASSWORD names so old configs
+// keep working. Whichever set is populated wins.
+const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
+const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+const emailService = process.env.EMAIL_SERVICE || 'gmail';
+const emailFrom = process.env.EMAIL_FROM || '"ZenovaX Support" <noreply@zenovax.com>';
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 const transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || 'gmail', // e.g., 'gmail'
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+    service: emailService,
+    auth: emailUser && emailPass ? { user: emailUser, pass: emailPass } : undefined
 });
 
 /**
@@ -25,7 +27,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} html - Email body (HTML)
  */
 const sendEmail = async (to, subject, html) => {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    if (!emailUser || !emailPass) {
         logger.warn("Email credentials not found in environment. Email NOT sent.");
         logger.debug("Email simulation", { to, subject });
         return;
@@ -33,7 +35,7 @@ const sendEmail = async (to, subject, html) => {
 
     try {
         await transporter.sendMail({
-            from: process.env.EMAIL_FROM || '"ZenovaX Support" <noreply@zenovax.com>',
+            from: emailFrom,
             to,
             subject,
             html
@@ -50,9 +52,6 @@ const sendEmail = async (to, subject, html) => {
  * @param {string} token - Verification token
  */
 exports.sendVerificationEmail = async (email, token) => {
-    // Determine frontend URL (dev or prod)
-    // Assuming frontend runs on localhost:5173 for dev
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const verificationLink = `${frontendUrl}/verify-email?token=${token}`;
 
     const subject = "Verify your ZenovaX Account";

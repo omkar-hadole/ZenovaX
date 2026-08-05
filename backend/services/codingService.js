@@ -337,7 +337,34 @@ exports.launchCodingQuestion = async (prisma, userId, id) => {
     return launched;
 };
 
-exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {
+exports.getCodingQuestionsBySession = async (prisma, userId, userRole, sessionId) => {
+    const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+        select: { mentorId: true }
+    });
+
+    if (!session) {
+        throw new NotFoundError('Session not found');
+    }
+
+    const isPrivileged = session.mentorId === userId || userRole === 'ADMIN';
+
+    // Non-privileged users must be booked into the session before they can
+    // list its coding questions (which still exposes exercise titles/examples).
+    if (!isPrivileged) {
+        const booking = await prisma.booking.findFirst({
+            where: {
+                userId,
+                sessionId,
+                status: { in: ['CONFIRMED', 'COMPLETED'] }
+            },
+            select: { id: true }
+        });
+        if (!booking) {
+            throw new ForbiddenError('You are not booked into this session');
+        }
+    }
+
     const questions = await prisma.codingQuestion.findMany({
         where: { sessionId },
         orderBy: { createdAt: 'desc' },
@@ -349,12 +376,31 @@ exports.getCodingQuestionsBySession = async (prisma, userId, sessionId) => {
         }
     });
 
-    return questions.map(q => ({
-        ...q,
-        testCases: q.testCases,
-        structuredTestCases: q.structuredTestCases,
-        isSolved: q.submissions.length > 0
-    }));
+    return questions.map(q => {
+        const isStructured = q.questionType === 'structured';
+        // Never ship hidden test cases, the reference solution, or starter code
+        // to a non-privileged caller.
+        const { referenceSolution: _ref, starterCode: _sc, ...rest } = q;
+
+        if (isPrivileged) {
+            return { ...rest, isSolved: q.submissions.length > 0 };
+        }
+
+        let testCases = q.testCases;
+        let structuredTestCases = q.structuredTestCases;
+        if (isStructured) {
+            structuredTestCases = JSON.stringify(redactHiddenStructuredTestCases(parseTestCases(q.structuredTestCases)));
+        } else {
+            testCases = JSON.stringify(redactHiddenTestCases(parseTestCases(q.testCases)));
+        }
+
+        return {
+            ...rest,
+            testCases,
+            structuredTestCases,
+            isSolved: q.submissions.length > 0
+        };
+    });
 };
 
 exports.submitCodingQuestion = async (prisma, userId, userRole, id, { code, language }) => {

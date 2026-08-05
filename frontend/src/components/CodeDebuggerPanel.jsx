@@ -26,6 +26,7 @@ import {
     GripVertical
 } from 'lucide-react';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
+import { getCsrfToken } from '../utils/api';
 
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '').replace(/\/api$/, '');
 // Deliberately requires the user's own connected ChatGPT account — never
@@ -44,7 +45,7 @@ const CodeBlock = React.memo(({ language, value }) => {
             await navigator.clipboard.writeText(value);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-        } catch {}
+        } catch { }
     };
 
     return (
@@ -168,10 +169,10 @@ const MARKDOWN_COMPONENTS = {
 };
 
 const QUICK_PROMPTS = [
-    { icon: Bug,       label: 'Debug my code',         prompt: 'Find bugs in my code and explain what is wrong.' },
-    { icon: Lightbulb, label: 'Hint (no spoilers)',     prompt: 'Give me a hint to solve this question without revealing the full solution.' },
-    { icon: Zap,       label: 'Optimize approach',     prompt: 'How can I optimize my current approach? What is the better algorithm or data structure for this problem?' },
-    { icon: Sparkles,  label: 'Explain the problem',   prompt: 'Explain this coding question to me in simpler terms and describe the approach I should take.' },
+    { icon: Bug, label: 'Debug my code', prompt: 'Find bugs in my code and explain what is wrong.' },
+    { icon: Lightbulb, label: 'Hint (no spoilers)', prompt: 'Give me a hint to solve this question without revealing the full solution.' },
+    { icon: Zap, label: 'Optimize approach', prompt: 'How can I optimize my current approach? What is the better algorithm or data structure for this problem?' },
+    { icon: Sparkles, label: 'Explain the problem', prompt: 'Explain this coding question to me in simpler terms and describe the approach I should take.' },
 ];
 
 /**
@@ -185,16 +186,16 @@ const QUICK_PROMPTS = [
  */
 export default function CodeDebuggerPanel({ question, code, language, isOpen, onClose }) {
     const [messages, setMessages] = useState([]);
-    const [input, setInput]       = useState('');
-    const [loading, setLoading]   = useState(false);
+    const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
     const [codeVisible, setCodeVisible] = useState(false);
-    const [copiedIdx, setCopiedIdx]     = useState(null);
-    const [panelWidth, setPanelWidth]   = useState(420);
+    const [copiedIdx, setCopiedIdx] = useState(null);
+    const [panelWidth, setPanelWidth] = useState(420);
 
-    const inputRef    = useRef(null);
-    const bottomRef   = useRef(null);
-    const isDragging  = useRef(false);
-    const panelRef    = useRef(null);
+    const inputRef = useRef(null);
+    const bottomRef = useRef(null);
+    const isDragging = useRef(false);
+    const panelRef = useRef(null);
     const thinkingTimerRef = useRef(null);
 
     const [thinkingSeconds, setThinkingSeconds] = useState(0);
@@ -337,16 +338,20 @@ User's request: ${userQuestion}`;
         scrollToBottom();
 
         try {
+            const csrfToken = getCsrfToken();
+            const csrfHeaders = csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
             const { data } = await axios.post(
                 API_ENDPOINT,
                 { question: buildContextPrompt(text) },
-                { headers: await openaiAuthHeaders() }
+                { withCredentials: true, headers: { ...(await openaiAuthHeaders()), ...csrfHeaders } }
             );
             setMessages(prev => [...prev, { role: 'ai', text: data.answer }]);
-        } catch {
+        } catch (err) {
             setMessages(prev => [...prev, {
                 role: 'ai',
-                text: "I couldn't reach Zen AI right now. Check your connection and try again.",
+                text: err?.response?.status === 401
+                    ? "Your session expired. Please log in again, then reconnect your ChatGPT account if needed."
+                    : "I couldn't reach Zen AI right now. Check your connection and try again.",
                 isError: true
             }]);
         } finally {
@@ -356,7 +361,7 @@ User's request: ${userQuestion}`;
     }, [input, loading, question, code, language, chatGptConnected]);
 
     const handleCopy = async (text, idx) => {
-        try { await navigator.clipboard.writeText(text); setCopiedIdx(idx); setTimeout(() => setCopiedIdx(null), 2000); } catch {}
+        try { await navigator.clipboard.writeText(text); setCopiedIdx(idx); setTimeout(() => setCopiedIdx(null), 2000); } catch { }
     };
 
     const handleClear = () => {
@@ -479,190 +484,190 @@ User's request: ${userQuestion}`;
                         )}
                     </div>
                 ) : (
-                <>
-                {/* Context Preview Bar */}
-                <div
-                    className="px-4 py-2 flex-shrink-0"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#131316' }}
-                >
-                    <button
-                        onClick={() => setCodeVisible(v => !v)}
-                        className="w-full flex items-center justify-between text-left group"
-                    >
-                        <div className="flex items-center gap-2 min-w-0">
-                            <span
-                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-                                style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}
+                    <>
+                        {/* Context Preview Bar */}
+                        <div
+                            className="px-4 py-2 flex-shrink-0"
+                            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: '#131316' }}
+                        >
+                            <button
+                                onClick={() => setCodeVisible(v => !v)}
+                                className="w-full flex items-center justify-between text-left group"
                             >
-                                {language}
-                            </span>
-                            <span className="text-[11px] text-gray-400 font-medium truncate">
-                                {question?.title || 'Coding Question'}
-                            </span>
-                            <span
-                                className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
-                                style={{
-                                    background: question?.difficulty === 'HARD' ? 'rgba(239,68,68,0.12)' :
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span
+                                        className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                        style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}
+                                    >
+                                        {language}
+                                    </span>
+                                    <span className="text-[11px] text-gray-400 font-medium truncate">
+                                        {question?.title || 'Coding Question'}
+                                    </span>
+                                    <span
+                                        className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                                        style={{
+                                            background: question?.difficulty === 'HARD' ? 'rgba(239,68,68,0.12)' :
                                                 question?.difficulty === 'MEDIUM' ? 'rgba(245,158,11,0.12)' :
-                                                'rgba(16,185,129,0.12)',
-                                    color: question?.difficulty === 'HARD' ? '#f87171' :
-                                           question?.difficulty === 'MEDIUM' ? '#fbbf24' :
-                                           '#34d399',
-                                }}
-                            >
-                                {question?.difficulty}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-600 group-hover:text-gray-400 transition-colors flex-shrink-0 ml-2">
-                            {codeVisible ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                        </div>
-                    </button>
-
-                    {codeVisible && (
-                        <pre className="mt-2 p-2.5 rounded-lg font-mono text-[11px] text-gray-400 overflow-x-auto max-h-28 leading-relaxed"
-                            style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            {code?.slice(0, 350) || '// empty'}{code?.length > 350 ? '\n…' : ''}
-                        </pre>
-                    )}
-                </div>
-
-                {/* ── Messages / Chat Body ── */}
-                <div className="debugger-scroll flex-1 overflow-y-auto px-4 py-3 space-y-3">
-
-                    {/* Empty state */}
-                    {messages.length === 0 && !loading && (
-                        <div className="space-y-3 pt-6">
-                            <div className="text-center">
-                                <div
-                                    className="w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center"
-                                    style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.15)' }}
-                                >
-                                    <Sparkles className="w-5 h-5 text-indigo-400" />
-                                </div>
-                                <p className="text-[12px] text-gray-500">What can I help with?</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-1.5 pt-1">
-                                {QUICK_PROMPTS.map(({ icon: Icon, label, prompt }) => (
-                                    <button
-                                        key={label}
-                                        onClick={() => handleSend(prompt)}
-                                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all hover:bg-white/[0.06] active:scale-[0.98]"
-                                        style={{
-                                            background: 'rgba(255,255,255,0.03)',
-                                            border: '1px solid rgba(255,255,255,0.06)',
+                                                    'rgba(16,185,129,0.12)',
+                                            color: question?.difficulty === 'HARD' ? '#f87171' :
+                                                question?.difficulty === 'MEDIUM' ? '#fbbf24' :
+                                                    '#34d399',
                                         }}
                                     >
-                                        <Icon className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
-                                        <span className="text-[11.5px] text-gray-300">{label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                                        {question?.difficulty}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-gray-600 group-hover:text-gray-400 transition-colors flex-shrink-0 ml-2">
+                                    {codeVisible ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                </div>
+                            </button>
 
-                    {/* Message Bubbles */}
-                    {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            {msg.role === 'user' ? (
-                                <div
-                                    className="max-w-[85%] px-3 py-2 rounded-2xl rounded-tr-sm text-[13px] text-white"
-                                    style={{ background: '#6366f1' }}
-                                >
-                                    {msg.text}
-                                </div>
-                            ) : (
-                                <div className="max-w-[95%] group">
-                                    <div className="flex items-center gap-1.5 mb-1.5 ml-1">
-                                        <span className="text-[10px] font-semibold text-indigo-400">Zen AI</span>
-                                    </div>
-                                    <div
-                                        className="px-3.5 py-2.5 rounded-2xl rounded-tl-sm"
-                                        style={{
-                                            background: msg.isError ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.04)',
-                                            border: `1px solid ${msg.isError ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)'}`,
-                                        }}
-                                    >
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkBreaks, remarkMath, remarkGfm]}
-                                            rehypePlugins={[rehypeKatex]}
-                                            components={MARKDOWN_COMPONENTS}
-                                        >
-                                            {msg.text}
-                                        </ReactMarkdown>
-                                    </div>
-                                    <button
-                                        onClick={() => handleCopy(msg.text, i)}
-                                        className="mt-1 ml-1 flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors opacity-0 group-hover:opacity-100"
-                                    >
-                                        {copiedIdx === i ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                                        {copiedIdx === i ? 'Copied' : 'Copy'}
-                                    </button>
-                                </div>
+                            {codeVisible && (
+                                <pre className="mt-2 p-2.5 rounded-lg font-mono text-[11px] text-gray-400 overflow-x-auto max-h-28 leading-relaxed"
+                                    style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    {code?.slice(0, 350) || '// empty'}{code?.length > 350 ? '\n…' : ''}
+                                </pre>
                             )}
                         </div>
-                    ))}
 
-                    {/* Typing indicator */}
-                    {loading && (
-                        <div className="flex justify-start">
-                            <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm"
-                                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                <div className="flex items-center gap-2">
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
-                                    <span className="text-[12px] text-gray-500">{getThinkingMessage(thinkingSeconds)}</span>
+                        {/* ── Messages / Chat Body ── */}
+                        <div className="debugger-scroll flex-1 overflow-y-auto px-4 py-3 space-y-3">
+
+                            {/* Empty state */}
+                            {messages.length === 0 && !loading && (
+                                <div className="space-y-3 pt-6">
+                                    <div className="text-center">
+                                        <div
+                                            className="w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center"
+                                            style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.15)' }}
+                                        >
+                                            <Sparkles className="w-5 h-5 text-indigo-400" />
+                                        </div>
+                                        <p className="text-[12px] text-gray-500">What can I help with?</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-1.5 pt-1">
+                                        {QUICK_PROMPTS.map(({ icon: Icon, label, prompt }) => (
+                                            <button
+                                                key={label}
+                                                onClick={() => handleSend(prompt)}
+                                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all hover:bg-white/[0.06] active:scale-[0.98]"
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    border: '1px solid rgba(255,255,255,0.06)',
+                                                }}
+                                            >
+                                                <Icon className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                                                <span className="text-[11.5px] text-gray-300">{label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Message Bubbles */}
+                            {messages.map((msg, i) => (
+                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    {msg.role === 'user' ? (
+                                        <div
+                                            className="max-w-[85%] px-3 py-2 rounded-2xl rounded-tr-sm text-[13px] text-white"
+                                            style={{ background: '#6366f1' }}
+                                        >
+                                            {msg.text}
+                                        </div>
+                                    ) : (
+                                        <div className="max-w-[95%] group">
+                                            <div className="flex items-center gap-1.5 mb-1.5 ml-1">
+                                                <span className="text-[10px] font-semibold text-indigo-400">Zen AI</span>
+                                            </div>
+                                            <div
+                                                className="px-3.5 py-2.5 rounded-2xl rounded-tl-sm"
+                                                style={{
+                                                    background: msg.isError ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.04)',
+                                                    border: `1px solid ${msg.isError ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)'}`,
+                                                }}
+                                            >
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkBreaks, remarkMath, remarkGfm]}
+                                                    rehypePlugins={[rehypeKatex]}
+                                                    components={MARKDOWN_COMPONENTS}
+                                                >
+                                                    {msg.text}
+                                                </ReactMarkdown>
+                                            </div>
+                                            <button
+                                                onClick={() => handleCopy(msg.text, i)}
+                                                className="mt-1 ml-1 flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-400 transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                {copiedIdx === i ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                                                {copiedIdx === i ? 'Copied' : 'Copy'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* Typing indicator */}
+                            {loading && (
+                                <div className="flex justify-start">
+                                    <div className="px-4 py-2.5 rounded-2xl rounded-tl-sm"
+                                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                                            <span className="text-[12px] text-gray-500">{getThinkingMessage(thinkingSeconds)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div ref={bottomRef} />
                         </div>
-                    )}
 
-                    <div ref={bottomRef} />
-                </div>
-
-                {/* Input Row */}
-                <div
-                    className="px-3 py-3 flex-shrink-0"
-                    style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#1a1a1f' }}
-                >
-                    <div
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-                    >
-                        <textarea
-                            ref={inputRef}
-                            value={input}
-                            onChange={e => {
-                                setInput(e.target.value);
-                                e.target.style.height = 'auto';
-                                e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
-                            }}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                    e.target.style.height = 'auto';
-                                }
-                            }}
-                            placeholder="Ask Zen anything…"
-                            rows={1}
-                            className="debugger-input flex-1 bg-transparent text-[13px] text-white resize-none leading-relaxed"
-                            style={{ maxHeight: '100px', minHeight: '20px' }}
-                        />
-                        <button
-                            onClick={() => handleSend()}
-                            disabled={!input.trim() || loading}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all flex-shrink-0 hover:opacity-85 active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
-                            style={{ background: '#6366f1' }}
+                        {/* Input Row */}
+                        <div
+                            className="px-3 py-3 flex-shrink-0"
+                            style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#1a1a1f' }}
                         >
-                            {loading
-                                ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
-                                : <Send className="w-3.5 h-3.5 text-white" />
-                            }
-                        </button>
-                    </div>
-                    <p className="text-[10px] text-gray-600 text-center mt-2 select-none">Zen is AI and can make mistakes.</p>
-                </div>
-                </>
+                            <div
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                            >
+                                <textarea
+                                    ref={inputRef}
+                                    value={input}
+                                    onChange={e => {
+                                        setInput(e.target.value);
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+                                    }}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend();
+                                            e.target.style.height = 'auto';
+                                        }
+                                    }}
+                                    placeholder="Ask Zen anything…"
+                                    rows={1}
+                                    className="debugger-input flex-1 bg-transparent text-[13px] text-white resize-none leading-relaxed"
+                                    style={{ maxHeight: '100px', minHeight: '20px' }}
+                                />
+                                <button
+                                    onClick={() => handleSend()}
+                                    disabled={!input.trim() || loading}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-all flex-shrink-0 hover:opacity-85 active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
+                                    style={{ background: '#6366f1' }}
+                                >
+                                    {loading
+                                        ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                                        : <Send className="w-3.5 h-3.5 text-white" />
+                                    }
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-gray-600 text-center mt-2 select-none">Zen is AI and can make mistakes.</p>
+                        </div>
+                    </>
                 )}
             </div>
         </>

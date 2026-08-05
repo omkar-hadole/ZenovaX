@@ -57,6 +57,16 @@ exports.releaseEarningsForSession = async (prisma, sessionId) => {
         if (mentorShare <= 0) continue;
 
         await prisma.$transaction(async (tx) => {
+            // Atomic claim on the booking itself: only the worker pass that flips
+            // earningsReleased false -> true may move the money. A second concurrent
+            // pass (e.g. an overlapping scheduled Lambda) sees count === 0 and skips,
+            // so earnings are never released twice.
+            const claimed = await tx.booking.updateMany({
+                where: { id: booking.id, earningsReleased: false },
+                data: { earningsReleased: true }
+            });
+            if (claimed.count === 0) return;
+
             const wallet = await getOrCreateWallet(tx, booking.session.mentorId);
 
             await tx.mentorWallet.update({
@@ -76,12 +86,7 @@ exports.releaseEarningsForSession = async (prisma, sessionId) => {
                     description: `Earnings released for completed booking ${booking.id}`
                 }
             });
-
-            await tx.booking.update({
-                where: { id: booking.id },
-                data: { earningsReleased: true }
-            });
-        });
+        }, { timeout: 15000 });
         releasedCount++;
     }
 
@@ -166,10 +171,18 @@ exports.requestPayout = async (prisma, mentorId, amount) => {
             throw new BadRequestError("Requested amount exceeds available balance");
         }
 
-        const updatedWallet = await tx.mentorWallet.update({
-            where: { id: wallet.id },
+        // Atomic guard against concurrent payout requests overdrawing the wallet:
+        // the decrement only applies when enough balance is still available, so two
+        // simultaneous requests can never both succeed past the funds.
+        const claimed = await tx.mentorWallet.updateMany({
+            where: { id: wallet.id, balanceAvailable: { gte: amount } },
             data: { balanceAvailable: { decrement: amount } }
         });
+        if (claimed.count === 0) {
+            throw new BadRequestError("Requested amount exceeds available balance");
+        }
+
+        const updatedWallet = await tx.mentorWallet.findUnique({ where: { id: wallet.id } });
 
         const payout = await tx.mentorPayout.create({
             data: {
@@ -191,7 +204,7 @@ exports.requestPayout = async (prisma, mentorId, amount) => {
         });
 
         return { payout, wallet: updatedWallet };
-    });
+    }, { timeout: 15000 });
 };
 
 exports.getPayoutHistory = async (prisma, mentorId) => {
@@ -211,6 +224,16 @@ exports.markPayoutFailed = async (prisma, payoutId, reason) => {
     }
 
     return prisma.$transaction(async (tx) => {
+        // Atomic claim on the payout's status so concurrent admin calls can't
+        // double-refund a failed payout.
+        const claimed = await tx.mentorPayout.updateMany({
+            where: { id: payoutId, status: { in: ['PENDING', 'PROCESSING'] } },
+            data: { status: 'FAILED', failureReason: reason || null, processedAt: new Date() }
+        });
+        if (claimed.count === 0) {
+            throw new BadRequestError(`Cannot fail a payout in status ${payout.status}`);
+        }
+
         await tx.mentorWallet.update({
             where: { id: payout.walletId },
             data: { balanceAvailable: { increment: payout.amount } }
@@ -226,11 +249,8 @@ exports.markPayoutFailed = async (prisma, payoutId, reason) => {
             }
         });
 
-        return tx.mentorPayout.update({
-            where: { id: payoutId },
-            data: { status: 'FAILED', failureReason: reason || null, processedAt: new Date() }
-        });
-    });
+        return tx.mentorPayout.findUnique({ where: { id: payoutId } });
+    }, { timeout: 15000 });
 };
 
 // Admin-side: marks a payout as paid once the real gateway transfer succeeds.
@@ -242,16 +262,23 @@ exports.markPayoutPaid = async (prisma, payoutId, gatewayPayoutId) => {
     }
 
     return prisma.$transaction(async (tx) => {
+        // Atomic claim on the payout's status so concurrent admin calls can't
+        // double-count the payout in totalPaidOut.
+        const claimed = await tx.mentorPayout.updateMany({
+            where: { id: payoutId, status: { in: ['PENDING', 'PROCESSING'] } },
+            data: { status: 'PAID', gatewayPayoutId: gatewayPayoutId || null, processedAt: new Date() }
+        });
+        if (claimed.count === 0) {
+            throw new BadRequestError(`Cannot mark payout in status ${payout.status} as paid`);
+        }
+
         await tx.mentorWallet.update({
             where: { id: payout.walletId },
             data: { totalPaidOut: { increment: payout.amount } }
         });
 
-        return tx.mentorPayout.update({
-            where: { id: payoutId },
-            data: { status: 'PAID', gatewayPayoutId: gatewayPayoutId || null, processedAt: new Date() }
-        });
-    });
+        return tx.mentorPayout.findUnique({ where: { id: payoutId } });
+    }, { timeout: 15000 });
 };
 
 // ---- Admin-facing operations ----

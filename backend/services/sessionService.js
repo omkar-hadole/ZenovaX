@@ -497,14 +497,21 @@ exports.confirmBookingPaid = async (prisma, cache, { bookingId, gatewayPaymentId
     const mentorId = booking.session.mentorId;
 
     await prisma.$transaction(async (tx) => {
-        const confirmed = await tx.booking.update({
-            where: { id: bookingId },
+        // Atomic claim: only one concurrent caller (webhook vs client callback)
+        // can flip PENDING -> CONFIRMED. The other sees count === 0 and bails,
+        // so earnings are never credited twice.
+        const claimed = await tx.booking.updateMany({
+            where: { id: bookingId, status: { notIn: ['CONFIRMED', 'COMPLETED'] } },
             data: {
                 status: 'CONFIRMED',
                 amountPaid: booking.totalAmount,
                 paymentId: gatewayPaymentId || booking.paymentId
             }
         });
+
+        if (claimed.count === 0) {
+            return; // already confirmed by a concurrent request
+        }
 
         await tx.transaction.update({
             where: { bookingId },
@@ -516,6 +523,7 @@ exports.confirmBookingPaid = async (prisma, cache, { bookingId, gatewayPaymentId
             }
         });
 
+        const confirmed = { ...booking, status: 'CONFIRMED', amountPaid: booking.totalAmount };
         await mentorWalletService.recordBookingEarning(tx, mentorId, confirmed);
 
         const uniqueLearners = await getUniqueLearnersCount(tx, mentorId);
@@ -565,6 +573,27 @@ exports.verifyPayment = async (prisma, cache, userId, payload) => {
         throw new BadRequestError("Payment verification failed");
     }
 
+    // Defense in depth: the signature only proves Razorpay signed the ids, so also
+    // re-fetch the payment and confirm the captured amount matches our order.
+    const txn = await prisma.transaction.findUnique({ where: { bookingId } });
+    if (txn) {
+        let payment;
+        try {
+            payment = await paymentService.fetchPayment(razorpayPaymentId);
+        } catch (err) {
+            throw new BadRequestError("Could not verify payment. Please try again.");
+        }
+        const amountOk = payment && Number(payment.amount) === Math.round(txn.totalAmount * 100);
+        const matchesOrder = payment && payment.id === razorpayPaymentId && payment.order_id === razorpayOrderId;
+        if (!amountOk || !matchesOrder || payment.status !== 'captured') {
+            await prisma.transaction.update({
+                where: { bookingId },
+                data: { status: 'FAILED' }
+            }).catch(() => {});
+            throw new BadRequestError("Payment verification failed");
+        }
+    }
+
     const confirmed = await exports.confirmBookingPaid(prisma, cache, {
         bookingId,
         gatewayPaymentId: razorpayPaymentId,
@@ -593,7 +622,7 @@ exports.cancelPendingBooking = async (prisma, cache, bookingId) => {
             where: { id: booking.sessionId },
             data: { availableSeats: { increment: 1 } }
         });
-    });
+    }, { timeout: 15000 });
 
     if (cache) {
         await cache.del(`profile_stats_${booking.userId}`);
@@ -900,7 +929,14 @@ exports.getSessionById = async (prisma, userId, id) => {
             quizzes: true,
             codingQuestions: {
                 where: { status: 'LIVE' },
-                include: {
+                select: {
+                    id: true,
+                    title: true,
+                    difficulty: true,
+                    questionType: true,
+                    status: true,
+                    points: true,
+                    createdAt: true,
                     submissions: {
                         where: { userId, status: 'PASSED' },
                         select: { id: true }

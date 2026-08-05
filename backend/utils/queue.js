@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const Redis = require("ioredis");
 const logger = require("./logger");
 const cache = require("./cache");
@@ -7,11 +8,14 @@ const mentorWalletService = require("../services/mentorWalletService");
 const { cleanupOldNotifications, cleanupExpiredRefreshTokens } = require("./storageCleanup");
 
 let myQueue;
+let redisConnection;
 let redisAvailable = false;
+
+const QUEUE_NAME = "ZenovaXQueue";
 
 if (config.redisUrl && config.redisUrl.trim()) {
     try {
-        const connection = new Redis(config.redisUrl, {
+        redisConnection = new Redis(config.redisUrl, {
             maxRetriesPerRequest: null,
             connectTimeout: 5000,
             lazyConnect: true,
@@ -20,19 +24,19 @@ if (config.redisUrl && config.redisUrl.trim()) {
             }
         });
 
-        connection.on("error", () => {});
+        redisConnection.on("error", () => {});
 
-        connection.connect().then(async () => {
+        redisConnection.connect().then(async () => {
             redisAvailable = true;
             try {
                 const { Queue } = require("bullmq");
-                myQueue = new Queue("ZenovaXQueue", { connection });
+                myQueue = new Queue(QUEUE_NAME, { connection: redisConnection });
             } catch (bullmqErr) {
                 logger.warn(`BullMQ not available: ${bullmqErr.message}`);
             }
         }).catch(() => {
             redisAvailable = false;
-            connection.disconnect();
+            redisConnection.disconnect();
         });
     } catch {
         redisAvailable = false;
@@ -88,66 +92,139 @@ async function processJob(prisma, job) {
     }
 }
 
-let isWorkerRunning = false;
+// Drains pending badge jobs from the BullMQ queue. Used both by the long-lived
+// worker loop (non-serverless) and by the scheduled background Lambda in
+// serverless, where there is no persistent process listening on the queue.
+async function drainBadgeQueue(prisma, maxJobs = 200) {
+    if (!redisAvailable || !myQueue) return 0;
 
-function startQueueWorker(prisma) {
-    if (isWorkerRunning) return;
-    isWorkerRunning = true;
+    const { Worker } = require("bullmq");
+    const worker = new Worker(
+        QUEUE_NAME,
+        async () => {},
+        { connection: redisConnection, concurrency: 4, autorun: false }
+    );
 
-    setInterval(async () => {
-        try {
-            const now = new Date();
-            const activeSessions = await prisma.session.findMany({
-                where: {
-                    status: { in: ['UPCOMING', 'LIVE'] },
-                    scheduledAt: { lt: now }
-                }
+    let processed = 0;
+    try {
+        await worker.waitUntilReady();
+        // A single token claims jobs as "active"; we finish each before moving
+        // on so processing is unambiguous and re-run-safe.
+        const token = crypto.randomUUID();
+        let job = await worker.getNextJob(token);
+        while (job && processed < maxJobs) {
+            await processJob(prisma, { type: job.name, payload: JSON.stringify(job.data) });
+            await job.moveToCompleted(null, token);
+            processed++;
+            job = await worker.getNextJob(token);
+        }
+    } catch (err) {
+        if (!/not connected|no queue/i.test(err.message || '')) {
+            logger.error(`Badge queue drain error: ${err.message}`);
+        }
+    } finally {
+        await worker.close().catch(() => {});
+    }
+
+    return processed;
+}
+
+// Guards a single maintenance pass so two overlapping passes (e.g. a scheduled
+// Lambda firing twice, or a slow pass in the loop) never double-release
+// earnings or double-cancel bookings.
+let workerPassInFlight = false;
+
+// Runs ONE full maintenance sweep: marks ended sessions complete, releases the
+// mentor earnings for them, cancels stale pending bookings, and performs
+// storage housekeeping. Safe to call from a scheduled Lambda or a long-lived
+// background loop.
+async function runWorkerPass(prisma) {
+    if (workerPassInFlight) return;
+    workerPassInFlight = true;
+
+    try {
+        const now = new Date();
+
+        // Session completion + earnings release.
+        const toComplete = await prisma.session.findMany({
+            where: {
+                status: { in: ['UPCOMING', 'LIVE'] },
+                scheduledAt: { lt: now }
+            },
+            select: { id: true, mentorId: true, scheduledAt: true, duration: true }
+        });
+
+        const endedSessions = toComplete.filter(session => {
+            const endTime = new Date(session.scheduledAt).getTime() + session.duration * 60 * 1000;
+            return endTime < now.getTime();
+        });
+
+        for (const session of endedSessions) {
+            await prisma.session.updateMany({
+                where: { id: session.id },
+                data: { status: 'COMPLETED' }
             });
-
-            const endedSessions = activeSessions.filter(session => {
-                const endTime = new Date(session.scheduledAt).getTime() + session.duration * 60 * 1000;
-                return endTime < now.getTime();
-            });
-
-            for (const session of endedSessions) {
-                await prisma.session.update({
-                    where: { id: session.id },
-                    data: { status: 'COMPLETED' }
-                });
-                await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
-                try {
-                    const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
-                    if (releasedCount > 0) {
-                        logger.info(`Released earnings for ${releasedCount} booking(s) on session ${session.id}.`);
-                    }
-                } catch (err) {
-                    logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`);
+            await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
+            try {
+                const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
+                if (releasedCount > 0) {
+                    logger.info(`Released earnings for ${releasedCount} booking(s) on session ${session.id}.`);
                 }
+            } catch (err) {
+                logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`);
             }
-        } catch (err) {
-            logger.error(`Session completion loop error: ${err.message}`);
         }
 
-        try {
-            const sessionService = require("../services/sessionService");
-            const cutoff = new Date(Date.now() - config.bookingHoldMinutes * 60 * 1000);
-            const stale = await prisma.booking.findMany({
-                where: { status: 'PENDING', bookedAt: { lt: cutoff } },
-                select: { id: true }
-            });
-            for (const b of stale) {
-                await sessionService.cancelPendingBooking(prisma, cache, b.id);
-            }
-        } catch (err) {
-            logger.error(`Pending-booking sweep error: ${err.message}`);
+        // Pending-booking sweep.
+        const sessionService = require("../services/sessionService");
+        const cutoff = new Date(Date.now() - config.bookingHoldMinutes * 60 * 1000);
+        const stale = await prisma.booking.findMany({
+            where: { status: 'PENDING', bookedAt: { lt: cutoff } },
+            select: { id: true }
+        });
+        for (const b of stale) {
+            await sessionService.cancelPendingBooking(prisma, cache, b.id);
         }
 
         await cleanupOldNotifications(prisma);
         await cleanupExpiredRefreshTokens(prisma);
-    }, 60000);
+    } catch (err) {
+        logger.error(`Session completion loop error: ${err.message}`);
+    } finally {
+        workerPassInFlight = false;
+    }
+}
+
+let isWorkerRunning = false;
+
+// Background loop for long-lived (non-serverless) processes only. Uses a
+// recursive setTimeout so iterations never overlap, and drains the badge queue
+// after each maintenance pass.
+function startQueueWorker(prisma) {
+    if (isWorkerRunning) return;
+    isWorkerRunning = true;
+
+    const tick = async () => {
+        try {
+            await runWorkerPass(prisma);
+        } catch (err) {
+            logger.error(`Queue worker pass error: ${err.message}`);
+        }
+        try {
+            await drainBadgeQueue(prisma);
+        } catch (err) {
+            logger.error(`Queue worker drain error: ${err.message}`);
+        }
+        setTimeout(tick, 60000);
+    };
+
+    // First pass soon after boot, then every minute.
+    setTimeout(tick, 5000);
 }
 
 module.exports = {
     addJob,
-    startQueueWorker
+    startQueueWorker,
+    runWorkerPass,
+    drainBadgeQueue
 };

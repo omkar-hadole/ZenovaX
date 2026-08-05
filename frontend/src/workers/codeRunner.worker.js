@@ -5,6 +5,16 @@ self.onmessage = (e) => {
     const { code, testCases, functionName, parameters, returnType, isStructured } = e.data;
     const logs = [];
 
+    // Student code runs via new Function, which gives it access to the worker's
+    // global scope. Shadow the dangerous globals with undefined params so their
+    // code can't reach the network, post forged results, or spawn anything.
+    // (console is intentionally NOT shadowed so we can still capture their logs.)
+    const SANDBOX_GLOBALS = [
+        'self', 'postMessage', 'fetch', 'importScripts', 'XMLHttpRequest',
+        'WebSocket', 'indexedDB', 'Worker', 'close', 'onmessage', 'onerror'
+    ];
+    const SHADOWED = SANDBOX_GLOBALS.map(() => undefined);
+
     const formatArg = (a) => (typeof a === 'object' ? JSON.stringify(a) : String(a));
     self.console.log = (...args) => logs.push({ type: 'log', text: args.map(formatArg).join(' ') });
     self.console.error = (...args) => logs.push({ type: 'error', text: args.map(formatArg).join(' ') });
@@ -78,9 +88,13 @@ self.onmessage = (e) => {
                 try {
                     if (isStructured) {
                         const paramNames = parameters.map(p => p.name).join(', ');
-                        userFunc = new Function(...parameters.map(p => p.name), code + `\nreturn ${functionName}(${paramNames});`);
+                        userFunc = new Function(
+                            ...SANDBOX_GLOBALS,
+                            ...parameters.map(p => p.name),
+                            code + `\nreturn ${functionName}(${paramNames});`
+                        );
                     } else {
-                        userFunc = new Function('input', code + '\nreturn solve(input);');
+                        userFunc = new Function(...SANDBOX_GLOBALS, 'input', code + '\nreturn solve(input);');
                     }
                 } catch (syntaxErr) {
                     throw new SyntaxError(syntaxErr.message);
@@ -89,9 +103,9 @@ self.onmessage = (e) => {
                 let result;
                 if (isStructured) {
                     const args = parameters.map(p => serializeValue(tc.inputs[p.name], p.type));
-                    result = userFunc(...args);
+                    result = userFunc(...SHADOWED, ...args);
                 } else {
-                    result = userFunc(tc.input);
+                    result = userFunc(...SHADOWED, tc.input);
                 }
 
                 if (typeof result === 'object' && result !== null) {

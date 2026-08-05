@@ -118,7 +118,7 @@ exports.pushAdminNotification = async (prisma, adminId, { title, message, link, 
                 totalSent: users.length,
             }
         });
-    });
+    }, { timeout: 20000 });
 
     const recipients = users.map(u => u.id);
     return { success: true, totalSent: users.length, recipients };

@@ -57,10 +57,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['lucide-react'], 
+          'vendor-ui': ['lucide-react'],
           'monaco': ['@monaco-editor/react'],
-          'qr': ['html5-qrcode', 'react-qr-code', 'qrcode'],
+          'qr': ['html5-qrcode', 'react-qr-code'],
           'syntax': ['react-syntax-highlighter'],
+          'katex': ['katex', 'rehype-katex'],
+          'three': ['three'],
         },
       },
     },

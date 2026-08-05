@@ -30,9 +30,34 @@ exports.handleWebhook = async (req, res) => {
             const orderId = paymentEntity?.order_id;
             const paymentId = paymentEntity?.id;
 
-            if (orderId) {
+            if (orderId && paymentId) {
                 const txn = await req.prisma.transaction.findUnique({ where: { gatewayOrderId: orderId } });
                 if (txn) {
+                    // Re-verify the payment server-side with Razorpay instead of trusting
+                    // the webhook body: the amount must match our order exactly, and the
+                    // payment must actually be captured for the right order.
+                    let payment;
+                    try {
+                        payment = await paymentService.fetchPayment(paymentId);
+                    } catch (err) {
+                        // Transient network failure talking to Razorpay — return 500 so
+                        // the webhook is retried rather than silently dropping a real capture.
+                        logger.error(`Webhook: could not verify payment ${paymentId} with Razorpay: ${err.message}`);
+                        return res.status(500).json({ error: "Unable to verify payment" });
+                    }
+
+                    const amountOk = payment && Number(payment.amount) === Math.round(txn.totalAmount * 100);
+                    const matchesOrder = payment && payment.id === paymentId && payment.order_id === orderId;
+                    const captured = payment && payment.status === "captured";
+
+                    if (!amountOk || !matchesOrder || !captured) {
+                        logger.warn(
+                            `Webhook: payment ${paymentId} for order ${orderId} failed verification ` +
+                            `(amount ${payment?.amount}, status ${payment?.status}); not confirming`
+                        );
+                        return res.json({ received: true });
+                    }
+
                     await sessionService.confirmBookingPaid(req.prisma, req.cache, {
                         bookingId: txn.bookingId,
                         gatewayPaymentId: paymentId

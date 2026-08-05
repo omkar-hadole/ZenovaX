@@ -20,13 +20,21 @@ Parameters:
   CloudinaryApiKey:   { Type: String, NoEcho: true, Default: "" }
   CloudinaryApiSecret:{ Type: String, NoEcho: true, Default: "" }
   GeminiApiKey:       { Type: String, NoEcho: true, Default: "" }
-  GmailUser:          { Type: String, Default: "" }
-  GmailAppPassword:   { Type: String, NoEcho: true, Default: "" }
+  EmailService:       { Type: String, Default: "gmail" }
+  EmailUser:          { Type: String, Default: "" }
+  EmailPass:          { Type: String, NoEcho: true, Default: "" }
+  EmailFrom:          { Type: String, Default: "" }
+  FrontendUrl:        { Type: String, Default: "" }   # base URL of the React app; used in emails + CORS
   SentryDsn:          { Type: String, Default: "" }
   PistonApiUrl:       { Type: String, Default: "https://emkc.org/api/v2/piston" }
   JaasAppId:          { Type: String, Default: "" }
   JaasApiKeyId:       { Type: String, Default: "" }
   JaasPrivateKey:     { Type: String, NoEcho: true, Default: "" }
+  RazorpayKeyId:      { Type: String, Default: "" }
+  RazorpayKeySecret:  { Type: String, NoEcho: true, Default: "" }
+  RazorpayWebhookSecret: { Type: String, NoEcho: true, Default: "" }
+  PlatformFeePercent: { Type: Number, Default: 15 }
+  BookingHoldMinutes: { Type: Number, Default: 15 }
 
 Globals:
   Function:
@@ -47,13 +55,21 @@ Globals:
         CLOUDINARY_API_KEY: !Ref CloudinaryApiKey
         CLOUDINARY_API_SECRET: !Ref CloudinaryApiSecret
         GEMINI_API_KEY: !Ref GeminiApiKey
-        GMAIL_USER: !Ref GmailUser
-        GMAIL_APP_PASSWORD: !Ref GmailAppPassword
+        EMAIL_SERVICE: !Ref EmailService
+        EMAIL_USER: !Ref EmailUser
+        EMAIL_PASS: !Ref EmailPass
+        EMAIL_FROM: !Ref EmailFrom
+        FRONTEND_URL: !Ref FrontendUrl
         SENTRY_DSN: !Ref SentryDsn
         PISTON_API_URL: !Ref PistonApiUrl
         JAAS_APP_ID: !Ref JaasAppId
         JAAS_API_KEY_ID: !Ref JaasApiKeyId
         JAAS_PRIVATE_KEY: !Ref JaasPrivateKey
+        RAZORPAY_KEY_ID: !Ref RazorpayKeyId
+        RAZORPAY_KEY_SECRET: !Ref RazorpayKeySecret
+        RAZORPAY_WEBHOOK_SECRET: !Ref RazorpayWebhookSecret
+        PLATFORM_FEE_PERCENT: !Ref PlatformFeePercent
+        BOOKING_HOLD_MINUTES: !Ref BookingHoldMinutes
 
 Resources:
   ApiFunction:
@@ -83,6 +99,25 @@ Resources:
       # CORS is handled inside Express (cors middleware) because it needs
       # credentials + dynamic origin checking, so we leave the gateway CORS off.
       PayloadFormatVersion: "2.0"
+
+  # Background maintenance worker. Serverless API functions are frozen after
+  # they respond, so they can't keep timers or queue listeners alive — this
+  # scheduled function runs the session-completion / earnings-release /
+  # booking-cleanup / badge sweep on a cron instead. Deployed from the same
+  # CodeUri as the API; only its handler differs.
+  BackgroundWorker:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda-worker.handler
+      CodeUri: ./
+      Description: ZenovaX background maintenance (session completion, earnings, booking sweep, badges)
+      MemorySize: 1024
+      Timeout: 55
+      Events:
+        EveryMinute:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
 
 Outputs:
   ApiUrl:

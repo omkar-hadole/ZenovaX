@@ -95,5 +95,49 @@ jobs:
             --function-name zenovax-backend \
             --zip-file fileb://function.zip
 
+      - name: Update Lambda function configuration (env + runtime)
+        # update-function-configuration REPLACES the whole environment, so this
+        # mirrors every variable from backend/template.yaml (the source of truth).
+        # Keep the two in sync. EMAIL_* / FRONTEND_URL / PISTON_API_URL are what
+        # make production emails and code execution actually work.
+        run: |
+          aws lambda update-function-configuration \
+            --function-name zenovax-backend \
+            --environment 'Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},DIRECT_URL=${{ secrets.DIRECT_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},CSRF_SECRET=${{ secrets.CSRF_SECRET }},REDIS_URL=${{ secrets.REDIS_URL }},ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }},CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }},CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }},CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},EMAIL_SERVICE=${{ secrets.EMAIL_SERVICE }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASS=${{ secrets.EMAIL_PASS }},EMAIL_FROM=${{ secrets.EMAIL_FROM }},FRONTEND_URL=${{ secrets.FRONTEND_URL }},SENTRY_DSN=${{ secrets.SENTRY_DSN }},PISTON_API_URL=${{ secrets.PISTON_API_URL }},JAAS_APP_ID=${{ secrets.JAAS_APP_ID }},JAAS_API_KEY_ID=${{ secrets.JAAS_API_KEY_ID }},JAAS_PRIVATE_KEY=${{ secrets.JAAS_PRIVATE_KEY }},RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }},RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }},RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }},PLATFORM_FEE_PERCENT=${{ secrets.PLATFORM_FEE_PERCENT }},BOOKING_HOLD_MINUTES=${{ secrets.BOOKING_HOLD_MINUTES }}}'
+
       - name: Wait for update to complete
         run: aws lambda wait function-updated --function-name zenovax-backend
+
+      - name: Deploy background worker function
+        # The maintenance worker (lambda-worker.handler) is new in template.yaml;
+        # the same function.zip contains it. Create it on first deploy, otherwise
+        # just push code + env. The EventBridge schedule is created next step.
+        run: |
+          FN=zenovax-background-worker
+          ENV='Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},DIRECT_URL=${{ secrets.DIRECT_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},CSRF_SECRET=${{ secrets.CSRF_SECRET }},REDIS_URL=${{ secrets.REDIS_URL }},ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }},CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }},CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }},CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }},GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},EMAIL_SERVICE=${{ secrets.EMAIL_SERVICE }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASS=${{ secrets.EMAIL_PASS }},EMAIL_FROM=${{ secrets.EMAIL_FROM }},FRONTEND_URL=${{ secrets.FRONTEND_URL }},SENTRY_DSN=${{ secrets.SENTRY_DSN }},PISTON_API_URL=${{ secrets.PISTON_API_URL }},JAAS_APP_ID=${{ secrets.JAAS_APP_ID }},JAAS_API_KEY_ID=${{ secrets.JAAS_API_KEY_ID }},JAAS_PRIVATE_KEY=${{ secrets.JAAS_PRIVATE_KEY }},RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }},RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }},RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }},PLATFORM_FEE_PERCENT=${{ secrets.PLATFORM_FEE_PERCENT }},BOOKING_HOLD_MINUTES=${{ secrets.BOOKING_HOLD_MINUTES }}}'
+          if aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
+            aws lambda update-function-code --function-name "$FN" --zip-file fileb://function.zip
+            aws lambda wait function-updated --function-name "$FN"
+            aws lambda update-function-configuration --function-name "$FN" --environment "$ENV"
+          else
+            aws lambda create-function --function-name "$FN" \
+              --runtime nodejs20.x --handler lambda-worker.handler \
+              --role "${{ secrets.AWS_LAMBDA_ROLE_ARN }}" \
+              --zip-file fileb://function.zip \
+              --memory-size 1024 --timeout 55 --architectures arm64 \
+              --environment "$ENV"
+          fi
+
+      - name: Ensure worker runs on a schedule
+        # Match the `rate(1 minute)` schedule in template.yaml's BackgroundWorker.
+        run: |
+          FN=zenovax-background-worker
+          aws events put-rule --name zenovax-background-worker-schedule \
+            --schedule-expression "rate(1 minute)"
+          aws events put-targets --rule zenovax-background-worker-schedule \
+            --targets "[{\"Id\":\"zenovax-background-worker\",\"Arn\":\"arn:aws:lambda:ap-south-1:$(aws sts get-caller-identity --query Account --output text):function:$FN\"}]"
+          aws lambda add-permission --function-name "$FN" \
+            --statement-id zenovax-background-worker-events \
+            --action lambda:InvokeFunction --principal events.amazonaws.com \
+            --source-arn "arn:aws:events:ap-south-1:$(aws sts get-caller-identity --query Account --output text):rule/zenovax-background-worker-schedule" \
+            2>/dev/null || true

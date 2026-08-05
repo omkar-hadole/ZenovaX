@@ -44,6 +44,18 @@ function isHttpsUrl(url) {
   }
 }
 
+// http:// or https:// only — blocks javascript:, data:, vbscript:, file:, etc.
+// Use for user-supplied web links that are rendered into an <a href>.
+function isHttpUrl(url) {
+  if (!isValidUrl(url)) return false;
+  try {
+    const protocol = new URL(url).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function sanitizeString(str) {
   if (typeof str !== 'string') return '';
   return xss(str.trim()); 
@@ -72,6 +84,7 @@ module.exports = {
   isValidBio,
   isValidUrl,
   isHttpsUrl,
+  isHttpUrl,
   sanitizeString,
   isValidArray,
   hashToken,

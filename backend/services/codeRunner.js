@@ -1,14 +1,13 @@
 const axios = require('axios');
-const { spawn } = require('child_process');
 const logger = require('../utils/logger');
 const pyodideRunner = require('./pyodideRunner');
+const jsRunner = require('./jsRunner');
 const { buildStructuredDriverCode, typedCompare } = require('./questionTypeEngine');
 const { AppError, BadRequestError } = require('../utils/errors');
 
 const MAX_CODE_LENGTH = 10000;
 const MAX_TEST_CASES = 10;
 const MAX_INPUT_LENGTH = 500;
-const JAVASCRIPT_TIMEOUT_MS = 5000;
 
 const getDriverCode = (language, userCode, testCases) => {
     if (language === 'python') {
@@ -134,9 +133,21 @@ console.log(__results.join("|||"));
 };
 
 const executePiston = async (language, sourceCode) => {
+    // The executor must be an explicitly-configured Piston instance. We never
+    // fall back to a public service: that would (a) silently leak the user's
+    // code AND hidden test cases to a third party, and (b) execute untrusted
+    // code outside our control. Use a self-hosted Piston container in prod.
+    const pistonUrl = process.env.PISTON_API_URL;
+    if (!pistonUrl) {
+        logger.error('Piston API URL not configured; skipping code execution');
+        throw new AppError('Code execution service is not configured', 503);
+    }
+
     try {
         const resp = await axios.post(
-            process.env.PISTON_API_URL || 'https://emkc.org/api/v2/piston/execute',
+            pistonUrl.includes('/execute')
+                ? pistonUrl
+                : `${pistonUrl.replace(/\/+$/, '')}/execute`,
             {
                 language: language.toLowerCase(),
                 version: '*',
@@ -161,28 +172,6 @@ const executePiston = async (language, sourceCode) => {
         });
         throw new AppError('Code execution service unavailable', 503);
     }
-};
-const executeJavaScriptLocally = (sourceCode) => {
-    return new Promise((resolve) => {
-        const child = spawn('node', [], {
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
-        let stdout = '';
-        let stderr = '';
-        const timer = setTimeout(() => { child.kill('SIGTERM'); }, JAVASCRIPT_TIMEOUT_MS);
-        child.stdout.on('data', (data) => { stdout += data.toString(); });
-        child.stderr.on('data', (data) => { stderr += data.toString(); });
-        child.on('close', (code) => {
-            clearTimeout(timer);
-            resolve({ stdout, stderr, exitCode: code });
-        });
-        child.on('error', () => {
-            clearTimeout(timer);
-            resolve({ stdout, stderr, exitCode: 1 });
-        });
-        child.stdin.write(sourceCode);
-        child.stdin.end();
-    });
 };
 
 
@@ -232,7 +221,7 @@ const runTestCases = async (language, code, testCases) => {
         rawOutputs = resultsOutput.split('|||');
     } else if (language === 'javascript') {
         const sourceContent = getDriverCode(language, code, testCases);
-        const run = await executeJavaScriptLocally(sourceContent);
+        const run = await jsRunner.executeJavaScript(sourceContent);
 
         if (run.stderr) {
             return { error: run.stderr };
@@ -337,7 +326,7 @@ const runStructuredTestCases = async (language, code, testCases, functionName, p
         });
     } else if (language === 'javascript') {
         const sourceContent = buildStructuredDriverCode(language, code, functionName, parameters, testCases);
-        const run = await executeJavaScriptLocally(sourceContent);
+        const run = await jsRunner.executeJavaScript(sourceContent);
 
         if (run.stderr) {
             return { error: run.stderr };
@@ -421,7 +410,6 @@ const runStructuredTestCases = async (language, code, testCases, functionName, p
 module.exports = {
     getDriverCode,
     executePiston,
-    executeJavaScriptLocally,
     runTestCases,
     runStructuredTestCases,
     validateRunInput,

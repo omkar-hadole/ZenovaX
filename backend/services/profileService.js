@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { sanitizeString, isValidUrl } = require("../utils/validation");
+const { sanitizeString, isHttpUrl } = require("../utils/validation");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const logger = require("../utils/logger");
 const { calculateBadges } = require("../utils/badges");
@@ -96,7 +96,7 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
     const trimmedPhone = phone ? phone.trim() : null;
     const trimmedLinkedin = linkedin ? linkedin.trim() : null;
 
-    if (trimmedLinkedin && !isValidUrl(trimmedLinkedin)) {
+    if (trimmedLinkedin && !isHttpUrl(trimmedLinkedin)) {
         throw new BadRequestError("linkedinUrl must be a valid URL (e.g. https://linkedin.com/in/yourname)");
     }
 
@@ -153,6 +153,7 @@ exports.completeProfile = async (prisma, cache, userId, body, file) => {
     if (cache) {
         await cache.del(`profile_stats_${userId}`);
         await cache.del('dashboard_top_mentors');
+        await cache.delPattern('mentor_list_*');
     }
 
     return updatedUser;
@@ -310,7 +311,7 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
 
     if (linkedin !== undefined) {
         const trimmedLinkedin = linkedin ? linkedin.trim() : null;
-        if (trimmedLinkedin && !isValidUrl(trimmedLinkedin)) {
+        if (trimmedLinkedin && !isHttpUrl(trimmedLinkedin)) {
             throw new BadRequestError("linkedinUrl must be a valid URL (e.g. https://linkedin.com/in/yourname)");
         }
         updateData.linkedinUrl = trimmedLinkedin;
@@ -390,6 +391,7 @@ exports.updateProfile = async (prisma, cache, userId, body, file) => {
     if (cache) {
         await cache.del(`profile_stats_${userId}`);
         await cache.del('dashboard_top_mentors');
+        await cache.delPattern('mentor_list_*');
     }
 
     return updatedUser;

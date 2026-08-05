@@ -31,6 +31,18 @@ const PREDEFINED_AVATARS = [
   '/avatars/Girl_3.png',
 ];
 
+// Only render http(s) links in href; reject javascript:/data:/vbscript: etc. so a
+// user-supplied URL can never execute script in another viewer's browser.
+const isSafeHttpUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
 const ReviewsSection = ({ userId }) => {
   const [reviews, setReviews] = useState([]);
   const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, distribution: [] });
@@ -480,7 +492,7 @@ export default function Profile() {
                     </>
                   ) : (
                     <>
-                      {profile.linkedinUrl && (
+                      {isSafeHttpUrl(profile.linkedinUrl) && (
                         <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20 transition-colors">
                           <Linkedin size={18} />
                           <span className="font-medium text-sm">LinkedIn</span>

@@ -151,19 +151,26 @@ app.use((err, req, res, _next) => {
   logger.error(err.stack);
   const statusCode = err.statusCode || 500;
   const message = err.statusCode ? err.message : 'Something went wrong!';
-  res.status(statusCode).json({
-    error: message,
-    details: err.message
-  });
+  const body = { error: message };
+  if (statusCode < 500) {
+    // Only surface internal details for client (4xx) errors — never leak
+    // stack traces / internal messages to the client on a 500.
+    body.details = err.message;
+  }
+  res.status(statusCode).json(body);
 });
 
 process.on('uncaughtException', (err) => {
-  logger.error('UNCAUGHT EXCEPTION! Shutting down...', err);
+  logger.error('UNCAUGHT EXCEPTION!', err);
+  // In Lambda, process.exit would abort a shared warm instance and kill any
+  // concurrent in-flight requests; let the runtime fail the invocation instead.
+  if (process.env.AWS_EXECUTION_ENV) return;
   process.exit(1);
 });
 
 process.on('unhandledRejection', (err) => {
-  logger.error('UNHANDLED REJECTION! Shutting down...', err);
+  logger.error('UNHANDLED REJECTION!', err);
+  if (process.env.AWS_EXECUTION_ENV) return;
   process.exit(1);
 });
 

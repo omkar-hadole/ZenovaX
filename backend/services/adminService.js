@@ -102,6 +102,7 @@ exports.approveSession = async (prisma, cache, { requestId }) => {
     if (cache) {
         await cache.del('dashboard_upcoming_sessions');
         await cache.del('dashboard_top_mentors');
+        await cache.delPattern('all_sessions_*');
     }
 
     return session;
@@ -139,7 +140,7 @@ exports.rejectSession = async (prisma, { requestId }) => {
                 link: '/mentor/sessions'
             }
         })
-    ]);
+    ], { timeout: 15000 });
 
     return { success: true };
 };
@@ -193,6 +194,7 @@ exports.deleteSession = async (prisma, cache, id) => {
         await cache.del(`profile_stats_${session.mentorId}`);
         await cache.del('dashboard_upcoming_sessions');
         await cache.del('dashboard_top_mentors');
+        await cache.delPattern('all_sessions_*');
     }
 
     return { success: true };
@@ -372,6 +374,7 @@ exports.handleReportAction = async (prisma, cache, { reportId, action }) => {
 
             if (cache && report.session) {
                 await cache.del(`profile_stats_${report.session.mentorId}`);
+                await cache.delPattern('all_sessions_*');
             }
 
             return { message: "Session deleted and report marked as resolved" };

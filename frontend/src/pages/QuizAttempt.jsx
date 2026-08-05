@@ -476,6 +476,13 @@ export default function QuizAttempt() {
   const startedAt = useRef(null);
   const submitLock = useRef(false);
 
+  // Always-fresh snapshot of answers so the autosubmit timer (which is set up in
+  // an effect that only depends on timeLeft/result) never submits a stale set.
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  });
+
   const from =
     new URLSearchParams(window.location.search).get('from') || '/dashboard';
 
@@ -603,7 +610,7 @@ export default function QuizAttempt() {
       const response = await apiCall(`/quiz/${id}/submit`, {
         method: 'POST',
         body: JSON.stringify({
-          answers,
+          answers: answersRef.current,
           startedAt: startedAt.current,
         }),
       });

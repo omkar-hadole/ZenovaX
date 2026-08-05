@@ -29,15 +29,15 @@ async function getFinishedSessionsCount(prisma, userId) {
  * @returns {Promise<number>}
  */
 async function getUniqueLearnersCount(prisma, userId) {
-    const bookings = await prisma.booking.findMany({
+    const groups = await prisma.booking.groupBy({
+        by: ['userId'],
         where: {
             session: { mentorId: userId },
             status: { in: ['CONFIRMED', 'COMPLETED'] }
         },
-        distinct: ['userId'],
-        select: { userId: true }
+        _count: { _all: true }
     });
-    return bookings.length;
+    return groups.length;
 }
 
 module.exports = {

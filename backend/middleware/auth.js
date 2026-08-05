@@ -98,23 +98,17 @@ async function requireProfileComplete(req, res, next) {
 }
 
 const authorize = (...roles) => {
-  return async (req, res, next) => {
+  // Role comes straight from the verified JWT (set at login/refresh), which is
+  // exactly what the old DB lookup returned — saving one round-trip on every
+  // protected request. Role changes take effect on the next login/refresh.
+  return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    try {
-      const user = await req.prisma.user.findUnique({
-        where: { id: req.user.id },
-        select: { role: true }
-      });
-      if (!user || !roles.includes(user.role)) {
-        return res.status(403).json({ error: 'Forbidden' });
-      }
-      req.user.role = user.role;
-      next();
-    } catch (err) {
-      next(err);
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
+    next();
   };
 };
 

@@ -6,6 +6,16 @@ const { validateCreateQuiz, validateEditQuiz, validateSubmitQuiz } = require("..
 
 router.use(protect, requireProfileComplete);
 
+// Learners must never receive the correct answer or explanation before they
+// submit. Questions fetched internally (with answers) are fine for the
+// server's own grading/review logic, but anything serialized back to a
+// non-creator has these stripped.
+const stripAnswersFromQuestions = (questions) =>
+    questions.map(({ correctAnswer: _ca, explanation: _ex, ...safe }) => safe);
+
+const canViewAnswers = (quiz, user) =>
+    quiz.creatorId === user.id || user.role === 'ADMIN';
+
 router.post("/create", authorize('MENTOR', 'BOTH'), async (req, res, next) => {
     try {
         const validation = validateCreateQuiz(req.body);
@@ -260,6 +270,21 @@ router.get("/session/:sessionId", async (req, res, next) => {
     try {
         const { sessionId } = req.params;
 
+        const session = await req.prisma.session.findUnique({
+            where: { id: sessionId },
+            select: { mentorId: true }
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: "Session not found" });
+        }
+
+        // Listing a session's quizzes exposes every question (including correct
+        // answers), so it is limited to the session's mentor or an admin.
+        if (session.mentorId !== req.user.id && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: "Not authorized to view quizzes for this session" });
+        }
+
         const quizzes = await req.prisma.quiz.findMany({
             where: { sessionId },
             include: {
@@ -295,6 +320,13 @@ router.get("/:id", async (req, res, next) => {
 
         if (!quiz) {
             return res.status(404).json({ error: "Quiz not found" });
+        }
+
+        // The full quiz payload (questions + correct answers) is only served to
+        // the creator or an ADMIN. Learners use /:id/attempt instead, which is
+        // redacted and booking-gated.
+        if (!canViewAnswers(quiz, req.user)) {
+            return res.status(403).json({ error: "Not authorized to view this quiz" });
         }
 
         const quizData = {
@@ -391,7 +423,7 @@ router.get("/:id/attempt", async (req, res, next) => {
                         marks: questions.find(q => q.id === a.questionId)?.marks || 0
                     }))
                 },
-                quiz
+                quiz: { ...quiz, questions: stripAnswersFromQuestions(quiz.questions) }
             });
         }
 
@@ -412,7 +444,7 @@ router.get("/:id/attempt", async (req, res, next) => {
             return res.status(403).json({ error: "You must be registered for the session to take this quiz" });
         }
 
-        res.json({ success: true, quiz });
+        res.json({ success: true, quiz: { ...quiz, questions: stripAnswersFromQuestions(quiz.questions) } });
     } catch (error) {
         next(error);
     }

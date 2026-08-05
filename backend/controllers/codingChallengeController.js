@@ -20,7 +20,7 @@ exports.launchCodingQuestion = async (req, res, next) => {
 
 exports.getCodingQuestionsBySession = async (req, res, next) => {
     try {
-        const questions = await codingService.getCodingQuestionsBySession(req.prisma, req.user.id, req.params.sessionId);
+        const questions = await codingService.getCodingQuestionsBySession(req.prisma, req.user.id, req.user.role, req.params.sessionId);
         res.json({ success: true, questions });
     } catch (error) {
         next(error);

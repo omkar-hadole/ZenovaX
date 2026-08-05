@@ -9,8 +9,13 @@ router.post('/create', protect, requireProfileComplete, async (req, res, next) =
     const { sessionId, rating, comment, isAnonymous } = req.body;
     const userId = req.user.id;
 
-    if (!sessionId || !rating) {
+    if (!sessionId || rating === undefined || rating === null || rating === '') {
         return res.status(400).json({ error: 'Session ID and rating are required' });
+    }
+
+    const ratingNum = parseInt(rating, 10);
+    if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+        return res.status(400).json({ error: 'Rating must be a whole number between 1 and 5' });
     }
 
     try {
@@ -40,21 +45,26 @@ router.post('/create', protect, requireProfileComplete, async (req, res, next) =
             return res.status(400).json({ error: 'You have already reviewed this session' });
         }
 
-        await req.prisma.$transaction(async (prisma) => {
+        const txResult = await req.prisma.$transaction(async (prisma) => {
+            // Atomic claim on the booking so two concurrent submits can't both create
+            // a review: only the request that flips hasReviewed false -> true proceeds.
+            const claimed = await prisma.booking.updateMany({
+                where: { id: booking.id, hasReviewed: false },
+                data: { hasReviewed: true }
+            });
+            if (claimed.count === 0) {
+                return { duplicate: true };
+            }
+
             await prisma.review.create({
                 data: {
                     authorId: userId,
                     mentorId: session.mentorId,
                     sessionId: sessionId,
-                    rating: parseInt(rating),
+                    rating: ratingNum,
                     comment: sanitizeString(comment),
                     isAnonymous: isAnonymous || false
                 }
-            });
-
-            await prisma.booking.update({
-                where: { id: booking.id },
-                data: { hasReviewed: true }
             });
 
             const stats = await prisma.review.aggregate({
@@ -76,13 +86,19 @@ router.post('/create', protect, requireProfileComplete, async (req, res, next) =
                     userId: session.mentorId,
                     type: 'NEW_REVIEW',
                     title: 'New review received',
-                    message: `You received a ${parseInt(rating)}-star review for "${session.title}".`,
+                    message: `You received a ${ratingNum}-star review for "${session.title}".`,
                     link: '/mentor/reviews'
                 }
             });
+
+            return { duplicate: false };
         }, {
             timeout: 20000
         });
+
+        if (txResult.duplicate) {
+            return res.status(400).json({ error: 'You have already reviewed this session' });
+        }
 
         if (req.cache) {
             await req.cache.del(`profile_stats_${session.mentorId}`);
