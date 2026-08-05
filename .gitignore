@@ -4,24 +4,39 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-yarn.lock
 .pnpm-debug.log
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .env.local
 .env.production
 .env*.local
 .env.development
 .env.test
 
+# Secrets & keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.p8
+*.jks
+*.keystore
+
 # Build outputs
 dist/
+dist-ssr/
+dev-dist/
 build/
 out/
 .next/
 .cache/
 .temp/
+.eslintcache
+*.tsbuildinfo
 .vscode/
 .DS_Store
 
@@ -48,6 +63,14 @@ Thumbs.db
 .vscode/
 *.sublime-workspace
 *.sublime-project
+
+# Editor / IDE config
+.claude/
+*.code-workspace
+
+# AWS SAM
+.aws-sam/
+samconfig.toml
 
 # Test coverage
 coverage/
