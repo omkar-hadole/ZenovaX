@@ -32,7 +32,6 @@ function MaskedWord({ children, accent = false }) {
 
 export default function HeroSection({ handlePrimaryCTA }) {
   const scope = useRef(null);
-  const tiltRef = useRef(null);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -94,37 +93,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
         );
       });
 
-      // Gentle pointer-driven 3D tilt on the mockup — mouse users only, and
-      // applied to an inner wrapper so it never fights the scroll-scrub
-      // scale/translate on [data-hero-mockup] above.
-      mm.add(
-        '(prefers-reduced-motion: no-preference) and (pointer: fine)',
-        () => {
-          const el = tiltRef.current;
-          if (!el) return;
-          const zone = el.parentElement;
-          const rotX = gsap.quickTo(el, 'rotationX', { duration: 0.6, ease: 'power3.out' });
-          const rotY = gsap.quickTo(el, 'rotationY', { duration: 0.6, ease: 'power3.out' });
-
-          const onMove = (e) => {
-            const r = el.getBoundingClientRect();
-            const px = (e.clientX - r.left) / r.width - 0.5;
-            const py = (e.clientY - r.top) / r.height - 0.5;
-            rotY(px * 6);
-            rotX(-py * 5);
-          };
-          const onLeave = () => {
-            rotX(0);
-            rotY(0);
-          };
-          zone.addEventListener('pointermove', onMove, { passive: true });
-          zone.addEventListener('pointerleave', onLeave);
-          return () => {
-            zone.removeEventListener('pointermove', onMove);
-            zone.removeEventListener('pointerleave', onLeave);
-          };
-        }
-      );
+      // 3D tilt hover effect removed by request
     }, scope);
     return () => ctx.revert();
   }, []);
@@ -151,7 +120,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
         style={{ background: 'var(--color-glow-soft)' }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-6 pt-36 md:pt-44 pb-20 text-center">
+      <div className="relative max-w-6xl mx-auto px-6 pt-36 md:pt-44 pb-10 text-center">
         <div data-hero-copy className="will-change-transform">
           <span
             data-hero-stagger
@@ -220,7 +189,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
 
         <div
           data-hero-mockup
-          className="relative mt-20 will-change-transform"
+          className="relative mt-10 will-change-transform"
           style={{ perspective: '1200px' }}
         >
           <div
@@ -228,7 +197,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
             className="absolute -inset-x-8 -top-8 h-40 blur-2xl pointer-events-none"
             style={{ background: 'linear-gradient(to bottom, var(--color-glow-soft), transparent)' }}
           />
-          <div ref={tiltRef} className="will-change-transform [transform-style:preserve-3d]">
+          <div>
             <img
               src={dashboard}
               srcSet={`${dashboardMobile} 800w, ${dashboard} 2389w`}
@@ -237,7 +206,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
               height={875}
               fetchPriority="high"
               alt="ZenovaX learner dashboard showing upcoming peer sessions and recommended mentors"
-              className="relative w-full rounded-[28px] border border-border bg-surface shadow-[var(--shadow-lg)]"
+              className="relative w-full rounded-t-[28px] border border-border bg-surface shadow-[var(--shadow-lg)]"
             />
           </div>
         </div>
