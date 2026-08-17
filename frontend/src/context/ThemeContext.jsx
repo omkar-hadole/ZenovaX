@@ -29,25 +29,8 @@ export function ThemeProvider({ children, defaultTheme }) {
     } catch {
       /* ignore storage failures */
     }
-    return defaultTheme || getSystemTheme();
+    return defaultTheme || 'light';
   });
-
-  // Follow the OS preference live, but only until the user makes an explicit
-  // choice — once they do, localStorage takes over and this stops applying.
-  useEffect(() => {
-    let hasStoredChoice = false;
-    try {
-      hasStoredChoice = !!localStorage.getItem(STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
-    if (hasStoredChoice) return undefined;
-
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = (e) => setThemeState(e.matches ? 'dark' : 'light');
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
