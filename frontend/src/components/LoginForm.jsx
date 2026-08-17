@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { login as apiLogin, apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { trackEvent } from '../utils/analytics';
 
 export default function LoginForm({ onToggle, showToast }) {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function LoginForm({ onToggle, showToast }) {
     try {
       const data = await apiLogin(formData.email, formData.password, rememberMe);
       login(data.user);
+      trackEvent('login', { method: 'email', role: data.user?.role });
       showToast({ message: 'Login successful!', type: 'success' });
 
       if (!data.user.isProfileComplete) {

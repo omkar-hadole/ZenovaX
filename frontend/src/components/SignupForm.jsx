@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { register } from '../utils/api';
+import { trackEvent } from '../utils/analytics';
 
 export default function SignupForm({ onToggle, showToast }) {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ export default function SignupForm({ onToggle, showToast }) {
     try {
       const name = `${formData.firstname} ${formData.lastname}`;
       await register(name, formData.email, formData.password);
+      trackEvent('sign_up', { method: 'email' });
       setSuccess(true);
       showToast({ message: 'Registration successful! Check your email.', type: 'success' });
     } catch (err) {

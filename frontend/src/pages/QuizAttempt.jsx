@@ -18,6 +18,7 @@ import {
 import { apiCall } from '../utils/api';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { trackEvent } from '../utils/analytics';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Helpers                                   */
@@ -613,6 +614,12 @@ export default function QuizAttempt() {
           answers: answersRef.current,
           startedAt: startedAt.current,
         }),
+      });
+
+      trackEvent('quiz_submitted', {
+        quiz_id: id,
+        score: response.result?.score,
+        total_marks: response.result?.totalMarks,
       });
 
       setResult(response.result);

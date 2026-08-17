@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/Toast';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { openRazorpayCheckout } from '../../utils/razorpay';
+import { trackEvent } from '../../utils/analytics';
 
 export default function SessionDetailsPage() {
     const { id } = useParams();
@@ -47,6 +48,11 @@ export default function SessionDetailsPage() {
             availableSeats: prev.availableSeats - 1
         }));
         setToast({ message: 'Registration confirmed!', type: 'success' });
+        trackEvent('session_booked', {
+            session_id: session?.id,
+            session_title: session?.title,
+            price_type: session?.priceType
+        });
     };
 
     const handleRegister = async () => {

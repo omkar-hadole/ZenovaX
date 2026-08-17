@@ -6,6 +6,7 @@ import Header from '../components/dashboard/Header';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
+import { trackEvent } from '../utils/analytics';
 
 export default function UploadResource() {
     const navigate = useNavigate();
@@ -45,6 +46,7 @@ export default function UploadResource() {
                 body: JSON.stringify(formData)
             });
             setToast({ message: 'Resource uploaded successfully!', type: 'success' });
+            trackEvent('resource_uploaded', { resource_type: formData.fileType });
             setTimeout(() => {
                 navigate('/mentor/dashboard');
             }, 1500);

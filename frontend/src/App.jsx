@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { trackPageView } from './utils/analytics';
 
 import LearnerLayout from './layouts/LearnerLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -62,6 +63,14 @@ import CommandBar from './components/CommandBar';
 import InstallPrompt from './components/InstallPrompt';
 import { setCsrfToken } from './utils/api';
 
+function AnalyticsTracker() {
+    const location = useLocation();
+    useEffect(() => {
+        trackPageView(location.pathname + location.search);
+    }, [location]);
+    return null;
+}
+
 function App() {
     const { user } = useAuth();
 
@@ -75,6 +84,7 @@ function App() {
 
     return (
         <BrowserRouter>
+            <AnalyticsTracker />
             <CommandBar />
             <InstallPrompt />
             <Suspense fallback={

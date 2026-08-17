@@ -6,6 +6,7 @@ import Pagination from '../components/common/Pagination';
 import InlineError from '../components/InlineError';
 import MentorCardSkeleton from '../components/common/MentorCardSkeleton';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
+import { trackEvent } from '../utils/analytics';
 
 export default function MentorsList() {
     const navigate = useNavigate();
@@ -100,7 +101,10 @@ export default function MentorsList() {
                         {currentMentors.map((mentor) => (
                             <div
                                 key={mentor.id}
-                                onClick={() => navigate(`/profile/${mentor.id}`)}
+                                onClick={() => {
+                                    trackEvent('mentor_profile_view', { mentor_id: mentor.id });
+                                    navigate(`/profile/${mentor.id}`);
+                                }}
                                 className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group relative overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110 duration-700" />

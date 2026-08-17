@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import Toast from '../components/Toast';
+import { trackEvent } from '../utils/analytics';
 
 const aiFillKeyframes = `
 @keyframes ai-fill-pulse {
@@ -423,6 +424,7 @@ export default function LaunchCodingQuestion({ setActiveTab, mySessions }) {
 
       if (isLaunch && questionId) {
         await apiCall(`/coding-questions/${questionId}/launch`, 'PUT');
+        trackEvent('coding_question_launched', { question_id: questionId });
         setToast({ message: 'Coding Question Launched Successfully!', type: 'success' });
       } else {
         setToast({ message: isEditMode ? 'Changes Saved Successfully!' : 'Draft Saved Successfully!', type: 'success' });

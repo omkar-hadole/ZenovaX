@@ -15,6 +15,7 @@ import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import DescriptionEditor from '../components/dashboard/mentor/DescriptionEditor';
 import SessionPreviewModal from '../components/dashboard/mentor/SessionPreviewModal';
 import { cleanDescription } from '../utils/descriptionFormatter';
+import { trackEvent } from '../utils/analytics';
 
 export default function CreateSession() {
   const navigate = useNavigate();
@@ -157,6 +158,12 @@ export default function CreateSession() {
           body: JSON.stringify(payload)
         });
       }
+
+      trackEvent('session_request_submitted', {
+        action: isEditing ? 'edit' : 'create',
+        mode: formData.mode,
+        price_type: formData.priceType
+      });
 
       if (isAdmin) {
         navigate('/admin/pending-sessions');

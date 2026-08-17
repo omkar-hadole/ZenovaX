@@ -19,6 +19,7 @@ import {
 import { apiCall } from '../utils/api';
 import logo from '../assets/footerlogo.svg';
 import { getOptimizedImageUrl } from '../utils/cloudinary';
+import { trackEvent } from '../utils/analytics';
 
 // Helper to dynamically load external scripts
 const loadExternalScript = (url) => {
@@ -103,6 +104,7 @@ export default function LiveSession() {
       const data = await apiCall(`/sessions/${id}/live-access`);
       setLiveAccess(data);
       setState('ACTIVE');
+      trackEvent('live_session_joined', { session_id: id });
     } catch (error) {
       console.error('Live access error:', error);
       setErrorMsg(error.message || 'Unable to join the live session.');

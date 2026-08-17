@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { apiCall } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { trackEvent } from '../utils/analytics';
 import Header from '../components/dashboard/Header';
 import MentorSidebar from '../components/dashboard/mentor/MentorSidebar';
 import Toast from '../components/Toast';
@@ -217,6 +218,7 @@ export default function LaunchQuiz() {
 
         if (launch && response.quiz) {
           await apiCall(`/quiz/${response.quiz.id}/launch`, { method: 'POST' });
+          trackEvent('quiz_launched', { quiz_id: response.quiz.id });
           setToast({ message: 'Quiz created and launched successfully!', type: 'success' });
         } else {
           setToast({ message: 'Quiz draft created successfully!', type: 'success' });
