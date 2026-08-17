@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useSignInWithChatGPT, openaiAuthHeaders } from '@openai-oauth/react';
 import {
     Sparkles,
@@ -58,6 +60,48 @@ const MENTOR_QUICK_ACTIONS = [
 
 const isMentor = (role) => role === 'MENTOR' || role === 'BOTH';
 
+const CodeBlock = React.memo(({ language, value }) => {
+    const [copied, setCopied] = useState(false);
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {}
+    };
+    return (
+        <div className="relative my-3 rounded-xl overflow-hidden border border-slate-800 bg-gray-950 text-gray-100 font-mono text-xs shadow-lg">
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800 text-gray-400 text-xs select-none">
+                <span className="font-bold uppercase tracking-wider text-[11px] text-indigo-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />
+                    {language || 'code'}
+                </span>
+                <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-800/80 hover:bg-gray-700 text-gray-300 hover:text-white transition-all text-[11px] font-medium"
+                    title="Copy code"
+                >
+                    {copied ? (
+                        <><Check className="w-3.5 h-3.5 text-emerald-400" /><span className="text-emerald-400">Copied!</span></>
+                    ) : (
+                        <><Copy className="w-3.5 h-3.5" /><span>Copy code</span></>
+                    )}
+                </button>
+            </div>
+            <div className="p-3 overflow-x-auto">
+                <SyntaxHighlighter
+                    language={language || 'text'}
+                    style={vscDarkPlus}
+                    customStyle={{ margin: 0, padding: 0, background: 'transparent', fontSize: '0.85rem', lineHeight: '1.6' }}
+                    codeTagProps={{ style: { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' } }}
+                >
+                    {value}
+                </SyntaxHighlighter>
+            </div>
+        </div>
+    );
+});
+
 const MARKDOWN_COMPONENTS = {
     a: ({ node, children, href, ...props }) => (
         <a href={href} target="_blank" rel="noopener noreferrer"
@@ -77,11 +121,18 @@ const MARKDOWN_COMPONENTS = {
         <ol className="list-decimal list-outside ml-4 my-2 space-y-1 text-gray-600 dark:text-gray-300 text-[13px]" {...props}>{children}</ol>
     ),
     li: ({ node, children, ...props }) => <li className="leading-relaxed" {...props}>{children}</li>,
-    code: ({ node, inline, children, ...props }) => (
-        <code className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-300 font-mono text-[11px] border border-gray-200 dark:border-gray-700" {...props}>
-            {children}
-        </code>
-    ),
+    code({ node, inline, className, children, ...props }) {
+        const match = /language-(\w+)/.exec(className || '');
+        const codeString = String(children).replace(/\n$/, '');
+        if (!inline && (match || codeString.includes('\n'))) {
+            return <CodeBlock language={match ? match[1] : ''} value={codeString} />;
+        }
+        return (
+            <code className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-300 font-mono text-[11px] border border-gray-200 dark:border-gray-700" {...props}>
+                {children}
+            </code>
+        );
+    },
     p: ({ node, children, ...props }) => (
         <p className="leading-relaxed mb-1.5 last:mb-0 text-gray-700 dark:text-gray-300 text-[13.5px]" {...props}>{children}</p>
     )
