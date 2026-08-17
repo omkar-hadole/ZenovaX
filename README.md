@@ -3,7 +3,7 @@ A Peer-to-Peer Learning Platform for Students
 Learn faster through peer sessions, notes, quizzes, and mentor ratings.
 
 <p align="center">
-  <img src="frontend/src/assets/dashboard-mockup.png" alt="Zenova Dashboard">
+  <img src="frontend/src/assets/dashboard-mockup.webp" alt="Zenova Dashboard">
 </p>
 
 ---
