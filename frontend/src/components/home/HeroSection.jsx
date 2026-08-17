@@ -189,7 +189,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
 
         <div
           data-hero-mockup
-          className="relative mt-10 will-change-transform"
+          className="relative mt-14 will-change-transform"
           style={{ perspective: '1200px' }}
         >
           <div
