@@ -28,9 +28,9 @@ export default function Footer() {
 
   return (
     <footer id="contact" className="relative bg-bg-subtle border-t border-border">
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="md:col-span-2">
+      <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="col-span-2 md:col-span-2">
             <img
               src={theme === 'dark' ? logoDark : logoLight}
               alt="ZenovaX"
@@ -65,7 +65,7 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-14 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-12 md:mt-14 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-text-subtle">
             &copy; {new Date().getFullYear()} ZenovaX. All rights reserved.
           </p>
