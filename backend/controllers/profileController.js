@@ -1,9 +1,38 @@
 const profileService = require("../services/profileService");
+const authService = require("../services/authService");
 const config = require("../config");
 
 exports.completeProfile = async (req, res, next) => {
     try {
         const updatedUser = await profileService.completeProfile(req.prisma, req.cache, req.user.id, req.body, req.file);
+
+        // The access token carries the role minted at login. Completing the
+        // profile changes LEARNER -> MENTOR in the DB, so re-issue the tokens
+        // when the role changes — otherwise role-gated routes (authorize)
+        // keep 403-ing from the stale JWT for the rest of its 15-minute life.
+        if (updatedUser.role !== req.user.role) {
+            const { accessToken, refreshToken } = await authService.generateTokens(
+                req.prisma,
+                updatedUser.id,
+                updatedUser.role,
+                false,
+                req.headers['user-agent'] || null
+            );
+            const isProd = config.nodeEnv === 'production';
+            res.cookie('token', accessToken, {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? 'None' : 'Lax',
+                maxAge: 15 * 60 * 1000
+            });
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? 'None' : 'Lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
+        }
+
         return res.json({
             success: true,
             user: updatedUser,
