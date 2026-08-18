@@ -206,7 +206,7 @@ export default function HeroSection({ handlePrimaryCTA }) {
               height={875}
               fetchPriority="high"
               alt="ZenovaX learner dashboard showing upcoming peer sessions and recommended mentors"
-              className="relative w-full rounded-t-[28px] border border-border bg-surface shadow-[var(--shadow-lg)]"
+              className="relative w-full rounded-t-[10px] md:rounded-t-[28px] border border-border bg-surface shadow-[var(--shadow-lg)]"
             />
           </div>
         </div>
