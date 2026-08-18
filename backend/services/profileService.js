@@ -410,6 +410,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
     }
     if (!cachedData) {
         // 1. Query total count and paginate + sort the mentors at database level
+        const now = new Date();
         const [mentors, total] = await Promise.all([
             prisma.user.findMany({
                 where: {
@@ -439,12 +440,15 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
                             receivedReviews: true,
                             mentorSessions: {
                                 where: {
-                                    status: { in: ['COMPLETED', 'LIVE', 'UPCOMING'] },
-                                    bookings: {
-                                        some: {
-                                            status: { in: ['CONFIRMED', 'COMPLETED'] }
+                                    OR: [
+                                        { status: 'COMPLETED' },
+                                        {
+                                            AND: [
+                                                { status: { in: ['UPCOMING', 'LIVE'] } },
+                                                { scheduledAt: { lt: now } }
+                                            ]
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         }
@@ -461,7 +465,7 @@ exports.getMentors = async (prisma, cache, userId, queryParams) => {
 
         // 2. Map and hydrate the paginated results for shared caching (excluding user-specific flags)
         const basicMentors = mentors.map((mentor) => {
-            const effectiveSessions = mentor._count.mentorSessions;
+            const effectiveSessions = Math.max(mentor.totalSessions, mentor._count.mentorSessions);
             let skills = [];
             try {
                 skills = mentor.mentorSkills ? JSON.parse(mentor.mentorSkills) : [];
