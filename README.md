@@ -114,8 +114,6 @@ That loop — book, learn, practice, rate, pay — is the whole product.
 |---|---|
 | Learner | Browse, book, attend, work through course material, and review mentors. |
 | Mentor | Create sessions, upload material, launch quizzes and coding challenges, scan attendance, and get paid. |
-| Both | A single account can act as learner and mentor at the same time. |
-| Admin | Session moderation, payout verification, report handling, and platform-wide user and notification management. |
 
 ---
 
