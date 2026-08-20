@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, Video, MapPin,
   DollarSign, Users, BookOpen, Layers, PlusCircle, LayoutDashboard, Star, HelpCircle, Settings, Edit, QrCode, Code, Eye
@@ -20,7 +20,9 @@ import { trackEvent } from '../utils/analytics';
 export default function CreateSession() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEditing = !!id;
+  const learningRequestId = searchParams.get('requestId');
 
   const { user, logout } = useAuth();
   const { theme } = useTheme();
@@ -105,6 +107,8 @@ export default function CreateSession() {
     }
   }, [id, isEditing]);
 
+
+
   const isAdmin = user?.role === 'ADMIN';
 
   const handleChange = (e) => {
@@ -144,7 +148,8 @@ export default function CreateSession() {
         topics: topicsArray,
         price: formData.price ? parseFloat(formData.price) : 0,
         maxSeats: formData.maxSeats ? parseInt(formData.maxSeats) : 0,
-        duration: formData.duration ? parseInt(formData.duration) : 0
+        duration: formData.duration ? parseInt(formData.duration) : 0,
+        learningRequestId: learningRequestId || undefined
       };
 
       if (isEditing) {

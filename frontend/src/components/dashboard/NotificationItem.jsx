@@ -1,4 +1,4 @@
-import { Bell, CalendarCheck, Clock, PlayCircle, Radio, CheckCircle2, XCircle, Star, Trophy, Wallet, Ticket, FileQuestion, Code2, FileText, Megaphone } from 'lucide-react';
+import { Bell, CalendarCheck, Clock, PlayCircle, Radio, CheckCircle2, XCircle, Star, Trophy, Wallet, Ticket, FileQuestion, Code2, FileText, Megaphone, ArrowUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const TYPE_ICON = {
@@ -17,6 +17,7 @@ const TYPE_ICON = {
   RESOURCE_UPLOADED: FileText,
   SESSION_REQUEST_APPROVED: CheckCircle2,
   SESSION_REQUEST_REJECTED: XCircle,
+  LEARNING_REQUEST_SESSION_CREATED: ArrowUp,
   ADMIN_BROADCAST: Megaphone,
 };
 

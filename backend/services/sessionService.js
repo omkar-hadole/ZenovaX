@@ -33,11 +33,27 @@ exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
         venue,
         meetingLink,
         proposedDate,
-        duration
+        duration,
+        learningRequestId
     } = data;
 
     if (!title || !description || !subject || !department || !mode || !proposedDate || !duration) {
         throw new BadRequestError("Missing required fields");
+    }
+
+    // When creating a session from a learning request, verify the request
+    // exists and is still open before linking to it.
+    if (learningRequestId) {
+        const learningRequest = await prisma.learningRequest.findUnique({
+            where: { id: learningRequestId },
+            select: { id: true, status: true }
+        });
+        if (!learningRequest) {
+            throw new NotFoundError("Learning request not found");
+        }
+        if (learningRequest.status !== 'OPEN') {
+            throw new BadRequestError("A session can only be created for an open learning request");
+        }
     }
 
     if (typeof description === 'string') {
@@ -118,7 +134,8 @@ exports.createSessionRequest = async (prisma, cache, mentorId, data) => {
             meetingLink,
             proposedDate: new Date(proposedDate),
             duration: parsedDuration,
-            status: "PENDING"
+            status: "PENDING",
+            learningRequestId: learningRequestId || null
         }
     });
 
@@ -1078,77 +1095,6 @@ exports.verifyAttendance = async (prisma, cache, mentorId, { bookingId, sessionI
     };
 };
 
-exports.getRecentActivity = async (prisma, userId) => {
-    const notifications = await prisma.notification.findMany({
-        where: { userId: userId },
-        orderBy: { createdAt: 'desc' },
-        take: 4
-    });
-
-    const sessions = await prisma.session.findMany({
-        where: { mentorId: userId },
-        select: { id: true }
-    });
-    const sessionIds = sessions.map(s => s.id);
-
-    let reports = [];
-    if (sessionIds.length > 0) {
-        reports = await prisma.report.findMany({
-            where: { sessionId: { in: sessionIds } },
-            orderBy: { createdAt: 'desc' },
-            take: 4,
-            include: { session: { select: { title: true } } }
-        });
-    }
-
-    // Normalize and Merge
-    const normalizedNotifications = notifications.map(n => ({
-        type: 'NOTIFICATION',
-        data: n,
-        createdAt: n.createdAt
-    }));
-
-    const normalizedReports = reports.map(r => ({
-        type: 'REPORT',
-        data: r,
-        createdAt: r.createdAt
-    }));
-
-    const combined = [...normalizedNotifications, ...normalizedReports]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 4);
-
-    // Map to Activity Format
-    return combined.map(item => {
-        if (item.type === 'REPORT') {
-            return {
-                id: item.data.id,
-                action: "Report Received",
-                detail: `${item.data.reason} (Session: ${item.data.session.title})`,
-                createdAt: item.data.createdAt,
-                isNegative: true
-            };
-        } else {
-            // Notification
-            const n = item.data;
-            let action = "Notification";
-            switch (n.type) {
-                case 'BOOKING_CONFIRMED': action = "New booking"; break;
-                case 'NEW_REVIEW': action = "Review received"; break;
-                case 'SESSION_REQUEST_APPROVED': action = "Session Approved"; break;
-                case 'SESSION_REQUEST_REJECTED': action = "Session Rejected"; break;
-                case 'ACHIEVEMENT_UNLOCKED': action = "Achievement Unlocked"; break;
-                default: action = n.title;
-            }
-            return {
-                id: n.id,
-                action: action,
-                detail: n.message,
-                createdAt: n.createdAt
-            };
-        }
-    });
-};
 
 exports.getLiveAccess = async (prisma, userId, sessionId) => {
     const session = await prisma.session.findUnique({

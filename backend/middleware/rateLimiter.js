@@ -108,6 +108,29 @@ const aiLimiter = rateLimit({
   keyGenerator: (req) => (req.user && req.user.id) || ipKeyGenerator(req.ip) || 'anon',
 });
 
+// Learning requests can't be spammed forever: a learner creates a bounded number
+// of requests per hour and toggles interest a bounded number of times per minute.
+// Keyed by the authenticated user id (set by `protect`), falling back to IP.
+const learningRequestCreateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: config.nodeEnv === 'development' ? 50 : 5,
+  message: { error: "Too many learning requests created. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: makeStore('rl:lreq:create:'),
+  keyGenerator: (req) => (req.user && req.user.id) || ipKeyGenerator(req.ip) || 'anon',
+});
+
+const learningRequestInterestLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: config.nodeEnv === 'development' ? 100 : 20,
+  message: { error: "Too many requests. Please wait a moment before trying again." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: makeStore('rl:lreq:interest:'),
+  keyGenerator: (req) => (req.user && req.user.id) || ipKeyGenerator(req.ip) || 'anon',
+});
+
 module.exports = {
   loginLimiter,
   registerLimiter,
@@ -117,5 +140,7 @@ module.exports = {
   resendVerificationLimiter,
   refreshLimiter,
   generalLimiter,
-  aiLimiter
+  aiLimiter,
+  learningRequestCreateLimiter,
+  learningRequestInterestLimiter
 };

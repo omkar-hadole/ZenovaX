@@ -20,6 +20,8 @@ const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 
 const DashboardPage = lazy(() => import('./pages/learner/DashboardPage'));
 const SessionsPage = lazy(() => import('./pages/learner/SessionsPage'));
+const LearningRequestsPage = lazy(() => import('./pages/learner/LearningRequestsPage'));
+const LearningRequestDetailsPage = lazy(() => import('./pages/learner/LearningRequestDetailsPage'));
 const SessionDetailsPage = lazy(() => import('./pages/learner/SessionDetailsPage'));
 const BookingsPage = lazy(() => import('./pages/learner/BookingsPage'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -28,6 +30,7 @@ const Zen = lazy(() => import('./pages/learner/Zen'));
 
 const MentorDashboardPage = lazy(() => import('./pages/mentor/MentorDashboardPage'));
 const MentorSessionsPage = lazy(() => import('./pages/mentor/MentorSessionsPage'));
+const MentorLearningRequestsPage = lazy(() => import('./pages/mentor/MentorLearningRequestsPage'));
 const MentorReportsPage = lazy(() => import('./pages/mentor/MentorReportsPage'));
 const MentorScanAttendancePage = lazy(() => import('./pages/mentor/MentorScanAttendancePage'));
 const MentorReviewsPage = lazy(() => import('./pages/mentor/MentorReviewsPage'));
@@ -125,6 +128,8 @@ function App() {
                         <Route path="dashboard" element={<DashboardPage />} />
                         <Route path="sessions" element={<SessionsPage />} />
                         <Route path="sessions/:id" element={<SessionDetailsPage />} />
+                        <Route path="learning-requests" element={<LearningRequestsPage />} />
+                        <Route path="learning-requests/:id" element={<LearningRequestDetailsPage />} />
                         <Route path="bookings" element={<BookingsPage />} />
                         <Route path="mentors" element={<MentorsList />} />
                         <Route path="help" element={<HelpCenter />} />
@@ -143,6 +148,7 @@ function App() {
                         <Route index element={<Navigate to="dashboard" replace />} />
                         <Route path="dashboard" element={<MentorDashboardPage />} />
                         <Route path="sessions" element={<MentorSessionsPage />} />
+                        <Route path="learning-requests" element={<MentorLearningRequestsPage />} />
                         <Route path="reports" element={<MentorReportsPage />} />
                         <Route path="scan-attendance" element={<MentorScanAttendancePage />} />
                         <Route path="reviews" element={<MentorReviewsPage />} />

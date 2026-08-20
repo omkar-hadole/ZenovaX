@@ -62,6 +62,8 @@ model User {
 
   mentorSessions      Session[] @relation("MentorSessions")
   sessionRequests     SessionRequest[]
+  learningRequests    LearningRequest[]
+  learningRequestInterests LearningRequestInterest[]
   bookings            Booking[]
   reviews             Review[]  @relation("ReviewAuthor")
   receivedReviews     Review[]  @relation("ReviewRecipient")
@@ -130,6 +132,19 @@ enum RequestStatus {
   CANCELLED
 }
 
+enum LearningRequestStatus {
+  OPEN
+  SESSION_CREATED
+  COMPLETED
+  CLOSED
+}
+
+enum PreferredMode {
+  ONLINE
+  OFFLINE
+  EITHER
+}
+
 model SessionRequest {
   id              String        @id @default(uuid())
 
@@ -160,6 +175,9 @@ model SessionRequest {
 
   session         Session?      @relation("ApprovedSession")
 
+  learningRequest LearningRequest? @relation("LearningRequestSessionRequests", fields: [learningRequestId], references: [id], onDelete: SetNull)
+  learningRequestId String?        @unique
+
   @@index([mentorId])
   @@index([status])
   @@index([requestedAt])
@@ -167,6 +185,52 @@ model SessionRequest {
   @@index([department])
   @@index([topics])
   @@map("session_requests")
+}
+
+model LearningRequest {
+  id              String                @id @default(uuid())
+
+  creatorId       String
+  creator         User                  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  topic           String
+  description     String
+  preferredMode   PreferredMode         @default(EITHER)
+  isAnonymous     Boolean               @default(false)
+
+  status          LearningRequestStatus @default(OPEN)
+
+  sessionId       String?               @unique
+  session         Session?              @relation("LearningRequestSession", fields: [sessionId], references: [id], onDelete: SetNull)
+
+  sessionRequests SessionRequest[]      @relation("LearningRequestSessionRequests")
+  interests       LearningRequestInterest[]
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([topic])
+  @@index([preferredMode])
+  @@index([createdAt])
+  @@map("learning_requests")
+}
+
+model LearningRequestInterest {
+  id                String          @id @default(uuid())
+
+  learningRequestId String
+  learningRequest   LearningRequest @relation(fields: [learningRequestId], references: [id], onDelete: Cascade)
+  learnerId         String
+  learner           User            @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime        @default(now())
+
+  @@unique([learningRequestId, learnerId])
+  @@index([learnerId])
+  @@index([learningRequestId])
+  @@map("learning_request_interests")
 }
 
 enum SessionMode {
@@ -224,6 +288,8 @@ model Session {
 
   sessionRequest  SessionRequest? @relation("ApprovedSession", fields: [requestId], references: [id], onDelete: SetNull)
   requestId       String?         @unique
+  learningRequest LearningRequest? @relation("LearningRequestSession")
+  learningRequestId String?       @unique
   bookings        Booking[]
   reviews         Review[]
   resources       Resource[]
@@ -635,6 +701,7 @@ enum NotificationType {
   RESOURCE_UPLOADED
   SESSION_REQUEST_APPROVED
   SESSION_REQUEST_REJECTED
+  LEARNING_REQUEST_SESSION_CREATED
   ADMIN_BROADCAST
 }
 

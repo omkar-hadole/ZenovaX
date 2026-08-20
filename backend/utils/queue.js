@@ -151,7 +151,7 @@ async function runWorkerPass(prisma) {
                 status: { in: ['UPCOMING', 'LIVE'] },
                 scheduledAt: { lt: now }
             },
-            select: { id: true, mentorId: true, scheduledAt: true, duration: true }
+            select: { id: true, mentorId: true, scheduledAt: true, duration: true, learningRequestId: true }
         });
 
         const endedSessions = toComplete.filter(session => {
@@ -164,6 +164,7 @@ async function runWorkerPass(prisma) {
                 where: { id: session.id },
                 data: { status: 'COMPLETED' }
             });
+
             await addJob(prisma, 'CALCULATE_BADGES', { userId: session.mentorId });
             try {
                 const releasedCount = await mentorWalletService.releaseEarningsForSession(prisma, session.id);
@@ -173,6 +174,18 @@ async function runWorkerPass(prisma) {
             } catch (err) {
                 logger.error(`Failed to release mentor earnings for session ${session.id}: ${err.message}`);
             }
+        }
+
+        // Batch-complete any learner-demand requests whose sessions just ended.
+        // Doing this once after the loop avoids one extra DB round-trip per session.
+        const fulfilledRequestIds = endedSessions
+            .filter(s => s.learningRequestId)
+            .map(s => s.learningRequestId);
+        if (fulfilledRequestIds.length > 0) {
+            await prisma.learningRequest.updateMany({
+                where: { id: { in: fulfilledRequestIds }, status: { in: ['OPEN', 'SESSION_CREATED'] } },
+                data: { status: 'COMPLETED' }
+            });
         }
 
         // Pending-booking sweep.

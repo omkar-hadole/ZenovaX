@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Calendar,
-    Star,
     HelpCircle,
     Settings,
     QrCode,
-    AlertTriangle,
     Code,
+    TrendingUp,
 } from 'lucide-react';
 import Sidebar from '../../dashboard/Sidebar';
 import EarningsTeaserCard from './EarningsTeaserCard';
@@ -20,10 +19,9 @@ import { useTheme } from '../../../context/ThemeContext';
 const TAB_PATHS = {
     'Dashboard': '/mentor/dashboard',
     'My Sessions': '/mentor/sessions',
+    'Learner Demand': '/mentor/learning-requests',
     'Coding Questions': '/mentor/coding-questions',
-    'Reports': '/mentor/reports',
     'Scan Attendance': '/mentor/scan-attendance',
-    'Reviews Received': '/mentor/reviews',
     'Help Center': '/mentor/help',
     'Settings': '/mentor/settings',
 };
@@ -31,10 +29,9 @@ const TAB_PATHS = {
 const BASE_ITEMS = [
     { icon: LayoutDashboard, label: 'Dashboard' },
     { icon: Calendar, label: 'My Sessions' },
+    { icon: TrendingUp, label: 'Learner Demand' },
     { icon: Code, label: 'Coding Questions' },
-    { icon: AlertTriangle, label: 'Reports' },
     { icon: QrCode, label: 'Scan Attendance' },
-    { icon: Star, label: 'Reviews Received' },
     { icon: HelpCircle, label: 'Help Center' },
     { icon: Settings, label: 'Settings' },
 ];

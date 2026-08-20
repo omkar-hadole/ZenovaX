@@ -127,6 +127,7 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/wallet", require("./routes/wallet"));
 app.use("/api/payments", require("./routes/payments"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/learning-requests", require("./routes/learningRequests"));
 
 app.use((req, res, next) => {
   if (!req.timedout) next();

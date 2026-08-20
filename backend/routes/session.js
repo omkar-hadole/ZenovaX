@@ -16,7 +16,7 @@ router.get("/my-requests", authorize('MENTOR', 'BOTH'), sessionController.getMyR
 
 router.get("/stats", authorize('MENTOR', 'BOTH'), sessionController.getMentorStats);
 
-router.get("/activity", authorize('MENTOR', 'BOTH'), sessionController.getRecentActivity);
+
 
 router.get("/my-sessions", authorize('MENTOR', 'BOTH'), sessionController.getMySessions);
 

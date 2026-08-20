@@ -151,14 +151,7 @@ exports.verifyAttendance = async (req, res, next) => {
     }
 };
 
-exports.getRecentActivity = async (req, res, next) => {
-    try {
-        const activities = await sessionService.getRecentActivity(req.prisma, req.user.id);
-        return res.json({ activities });
-    } catch (error) {
-        return next(error);
-    }
-};
+
 
 exports.getLiveAccess = async (req, res, next) => {
     try {

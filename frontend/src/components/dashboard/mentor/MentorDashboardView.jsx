@@ -5,7 +5,7 @@ import StatsCard from '../StatsCard';
 import SessionRequests from './SessionRequests';
 import QuickActions from './QuickActions';
 import RatingSummary from './RatingSummary';
-import RecentActivity from './RecentActivity';
+import FeedbackActions from './FeedbackActions';
 import DashboardSkeleton from '../DashboardSkeleton';
 import InlineError from '../../InlineError';
 
@@ -241,7 +241,7 @@ export default function MentorDashboardView({
                 <div className="space-y-6">
                     <QuickActions />
                     <RatingSummary stats={reviewStats} />
-                    <RecentActivity />
+                    <FeedbackActions />
                 </div>
             </div>
         </div>

@@ -1,4 +1,5 @@
 const { BadRequestError, NotFoundError } = require("../utils/errors");
+const learningRequestService = require("./learningRequestService");
 
 exports.getDashboardStats = async (prisma) => {
     const [
@@ -80,7 +81,8 @@ exports.approveSession = async (prisma, cache, { requestId }) => {
                 meetingLink: sessionRequest.meetingLink,
                 scheduledAt: sessionRequest.proposedDate,
                 duration: sessionRequest.duration,
-                requestId: sessionRequest.id
+                requestId: sessionRequest.id,
+                learningRequestId: sessionRequest.learningRequestId || null
             }
         });
 
@@ -94,6 +96,18 @@ exports.approveSession = async (prisma, cache, { requestId }) => {
             }
         });
 
+        // If this session fulfils a learner demand request, mark it as served
+        // and notify every learner who expressed interest.
+        if (sessionRequest.learningRequestId) {
+            await learningRequestService.markSessionCreated(
+                tx,
+                sessionRequest.learningRequestId,
+                newSession.id,
+                newSession.title,
+                `/sessions/${newSession.id}`
+            );
+        }
+
         return newSession;
     }, {
         timeout: 10000
@@ -103,6 +117,7 @@ exports.approveSession = async (prisma, cache, { requestId }) => {
         await cache.del('dashboard_upcoming_sessions');
         await cache.del('dashboard_top_mentors');
         await cache.delPattern('all_sessions_*');
+        await cache.delPattern('learning_requests_*');
     }
 
     return session;

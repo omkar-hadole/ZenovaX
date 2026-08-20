@@ -8,6 +8,7 @@ import {
     HelpCircle,
     Settings,
     Users,
+    GraduationCap,
 } from 'lucide-react';
 import Sidebar from '../components/dashboard/Sidebar';
 import Header from '../components/dashboard/Header';
@@ -36,6 +37,7 @@ export default function LearnerLayout() {
     const sidebarItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
         { icon: BookOpen, label: 'Browse Sessions', path: '/sessions' },
+        { icon: GraduationCap, label: 'Learning Requests', path: '/learning-requests' },
         { icon: Calendar, label: 'My Bookings', path: '/bookings' },
         { icon: Users, label: 'Mentors', path: '/mentors' },
         { icon: HelpCircle, label: 'Help Center', path: '/help' },
