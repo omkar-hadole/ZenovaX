@@ -163,8 +163,13 @@ export default function CommandBar() {
         localStorage.setItem(PROVIDER_STORAGE_KEY, next);
     };
 
-    const { isSignedIn: chatGptConnected, login: connectChatGPT } =
-        useSignInWithChatGPT({ onSuccess: () => setProvider('chatgpt') });
+    const {
+        status: chatGptStatus,
+        installUrl: chatGptInstallUrl,
+        isSignedIn: chatGptConnected,
+        login: connectChatGPT,
+    } = useSignInWithChatGPT({ onSuccess: () => setProvider('chatgpt') });
+    const needsChatGptExtension = chatGptStatus === 'needs-extension';
 
     // Global keyboard shortcut
     useEffect(() => {
@@ -401,6 +406,22 @@ export default function CommandBar() {
                                 <Check className="w-3 h-3 text-emerald-500" />
                                 ChatGPT
                             </button>
+                        ) : needsChatGptExtension ? (
+                            <>
+                                <button
+                                    onClick={() => window.open(chatGptInstallUrl, '_blank', 'noopener,noreferrer')}
+                                    className="text-[11px] font-semibold flex items-center gap-1 hover:opacity-70 transition-opacity"
+                                    style={{ color: '#6366f1' }}
+                                >
+                                    <ExternalLink className="w-3 h-3" /> Install the ChatGPT extension
+                                </button>
+                                <button
+                                    onClick={connectChatGPT}
+                                    className="text-[11px] text-gray-400 hover:text-indigo-500 underline underline-offset-2 transition-colors"
+                                >
+                                    Installed it? Try again
+                                </button>
+                            </>
                         ) : (
                             <button
                                 onClick={connectChatGPT}
