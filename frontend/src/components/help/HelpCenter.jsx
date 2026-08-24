@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Mail, Phone, ExternalLink, ChevronDown, Sparkles, Search } from 'lucide-react';
 
-const WA_LINK = "https://wa.me/919876543210";
+const WA_LINK = "https://wa.me/919588172862";
 
 const DEFAULT_CONTACTS = [
     {
@@ -15,8 +15,8 @@ const DEFAULT_CONTACTS = [
     },
     {
         title: 'Call Support',
-        value: '+91 987 654 3210',
-        href: 'tel:+919876543210',
+        value: '+91 9588172862',
+        href: 'tel:+919588172862',
         detail: '10 AM – 6 PM IST only',
         icon: Phone,
         badge: 'Urgent',
