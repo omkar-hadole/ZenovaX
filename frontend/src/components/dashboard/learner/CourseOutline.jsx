@@ -70,8 +70,8 @@ export default function CourseOutline() {
                 {yearId && !course && courses.map((c) => (
                     <div
                         key={c.id}
-                        onClick={() => setCourseId(c.id)}
-                        className={`bg-white dark:bg-gray-900 rounded-[1.5rem] px-4 py-3.5 flex items-center gap-4 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-lg transition-all duration-300 group cursor-pointer ${theme.hoverBorder}`}
+
+                        className={`bg-white dark:bg-gray-900 rounded-[1.5rem] px-4 py-3.5 flex items-center gap-4 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-lg transition-all duration-300 group ${theme.hoverBorder}`}
                     >
                         <div className={`w-11 h-11 shrink-0 ${theme.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                             <BookOpen className={`w-5 h-5 ${theme.iconText}`} strokeWidth={1.5} />
