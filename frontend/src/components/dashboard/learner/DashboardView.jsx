@@ -4,6 +4,7 @@ import SessionList from './SessionList';
 import DailySchedule from './DailySchedule';
 import RecentCourses from './RecentCourses';
 import MentorsList from './MentorsList';
+import CourseOutline from './CourseOutline';
 
 export default function DashboardView({
     myBookings,
@@ -169,22 +170,7 @@ export default function DashboardView({
 
                 <MentorsList mentors={mentors} />
 
-                <SessionList
-                    title="Upcoming Classes"
-                    sessions={sessions
-                        .filter(s => !s.isBooked && new Date(s.scheduledAt) > new Date())
-                        .slice(0, 3)
-                        .map(session => ({
-                            id: session.id,
-                            title: session.title,
-                            instructor: `By ${session.mentor?.name}`,
-                            status: 'Register',
-                            color: 'bg-orange-100 text-orange-600'
-                        }))}
-                    type="class"
-                    onViewAll={() => setActiveTab('Browse Sessions')}
-                    onSessionClick={(sessionId) => setSelectedSession({ id: sessionId })}
-                />
+                <CourseOutline />
             </div>
         </div>
     );
